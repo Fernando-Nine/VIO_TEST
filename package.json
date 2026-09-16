@@ -1,0 +1,45 @@
+{
+  "name": "vio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx src/server/index.ts --dev",
+    "build": "npm run typecheck && node scripts/build.mjs",
+    "start": "node --env-file-if-exists=.env dist/server/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:media": "node --env-file-if-exists=.env --import tsx tests/media-runner.ts",
+    "audit:production": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.0",
+    "@fontsource/ibm-plex-mono": "^5.2.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "lucide-react": "^1.31.0",
+    "proxy-addr": "^2.0.7",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.0",
+    "@types/proxy-addr": "^2.0.3",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "esbuild": "^0.28.2",
+    "prettier": "3.6.2",
+    "tsx": "^4.20.5",
+    "typescript": "~5.9.3",
+    "vite": "8.3.0"
+  }
+}

@@ -1,0 +1,20 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> vio@0.1.0 test
+> node --import tsx --test tests/*.test.ts
+
+✔ tokens assinados rejeitam adulteração e expiração (1.942164ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (83.439203ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (16.409642ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (13.998242ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (16.505857ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (11.468775ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (5.601192ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 527.582086

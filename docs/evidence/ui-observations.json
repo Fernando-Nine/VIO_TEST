@@ -1,0 +1,33 @@
+{
+  "at": "2026-09-15",
+  "browserUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+  "method": "Remote Chrome, UI interaction and screenshots. Mobile uses same-origin 390x844 iframe, not a physical device.",
+  "observations": [
+    "Manual mute stayed enabled after toggling deafen on/off.",
+    "Unmuting returned the microphone control to active state.",
+    "Stopping synthetic camera preserved local screen and voice.",
+    "Stopping synthetic screen removed its publication and preserved voice.",
+    "Low preset changed displayed capture frameRate from 24 to 15 FPS. Requested bitrate 700 kbps, scale 2. No transport bitrate was established.",
+    "Control sounds preference checked state confirmed in DOM snapshot.",
+    "Settings opened on desktop/mobile and Escape removed the dialog.",
+    "Entry form created real anonymous rooms on desktop/mobile.",
+    "Desktop player resized to keep dock visible.",
+    "Mobile share button has explicit accessible label after visual labels are hidden."
+  ],
+  "notVerified": [
+    "physical media",
+    "audible sound quality",
+    "connected WebRTC transport",
+    "TURN relay",
+    "Render deployment",
+    "formal accessibility audit"
+  ],
+  "screenshots": [
+    "vio-entrada-final.jpg",
+    "vio-sala-desktop-final.jpg",
+    "vio-entrada-mobile.jpg",
+    "vio-sala-mobile.jpg",
+    "vio-ajustes-mobile-final.jpg",
+    "vio-midia-diagnostico.jpg"
+  ]
+}

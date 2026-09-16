@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: vio-test
+    runtime: node
+    plan: free
+    numInstances: 1
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "1"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: MAX_PARTICIPANTS
+        value: "4"
+      - key: MAX_ROOMS
+        value: "200"
+      - key: STUN_URLS
+        value: stun:stun.l.google.com:19302
+      - key: ENABLE_TEST_LAB
+        value: "0"
+# TURN opcional: adicione TURN_URLS e TURN_SECRET nos segredos do serviço.
+# ALLOWED_ORIGINS só é necessária para um domínio adicional; a origem Render é derivada
+# de RENDER_EXTERNAL_URL, fornecida pela plataforma em runtime.

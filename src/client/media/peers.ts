@@ -1,0 +1,453 @@
+import type { IceConfig, Signal, Subscription } from "../../shared/protocol";
+import type { Captures } from "./capture";
+import { mediaDeadline } from "./deadline";
+export interface PeerInfo {
+  id: string;
+  publicationId: string;
+  owner: string;
+  viewer: string;
+  tier: string;
+  kind: string;
+  sending: boolean;
+  state: RTCPeerConnectionState;
+  rtt?: number;
+  relay?: boolean;
+  bitrate?: number;
+  width?: number;
+  height?: number;
+  fps?: number;
+  bytes?: number;
+  error?: string;
+  attempts: number;
+  localCandidates?: number;
+  remoteCandidates?: number;
+  gathering?: RTCIceGatheringState;
+  sentIce?: number;
+  iceEvents?: number;
+  receivedIce?: number;
+  rejectedSignals?: number;
+}
+interface Peer {
+  sub: Subscription;
+  pc: RTCPeerConnection;
+  stream: MediaStream;
+  outgoing: boolean;
+  round: number;
+  queue: Promise<void>;
+  candidates: Signal[];
+  timer?: ReturnType<typeof setTimeout>;
+  attempts: number;
+  started: boolean;
+  lastBytes?: number;
+  lastTime?: number;
+  info: PeerInfo;
+  events: AbortController;
+}
+export class Peers {
+  entries = new Map<string, Peer>();
+  ice: IceConfig = { iceServers: [], expiresAt: 0, turn: false };
+  forceRelay = false;
+  private statsTimer: ReturnType<typeof setInterval>;
+  private collecting = false;
+  constructor(
+    private me: () => string,
+    private captures: Captures,
+    private send: (signal: Signal) => void,
+    private changed: () => void,
+    private online: () => boolean,
+    private freshIce: () => Promise<IceConfig>,
+  ) {
+    this.statsTimer = setInterval(() => void this.stats(), 2000);
+  }
+  infos() {
+    return [...this.entries.values()].map((p) => p.info);
+  }
+  stream(publicationId: string, tier = "main") {
+    return [...this.entries.values()].find(
+      (p) =>
+        !p.outgoing &&
+        p.sub.publication.id === publicationId &&
+        p.sub.tier === tier,
+    )?.stream;
+  }
+  private serial(peer: Peer, fn: () => Promise<void>) {
+    peer.queue = peer.queue
+      .then(async () => {
+        if (this.entries.get(peer.sub.id) === peer) await fn();
+      })
+      .catch((e) => {
+        peer.info.error =
+          e instanceof Error ? e.message : "Falha na negociação.";
+        this.changed();
+      });
+    return peer.queue;
+  }
+  async accept(sub: Subscription) {
+    if (this.ice.expiresAt < Date.now()) this.ice = await this.freshIce();
+    const existing = this.entries.get(sub.id);
+    if (existing) {
+      if (existing.pc.connectionState === "failed") this.recover(existing);
+      return;
+    }
+    const outgoing = sub.publication.owner === this.me();
+    if (outgoing && !this.captures.sources.has(sub.publication.kind)) return;
+    const pc = new RTCPeerConnection({
+      iceServers: this.ice.iceServers,
+      iceTransportPolicy: this.forceRelay ? "relay" : "all",
+    });
+    const info: PeerInfo = {
+      id: sub.id,
+      publicationId: sub.publication.id,
+      owner: sub.publication.owner,
+      viewer: sub.viewer,
+      tier: sub.tier,
+      kind: sub.publication.kind,
+      sending: outgoing,
+      state: "new",
+      attempts: 0,
+    };
+    const peer: Peer = {
+      sub,
+      pc,
+      info,
+      outgoing,
+      stream: new MediaStream(),
+      round: 0,
+      queue: Promise.resolve(),
+      candidates: [],
+      attempts: 0,
+      started: false,
+      events: new AbortController(),
+    };
+    this.entries.set(sub.id, peer);
+    pc.addEventListener(
+      "icecandidate",
+      (e) => {
+        info.iceEvents = (info.iceEvents || 0) + 1;
+        if (e.candidate) {
+          info.sentIce = (info.sentIce || 0) + 1;
+          this.send({
+            id: sub.id,
+            round: peer.round,
+            candidate: {
+              candidate: e.candidate.candidate,
+              sdpMid: e.candidate.sdpMid,
+              sdpMLineIndex: e.candidate.sdpMLineIndex,
+              usernameFragment: e.candidate.usernameFragment,
+            },
+          });
+        }
+      },
+      { signal: peer.events.signal },
+    );
+    pc.ontrack = (e) => {
+      if (!peer.stream.getTracks().some((t) => t.id === e.track.id))
+        peer.stream.addTrack(e.track);
+      e.track.onunmute = () => this.changed();
+      e.track.onended = () => {
+        peer.stream.removeTrack(e.track);
+        this.changed();
+      };
+      this.changed();
+    };
+    pc.onconnectionstatechange = () => {
+      info.state = pc.connectionState;
+      if (pc.connectionState === "connected") {
+        clearTimeout(peer.timer);
+        peer.timer = undefined;
+        peer.attempts = 0;
+        info.attempts = 0;
+        info.error = undefined;
+      } else if (
+        pc.connectionState === "failed" ||
+        pc.connectionState === "disconnected"
+      )
+        this.recover(peer);
+      this.changed();
+    };
+    if (outgoing)
+      await this.serial(peer, async () => {
+        const stream =
+          sub.tier === "preview"
+            ? await this.captures.previewStream()
+            : this.captures.sources.get(sub.publication.kind)?.stream;
+        if (this.entries.get(sub.id) !== peer) {
+          if (
+            ![...this.entries.values()].some(
+              (p) => p.outgoing && p.sub.tier === "preview",
+            )
+          )
+            this.captures.stopPreview();
+          return;
+        }
+        if (!stream) throw new Error("A captura foi encerrada.");
+        for (const track of stream.getTracks()) pc.addTrack(track, stream);
+        peer.started = true;
+        await this.offer(peer, false);
+      });
+    if (pc.connectionState !== "connected") this.recover(peer);
+    this.changed();
+  }
+  private async offer(peer: Peer, restart: boolean) {
+    if (!this.online() || peer.pc.signalingState !== "stable") return;
+    peer.round++;
+    await peer.pc.setLocalDescription(
+      await peer.pc.createOffer({ iceRestart: restart }),
+    );
+    this.send({
+      id: peer.sub.id,
+      round: peer.round,
+      description: { type: "offer", sdp: peer.pc.localDescription!.sdp },
+    });
+  }
+  signal(signal: Signal) {
+    const peer = this.entries.get(signal.id);
+    if (!peer) return;
+    if (signal.candidate)
+      peer.info.receivedIce = (peer.info.receivedIce || 0) + 1;
+    return this.serial(peer, async () => {
+      if (signal.restart) {
+        if (peer.outgoing) await this.offer(peer, true);
+        return;
+      }
+      if (signal.description) {
+        if (signal.round < peer.round) return;
+        if (peer.outgoing) {
+          if (
+            signal.description.type !== "answer" ||
+            signal.round !== peer.round ||
+            peer.pc.signalingState !== "have-local-offer"
+          )
+            return;
+        } else {
+          if (signal.description.type !== "offer") return;
+          peer.round = signal.round;
+        }
+        await peer.pc.setRemoteDescription(signal.description);
+        if (!peer.outgoing) {
+          await peer.pc.setLocalDescription(await peer.pc.createAnswer());
+          this.send({
+            id: peer.sub.id,
+            round: peer.round,
+            description: { type: "answer", sdp: peer.pc.localDescription!.sdp },
+          });
+        }
+        const queued = peer.candidates.splice(0);
+        for (const item of queued)
+          if (item.round === peer.round)
+            await peer.pc.addIceCandidate(item.candidate!);
+        if (peer.outgoing) await this.parameters(peer);
+      } else if (signal.candidate) {
+        if (signal.round < peer.round) return;
+        if (!peer.pc.remoteDescription || signal.round > peer.round) {
+          if (peer.candidates.length < 128) peer.candidates.push(signal);
+          return;
+        }
+        await peer.pc.addIceCandidate(signal.candidate);
+      }
+    });
+  }
+  private recover(peer: Peer) {
+    if (peer.timer || peer.attempts >= 4 || !this.entries.has(peer.sub.id))
+      return;
+    peer.timer = setTimeout(
+      () => {
+        peer.timer = undefined;
+        if (peer.pc.connectionState === "connected") return;
+        if (!this.online()) {
+          this.recover(peer);
+          return;
+        }
+        peer.attempts++;
+        peer.info.attempts = peer.attempts;
+        void this.serial(peer, async () => {
+          if (this.ice.expiresAt < Date.now() + 60000)
+            this.ice = await this.freshIce();
+          peer.pc.setConfiguration({
+            iceServers: this.ice.iceServers,
+            iceTransportPolicy: this.forceRelay ? "relay" : "all",
+          });
+          if (peer.outgoing) {
+            if (peer.pc.signalingState === "have-local-offer")
+              await peer.pc.setLocalDescription({ type: "rollback" });
+            await this.offer(peer, true);
+          } else
+            this.send({ id: peer.sub.id, round: peer.round, restart: true });
+        });
+        if (peer.attempts >= 4)
+          peer.info.error =
+            "A conexão falhou. Tente reconectar a mídia ou configure TURN para redes restritas.";
+        else this.recover(peer);
+        this.changed();
+      },
+      Math.min(2000 * 2 ** peer.attempts, 16000),
+    );
+  }
+  resume() {
+    for (const peer of this.entries.values())
+      if (peer.pc.connectionState !== "connected") {
+        if (peer.outgoing && peer.started)
+          void this.serial(peer, () => this.offer(peer, true));
+        this.recover(peer);
+      }
+  }
+  restartOutgoing() {
+    for (const peer of this.entries.values())
+      if (peer.outgoing && peer.started)
+        void this.serial(peer, async () => {
+          if (peer.pc.signalingState === "have-local-offer")
+            await peer.pc.setLocalDescription({ type: "rollback" });
+          await this.offer(peer, true);
+        });
+  }
+  async parameters(peer: Peer) {
+    for (const sender of peer.pc.getSenders())
+      if (sender.track?.kind === "video") {
+        const p = sender.getParameters();
+        if (!p.encodings?.length) continue;
+        const quality =
+          peer.sub.publication.kind === "screen"
+            ? this.captures.quality
+            : { fps: 20, bitrate: 450, scale: 1 };
+        Object.assign(p.encodings[0], {
+          maxBitrate:
+            peer.sub.tier === "preview" ? 90000 : quality.bitrate * 1000,
+          maxFramerate: peer.sub.tier === "preview" ? 5 : quality.fps,
+          scaleResolutionDownBy:
+            peer.sub.tier === "preview" ? 1 : quality.scale,
+        });
+        try {
+          await mediaDeadline(
+            sender.setParameters(p),
+            "O navegador não confirmou os parâmetros do envio.",
+          );
+        } catch {
+          peer.info.error =
+            "O navegador limitou os parâmetros do envio; confira as estatísticas efetivas.";
+        }
+      }
+  }
+  async update(kind: string) {
+    for (const peer of this.entries.values())
+      if (
+        peer.outgoing &&
+        peer.sub.publication.kind === kind &&
+        peer.sub.tier !== "preview"
+      ) {
+        const source = this.captures.sources.get(peer.sub.publication.kind);
+        for (const sender of peer.pc.getSenders()) {
+          const track = source?.stream
+            .getTracks()
+            .find((t) => t.kind === sender.track?.kind);
+          if (track && sender.track !== track) await sender.replaceTrack(track);
+        }
+        await this.parameters(peer);
+      }
+  }
+  close(id: string) {
+    const peer = this.entries.get(id);
+    if (!peer) return;
+    this.entries.delete(id);
+    clearTimeout(peer.timer);
+    peer.events.abort();
+    peer.pc.ontrack = null;
+    peer.pc.onconnectionstatechange = null;
+    peer.pc.close();
+    peer.stream.getTracks().forEach((t) => {
+      t.onended = null;
+      t.onunmute = null;
+      t.stop();
+    });
+    if (
+      ![...this.entries.values()].some(
+        (p) => p.outgoing && p.sub.tier === "preview",
+      )
+    )
+      this.captures.stopPreview();
+    this.changed();
+  }
+  closePublication(id: string) {
+    for (const peer of [...this.entries.values()])
+      if (peer.sub.publication.id === id) this.close(peer.sub.id);
+  }
+  async stats() {
+    if (this.collecting) return;
+    this.collecting = true;
+    try {
+      await Promise.allSettled(
+        [...this.entries.values()].map(async (peer) => {
+          if (peer.pc.connectionState === "closed") return;
+          const stats = await peer.pc.getStats();
+          let selected: any;
+          let localCandidates = 0,
+            remoteCandidates = 0;
+          stats.forEach((stat) => {
+            if (stat.type === "local-candidate") localCandidates++;
+            if (stat.type === "remote-candidate") remoteCandidates++;
+            if (stat.type === "transport" && stat.selectedCandidatePairId)
+              selected = stats.get(stat.selectedCandidatePairId);
+          });
+          Object.assign(peer.info, {
+            localCandidates,
+            remoteCandidates,
+            gathering: peer.pc.iceGatheringState,
+          });
+          if (peer.pc.iceGatheringState === "complete" && !localCandidates)
+            peer.info.error =
+              "Nenhuma rota de mídia foi encontrada. Verifique a rede ou configure TURN.";
+          if (!selected)
+            stats.forEach((s) => {
+              if (
+                s.type === "candidate-pair" &&
+                s.state === "succeeded" &&
+                s.nominated
+              )
+                selected = s;
+            });
+          if (selected) {
+            peer.info.rtt =
+              typeof selected.currentRoundTripTime === "number"
+                ? Math.round(selected.currentRoundTripTime * 1000)
+                : undefined;
+            const local = stats.get(selected.localCandidateId),
+              remote = stats.get(selected.remoteCandidateId);
+            peer.info.relay =
+              local?.candidateType === "relay" ||
+              remote?.candidateType === "relay";
+          }
+          stats.forEach((s) => {
+            if (
+              s.type === (peer.outgoing ? "outbound-rtp" : "inbound-rtp") &&
+              (s.kind === "video" || peer.sub.publication.kind === "voice")
+            ) {
+              const bytes = peer.outgoing ? s.bytesSent : s.bytesReceived;
+              if (peer.lastTime && s.timestamp > peer.lastTime)
+                peer.info.bitrate = Math.round(
+                  ((bytes - (peer.lastBytes || 0)) * 8) /
+                    (s.timestamp - peer.lastTime),
+                );
+              peer.lastTime = s.timestamp;
+              peer.lastBytes = bytes;
+              Object.assign(peer.info, {
+                bytes,
+                width: s.frameWidth,
+                height: s.frameHeight,
+                fps: s.framesPerSecond,
+              });
+            }
+          });
+        }),
+      );
+      this.changed();
+    } finally {
+      this.collecting = false;
+    }
+  }
+  closeAll() {
+    for (const id of [...this.entries.keys()]) this.close(id);
+  }
+  destroy() {
+    clearInterval(this.statsTimer);
+    this.closeAll();
+  }
+}

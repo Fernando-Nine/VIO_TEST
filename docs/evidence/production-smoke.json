@@ -1,0 +1,14 @@
+{
+  "at": "2026-09-15T17:54:50.138Z",
+  "result": "PASS",
+  "checks": [
+    "compiled server startup",
+    "healthz 200",
+    "compiled client 200",
+    "production CSP",
+    "test lab disabled",
+    "source archive download",
+    "SIGTERM exit 0"
+  ],
+  "logs": "{\"time\":\"2026-09-15T17:54:50.102Z\",\"event\":\"listening\",\"port\":35051}\n{\"time\":\"2026-09-15T17:54:50.134Z\",\"event\":\"shutdown\"}\n"
+}

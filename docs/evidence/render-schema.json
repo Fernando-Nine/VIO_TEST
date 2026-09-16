@@ -1,0 +1,7 @@
+{
+  "result": "PASS",
+  "schema": "https://render.com/schema/render.yaml.json",
+  "validator": "jsonschema 4.25.1 Draft202012Validator",
+  "at": "2026-09-15T17:49:35.927230+00:00",
+  "scope": "Schema validation only; no authenticated Render deployment."
+}
