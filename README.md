@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.0.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.1.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -45,6 +45,13 @@ O build gera o cliente, o servidor e `dist/source.tar.gz`, oferecido no próprio
 Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
+
+## Entrada 2.1.0
+
+Composição em marfim e preto, azul sólido e verde-lima pontual, com Bricolage
+Grotesque e Instrument Serif locais. O formulário mantém criação e entrada por
+código, com inicial personalizada. A prévia Tela/Voz/Câmera responde a clique e
+teclado sem iniciar capturas. Animações leves respeitam movimento reduzido.
 
 ## O que a interface oferece
 

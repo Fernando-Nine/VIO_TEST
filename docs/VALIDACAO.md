@@ -1,5 +1,25 @@
 # VIO — validação
 
+## Atualização 2.1.0 — 16/09/2026
+
+Build de produção e os 12 testes existentes aprovados. Entrada redesenhada
+conferida visualmente em desktop e em prévias de 320, 390 e 768 px, sem
+rolagem horizontal. O formulário continua criando/abrindo salas; retorno à
+entrada, troca das prévias por clique/setas, inicial do nome e atalho ao
+formulário foram exercitados no Chrome 151. Foco sólido visível confirmado.
+
+Contraste calculado dos pares da nova entrada: texto principal 14,44:1,
+secundário 5,97:1, placeholder 5,37:1, texto do botão 9,44:1, título azul
+8,41:1 e selo 14,51:1. Revisão da lista visual de exclusões executada: sem
+gradientes na entrada, sem fontes anteriores, sem hero centralizado/blob,
+sem cards repetidos, sem emojis e sem bibliotecas adicionais de animação.
+
+As animações da entrada usam somente transform/opacity; movimento reduzido
+e semântica/foco foram conferidos no CSS e nos componentes. As ilustrações
+são decorativas e marcadas com aria-hidden; a prévia não inicia capturas.
+O changelog mantém as 16 versões históricas, a 2.0.0 e a nova 2.1.0.
+
+
 ## Atualização 2.0.0 — 16/09/2026
 
 - 12 testes automatizados aprovados: os sete casos anteriores e cinco casos novos.

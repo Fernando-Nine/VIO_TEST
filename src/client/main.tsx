@@ -1,10 +1,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import "@fontsource-variable/manrope";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource/instrument-serif/latin-400-italic.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import App from "./App";
 import { Controller } from "./room/controller";
 import "./styles.css";
+import "./landing.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
 const engine = new Controller();

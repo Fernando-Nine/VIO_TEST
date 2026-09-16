@@ -72,9 +72,9 @@ try {
   assert.equal(worker.status, 200);
   assert.match(worker.headers.get("cache-control"), /no-cache/);
   assert.match(worker.headers.get("content-type"), /javascript/);
-  assert.match(await worker.text(), /vio-static-2\.0\.0/);
+  assert.match(await worker.text(), /vio-static-2\.1\.0/);
   checks.push(
-    "Manifest e service worker 2.0.0 entregues com cache de atualização correto",
+    "Manifest e service worker 2.1.0 entregues com cache de atualização correto",
   );
   const source = await request("/source.tar.gz");
   assert.equal(source.status, 200);

@@ -2,6 +2,17 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.1.0] - 2026-09-16
+
+Uma entrada com outra presença
+
+### Design e interação
+- Nova entrada em marfim e preto, com azul sólido e um acento verde-lima. Composição assimétrica com formulário em formato de convite.
+- Bricolage Grotesque e Instrument Serif substituem a tipografia anterior; fontes servidas pelo próprio app.
+- Prévia interativa de tela, voz e câmera, navegável por clique ou teclado, sem iniciar capturas.
+- Inicial personalizada ao digitar o nome, atalho direto ao formulário e feedback no botão de entrada.
+- Responsividade a partir de 320 px, contraste AA, foco visível e respeito à preferência de movimento reduzido. Conteúdo, salas e controles preservados.
+
 ## [2.0.0] - 2026-09-16
 
 Uma nova geração do VIO

@@ -142,7 +142,7 @@ test("service worker jamais intercepta navegação, sala, sessão ou socket", as
   assert.deepEqual(cached, network);
 });
 
-test("changelog preserva o arquivo original inteiro e continua em 2.0.0", async () => {
+test("changelog preserva o histórico inteiro e a mudança de sistema", async () => {
   const source = await readFile("docs/CHANGELOG-VIO_2.md");
   const sha = createHash("sha1")
     .update(`blob ${source.length}\0`)
@@ -158,8 +158,11 @@ test("changelog preserva o arquivo original inteiro e continua em 2.0.0", async 
     versions,
   );
   assert.equal(historic.length, 16);
-  assert.equal(version, "2.0.0");
-  assert.equal(releases[0].systemChange, true);
+  assert.equal(version, "2.1.0");
+  assert.equal(
+    releases.find((release) => release.version === "2.0.0")?.systemChange,
+    true,
+  );
   const originalBullets = [
     ...source.toString().matchAll(/^[-*] (.*(?:\n {2,}[^\n]+)*)/gm),
   ].map((m) => m[1].replace(/\s+/g, " ").trim());

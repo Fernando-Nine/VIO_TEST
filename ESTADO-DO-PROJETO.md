@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.0.0**, em 16/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.1.0**, em 16/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -30,6 +30,10 @@ Adições da 2.0.0: fala remota acompanhando trilhas tardias, prévias opcionais
 desligadas por padrão, abas Vídeo/Áudio, ganho manual de 20% a 300% exclusivo do
 modo sem AGC, saída de áudio para voz e tela, instalação PWA, duração comum da sala,
 seis participantes com explicação e ping visível com cores.
+
+Adições da 2.1.0: entrada redesenhada com tipografia expressiva, composição
+assimétrica, fundo marfim, prévia interativa de recursos, inicial personalizada
+e cursor próprio. Fluxos de sala, áudio, vídeo, instalação e histórico preservados.
 
 ## O que foi comprovado
 

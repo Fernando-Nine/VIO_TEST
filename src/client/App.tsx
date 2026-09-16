@@ -7,7 +7,6 @@ import {
 } from "react";
 import {
   ArrowUpRight,
-  ArrowRight,
   AudioLines,
   Camera,
   CameraOff,
@@ -16,7 +15,6 @@ import {
   Copy,
   Headphones,
   HeadphoneOff,
-  Info,
   LogOut,
   Maximize,
   Mic,
@@ -26,7 +24,6 @@ import {
   Pause,
   Radio,
   Settings2,
-  ShieldCheck,
   Users,
   Volume2,
   VolumeX,
@@ -44,7 +41,7 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
-import { InstallApp } from "./components/InstallApp";
+import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import type { Participant, Publication } from "../shared/protocol";
 type Panel = "settings" | "people" | "about" | "share" | "history" | null;
@@ -201,6 +198,11 @@ export default function App({ engine }: { engine: Controller }) {
   const video = useRef<HTMLVideoElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const visibleIds = useRef(new Set<string>());
+  useEffect(() => {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", view.snapshot ? "#0b0c13" : "#f4f2e9");
+  }, [!!view.snapshot]);
   const wake = useCallback(() => {
     setActive(true);
     clearTimeout(timer.current);
@@ -308,7 +310,7 @@ export default function App({ engine }: { engine: Controller }) {
   }
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : ""} ${!active && !panel && source ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && source ? "idle" : ""}`}
       onPointerMove={wake}
       onPointerDown={wake}
       onKeyDown={wake}
@@ -346,11 +348,12 @@ export default function App({ engine }: { engine: Controller }) {
           <div className="header-actions">
             <span className="small-note">De perto, mesmo de longe.</span>
             <button
-              className="icon-button"
+              className="landing-about"
               aria-label="Como funciona o VIO"
               onClick={() => open("about")}
             >
-              <Info size={20} />
+              <span>Como funciona</span>
+              <ArrowUpRight size={16} aria-hidden="true" />
             </button>
           </div>
         )}
@@ -374,110 +377,16 @@ export default function App({ engine }: { engine: Controller }) {
         </div>
       )}
       {!view.snapshot ? (
-        <main className="entrance">
-          <section className="entrance-copy">
-            <div className="eyebrow">
-              <span className="short-rule" /> SUA PRÓXIMA SESSÃO COMEÇA AQUI
-            </div>
-            <h1>
-              Bom mesmo
-              <br />é assistir <em>junto.</em>
-            </h1>
-            <p>
-              Uma tela para compartilhar.
-              <br />
-              Voz e câmera para estar por perto.
-            </p>
-            <div className="entrance-signature" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="entrance-bottom">
-              <span>
-                <Monitor size={16} /> Tela
-              </span>
-              <span>
-                <Mic size={16} /> Voz
-              </span>
-              <span>
-                <Camera size={16} /> Câmera
-              </span>
-            </div>
-          </section>
-          <section className="join-card">
-            <div className="card-top">
-              <span className="eyebrow">SUA SALA NO VIO</span>
-              <span className="join-symbol">
-                <ArrowUpRight size={24} />
-              </span>
-            </div>
-            <h2>Chega mais.</h2>
-            <p>Escolha um nome e encontre sua turma.</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void engine.enter(name, code);
-              }}
-            >
-              <label htmlFor="your-name">Como podemos chamar você?</label>
-              <input
-                id="your-name"
-                autoComplete="nickname"
-                placeholder="Seu nome"
-                maxLength={32}
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <label htmlFor="room-code">
-                Código da sala <span>opcional</span>
-              </label>
-              <input
-                id="room-code"
-                className="mono"
-                placeholder="COLE O CÓDIGO AQUI"
-                pattern="[a-zA-Z0-9]{4,24}"
-                maxLength={24}
-                value={code}
-                onChange={(e) =>
-                  setCode(
-                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
-                  )
-                }
-              />
-              <small>Sem código? Criamos uma sala nova para você.</small>
-              <button
-                className="primary join-button"
-                disabled={
-                  view.status === "connecting" || view.status === "reconnecting"
-                }
-                type="submit"
-              >
-                {view.status === "connecting" || view.status === "reconnecting"
-                  ? "Abrindo sua sala…"
-                  : code
-                    ? "Entrar na sala"
-                    : "Criar minha sala"}
-                <ArrowRight size={19} />
-              </button>
-            </form>
-            <div className="privacy-note">
-              <ShieldCheck size={17} />
-              <span>Sem conta. Câmera e microfone começam desligados.</span>
-            </div>
-            <InstallApp />
-          </section>
-        </main>
+        <Landing
+          name={name}
+          code={code}
+          setName={setName}
+          setCode={setCode}
+          busy={view.status === "connecting" || view.status === "reconnecting"}
+          enter={() => {
+            void engine.enter(name, code);
+          }}
+        />
       ) : (
         <main className="room">
           <div className="room-heading">

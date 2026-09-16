@@ -1,6 +1,6 @@
 # VIO — produto e aceite
 
-Atualizado em 16/09/2026, versão 2.0.0. Base reescrita, com importação exclusiva
+Atualizado em 16/09/2026, versão 2.1.0. Base reescrita, com importação exclusiva
 do CHANGELOG.md histórico do VIO_2; nenhum código anterior importado.
 
 ## Objetivo
@@ -12,7 +12,7 @@ teal para transmissão, by NerdQuest Studios · fundado por Nine. AGPLv3.
 
 ## Decisões
 
-- React + TypeScript + Vite, CSS próprio, Manrope e IBM Plex Mono locais (OFL).
+- React + TypeScript + Vite, CSS próprio, Bricolage Grotesque, Instrument Serif e IBM Plex Mono locais (OFL).
 - Express e Socket.IO no mesmo servidor HTTP. Somente transporte WebSocket;
   evita afinidade de HTTP polling, mas redes que bloqueiam WebSocket impedem ingresso.
 - Uma instância, estado em memória, 6 participantes por padrão. Limite conservador,

@@ -7,9 +7,26 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.0.0";
+export const version = "2.1.0";
 export const currentRelease: Release = {
   version,
+  date: "2026-09-16",
+  title: "Uma entrada com outra presença",
+  sections: [
+    {
+      title: "Design e interação",
+      items: [
+        "Nova entrada em marfim e preto, com azul sólido e um acento verde-lima. Composição assimétrica com formulário em formato de convite.",
+        "Bricolage Grotesque e Instrument Serif substituem a tipografia anterior; fontes servidas pelo próprio app.",
+        "Prévia interativa de tela, voz e câmera, navegável por clique ou teclado, sem iniciar capturas.",
+        "Inicial personalizada ao digitar o nome, atalho direto ao formulário e feedback no botão de entrada.",
+        "Responsividade a partir de 320 px, contraste AA, foco visível e respeito à preferência de movimento reduzido. Conteúdo, salas e controles preservados.",
+      ],
+    },
+  ],
+};
+const systemRelease: Release = {
+  version: "2.0.0",
   date: "2026-09-16",
   title: "Uma nova geração do VIO",
   systemChange: true,
@@ -47,4 +64,4 @@ export const currentRelease: Release = {
     },
   ],
 };
-export const releases: Release[] = [currentRelease, ...legacy];
+export const releases: Release[] = [currentRelease, systemRelease, ...legacy];
