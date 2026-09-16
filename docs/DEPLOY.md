@@ -40,11 +40,10 @@ foram verificados. Os serviços existentes dos outros projetos não foram altera
 O segredo de sessão foi gerado para este serviço e enviado somente à configuração
 de ambiente da Render; não foi incluído no repositório.
 
-O conector usado para criar o serviço não expõe o campo de health check HTTP.
-A configuração remota ficou com `healthCheckPath` vazio (checagem de porta).
-`/healthz` está funcionando; para usá-lo como checagem HTTP da Render, configure
-esse caminho em **Settings → Health Check Path** no painel do serviço. O Blueprint
-já declara `/healthz`, mas não foi aplicado à infraestrutura criada pelo conector.
+O conector usado na criação inicial não expõe o campo de health check HTTP.
+Uma sincronização posterior do Blueprint configurou **`/healthz`** no serviço;
+essa configuração remota foi confirmada em 16/09/2026. O endpoint responde HTTP 200
+e agora também está selecionado como checagem de saúde da Render.
 
 ### Reproduzir a implantação
 

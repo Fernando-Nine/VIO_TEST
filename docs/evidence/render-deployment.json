@@ -16,7 +16,8 @@
     "status": "live",
     "port": 10000
   },
-  "httpHealthCheck": "Endpoint /healthz verificado com HTTP 200; criação via conector manteve healthCheckPath vazio na configuração Render.",
+  "httpHealthCheck": "Endpoint /healthz verificado com HTTP 200 e configurado na Render por uma sincronização posterior do Blueprint; configuração confirmada em 16/09/2026.",
+  "healthCheckPath": "/healthz",
   "browser": {
     "status": "PASS",
     "tabs": 3,
