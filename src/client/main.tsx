@@ -14,6 +14,18 @@ if (import.meta.env.DEV && location.pathname === "/qa")
     .catch(() => root.render(<App engine={engine} />));
 else root.render(<App engine={engine} />);
 const unregister = registerRoomTools(engine);
+if (import.meta.env.PROD && "serviceWorker" in navigator)
+  window.addEventListener(
+    "load",
+    () => {
+      void navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .catch(() => {
+          // Installation is optional; room and media connections remain usable.
+        });
+    },
+    { once: true },
+  );
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     unregister();

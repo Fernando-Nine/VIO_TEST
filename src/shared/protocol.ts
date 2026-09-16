@@ -95,6 +95,8 @@ export interface Participant {
 export interface Snapshot {
   epoch: string;
   code: string;
+  createdAt: number;
+  serverTime: number;
   participants: Participant[];
   maxParticipants: number;
 }

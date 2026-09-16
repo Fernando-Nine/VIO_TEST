@@ -1,0 +1,9 @@
+Chrome 151 — Web Audio com oscilador sintético — 16/09/2026
+Nenhum microfone/câmera/tela pessoal capturado.
+PASS · Indicador acende com a trilha que chega após o cartão
+PASS · Silêncio, remoção e substituição funcionam no mesmo MediaStream
+PASS · Volume real: 300% = 3.00×; 20% = 0.20×; sensibilidade preservada
+PASS · Fonte sintética sem AGC: rejeição preserva a configuração e o ganho manual
+
+Este ensaio verifica processamento local; não comprova transporte WebRTC entre redes
+nem o AGC físico de um microfone.

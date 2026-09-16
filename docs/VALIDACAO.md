@@ -1,4 +1,31 @@
-# VIO — validação da versão 0.1.0
+# VIO — validação
+
+## Atualização 2.0.0 — 16/09/2026
+
+- 12 testes automatizados aprovados: os sete casos anteriores e cinco casos novos.
+  Incluem seis ingressos e recusa do sétimo, início comum da sala, saída aplicada
+  a voz/tela/elementos futuros e rollback em falha, ping por origem, duração,
+  exclusão de navegações/sockets/salas/sessões do service worker e integridade
+  byte a byte do changelog histórico (16 versões).
+- Web Audio real, com oscilador sintético no Chrome 151: indicador ativado com
+  trilha tardia, desligado com silêncio/remoção e reativado com substituição.
+  Ganhos medidos de 0,20× e 3,00× sem alterar a sensibilidade. A trilha sintética
+  não oferece AGC; uma recusa do navegador preserva o ajuste anterior.
+- UI móvel em iframe de 390 × 844: abas, ganho até 300%, prévias desligadas
+  por padrão, duração, ping e explicação de seis pessoas conferidos.
+- Build de produção aprovado; o bundle exclui o laboratório de desenvolvimento.
+  Evidências: `evidence/tests-2.0.0.txt` e `evidence/build-2.0.0.txt`.
+- A seleção de saídas foi testada com destinos simulados; a troca audível entre
+  fone, caixa e monitor ainda depende de dispositivos físicos.
+- Manifest, ícones e worker foram implementados. A instalação pela interface
+  do sistema operacional e a captura física em celular não foram exercitadas.
+- Os resultados históricos de transporte WebRTC abaixo continuam válidos como
+  limitações do ensaio. O teste do analisador não comprova transporte entre redes.
+
+## Registro do protótipo 0.1.0
+
+As referências a quatro participantes abaixo descrevem o ensaio anterior.
+Na 2.0.0 o padrão passou a seis, com o limite de ingresso validado no servidor.
 
 Validação local em 15/09/2026; publicação na Render em 16/09/2026.
 Esta é uma base nova; não herda o aceite de versões antigas.
@@ -121,4 +148,5 @@ o teste de recepção real.
 7. Repetir em Chrome/Edge/Firefox desktop e Safari/iPhone, anotando diferenças reais
    de captura/áudio/tela cheia. Registrar CPU, upload, RTT, sistema e versões.
 
-Não aumentar o limite P2P nem anunciar aceite de produção antes dessas verificações.
+A capacidade de mídia de seis participantes ainda requer medição em dispositivos
+reais. Os testes de sinalização não constituem esse aceite.

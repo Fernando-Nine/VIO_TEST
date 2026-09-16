@@ -5,6 +5,7 @@ import App from "../src/client/App";
 import { syntheticAdapter } from "./synthetic";
 import { freshKey } from "../src/client/id";
 import { mediaDeadline } from "../src/client/media/deadline";
+import { FeatureLab } from "./FeatureLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
 async function until(condition: () => boolean, label: string, ms = 20000) {
   const start = Date.now();
@@ -83,6 +84,7 @@ export function BrowserLab() {
       a.select(bScreen);
       b.select(aScreen);
       c.select(aScreen);
+      c.setPreviews(true);
       c.previews([bScreen]);
       await mediaDeadline(
         Promise.all(
@@ -325,6 +327,7 @@ export function BrowserLab() {
   return (
     <main className="lab">
       <h1>VIO · laboratório de integração</h1>
+      <FeatureLab />
       <p>
         Fontes sintéticas. Três sessões independentes usam o servidor e conexões
         WebRTC reais. Nenhum microfone, câmera ou tela pessoal é capturado.

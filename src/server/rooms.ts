@@ -18,6 +18,7 @@ interface Member extends Participant {
 }
 interface Room {
   code: string;
+  createdAt: number;
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
   touched: number;
@@ -35,6 +36,8 @@ export class Rooms {
     return {
       epoch: this.epoch,
       code: room.code,
+      createdAt: room.createdAt,
+      serverTime: Date.now(),
       maxParticipants: this.config.maxParticipants,
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
@@ -200,6 +203,7 @@ export class Rooms {
           );
         room = {
           code,
+          createdAt: Date.now(),
           members: new Map(),
           subscriptions: new Map(),
           touched: Date.now(),

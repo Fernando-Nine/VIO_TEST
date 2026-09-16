@@ -1,6 +1,7 @@
 # VIO — produto e aceite
 
-Data: 15/09/2026. Base nova 0.1.0, sem importar versões ou código históricos.
+Atualizado em 16/09/2026, versão 2.0.0. Base reescrita, com importação exclusiva
+do CHANGELOG.md histórico do VIO_2; nenhum código anterior importado.
 
 ## Objetivo
 
@@ -14,12 +15,13 @@ teal para transmissão, by NerdQuest Studios · fundado por Nine. AGPLv3.
 - React + TypeScript + Vite, CSS próprio, Manrope e IBM Plex Mono locais (OFL).
 - Express e Socket.IO no mesmo servidor HTTP. Somente transporte WebSocket;
   evita afinidade de HTTP polling, mas redes que bloqueiam WebSocket impedem ingresso.
-- Uma instância, estado em memória, 4 participantes por padrão. Limite conservador,
+- Uma instância, estado em memória, 6 participantes por padrão. Limite conservador,
   não promessa de capacidade comprovada em todos os dispositivos.
 - Uma conexão WebRTC por assinatura dirigida. O publicador sempre oferece; o
   espectador responde. Telas cruzadas usam conexões distintas e não disputam ofertas.
 - Miniatura gerada uma vez na origem, em canvas de 320 × 180 / até 5 FPS,
-  sem áudio, com limite de 90 kbps por assinatura. No máximo duas por espectador.
+  sem áudio, com limite de 90 kbps por assinatura. No máximo duas por espectador, desligadas por padrão. A preferência local
+  mostra iniciais quando não há prévias.
 - Somente uma tela principal por espectador. Câmera até 450 kbps/20 FPS por peer.
 - Códigos de sala gerados com 64 bits aleatórios. Códigos escolhidos manualmente
   podem ser previsíveis; o app permite seu uso para grupos pequenos, com rate limit.
