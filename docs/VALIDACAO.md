@@ -1,10 +1,13 @@
 # VIO — validação da versão 0.1.0
 
-Data: 15/09/2026. Esta é uma base nova; não herda o aceite de versões antigas.
+Validação local em 15/09/2026; publicação na Render em 16/09/2026.
+Esta é uma base nova; não herda o aceite de versões antigas.
 
 **O aceite completo de mídia permanece pendente.** Build, servidor e controles
 locais passaram. O ensaio de transmissão no navegador não estabeleceu uma rota
-WebRTC. Não foi publicado um serviço Render nesta execução.
+WebRTC. O serviço Render foi publicado em https://vio-test.onrender.com/ e três
+participantes foram conectados à mesma sala por HTTPS/WSS. Isso comprova presença
+e sinalização, mas não transporte de mídia entre dispositivos.
 
 ## Ambiente e método
 
@@ -37,9 +40,20 @@ WebRTC. Não foi publicado um serviço Render nesta execução.
 | Preset Baixa | PASS da captura sintética; envio não comprovado | `getSettings()` exibido na UI mudou de 24 para 15 FPS; limite solicitado 700 kbps e escala 2; envio continuou 0 kbps |
 | Sons dos controles | PASS da preferência na UI; escuta não validada | Checkbox ativado e confirmado; os seis sons são sintetizados por Web Audio |
 | Painéis e teclado | PASS nos fluxos exercitados | Ajustes abriu em desktop/mobile; Escape fechou sem deixar dialog aberto |
-| WebMCP opcional | Indisponível neste contexto | O navegador retornou `modelContext is unavailable`; registro por feature detection |
+| WebMCP opcional | Leitura da sala PASS em HTTPS | Indisponível no preview inicial; `get_vio_room` retornou três IDs distintos e online no serviço publicado |
+| Publicação Render | PASS | Build remoto, estado `live`, processo na porta 10000 e HTTPS funcionando; `evidence/render-deployment.json` |
+| Presença pública em três sessões | PASS | Três abas do navegador, nomes e IDs distintos; indicador “3 de 4”, status `connected` |
+| Verificação pública por CLI | HTTP PASS; WSS FAIL nesse cliente | `evidence/render-public-smoke.json`: saúde, CSP/HSTS, página, configuração, fonte e recusa de origem passaram; conexão Socket.IO do cliente Node retornou `websocket error`. As três sessões no navegador conectaram normalmente. |
 
 As observações de UI estão consolidadas em `evidence/ui-observations.json`.
+
+A checagem pública pode ser repetida com
+`node --use-env-proxy scripts/check-deployment.mjs https://vio-test.onrender.com`.
+O script abre sessões temporárias, exercita sinalização sem enviar mídia e fecha
+as próprias conexões ao terminar. A primeira requisição admite a retomada do plano
+Free. O erro WSS no cliente de terminal não foi atribuído definitivamente à rede ou
+à biblioteca; ele não invalida a presença observada nas três abas do navegador,
+nem permite afirmar que transporte WebRTC foi validado.
 
 Os testes do servidor verificam tokens adulterados/expirados, nomes iguais, duas
 publicações simultâneas, assinatura principal seletiva, cancelamento de miniatura,
@@ -85,13 +99,13 @@ o teste de recepção real.
 | Segurança | Zod, Helmet, Origin, HMAC e rate limits | sete testes e auditoria de dependências | PASS nos casos definidos; não é auditoria completa |
 | Identidade, versão e histórico | CSS, fontes OFL, releases.ts, AGPLv3 | build e inspeção visual | PASS para artefatos; leitor de tela/AA formal pendentes |
 | Ocultação por inatividade e movimento reduzido | timers/foco, CSS media query | inspeção de implementação | Ensaio completo com mídia/teclado/movimento reduzido pendente |
-| Render | Um Web Service, HTTPS/WSS e porta runtime | conexão da conta e esquema validado | Confirmar workspace e vincular repositório novo; deploy pendente |
+| Render | Um Web Service, HTTPS/WSS e porta runtime | deploy live e três participantes no domínio público | Publicação/presença PASS; mídia real e recuperação com mídia pendentes |
 | Node e Docker portáveis | build/start, Dockerfile/compose/proxy docs | processo Node compilado | Node PASS; Docker não executado (daemon indisponível) |
 | Limite de quatro pessoas | configuração conservadora | três sessões sintéticas | Medir CPU/upload reais antes de ampliar |
 
 ## Próximo ensaio de mídia
 
-1. Executar o projeto em `http://localhost:3000` ou publicar a base nova em HTTPS.
+1. Usar https://vio-test.onrender.com/ para o teste público ou executar o projeto em `http://localhost:3000`.
    Rodar `npm run test:media` e abrir `/qa` apenas no desenvolvimento. Salvar o JSON.
 2. Em três navegadores/dispositivos, publicar duas telas reais simultaneamente com
    vozes e câmeras. Alternar a principal e comparar bytes/bitrate/resolução no diagnóstico.

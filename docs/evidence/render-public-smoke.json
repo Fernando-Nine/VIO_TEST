@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-16T12:20:15.617Z",
+  "origin": "https://vio-test.onrender.com",
+  "checks": [
+    "HTTPS, healthz, CSP e HSTS",
+    "Página principal, configuração pública e laboratório desativado",
+    "Código-fonte disponível para download",
+    "Sessão de origem externa recusada"
+  ],
+  "mediaTransport": "NOT_TESTED",
+  "status": "FAIL",
+  "error": "websocket error"
+}

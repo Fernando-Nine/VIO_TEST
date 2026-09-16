@@ -5,8 +5,9 @@ Uma sala para compartilhar tela, conversar e assistir com amigos.
 **by NerdQuest Studios · fundado por Nine**  
 Nova implementação **0.1.0** · **AGPLv3** · **Node 24**
 
-Destino definido em 16/09/2026: repositório privado **Fernando-Nine/VIO_TEST**,
-criado pelo usuário, e novo serviço Render **vio-test**, com implantação pendente.
+Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
+Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
+**vio-test**, plano Free, região Virginia, uma instância.
 Os repositórios **VIO** e **VIO_2** não fazem parte desta entrega e não devem ser alterados.
 
 Este projeto foi criado do zero. O histórico e o código do VIO anterior não foram

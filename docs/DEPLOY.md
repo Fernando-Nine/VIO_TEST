@@ -25,15 +25,28 @@ O usuário criou VIO_TEST como repositório privado. O acesso de leitura e escri
 foi confirmado na conta Fernando-Nine em 16/09/2026. O código deste projeto é
 destinado exclusivamente a esse repositório.
 
-“My Workspace” é o nome do espaço na conta Render que agrupa serviços. Não é o
-nome de um repositório nem o nome do aplicativo. A confirmação de uso desse espaço
-continua pendente; nenhum serviço Render foi criado ou alterado.
+O usuário confirmou o espaço **My Workspace** e o plano **Free** em 16/09/2026.
+Foi criado exclusivamente o serviço **vio-test**, região **Virginia**, uma instância,
+ligado à branch `main` do VIO_TEST com publicação automática.
 
-Nesta execução, a conexão Render respondeu à listagem de workspaces. A ferramenta
-exigiu confirmação explícita do workspace antes de listar serviços. A publicação
-na Render é o próximo passo, após confirmar o workspace; nenhum
-serviço existente foi alterado. O manifesto passou no JSON Schema oficial, com
-registro em `evidence/render-schema.json`. Isso não substitui um deploy real.
+- Aplicação: https://vio-test.onrender.com/
+- Painel: https://dashboard.render.com/web/srv-dal01nlg1s2s73dor200
+- Serviço: `srv-dal01nlg1s2s73dor200`.
+- Deploy inicial: `dep-dal01odg1s2s73dor4hg`, estado `live`, commit `569537a79acd81eb373024383ab99b6660768016`.
+
+O build remoto passou e o processo escutou a porta 10000 fornecida pela Render.
+HTTPS, API pública, código-fonte e entrada de três participantes no navegador
+foram verificados. Os serviços existentes dos outros projetos não foram alterados.
+O segredo de sessão foi gerado para este serviço e enviado somente à configuração
+de ambiente da Render; não foi incluído no repositório.
+
+O conector usado para criar o serviço não expõe o campo de health check HTTP.
+A configuração remota ficou com `healthCheckPath` vazio (checagem de porta).
+`/healthz` está funcionando; para usá-lo como checagem HTTP da Render, configure
+esse caminho em **Settings → Health Check Path** no painel do serviço. O Blueprint
+já declara `/healthz`, mas não foi aplicado à infraestrutura criada pelo conector.
+
+### Reproduzir a implantação
 
 1. Coloque este projeto no novo repositório VIO_TEST, incluindo o lockfile.
 2. Na Render, crie um Blueprint a partir do repositório e revise `render.yaml`.
@@ -43,8 +56,8 @@ registro em `evidence/render-schema.json`. Isso não substitui um deploy real.
    automaticamente; para domínio próprio, acrescente sua origem HTTPS em `ALLOWED_ORIGINS`.
 6. Adicione TURN apenas se tiver um servidor ou serviço compatível; veja TURN.md.
 7. Abra `/healthz`, crie uma sala em dois dispositivos e execute a matriz de validação.
-8. Teste um deploy/reinício com a sala aberta. A própria Render ainda precisa ser
-   validada na sua conta: nenhum serviço foi publicado nesta execução.
+8. Teste um deploy/reinício com a sala aberta e mídias ativas. A publicação e a
+   sinalização não substituem o aceite de mídia descrito em VALIDACAO.md.
 
 O servidor escuta `0.0.0.0` e `process.env.PORT`. HTTPS termina no proxy da Render,
 que encaminha HTTP ao processo; o navegador usa HTTPS/WSS. O único hop confiável no

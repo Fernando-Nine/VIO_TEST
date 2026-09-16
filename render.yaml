@@ -2,6 +2,7 @@ services:
   - type: web
     name: vio-test
     runtime: node
+    region: virginia
     plan: free
     numInstances: 1
     buildCommand: npm ci --include=dev && npm run build

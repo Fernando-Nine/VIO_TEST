@@ -6,9 +6,9 @@ Versão 0.1.0, criada do zero em 15/09/2026. Não deriva da antiga 1.2.0.
 
 O usuário criou o novo repositório privado **Fernando-Nine/VIO_TEST**. O acesso
 de leitura e escrita foi confirmado em 16/09/2026. Esta base usa exclusivamente
-esse repositório; a implantação no Render ainda precisa ser realizada.
-VIO e VIO_2 estão fora do escopo de alterações. O serviço previsto no render.yaml
-agora se chama **vio-test**; sua criação no Render também permanece pendente.
+esse repositório. O serviço **vio-test** foi publicado em 16/09/2026 no My Workspace,
+plano Free, região Virginia, uma instância: https://vio-test.onrender.com/.
+VIO e VIO_2 estão fora do escopo de alterações e não foram alterados.
 
 ## Implementado
 
@@ -39,7 +39,7 @@ Consulte `docs/VALIDACAO.md` e `docs/evidence/media-browser.json`.
 
 ## Dependências externas
 
-- Render conectado; publicação depende da confirmação do workspace e do acesso da Render ao repositório privado VIO_TEST. O esquema do Blueprint passou; nenhum serviço foi criado ou alterado.
+- Render publicado e respondendo por HTTPS; entrada em sala confirmada no navegador. Testes de mídia entre dispositivos e recuperação durante deploy permanecem pendentes.
 - Relay TURN real: sem servidor/credenciais de relay configurados.
 - Captura física, revogação de permissão e reprodução em Safari/iPhone: dependem de
   navegador em HTTPS/localhost e dispositivos reais.

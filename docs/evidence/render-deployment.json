@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-16",
+  "serviceName": "vio-test",
+  "serviceId": "srv-dal01nlg1s2s73dor200",
+  "workspace": "My Workspace",
+  "repo": "https://github.com/Fernando-Nine/VIO_TEST",
+  "branch": "main",
+  "plan": "free",
+  "region": "virginia",
+  "numInstances": 1,
+  "url": "https://vio-test.onrender.com/",
+  "dashboardUrl": "https://dashboard.render.com/web/srv-dal01nlg1s2s73dor200",
+  "initialDeploy": {
+    "id": "dep-dal01odg1s2s73dor4hg",
+    "commit": "569537a79acd81eb373024383ab99b6660768016",
+    "status": "live",
+    "port": 10000
+  },
+  "httpHealthCheck": "Endpoint /healthz verificado com HTTP 200; criação via conector manteve healthCheckPath vazio na configuração Render.",
+  "browser": {
+    "status": "PASS",
+    "tabs": 3,
+    "distinctParticipantIds": 3,
+    "roomStatus": "connected",
+    "participantIndicator": "3 de 4",
+    "webmcpGetRoom": "PASS",
+    "mediaTransport": "NOT_TESTED"
+  },
+  "mediaAcceptance": "PENDING: áudio/vídeo/tela entre dispositivos, TURN e recuperação com mídia."
+}
