@@ -61,9 +61,20 @@ try {
   assert.match(await root.text(), /VIO/);
   const config = await (await request("/api/config")).json();
   assert.equal(config.testLab, false);
-  assert.equal(config.maxParticipants, 4);
+  assert.equal(config.maxParticipants, 6);
   checks.push(
     "Página principal, configuração pública e laboratório desativado",
+  );
+  const manifest = await (await request("/manifest.webmanifest")).json();
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.icons.length, 3);
+  const worker = await request("/sw.js");
+  assert.equal(worker.status, 200);
+  assert.match(worker.headers.get("cache-control"), /no-cache/);
+  assert.match(worker.headers.get("content-type"), /javascript/);
+  assert.match(await worker.text(), /vio-static-2\.1\.0/);
+  checks.push(
+    "Manifest e service worker 2.1.0 entregues com cache de atualização correto",
   );
   const source = await request("/source.tar.gz");
   assert.equal(source.status, 200);

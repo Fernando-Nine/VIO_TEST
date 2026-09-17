@@ -20,7 +20,7 @@ services:
       - key: WEB_CONCURRENCY
         value: "1"
       - key: MAX_PARTICIPANTS
-        value: "4"
+        value: "6"
       - key: MAX_ROOMS
         value: "200"
       - key: STUN_URLS

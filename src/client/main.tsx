@@ -1,10 +1,12 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import "@fontsource-variable/manrope";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource/instrument-serif/latin-400-italic.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import App from "./App";
 import { Controller } from "./room/controller";
 import "./styles.css";
+import "./landing.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
 const engine = new Controller();
@@ -14,6 +16,18 @@ if (import.meta.env.DEV && location.pathname === "/qa")
     .catch(() => root.render(<App engine={engine} />));
 else root.render(<App engine={engine} />);
 const unregister = registerRoomTools(engine);
+if (import.meta.env.PROD && "serviceWorker" in navigator)
+  window.addEventListener(
+    "load",
+    () => {
+      void navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .catch(() => {
+          // Installation is optional; room and media connections remain usable.
+        });
+    },
+    { once: true },
+  );
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     unregister();

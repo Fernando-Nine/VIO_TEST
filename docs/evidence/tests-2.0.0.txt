@@ -1,0 +1,22 @@
+npm test — Node 24.19.0 — 16/09/2026
+
+✔ ping distingue sinalização e tela, latência e conexão interrompida (2.053784ms)
+✔ saída muda voz, tela e elementos futuros; falha reverte a seleção (3.070841ms)
+✔ service worker jamais intercepta navegação, sala, sessão ou socket (31.242801ms)
+✔ changelog preserva o arquivo original inteiro e continua em 2.0.0 (4.48738ms)
+✔ tokens assinados rejeitam adulteração e expiração (4.28053ms)
+✔ seis pessoas entram, a sétima é recusada e a duração pertence à sala (227.270313ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (52.822355ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (22.605478ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (28.728311ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (26.962645ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (21.515463ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (13.78483ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1323.182236

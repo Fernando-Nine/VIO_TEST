@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Play, VideoOff } from "lucide-react";
+import { observeVoiceActivity } from "../media/voice-activity";
+import type { AudioOutput } from "../media/audio-output";
 export function Media({
   stream,
   muted = true,
@@ -7,6 +9,7 @@ export function Media({
   className = "",
   label,
   videoRef,
+  output,
 }: {
   stream?: MediaStream;
   muted?: boolean;
@@ -14,6 +17,7 @@ export function Media({
   className?: string;
   label: string;
   videoRef?: RefObject<HTMLVideoElement | null>;
+  output?: AudioOutput;
 }) {
   const localRef = useRef<HTMLVideoElement>(null);
   const ref = videoRef || localRef;
@@ -22,16 +26,24 @@ export function Media({
     const el = ref.current;
     if (!el) return;
     el.srcObject = stream || null;
-    if (stream)
-      void el
-        .play()
-        .then(() => setBlocked(false))
-        .catch(() => setBlocked(true));
+    const play = () => {
+      if (stream)
+        void el
+          .play()
+          .then(() => setBlocked(false))
+          .catch(() => setBlocked(true));
+    };
+    play();
+    stream?.addEventListener("addtrack", play);
     return () => {
+      stream?.removeEventListener("addtrack", play);
       el.pause();
       el.srcObject = null;
     };
   }, [stream, ref]);
+  useEffect(() => {
+    if (ref.current && output?.supported) return output.register(ref.current);
+  }, [output, ref]);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -70,11 +82,13 @@ export function RemoteVoice({
   muted,
   volume,
   label,
+  output,
 }: {
   stream?: MediaStream;
   muted: boolean;
   volume: number;
   label: string;
+  output?: AudioOutput;
 }) {
   const ref = useRef<HTMLAudioElement>(null);
   const [blocked, setBlocked] = useState(false);
@@ -84,16 +98,24 @@ export function RemoteVoice({
     el.srcObject = stream || null;
     el.muted = muted;
     el.volume = volume;
-    if (stream)
-      void el
-        .play()
-        .then(() => setBlocked(false))
-        .catch(() => setBlocked(true));
+    const play = () => {
+      if (stream)
+        void el
+          .play()
+          .then(() => setBlocked(false))
+          .catch(() => setBlocked(true));
+    };
+    play();
+    stream?.addEventListener("addtrack", play);
     return () => {
+      stream?.removeEventListener("addtrack", play);
       el.pause();
       el.srcObject = null;
     };
   }, [stream, muted, volume]);
+  useEffect(() => {
+    if (ref.current && output?.supported) return output.register(ref.current);
+  }, [output]);
   return (
     <>
       <audio ref={ref} aria-label={label} autoPlay />
@@ -115,43 +137,11 @@ export function useSpeaking(
 ) {
   const [speaking, setSpeaking] = useState(false);
   useEffect(() => {
+    setSpeaking(false);
     if (muted || (!stream && !localLevel)) {
-      setSpeaking(false);
       return;
     }
-    let context: AudioContext | undefined,
-      source: MediaStreamAudioSourceNode | undefined,
-      analyser: AnalyserNode | undefined,
-      hold = 0;
-    const buffer = new Float32Array(256);
-    if (stream?.getAudioTracks().length && !localLevel) {
-      context = new AudioContext();
-      source = context.createMediaStreamSource(stream);
-      analyser = context.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      void context.resume();
-    }
-    const resume = () => void context?.resume();
-    window.addEventListener("pointerdown", resume);
-    const timer = setInterval(() => {
-      let level = localLevel?.() || 0;
-      if (analyser) {
-        analyser.getFloatTimeDomainData(buffer);
-        level =
-          Math.sqrt(buffer.reduce((sum, v) => sum + v * v, 0) / buffer.length) *
-          8;
-      }
-      if (level > 0.025) hold = Date.now() + 200;
-      setSpeaking(Date.now() < hold);
-    }, 100);
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener("pointerdown", resume);
-      source?.disconnect();
-      analyser?.disconnect();
-      void context?.close();
-    };
+    return observeVoiceActivity(stream, setSpeaking, localLevel);
   }, [stream, muted, localLevel]);
   return speaking;
 }

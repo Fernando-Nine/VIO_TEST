@@ -52,6 +52,7 @@ export class Captures {
   micMuted = false;
   deaf = false;
   threshold = -55;
+  manualGain = 1;
   voiceLevel = 0;
   voiceSettings = {
     echoCancellation: true,
@@ -67,6 +68,7 @@ export class Captures {
   private context?: AudioContext;
   private input?: MediaStreamAudioSourceNode;
   private gate?: GainNode;
+  private voiceGain?: GainNode;
   private analyser?: AnalyserNode;
   private voiceTimer?: ReturnType<typeof setInterval>;
   private thumbnail?: {
@@ -78,7 +80,13 @@ export class Captures {
   constructor(
     private adapter: CaptureAdapter = browserCapture,
     private changed: (kind: Kind, ended?: boolean) => void = () => {},
-  ) {}
+  ) {
+    if (
+      typeof navigator !== "undefined" &&
+      !navigator.mediaDevices?.getSupportedConstraints().autoGainControl
+    )
+      this.voiceSettings.autoGainControl = false;
+  }
   private save(kind: Kind, stream: MediaStream) {
     const previous = this.sources.get(kind);
     const source = { kind, key: previous?.key || freshKey(), stream };
@@ -133,6 +141,7 @@ export class Captures {
       raw = await this.adapter.device({
         audio: {
           ...this.voiceSettings,
+          autoGainControl: { exact: this.voiceSettings.autoGainControl },
           ...(this.micDevice ? { deviceId: { exact: this.micDevice } } : {}),
         },
         video: false,
@@ -148,10 +157,15 @@ export class Captures {
     this.analyser.fftSize = 512;
     this.gate = this.context.createGain();
     this.gate.gain.value = 0;
+    this.voiceGain = this.context.createGain();
+    this.voiceGain.gain.value = this.voiceSettings.autoGainControl
+      ? 1
+      : this.manualGain;
     const destination = this.context.createMediaStreamDestination();
     this.input.connect(this.analyser);
     this.input.connect(this.gate);
-    this.gate.connect(destination);
+    this.gate.connect(this.voiceGain);
+    this.voiceGain.connect(destination);
     const buffer = new Float32Array(this.analyser.fftSize);
     let hold = 0;
     let open = false;
@@ -193,6 +207,7 @@ export class Captures {
     const stream = await this.adapter.device({
       audio: {
         ...this.voiceSettings,
+        autoGainControl: { exact: this.voiceSettings.autoGainControl },
         ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
       },
       video: false,
@@ -222,8 +237,26 @@ export class Captures {
   }
   async setVoiceSettings(settings: typeof this.voiceSettings) {
     const track = this.rawVoice?.getAudioTracks()[0];
-    if (track) await track.applyConstraints(settings);
+    if (track)
+      await mediaDeadline(
+        track.applyConstraints({
+          ...settings,
+          autoGainControl: { exact: settings.autoGainControl },
+        }),
+        "O navegador não confirmou os ajustes do microfone.",
+      );
     this.voiceSettings = settings;
+    this.setManualGain(this.manualGain);
+  }
+  setManualGain(value: number) {
+    if (!Number.isFinite(value)) return;
+    this.manualGain = Math.min(3, Math.max(0.2, value));
+    if (this.voiceGain && this.context)
+      this.voiceGain.gain.setTargetAtTime(
+        this.voiceSettings.autoGainControl ? 1 : this.manualGain,
+        this.context.currentTime,
+        0.015,
+      );
   }
   voiceEffective() {
     return this.rawVoice?.getAudioTracks()[0]?.getSettings();
@@ -352,6 +385,8 @@ export class Captures {
       this.input?.disconnect();
       this.analyser?.disconnect();
       this.gate?.disconnect();
+      this.voiceGain?.disconnect();
+      this.voiceGain = undefined;
       void this.context?.close();
       this.rawVoice = undefined;
       this.context = undefined;

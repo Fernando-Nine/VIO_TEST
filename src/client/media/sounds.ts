@@ -1,3 +1,4 @@
+import type { AudioOutput } from "./audio-output";
 export type Cue =
   | "share-on"
   | "share-off"
@@ -7,16 +8,28 @@ export type Cue =
   | "undeafen";
 export class SoundCues {
   private context?: AudioContext;
+  private unregister?: () => void;
+  constructor(private output?: AudioOutput) {}
   unlock() {
     try {
-      this.context ??= new AudioContext();
+      if (!this.context) {
+        this.context = new AudioContext();
+        const context = this.context as AudioContext & {
+          setSinkId?: (id: string) => Promise<void>;
+        };
+        if (typeof context.setSinkId === "function")
+          this.unregister = this.output?.register(
+            context as AudioContext & { setSinkId(id: string): Promise<void> },
+          );
+      }
       void this.context.resume();
     } catch {}
   }
-  play(cue: Cue) {
+  async play(cue: Cue) {
     this.unlock();
+    await this.output?.ready();
     const context = this.context;
-    if (!context) return;
+    if (!context || context.state === "closed") return;
     const notes: Record<Cue, number[]> = {
       "share-on": [440, 660],
       "share-off": [660, 330],
@@ -45,6 +58,7 @@ export class SoundCues {
     });
   }
   close() {
+    this.unregister?.();
     void this.context?.close();
     this.context = undefined;
   }

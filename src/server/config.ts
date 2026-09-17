@@ -125,7 +125,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     sessionTtl: integer(env.SESSION_TTL_SECONDS, 3600, 300, 86400) * 1000,
     grace: integer(env.RECONNECT_GRACE_SECONDS, 90, 10, 300) * 1000,
     roomTtl: integer(env.ROOM_TTL_SECONDS, 300, 10, 3600) * 1000,
-    maxParticipants: integer(env.MAX_PARTICIPANTS, 4, 2, 6),
+    maxParticipants: integer(env.MAX_PARTICIPANTS, 6, 2, 6),
     maxRooms: integer(env.MAX_ROOMS, 200, 1, 10000),
     maxPreviews: 2,
     maxSocketsPerIp: integer(env.MAX_SOCKETS_PER_IP, 20, 4, 200),

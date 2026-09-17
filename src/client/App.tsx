@@ -7,7 +7,6 @@ import {
 } from "react";
 import {
   ArrowUpRight,
-  ArrowRight,
   AudioLines,
   Camera,
   CameraOff,
@@ -16,7 +15,6 @@ import {
   Copy,
   Headphones,
   HeadphoneOff,
-  Info,
   LogOut,
   Maximize,
   Mic,
@@ -26,7 +24,6 @@ import {
   Pause,
   Radio,
   Settings2,
-  ShieldCheck,
   Users,
   Volume2,
   VolumeX,
@@ -39,6 +36,12 @@ import { Controller } from "./room/controller";
 import { Media, RemoteVoice, useSpeaking } from "./components/Media";
 import { Dialog } from "./components/Dialog";
 import { Settings } from "./components/Settings";
+import {
+  ConnectionStatus,
+  RoomTimer,
+  RoomLimit,
+} from "./components/RoomStatus";
+import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
 import type { Participant, Publication } from "../shared/protocol";
@@ -70,7 +73,7 @@ function Person({
   const level = useCallback(() => engine.captures.voiceLevel, [engine]);
   const speaking = useSpeaking(
     stream,
-    !!voice?.muted || !voice,
+    !!voice?.muted || !voice || !person.online,
     own ? level : undefined,
   );
   const cameraStream = camera
@@ -129,8 +132,12 @@ function Preview({
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const own = publication.owner === engine.view.id;
+  const selected = engine.view.selected === publication.id;
   useEffect(() => {
-    if (!ref.current) return;
+    if (!ref.current || !visible || !engine.previewsEnabled) {
+      onVisible(publication.id, false);
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         onVisible(publication.id, entries[0].isIntersecting && visible);
@@ -142,11 +149,13 @@ function Preview({
       observer.disconnect();
       onVisible(publication.id, false);
     };
-  }, [publication.id, visible, onVisible]);
-  const selected = engine.view.selected === publication.id;
-  const stream = own
-    ? engine.captures.sources.get("screen")?.stream
-    : engine.peers.stream(publication.id, selected ? "main" : "preview");
+  }, [publication.id, visible, onVisible, engine.previewsEnabled, selected]);
+  const stream =
+    !engine.previewsEnabled || !visible
+      ? undefined
+      : own
+        ? engine.captures.sources.get("screen")?.stream
+        : engine.peers.stream(publication.id, selected ? "main" : "preview");
   return (
     <button
       ref={ref}
@@ -159,7 +168,9 @@ function Preview({
         {stream ? (
           <Media stream={stream} label={`Miniatura de ${name}`} />
         ) : (
-          <Monitor size={22} />
+          <span className="preview-initial">
+            {[...name.trim()][0]?.toUpperCase() || "?"}
+          </span>
         )}
         <span className="preview-live">AO VIVO</span>
       </div>
@@ -188,6 +199,11 @@ export default function App({ engine }: { engine: Controller }) {
   const video = useRef<HTMLVideoElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const visibleIds = useRef(new Set<string>());
+  useEffect(() => {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", view.snapshot ? "#0b0c13" : "#f4f2e9");
+  }, [!!view.snapshot]);
   const wake = useCallback(() => {
     setActive(true);
     clearTimeout(timer.current);
@@ -292,16 +308,9 @@ export default function App({ engine }: { engine: Controller }) {
       engine.fail(e);
     }
   }
-  const connectionText = {
-    idle: "Fora da sala",
-    connecting: "Conectando",
-    connected: "Sala conectada",
-    reconnecting: "Reconectando",
-    failed: "Conexão interrompida",
-  }[view.status];
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : ""} ${!active && !panel && source ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && source ? "idle" : ""}`}
       onPointerMove={wake}
       onPointerDown={wake}
       onKeyDown={wake}
@@ -326,19 +335,10 @@ export default function App({ engine }: { engine: Controller }) {
         </div>
         {view.snapshot ? (
           <div className="header-actions">
-            <button
-              className={`connection ${view.status}`}
-              onClick={() => open("about")}
-              title={`Sinalização: ${view.signalingPing ?? "—"} ms · Mídia: ${mediaStats?.rtt ?? "—"} ms`}
-            >
-              <span className="connection-dot" />
-              {connectionText}
-              <span className="technical">
-                {mediaStats?.rtt !== undefined
-                  ? `${mediaStats.rtt} ms mídia`
-                  : "— ms mídia"}
-              </span>
-            </button>
+            <ConnectionStatus
+              engine={engine}
+              diagnostics={() => open("about")}
+            />
             <button className="secondary invite" onClick={() => void copy()}>
               {copied ? <Check size={16} /> : <LinkIcon size={16} />}
               <span>{copied ? "Copiado" : "Convidar"}</span>
@@ -348,11 +348,12 @@ export default function App({ engine }: { engine: Controller }) {
           <div className="header-actions">
             <span className="small-note">De perto, mesmo de longe.</span>
             <button
-              className="icon-button"
+              className="landing-about"
               aria-label="Como funciona o VIO"
               onClick={() => open("about")}
             >
-              <Info size={20} />
+              <span>Como funciona</span>
+              <ArrowUpRight size={16} aria-hidden="true" />
             </button>
           </div>
         )}
@@ -376,109 +377,16 @@ export default function App({ engine }: { engine: Controller }) {
         </div>
       )}
       {!view.snapshot ? (
-        <main className="entrance">
-          <section className="entrance-copy">
-            <div className="eyebrow">
-              <span className="short-rule" /> SUA PRÓXIMA SESSÃO COMEÇA AQUI
-            </div>
-            <h1>
-              Bom mesmo
-              <br />é assistir <em>junto.</em>
-            </h1>
-            <p>
-              Uma tela para compartilhar.
-              <br />
-              Voz e câmera para estar por perto.
-            </p>
-            <div className="entrance-signature" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="entrance-bottom">
-              <span>
-                <Monitor size={16} /> Tela
-              </span>
-              <span>
-                <Mic size={16} /> Voz
-              </span>
-              <span>
-                <Camera size={16} /> Câmera
-              </span>
-            </div>
-          </section>
-          <section className="join-card">
-            <div className="card-top">
-              <span className="eyebrow">SUA SALA NO VIO</span>
-              <span className="join-symbol">
-                <ArrowUpRight size={24} />
-              </span>
-            </div>
-            <h2>Chega mais.</h2>
-            <p>Escolha um nome e encontre sua turma.</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void engine.enter(name, code);
-              }}
-            >
-              <label htmlFor="your-name">Como podemos chamar você?</label>
-              <input
-                id="your-name"
-                autoComplete="nickname"
-                placeholder="Seu nome"
-                maxLength={32}
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <label htmlFor="room-code">
-                Código da sala <span>opcional</span>
-              </label>
-              <input
-                id="room-code"
-                className="mono"
-                placeholder="COLE O CÓDIGO AQUI"
-                pattern="[a-zA-Z0-9]{4,24}"
-                maxLength={24}
-                value={code}
-                onChange={(e) =>
-                  setCode(
-                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
-                  )
-                }
-              />
-              <small>Sem código? Criamos uma sala nova para você.</small>
-              <button
-                className="primary join-button"
-                disabled={
-                  view.status === "connecting" || view.status === "reconnecting"
-                }
-                type="submit"
-              >
-                {view.status === "connecting" || view.status === "reconnecting"
-                  ? "Abrindo sua sala…"
-                  : code
-                    ? "Entrar na sala"
-                    : "Criar minha sala"}
-                <ArrowRight size={19} />
-              </button>
-            </form>
-            <div className="privacy-note">
-              <ShieldCheck size={17} />
-              <span>Sem conta. Câmera e microfone começam desligados.</span>
-            </div>
-          </section>
-        </main>
+        <Landing
+          name={name}
+          code={code}
+          setName={setName}
+          setCode={setCode}
+          busy={view.status === "connecting" || view.status === "reconnecting"}
+          enter={() => {
+            void engine.enter(name, code);
+          }}
+        />
       ) : (
         <main className="room">
           <div className="room-heading">
@@ -489,12 +397,16 @@ export default function App({ engine }: { engine: Controller }) {
                   ? "Todo mundo na mesma cena."
                   : "Sua companhia está aqui."}
               </h1>
+              <RoomTimer engine={engine} />
             </div>
-            <button className="text-button" onClick={() => open("people")}>
-              <Users size={17} />
-              {people.length} de {view.snapshot.maxParticipants}
-              <ChevronDown size={14} />
-            </button>
+            <div className="room-capacity">
+              <button className="text-button" onClick={() => open("people")}>
+                <Users size={17} />
+                {people.length} de {view.snapshot.maxParticipants}
+                <ChevronDown size={14} />
+              </button>
+              <RoomLimit limit={view.snapshot.maxParticipants} />
+            </div>
           </div>
           <div className="player-layout">
             <div className="player" ref={player}>
@@ -520,6 +432,7 @@ export default function App({ engine }: { engine: Controller }) {
                   videoRef={video}
                   muted={muted}
                   volume={engine.screenVolume}
+                  output={ownScreen ? undefined : engine.output}
                 />
               ) : (
                 <div className="player-empty">
@@ -762,6 +675,7 @@ export default function App({ engine }: { engine: Controller }) {
               <RemoteVoice
                 key={p.id}
                 stream={engine.peers.stream(p.id)}
+                output={engine.output}
                 muted={engine.captures.deaf || engine.remoteMute}
                 volume={engine.volumes.get(p.owner) ?? 1}
                 label={
@@ -978,17 +892,38 @@ export default function App({ engine }: { engine: Controller }) {
           )}
           {panel === "history" && (
             <>
+              <div className="system-change">
+                <span className="eyebrow">MUDANÇA DE SISTEMA · 2.0.0</span>
+                <h3>Uma nova geração, com a mesma história.</h3>
+                <p>
+                  O VIO foi reescrito do zero. A numeração continua depois da
+                  1.9.0. As versões abaixo da 2.0.0 registram o sistema
+                  anterior, com o changelog integral preservado.
+                </p>
+              </div>
               {releases.map((release) => (
-                <article className="release" key={release.version}>
+                <article
+                  className={`release ${release.legacy ? "legacy-release" : ""}`}
+                  key={release.version}
+                >
                   <span className="eyebrow">
-                    {release.date} · V{release.version}
+                    V{release.version}
+                    {release.date ? ` · ${release.date}` : ""}
+                    {release.legacy && (
+                      <span className="legacy-tag">Sistema anterior</span>
+                    )}
                   </span>
                   <h3>{release.title}</h3>
-                  <ul>
-                    {release.changes.map((change) => (
-                      <li key={change}>{change}</li>
-                    ))}
-                  </ul>
+                  {release.sections.map((section) => (
+                    <section key={section.title}>
+                      <h4>{section.title}</h4>
+                      <ul>
+                        {section.items.map((change) => (
+                          <li key={change}>{change}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
                 </article>
               ))}
               <p className="field-note">

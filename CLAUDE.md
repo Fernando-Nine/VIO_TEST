@@ -25,6 +25,9 @@ Decisão explícita de escopo, não limitação temporária:
   `rooms.ts` é o coração: comandos, assinaturas, snapshots e ICE.
 - `@src/client/` — React 19 + Vite. `room/controller.ts` é a máquina de estado da sala;
   `media/peers.ts` cuida das PeerConnections; `media/capture.ts` da captura e do microfone.
+- `@src/client/media/` — `peers.ts` (PeerConnections), `capture.ts` (captura e microfone),
+  `audio-output.ts` (para onde o som sai, vale para voz e tela), `voice-activity.ts` (quem
+  está falando, inclusive os outros), `sounds.ts`.
 - `@src/shared/protocol.ts` — contrato **único** entre os dois lados: schemas zod e tipos.
   Mudou o protocolo? Muda aqui primeiro; os dois lados quebram junto no `typecheck`, que é o
   ponto.
@@ -103,7 +106,7 @@ nunca mais reabriria. O portão corta por ganho com retenção de 180 ms, e o li
 npm ci
 cp .env.example .env     # gere SESSION_SECRET, veja o README
 npm run dev              # http://localhost:3000
-npm test                 # 8 suítes, servidor real, sem navegador
+npm test                 # 13 suítes, servidor real, sem navegador
 npm run typecheck
 npm run build && npm start
 npm run test:media       # bancada de mídia em navegador (tests/BrowserLab.tsx)
@@ -174,9 +177,14 @@ cumprida, não enfeite — **não remova**.
 ## Versionamento
 
 Fonte da verdade: `@src/shared/releases.ts`. Servidor e cliente leem a versão de lá, e o
-histórico que o app mostra é o mesmo array. Uma release mexe num arquivo só.
+histórico que o app mostra sai do mesmo lugar. Uma release mexe num arquivo só.
 
-Semver: correção = PATCH, feature nova = MINOR. Versão atual: 0.1.0.
+O histórico anterior vive em `@src/shared/legacy-releases.json` (16 entradas, 0.1.0 a 1.9.0),
+herdado do projeto que veio antes. A 2.0.0 carrega `systemChange: true` e é a fronteira: daí
+para trás, o histórico descreve um app que por dentro não existe mais. **Não apague essa
+marca** — sem ela o histórico mente por omissão.
+
+Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.1.0.
 
 ## Fora de limite
 
@@ -204,12 +212,13 @@ sem desconto:
    prévia: o vídeo estava lá, tocando, com a conexão saudável, e ninguém via. Nenhuma asserção
    sobre estado pegaria isso. Olhe a tela.
 
-O que o VIO_2 tem e aqui **não existe**: PWA instalável e service worker. Se for portar, porte
-o escopo estreito junto — o service worker de lá nunca encosta em `/socket.io/` nem na rota da
-sala, e é isso que o mantém inofensivo.
+A 2.0.0 fechou a lista que faltava: PWA com service worker, saída de áudio, indicador de fala
+dos outros, duração da sala e o histórico herdado. O service worker **nunca** intercepta
+navegação, sala, sessão ou socket — há teste para isso, e é o que o mantém inofensivo.
 
-O que o VIO_2 tem e aqui **já existe, melhor**: portão de ruído (em dB), TURN com credencial
-efêmera, validação de payload, identidade estável na reconexão, miniaturas ao vivo.
+O que aqui é melhor desde o começo: portão de ruído (em dB), TURN com credencial efêmera,
+validação de payload, identidade estável na reconexão, e miniaturas ao vivo por encoding
+barato em vez de conexão cheia.
 
 Este repositório não tem hooks do Claude Code. As regras acima são pedido, não portão — ao
 contrário do VIO_2, onde `.claude/hooks/guard.js` as cumpre de verdade.

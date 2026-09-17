@@ -5,6 +5,7 @@ import App from "../src/client/App";
 import { syntheticAdapter } from "./synthetic";
 import { freshKey } from "../src/client/id";
 import { mediaDeadline } from "../src/client/media/deadline";
+import { FeatureLab } from "./FeatureLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
 async function until(condition: () => boolean, label: string, ms = 20000) {
   const start = Date.now();
@@ -22,6 +23,7 @@ export function BrowserLab() {
   const [controllers, setControllers] = useState<Controller[]>([]);
   const [shown, setShown] = useState(-1);
   const [mobile, setMobile] = useState(false);
+  const [previewWidth, setPreviewWidth] = useState(390);
   const cleanup = useRef<() => Promise<void>>(async () => {});
   useEffect(
     () => () => {
@@ -83,6 +85,7 @@ export function BrowserLab() {
       a.select(bScreen);
       b.select(aScreen);
       c.select(aScreen);
+      c.setPreviews(true);
       c.previews([bScreen]);
       await mediaDeadline(
         Promise.all(
@@ -325,6 +328,7 @@ export function BrowserLab() {
   return (
     <main className="lab">
       <h1>VIO · laboratório de integração</h1>
+      <FeatureLab />
       <p>
         Fontes sintéticas. Três sessões independentes usam o servidor e conexões
         WebRTC reais. Nenhum microfone, câmera ou tela pessoal é capturado.
@@ -335,6 +339,19 @@ export function BrowserLab() {
       <button className="secondary" onClick={() => setMobile(!mobile)}>
         Inspecionar mobile
       </button>
+      {mobile && (
+        <label>
+          Largura da prévia
+          <select
+            value={previewWidth}
+            onChange={(event) => setPreviewWidth(+event.target.value)}
+          >
+            <option value={320}>320 px</option>
+            <option value={390}>390 px</option>
+            <option value={768}>768 px</option>
+          </select>
+        </label>
+      )}
       {controllers.map((e, i) => (
         <button key={i} className="secondary" onClick={() => setShown(i)}>
           Abrir sala {["Ana", "Bia", "Caio"][i]}
@@ -383,11 +400,11 @@ export function BrowserLab() {
       </button>
       {mobile && (
         <iframe
-          title="VIO em 390 por 844 pixels"
+          title={`VIO em ${previewWidth} por 844 pixels`}
           src="/"
           style={{
             display: "block",
-            width: 390,
+            width: previewWidth,
             height: 844,
             margin: "25px auto",
             border: "1px solid #555",

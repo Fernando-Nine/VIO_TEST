@@ -45,7 +45,7 @@ export async function createApp(config: Config = readConfig(), dev = false) {
   app.use((_req, res, next) => {
     res.setHeader(
       "Permissions-Policy",
-      "camera=(self), microphone=(self), display-capture=(self), fullscreen=(self)",
+      "camera=(self), microphone=(self), display-capture=(self), fullscreen=(self), speaker-selection=(self)",
     );
     res.setHeader("Referrer-Policy", "no-referrer");
     next();
@@ -159,6 +159,11 @@ export async function createApp(config: Config = readConfig(), dev = false) {
     vite = v;
   } else {
     const client = resolve("dist/client");
+    app.get("/sw.js", (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Service-Worker-Allowed", "/");
+      res.sendFile(resolve(client, "sw.js"));
+    });
     app.get("/source.tar.gz", (_req, res) => {
       const path = resolve("dist/source.tar.gz");
       if (existsSync(path))

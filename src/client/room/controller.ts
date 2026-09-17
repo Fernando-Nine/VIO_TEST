@@ -15,6 +15,7 @@ import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
+import { AudioOutput } from "../media/audio-output";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -39,6 +40,14 @@ export class Controller {
   socket?: Socket;
   readonly captures: Captures;
   readonly peers: Peers;
+  readonly output = new AudioOutput(() => {
+    this.fail(
+      new Error(
+        "Não foi possível usar a saída de áudio escolhida. O som voltou à saída padrão.",
+      ),
+    );
+    this.savePreferences();
+  });
   publications = new Map<Kind, Publication>();
   visiblePreviews = new Set<string>();
   private listeners = new Set<() => void>();
@@ -55,10 +64,12 @@ export class Controller {
   private generation = 0;
   private disposed = false;
   sounds = true;
+  previewsEnabled = false;
   remoteMute = false;
   screenVolume = 0.8;
   volumes = new Map<string, number>();
-  private cues = new SoundCues();
+  private cues = new SoundCues(this.output);
+  private snapshotReceivedAt = 0;
   private icePending?: Promise<IceConfig>;
   private missingSince = new Map<string, number>();
   constructor(
@@ -106,6 +117,24 @@ export class Controller {
         this.captures.micDevice = p.micDevice || "";
         this.captures.cameraDevice = p.cameraDevice || "";
         this.sounds = p.sounds !== false;
+        this.previewsEnabled = p.previewsEnabled === true;
+        if (this.output.supported && typeof p.outputDevice === "string")
+          this.output.deviceId = p.outputDevice;
+        if (Number.isFinite(p.manualGain))
+          this.captures.setManualGain(p.manualGain);
+        if (Number.isFinite(p.threshold))
+          this.captures.threshold = Math.min(-20, Math.max(-65, p.threshold));
+        for (const key of [
+          "echoCancellation",
+          "noiseSuppression",
+          "autoGainControl",
+        ] as const)
+          if (
+            typeof p.voiceSettings?.[key] === "boolean" &&
+            (key !== "autoGainControl" ||
+              navigator.mediaDevices?.getSupportedConstraints().autoGainControl)
+          )
+            this.captures.voiceSettings[key] = p.voiceSettings[key];
       } catch {}
     }
   }
@@ -137,6 +166,11 @@ export class Controller {
             micDevice: this.captures.micDevice,
             cameraDevice: this.captures.cameraDevice,
             sounds: this.sounds,
+            previewsEnabled: this.previewsEnabled,
+            outputDevice: this.output.deviceId,
+            manualGain: this.captures.manualGain,
+            threshold: this.captures.threshold,
+            voiceSettings: this.captures.voiceSettings,
           }),
         );
       } catch {}
@@ -310,6 +344,7 @@ export class Controller {
       this.intent.code = result.snapshot.code;
       this.view.id = result.id;
       this.view.status = "connected";
+      void this.heartbeat();
       this.view.error = "";
       this.view.notice = "";
       this.receiveSnapshot(result.snapshot);
@@ -339,6 +374,7 @@ export class Controller {
     )
       return;
     this.view.snapshot = snapshot;
+    this.snapshotReceivedAt = performance.now();
     if (!this.view.selected) {
       const screens = snapshot.participants
         .flatMap((m) => m.publications)
@@ -439,8 +475,34 @@ export class Controller {
     this.bump();
     void this.reconcile();
   }
+  roomSeconds() {
+    const snapshot = this.view.snapshot;
+    if (!snapshot?.createdAt || !snapshot.serverTime) return 0;
+    return Math.max(
+      0,
+      Math.floor(
+        (snapshot.serverTime -
+          snapshot.createdAt +
+          performance.now() -
+          this.snapshotReceivedAt) /
+          1000,
+      ),
+    );
+  }
+  setPreviews(enabled: boolean) {
+    this.previewsEnabled = enabled;
+    if (!enabled) this.visiblePreviews.clear();
+    this.savePreferences();
+    void this.reconcile();
+  }
   previews(ids: string[]) {
-    this.visiblePreviews = new Set(ids.slice(0, this.config?.maxPreviews || 2));
+    this.visiblePreviews = new Set(
+      this.previewsEnabled
+        ? ids
+            .filter((id) => id !== this.view.selected)
+            .slice(0, this.config?.maxPreviews || 2)
+        : [],
+    );
     void this.reconcile();
   }
   private async reconcile() {
@@ -464,7 +526,7 @@ export class Controller {
           if (p.owner === this.view.id) continue;
           if (p.kind !== "screen" || p.id === this.view.selected)
             desired.set(p.id + ":main", { publicationId: p.id, tier: "main" });
-          else if (this.visiblePreviews.has(p.id))
+          else if (this.previewsEnabled && this.visiblePreviews.has(p.id))
             desired.set(p.id + ":preview", {
               publicationId: p.id,
               tier: "preview",

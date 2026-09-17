@@ -3,15 +3,16 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **0.1.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.1.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
 **vio-test**, plano Free, região Virginia, uma instância.
 Os repositórios **VIO** e **VIO_2** não fazem parte desta entrega e não devem ser alterados.
 
-Este projeto foi criado do zero. O histórico e o código do VIO anterior não foram
-importados. Consulte [o estado da entrega](ESTADO-DO-PROJETO.md) e
+Este projeto foi criado do zero. Somente o CHANGELOG.md de Fernando-Nine/VIO_2 foi
+importado integralmente. O código anterior não foi importado. A versão 2.0.0 marca
+a mudança de sistema e continua a numeração após a 1.9.0. Consulte [o estado da entrega](ESTADO-DO-PROJETO.md) e
 [a matriz de validação](docs/VALIDACAO.md) antes de colocar o serviço em uso.
 
 ## Executar
@@ -45,18 +46,30 @@ Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
 
+## Entrada 2.1.0
+
+Composição em marfim e preto, azul sólido e verde-lima pontual, com Bricolage
+Grotesque e Instrument Serif locais. O formulário mantém criação e entrada por
+código, com inicial personalizada. A prévia Tela/Voz/Câmera responde a clique e
+teclado sem iniciar capturas. Animações leves respeitam movimento reduzido.
+
 ## O que a interface oferece
 
-- Salas por código, sem conta e sem anfitrião. Até quatro pessoas por padrão.
+- Salas por código, sem conta e sem anfitrião. Até seis pessoas por padrão; o “?” explica o custo das conexões diretas.
 - Compartilhamento simultâneo de telas. Cada espectador escolhe uma tela principal.
-- Miniaturas ao vivo produzidas em baixa resolução na origem, sem áudio.
-- Microfone com seleção de dispositivo, limiar de abertura e ajustes de voz.
+- Miniaturas ao vivo opcionais, desligadas por padrão, com iniciais no lugar do vídeo.
+  Quando ligadas, até duas miniaturas visíveis são recebidas em baixa resolução, sem áudio.
+- Ajustes nas abas Vídeo e Áudio. Microfone com limiar de abertura separado do volume.
+- Ganho manual de 20% a 300% apenas quando o ganho automático está desligado.
+- Saída de áudio própria para conversa e telas, exibida apenas com suporte à API.
+- Indicadores de fala locais/remotos, duração comum da sala e ping com cores.
+- Instalação PWA em celulares; salas, sessões e sockets nunca passam pelo service worker.
 - Câmera independente da tela, prévia local espelhada e troca de dispositivo.
 - Mute, ensurdecer, volume da tela e volume local de voz por pessoa.
 - Qualidade por preset ou FPS, bitrate e escala; valores efetivos no diagnóstico.
 - Convites, painéis, estados de erro, versão e histórico acessível.
 - Sons discretos e diferentes para compartilhar/parar, mutar/desmutar e ensurdecer.
-  Desative todos em **Ajustes → Sons dos controles**.
+  Desative todos em **Ajustes → Áudio → Sons dos controles**.
 - Reentrada após queda de sinalização, renovação de sessão, ICE restart e TURN opcional.
 
 Implementação não equivale a validação em todas as redes e navegadores. A matriz de
@@ -88,7 +101,9 @@ A aplicação principal usa um servidor Node na Render. P2P transmite diretament
 quando existe uma rota; TURN retransmite a mídia quando configurado e selecionado.
 Portanto, mídia **pode passar por um servidor TURN**. Não há gravação.
 
-Padrão: quatro participantes. Esse limite é conservador; a medição final depende de
+Padrão: seis participantes. O valor anterior de quatro era uma configuração conservadora.
+O limite existe porque cada navegador envia mídia aos demais; salas maiores exigem
+outra arquitetura, como uma SFU. A capacidade efetiva depende de
 CPU, navegador e upload de cada pessoa. A tela consome aproximadamente seu limite de
 bitrate vezes o número de espectadores principais, mais miniaturas e overhead.
 No preset Alta, três espectadores podem demandar aproximadamente 12 Mbps só de vídeo
@@ -115,7 +130,7 @@ isolamento de áudio universal. [Limites e fontes](docs/NAVEGADORES.md).
 | `STUN_URLS` | STUN público Google | Lista separada por vírgula; pode ser vazia |
 | `TURN_URLS`, `TURN_SECRET` | vazios | Configuração opcional de relay |
 | `TURN_TTL_SECONDS` | 600 | Expiração das credenciais TURN |
-| `MAX_PARTICIPANTS` | 4 | Pessoas por sala; intervalo aceito 2–6 |
+| `MAX_PARTICIPANTS` | 6 | Pessoas por sala; intervalo aceito 2–6 |
 | `MAX_ROOMS` | 200 | Limite de salas em memória |
 | `MAX_SOCKETS_PER_IP` | 20 | Conexões simultâneas por IP |
 | `RECONNECT_GRACE_SECONDS` | 90 | Preserva presença durante queda temporária |
@@ -157,4 +172,5 @@ incluído nesta entrega web.
 
 [GNU AGPL versão 3](LICENSE). As fontes tipográficas e dependências mantêm suas
 próprias licenças; os textos OFL estão em `docs/licenses`. O histórico mostrado no app
-e o CHANGELOG são gerados a partir de `src/shared/releases.ts`.
+e o CHANGELOG usam `src/shared/releases.ts` e `src/shared/legacy-releases.json`.
+O arquivo anterior completo, preservado byte a byte, está em `docs/CHANGELOG-VIO_2.md`.
