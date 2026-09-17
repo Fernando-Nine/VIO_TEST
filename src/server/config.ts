@@ -18,6 +18,8 @@ export interface Config {
   turnSecret: string;
   turnTtl: number;
   stunUrls: string[];
+  cloudflareTurnKeyId: string;
+  cloudflareTurnApiToken: string;
   testLab: boolean;
 }
 function integer(
@@ -73,6 +75,22 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     (turnSecret.length < 32 || turnUrls.some((v) => !/^turns?:[^\s]+$/.test(v)))
   )
     throw new Error("TURN exige URLs válidas e TURN_SECRET com 32 caracteres.");
+  // Segundo jeito de ligar TURN: em vez de auto-hospedar coturn, delegar a
+  // emissão de credencial para a API da Cloudflare Realtime. As duas variáveis
+  // vêm sempre juntas — uma sem a outra é config pela metade — e nunca junto
+  // com TURN_URLS/TURN_SECRET, porque aí não haveria como saber qual dos dois
+  // caminhos o servidor deveria seguir.
+  const cloudflareTurnKeyId = env.CLOUDFLARE_TURN_KEY_ID || "";
+  const cloudflareTurnApiToken = env.CLOUDFLARE_TURN_API_TOKEN || "";
+  if (!!cloudflareTurnKeyId !== !!cloudflareTurnApiToken)
+    throw new Error(
+      "CLOUDFLARE_TURN_KEY_ID e CLOUDFLARE_TURN_API_TOKEN devem ser configurados juntos.",
+    );
+  if (cloudflareTurnKeyId && turnUrls.length)
+    throw new Error(
+      "Configure TURN por um caminho só: TURN_URLS/TURN_SECRET (coturn) OU " +
+        "CLOUDFLARE_TURN_KEY_ID/CLOUDFLARE_TURN_API_TOKEN (Cloudflare), nunca os dois.",
+    );
   if (env.WEB_CONCURRENCY && env.WEB_CONCURRENCY !== "1")
     throw new Error(
       "Este backend exige uma instância; coordenação distribuída não está habilitada.",
@@ -100,6 +118,8 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     stunUrls: (env.STUN_URLS ?? "stun:stun.l.google.com:19302")
       .split(",")
       .filter(Boolean),
+    cloudflareTurnKeyId,
+    cloudflareTurnApiToken,
     testLab: env.ENABLE_TEST_LAB === "1",
   };
 }
