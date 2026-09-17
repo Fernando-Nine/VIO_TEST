@@ -59,6 +59,14 @@ export async function createApp(config: Config = readConfig(), dev = false) {
     }
     next();
   });
+  // Origem permitida num lugar só: web (com a regra de HTTPS) mais casca nativa
+  // (lista própria). Antes esta condição estava escrita duas vezes, e duas
+  // cópias de uma regra de segurança é uma a mais do que se consegue manter
+  // iguais. Origem AUSENTE continua recusada, de propósito.
+  const origemPermitida = (origin?: string) =>
+    !!origin &&
+    (config.origins.includes(origin) || config.appOrigins.includes(origin));
+
   app.get("/healthz", (_req, res) => res.json({ ok: true, version }));
   app.get("/api/config", (_req, res) =>
     res.json({
@@ -71,7 +79,7 @@ export async function createApp(config: Config = readConfig(), dev = false) {
   );
   app.post("/api/session", (req, res) => {
     try {
-      if (!req.headers.origin || !config.origins.includes(req.headers.origin))
+      if (!origemPermitida(req.headers.origin))
         throw new Fault("ORIGIN", "Origem não permitida.");
       limits.take((req.ip || "unknown") + ":session", 30);
       res.json(issueToken(config.secret, config.sessionTtl));
@@ -94,10 +102,13 @@ export async function createApp(config: Config = readConfig(), dev = false) {
     serveClient: false,
     pingInterval: 20000,
     pingTimeout: 20000,
-    cors: { origin: config.origins, credentials: false },
+    cors: {
+      origin: [...config.origins, ...config.appOrigins],
+      credentials: false,
+    },
     allowRequest: (req, done) => {
       try {
-        if (!req.headers.origin || !config.origins.includes(req.headers.origin))
+        if (!origemPermitida(req.headers.origin))
           return done("Origin denied", false);
         const ip = proxyaddr(req, trust);
         limits.take(ip + ":handshake", 60);
