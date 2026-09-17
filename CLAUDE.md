@@ -82,6 +82,22 @@ PeerConnection.
 
 ### Voz
 
+**O indicador de fala dos outros depende do `RemoteVoice`, e isso não é óbvio.** Um
+`AnalyserNode` alimentado por track remota de WebRTC lê **silêncio** enquanto essa track não
+estiver presa a um `HTMLMediaElement` tocando. Medido nesta bancada (Chromium 141), com tom de
+440 Hz atravessando uma `PeerConnection`:
+
+| configuração | analisador |
+|---|---|
+| elemento tocando (mesmo objeto, ou outro envolvendo a track) | detecta 439 Hz |
+| elemento tocando, porém **mudo** | detecta 439 Hz |
+| sem elemento, analisador ligado ao destino por ganho zero | **silêncio** |
+
+Ou seja: quem faz o indicador funcionar é o `<audio>` do `RemoteVoice`, não o dreno de ganho
+zero do `voice-activity.ts`. **Tirar `RemoteVoice` da árvore, ou deixar de montá-lo antes do
+cartão, mata o indicador sem erro nenhum** — e o dreno, sozinho, não segura. Se um dia o áudio
+remoto passar a tocar por outro caminho, confira o indicador na mesma leva.
+
 Grafo de áudio próprio em `capture.ts`: `fonte → analisador → portão (GainNode) → destino`.
 O analisador fica **antes** do portão — com ele depois, o portão fechado zeraria o medidor e
 nunca mais reabriria. O portão corta por ganho com retenção de 180 ms, e o limiar é em **dB**
