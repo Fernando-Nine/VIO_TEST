@@ -122,7 +122,7 @@ nunca mais reabriria. O portão corta por ganho com retenção de 180 ms, e o li
 npm ci
 cp .env.example .env     # gere SESSION_SECRET, veja o README
 npm run dev              # http://localhost:3000
-npm test                 # 13 suítes, servidor real, sem navegador
+npm test                 # 15 suítes, servidor real, sem navegador
 npm run typecheck
 npm run build && npm start
 npm run test:media       # bancada de mídia em navegador (tests/BrowserLab.tsx)
@@ -149,8 +149,13 @@ Implementado, e é para continuar assim:
   origem HTTPS explícita, o processo morre no boot. Falhar cedo é o comportamento desejado.
 - **Helmet**, CSP, e `trust proxy` explícito (`TRUST_PROXY`), nunca `true`.
 - **Limites por chave**: salas, participantes, sockets por IP, comandos por janela (`Limits`).
-- **TURN com credencial efêmera** no formato REST do coturn: `username` = expiração + id,
-  `credential` = HMAC-SHA1. O segredo nunca vai para o cliente.
+- **TURN por três caminhos mutuamente exclusivos** (`docs/TURN.md`), e `readConfig` recusa
+  subir se mais de um vier preenchido: credencial efêmera do coturn (`username` = expiração
+  + id, `credential` = HMAC-SHA1), Cloudflare Realtime (a credencial vem da API deles) ou
+  par usuário/senha estático. Nos dois primeiros, o segredo nunca vai para o cliente. O
+  terceiro existe porque plano gratuito de TURN gerenciado costuma só dar par fixo — e é o
+  mais fraco dos três, porque essa credencial **não expira**. Use-o para descobrir se TURN
+  resolve o caso de alguém, não como arranjo permanente.
 - **Log estruturado** em JSON por linha (`log()`), sem dado pessoal.
 
 Regras:

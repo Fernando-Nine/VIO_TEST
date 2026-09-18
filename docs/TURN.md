@@ -1,11 +1,84 @@
 # TURN opcional
 
 TURN atende redes em que o caminho direto não funciona. Ele recebe e retransmite
-mídia; STUN apenas ajuda a descobrir endereços. O backend emite credenciais temporárias
-somente para uma sessão já presente na sala. Nenhum segredo compartilhado vai para o
-JavaScript entregue ao usuário.
+mídia; STUN apenas ajuda a descobrir endereços. O backend só entrega credencial a uma
+sessão já presente na sala, e nunca entrega o segredo do coturn nem o token da API da
+Cloudflare — deles saem credenciais derivadas, que expiram. A exceção é o caminho de
+credencial estática, em que o par usuário/senha do provedor vai como está; a seção dele
+explica o que isso custa.
 
-## Configurar o VIO
+## Três caminhos, nunca mais de um
+
+| | Credencial estática | Cloudflare Realtime | coturn auto-hospedado |
+|---|---|---|---|
+| Você administra | nada | nada | uma VM: SO, certificado, firewall |
+| Esforço pra ligar | colar três variáveis | criar uma chave no painel | montar o servidor |
+| Custo | o que o provedor der de graça; confira o teto vigente | grátis até um teto generoso de banda por mês | grátis numa VM com franquia de saída boa (ex: Oracle Always Free), ou alguns euros/mês numa VM comum |
+| Config no VIO | `TURN_URLS` + `TURN_USERNAME` + `TURN_PASSWORD` | `CLOUDFLARE_TURN_KEY_ID` + `CLOUDFLARE_TURN_API_TOKEN` | `TURN_URLS` + `TURN_SECRET` |
+| Quem gera a credencial | ninguém: é fixa, vem do painel do provedor | a Cloudflare, por chamada HTTP (`rooms.ts`) | o próprio VIO, localmente (HMAC-SHA1) |
+| A credencial expira | **não**, só na troca manual | sim, em `TURN_TTL_SECONDS` | sim, em `TURN_TTL_SECONDS` |
+
+`readConfig` recusa subir se mais de uma família de variável vier preenchida — não
+haveria como decidir qual delas vale.
+
+## Caminho 1: credencial estática
+
+O mais rápido de ligar, e o mais fraco dos três. Serve quando o provedor de TURN
+gerenciado só oferece um par usuário/senha fixo — é o caso dos planos gratuitos de
+vários deles, o ExpressTurn entre eles, que reservam a autenticação por segredo
+compartilhado para os planos pagos.
+
+```dotenv
+TURN_URLS=turn:free.expressturn.com:3478
+TURN_USERNAME=o_usuario_que_o_provedor_deu
+TURN_PASSWORD=a_senha_que_o_provedor_deu
+```
+
+O `turn:` na frente é obrigatório. O painel do provedor costuma mostrar só `host:porta`,
+e sem o esquema o VIO recusa subir.
+
+**O que você aceita ao usar este caminho.** A credencial vai para o navegador de quem
+entra na sala, como em qualquer um dos três — mas esta **não expira**. Quem interceptá-la
+usa seu relay, e sua franquia, até você trocá-la à mão no painel. Com um teto de banda do
+lado do provedor o estrago é limitado, e para descobrir se TURN resolve o problema de
+alguém a troca é razoável. Para deixar ligado por tempo indeterminado, os outros dois
+caminhos são melhores.
+
+`TURN_TTL_SECONDS` continua valendo como cadência de renovação do cliente, mas aqui não
+expira nada: só a troca no painel invalida a credencial antiga.
+
+## Caminho 2: Cloudflare Realtime
+
+Sem servidor para manter. O VIO chama a API da Cloudflare a cada vez que precisa de
+uma credencial nova, e reaproveita a mesma por até um minuto antes dela expirar — não
+bate na API a cada participante.
+
+1. Crie (ou entre numa) conta em [dash.cloudflare.com](https://dash.cloudflare.com).
+2. No painel, procure a seção **Realtime** (às vezes listada como **Calls** em contas
+   mais antigas) e dentro dela **TURN**. Os nomes exatos dos botões mudam de tempos em
+   tempos — se não achar de primeira, procure por algo como "Create key" ou "Add key".
+3. Ao criar a chave, a Cloudflare mostra um **TURN Token ID** e um **API Token** (ou
+   Secret). Guarde os dois — o token normalmente só é exibido uma vez.
+4. Configure no VIO:
+
+```dotenv
+CLOUDFLARE_TURN_KEY_ID=o_token_id_que_a_cloudflare_deu
+CLOUDFLARE_TURN_API_TOKEN=o_api_token_que_a_cloudflare_deu
+TURN_TTL_SECONDS=600
+```
+
+`CLOUDFLARE_TURN_API_TOKEN` é tão sensível quanto uma senha — nunca vai para o
+JavaScript do cliente, só circula entre o servidor do VIO e a API da Cloudflare
+(`rooms.ts`, método `fetchCloudflareIce`). Se ele vazar, revogue e gere outro no
+painel da Cloudflare.
+
+Se a API da Cloudflare estiver fora do ar ou a credencial for rejeitada, o pedido de
+`ice` falha com a mensagem "Não foi possível obter credenciais de relay agora" — a
+sala continua de pé, só a rota via TURN é que fica indisponível até normalizar.
+
+## Caminho 3: coturn auto-hospedado
+
+### Configurar o VIO
 
 ```dotenv
 TURN_URLS=turn:turn.seudominio.com:3478?transport=udp,turn:turn.seudominio.com:3478?transport=tcp,turns:turn.seudominio.com:5349?transport=tcp
@@ -20,7 +93,7 @@ publique esse segredo em Git, imagens, logs ou URLs. As credenciais entregues ao
 navegador são utilizáveis por quem as obtiver até sua expiração, e coturn ainda exige
 cotas e monitoramento. [coturn](https://github.com/coturn/coturn/blob/master/README.turnserver)
 
-## Infraestrutura
+### Infraestrutura
 
 Use uma VM com IP público e UDP/TCP compatíveis, ou um serviço TURN que aceite o
 mesmo modelo de credenciais. Um Web Service HTTP da Render não expõe o conjunto
@@ -77,7 +150,7 @@ encaminhe TURN por um proxy HTTP comum.
 
 ## Verificar relay
 
-1. Reinicie o VIO com as três variáveis TURN.
+1. Reinicie o VIO com as variáveis do caminho escolhido (Cloudflare ou coturn).
 2. Entre com dois dispositivos em redes diferentes e publique tela/voz/câmera.
 3. Em Sobre a sala, ative “Testar somente via TURN”. Isso cria novas assinaturas.
 4. Aguarde a conexão e confira `TURN / relay` no candidato selecionado por `getStats()`.
@@ -86,6 +159,7 @@ encaminhe TURN por um proxy HTTP comum.
 7. Confirme que credenciais expiradas não criam novas alocações e que cotas limitam abuso.
 
 A emissão e a expiração de credenciais foram cobertas por teste automatizado de
-servidor. A conectividade real via TURN e entre redes distintas exige infraestrutura
-externa e ainda não foi comprovada. O teste não deve ser marcado como concluído apenas
-porque o endpoint retornou credenciais.
+servidor, nos três caminhos — inclusive a Cloudflare fora do ar e a mútua exclusão
+entre as famílias de variável. A conectividade real via TURN e entre redes
+distintas exige infraestrutura externa e ainda não foi comprovada. O teste não deve
+ser marcado como concluído apenas porque o endpoint retornou credenciais.
