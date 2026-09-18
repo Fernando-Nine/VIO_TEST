@@ -559,3 +559,78 @@ test("Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do cot
     global.fetch = originalFetch;
   }
 });
+test("credencial TURN estática: par fixo da config, sem HMAC", async () => {
+  // Usuário e senha vêm sempre juntos.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "turn:relay.example:3478",
+      TURN_USERNAME: "usuario",
+    }),
+  );
+  // Estática e efêmera são modos diferentes de fazer a mesma coisa: juntas, não
+  // há como saber qual das duas o servidor deveria mandar.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "turn:relay.example:3478",
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+      TURN_SECRET: secret,
+    }),
+  );
+  // Credencial sem relay pra onde apontar é config pela metade.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+    }),
+  );
+  // URL malformada continua barrada, agora com mensagem própria.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "relay.example:3478",
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+    }),
+  );
+  const config = readConfig({
+    PORT: "0",
+    SESSION_SECRET: secret,
+    ALLOWED_ORIGINS: origin,
+    TURN_URLS: "turn:relay.example:3478,turns:relay.example:5349",
+    TURN_USERNAME: "usuario-do-provedor",
+    TURN_PASSWORD: "senha-estatica-do-provedor",
+  });
+  const app = await createApp(config);
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as any).port}`;
+  const a = await connect(url, (await session(url)).token);
+  try {
+    data(await request(a, "join", { name: "Estatica", code: "QASTAT" }));
+    const ice = data(await request<any>(a, "ice"));
+    assert.equal(ice.turn, true);
+    const relay = ice.iceServers[1];
+    assert.deepEqual(relay.urls, [
+      "turn:relay.example:3478",
+      "turns:relay.example:5349",
+    ]);
+    // O par sai exatamente como entrou: sem prefixo de expiração no usuário e
+    // sem HMAC na credencial, que é o que distingue este modo do coturn.
+    assert.equal(relay.username, "usuario-do-provedor");
+    assert.equal(relay.credential, "senha-estatica-do-provedor");
+    // Duas chamadas devolvem a mesma credencial — não há rotação a esperar.
+    const outra = data(await request<any>(a, "ice"));
+    assert.equal(outra.iceServers[1].credential, relay.credential);
+  } finally {
+    a.disconnect();
+    await app.close();
+  }
+});

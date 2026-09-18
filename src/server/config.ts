@@ -16,6 +16,8 @@ export interface Config {
   trustProxy: string | number | false;
   turnUrls: string[];
   turnSecret: string;
+  turnUsername: string;
+  turnPassword: string;
   turnTtl: number;
   stunUrls: string[];
   cloudflareTurnKeyId: string;
@@ -70,11 +72,32 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   const turnUrls = (env.TURN_URLS || "").split(",").filter(Boolean);
   const turnSecret = env.TURN_SECRET || "";
-  if (
-    turnUrls.length &&
-    (turnSecret.length < 32 || turnUrls.some((v) => !/^turns?:[^\s]+$/.test(v)))
-  )
-    throw new Error("TURN exige URLs válidas e TURN_SECRET com 32 caracteres.");
+  // Credencial estática: o provedor entrega um par usuário/senha fixo em vez de
+  // um segredo pra derivar credencial efêmera. É o que os planos gratuitos de
+  // TURN gerenciado costumam dar. Pior em segurança — não expira, então quem a
+  // interceptar usa o relay até ela ser trocada à mão —, daí ficar atrás de uma
+  // escolha explícita e nunca ser o padrão.
+  const turnUsername = env.TURN_USERNAME || "";
+  const turnPassword = env.TURN_PASSWORD || "";
+  const turnStatic = !!(turnUsername || turnPassword);
+  if (turnUrls.some((v) => !/^turns?:[^\s]+$/.test(v)))
+    throw new Error("TURN_URLS exige URLs começando com turn: ou turns:.");
+  if (turnStatic && !(turnUsername && turnPassword))
+    throw new Error(
+      "TURN_USERNAME e TURN_PASSWORD devem ser configurados juntos.",
+    );
+  if (turnStatic && turnSecret)
+    throw new Error(
+      "Escolha um modo de credencial: TURN_SECRET (efêmera) OU " +
+        "TURN_USERNAME/TURN_PASSWORD (estática), nunca os dois.",
+    );
+  if (turnStatic && !turnUrls.length)
+    throw new Error("TURN_USERNAME/TURN_PASSWORD exigem TURN_URLS.");
+  if (turnUrls.length && !turnStatic && turnSecret.length < 32)
+    throw new Error(
+      "TURN exige TURN_SECRET com 32 caracteres ou, para credencial estática, " +
+        "TURN_USERNAME e TURN_PASSWORD.",
+    );
   // Segundo jeito de ligar TURN: em vez de auto-hospedar coturn, delegar a
   // emissão de credencial para a API da Cloudflare Realtime. As duas variáveis
   // vêm sempre juntas — uma sem a outra é config pela metade — e nunca junto
@@ -114,6 +137,8 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     signalingUrl: env.SIGNALING_URL || "",
     turnUrls,
     turnSecret,
+    turnUsername,
+    turnPassword,
     turnTtl: integer(env.TURN_TTL_SECONDS, 600, 60, 3600),
     stunUrls: (env.STUN_URLS ?? "stun:stun.l.google.com:19302")
       .split(",")

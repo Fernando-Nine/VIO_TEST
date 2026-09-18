@@ -1,23 +1,53 @@
 # TURN opcional
 
 TURN atende redes em que o caminho direto não funciona. Ele recebe e retransmite
-mídia; STUN apenas ajuda a descobrir endereços. O backend emite credenciais temporárias
-somente para uma sessão já presente na sala. Nenhum segredo compartilhado vai para o
-JavaScript entregue ao usuário.
+mídia; STUN apenas ajuda a descobrir endereços. O backend só entrega credencial a uma
+sessão já presente na sala, e nunca entrega o segredo do coturn nem o token da API da
+Cloudflare — deles saem credenciais derivadas, que expiram. A exceção é o caminho de
+credencial estática, em que o par usuário/senha do provedor vai como está; a seção dele
+explica o que isso custa.
 
-## Dois caminhos, nunca os dois juntos
+## Três caminhos, nunca mais de um
 
-| | Cloudflare Realtime | coturn auto-hospedado |
-|---|---|---|
-| Você administra | nada | uma VM: SO, certificado, firewall |
-| Custo | grátis até um teto generoso de banda por mês; confira o valor vigente | grátis numa VM com franquia de saída boa (ex: Oracle Always Free), ou alguns euros/mês numa VM comum |
-| Config no VIO | `CLOUDFLARE_TURN_KEY_ID` + `CLOUDFLARE_TURN_API_TOKEN` | `TURN_URLS` + `TURN_SECRET` |
-| Quem gera a credencial | a Cloudflare, por chamada HTTP (`rooms.ts`) | o próprio VIO, localmente (HMAC-SHA1) |
+| | Credencial estática | Cloudflare Realtime | coturn auto-hospedado |
+|---|---|---|---|
+| Você administra | nada | nada | uma VM: SO, certificado, firewall |
+| Esforço pra ligar | colar três variáveis | criar uma chave no painel | montar o servidor |
+| Custo | o que o provedor der de graça; confira o teto vigente | grátis até um teto generoso de banda por mês | grátis numa VM com franquia de saída boa (ex: Oracle Always Free), ou alguns euros/mês numa VM comum |
+| Config no VIO | `TURN_URLS` + `TURN_USERNAME` + `TURN_PASSWORD` | `CLOUDFLARE_TURN_KEY_ID` + `CLOUDFLARE_TURN_API_TOKEN` | `TURN_URLS` + `TURN_SECRET` |
+| Quem gera a credencial | ninguém: é fixa, vem do painel do provedor | a Cloudflare, por chamada HTTP (`rooms.ts`) | o próprio VIO, localmente (HMAC-SHA1) |
+| A credencial expira | **não**, só na troca manual | sim, em `TURN_TTL_SECONDS` | sim, em `TURN_TTL_SECONDS` |
 
-`readConfig` recusa subir se as duas famílias de variável vierem preenchidas ao mesmo
-tempo — não haveria como decidir qual delas vale.
+`readConfig` recusa subir se mais de uma família de variável vier preenchida — não
+haveria como decidir qual delas vale.
 
-## Caminho 1: Cloudflare Realtime
+## Caminho 1: credencial estática
+
+O mais rápido de ligar, e o mais fraco dos três. Serve quando o provedor de TURN
+gerenciado só oferece um par usuário/senha fixo — é o caso dos planos gratuitos de
+vários deles, o ExpressTurn entre eles, que reservam a autenticação por segredo
+compartilhado para os planos pagos.
+
+```dotenv
+TURN_URLS=turn:free.expressturn.com:3478
+TURN_USERNAME=o_usuario_que_o_provedor_deu
+TURN_PASSWORD=a_senha_que_o_provedor_deu
+```
+
+O `turn:` na frente é obrigatório. O painel do provedor costuma mostrar só `host:porta`,
+e sem o esquema o VIO recusa subir.
+
+**O que você aceita ao usar este caminho.** A credencial vai para o navegador de quem
+entra na sala, como em qualquer um dos três — mas esta **não expira**. Quem interceptá-la
+usa seu relay, e sua franquia, até você trocá-la à mão no painel. Com um teto de banda do
+lado do provedor o estrago é limitado, e para descobrir se TURN resolve o problema de
+alguém a troca é razoável. Para deixar ligado por tempo indeterminado, os outros dois
+caminhos são melhores.
+
+`TURN_TTL_SECONDS` continua valendo como cadência de renovação do cliente, mas aqui não
+expira nada: só a troca no painel invalida a credencial antiga.
+
+## Caminho 2: Cloudflare Realtime
 
 Sem servidor para manter. O VIO chama a API da Cloudflare a cada vez que precisa de
 uma credencial nova, e reaproveita a mesma por até um minuto antes dela expirar — não
@@ -46,7 +76,7 @@ Se a API da Cloudflare estiver fora do ar ou a credencial for rejeitada, o pedid
 `ice` falha com a mensagem "Não foi possível obter credenciais de relay agora" — a
 sala continua de pé, só a rota via TURN é que fica indisponível até normalizar.
 
-## Caminho 2: coturn auto-hospedado
+## Caminho 3: coturn auto-hospedado
 
 ### Configurar o VIO
 
@@ -129,7 +159,7 @@ encaminhe TURN por um proxy HTTP comum.
 7. Confirme que credenciais expiradas não criam novas alocações e que cotas limitam abuso.
 
 A emissão e a expiração de credenciais foram cobertas por teste automatizado de
-servidor, nos dois caminhos — inclusive a Cloudflare fora do ar e a mutual exclusão
-entre as duas famílias de variável. A conectividade real via TURN e entre redes
+servidor, nos três caminhos — inclusive a Cloudflare fora do ar e a mútua exclusão
+entre as famílias de variável. A conectividade real via TURN e entre redes
 distintas exige infraestrutura externa e ainda não foi comprovada. O teste não deve
 ser marcado como concluído apenas porque o endpoint retornou credenciais.

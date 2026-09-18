@@ -399,10 +399,10 @@ export class Rooms {
       return {};
     }
     if (action === "ice") {
-      // Dois jeitos de ligar TURN, mutuamente exclusivos (config.ts garante que
-      // só um deles vem preenchido): coturn auto-hospedado, com credencial
-      // gerada aqui mesmo; ou Cloudflare Realtime, que emite a credencial do
-      // lado dela — este servidor só repassa.
+      // Três jeitos de ligar TURN, mutuamente exclusivos (config.ts garante que
+      // só um deles vem preenchido): Cloudflare Realtime, que emite a credencial
+      // do lado dela e este servidor só repassa; credencial efêmera derivada
+      // aqui por HMAC (coturn); ou par usuário/senha estático da config.
       if (this.config.cloudflareTurnKeyId) {
         const { iceServers, expiresAt } = await this.fetchCloudflareIce();
         return { iceServers, expiresAt, turn: true };
@@ -412,14 +412,26 @@ export class Rooms {
       if (this.config.stunUrls.length)
         iceServers.push({ urls: this.config.stunUrls });
       if (this.config.turnUrls.length) {
-        const username = Math.floor(expiresAt / 1000) + ":" + m.id;
-        iceServers.push({
-          urls: this.config.turnUrls,
-          username,
-          credential: createHmac("sha1", this.config.turnSecret)
-            .update(username)
-            .digest("base64"),
-        });
+        // Credencial estática não tem o que derivar: vai como veio da config.
+        // O expiresAt acima continua valendo como cadência de renovação do
+        // cliente, mas aqui ele não expira nada — só a troca manual da senha no
+        // painel do provedor invalida.
+        if (this.config.turnUsername) {
+          iceServers.push({
+            urls: this.config.turnUrls,
+            username: this.config.turnUsername,
+            credential: this.config.turnPassword,
+          });
+        } else {
+          const username = Math.floor(expiresAt / 1000) + ":" + m.id;
+          iceServers.push({
+            urls: this.config.turnUrls,
+            username,
+            credential: createHmac("sha1", this.config.turnSecret)
+              .update(username)
+              .digest("base64"),
+          });
+        }
       }
       return { iceServers, expiresAt, turn: !!this.config.turnUrls.length };
     }
