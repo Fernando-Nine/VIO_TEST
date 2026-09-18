@@ -420,3 +420,217 @@ test("credenciais TURN temporárias e configuração de produção fechada", asy
     await app.close();
   }
 });
+test("Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn", async () => {
+  // As duas variáveis vêm sempre juntas.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      CLOUDFLARE_TURN_KEY_ID: "key123",
+    }),
+  );
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      CLOUDFLARE_TURN_API_TOKEN: "token123",
+    }),
+  );
+  // Nunca junto com o caminho do coturn — ambíguo demais pra adivinhar qual
+  // dos dois o servidor deveria seguir.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "turn:relay.example:3478",
+      TURN_SECRET: secret,
+      CLOUDFLARE_TURN_KEY_ID: "key123",
+      CLOUDFLARE_TURN_API_TOKEN: "token123",
+    }),
+  );
+
+  const config = readConfig({
+    PORT: "0",
+    SESSION_SECRET: secret,
+    ALLOWED_ORIGINS: origin,
+    CLOUDFLARE_TURN_KEY_ID: "key123",
+    CLOUDFLARE_TURN_API_TOKEN: "token123",
+    TURN_TTL_SECONDS: "600",
+  });
+
+  const cloudflareResponse = {
+    iceServers: [
+      { urls: ["stun:stun.cloudflare.com:3478"] },
+      {
+        urls: ["turn:turn.cloudflare.com:3478?transport=udp"],
+        username: "short-lived-username",
+        credential: "short-lived-password",
+      },
+    ],
+  };
+  const cloudflareUrl =
+    "https://rtc.live.cloudflare.com/v1/turn/keys/key123/credentials/generate-ice-servers";
+  const calls: { url: string; init: RequestInit }[] = [];
+  let statusToReturn = 201;
+  const originalFetch = global.fetch;
+  // Cirúrgico de propósito: só intercepta a URL da Cloudflare. Um mock que
+  // substitui fetch por inteiro também captura a chamada real que o próprio
+  // teste faz a /api/session — e session() passa a receber a resposta errada.
+  // Foi exatamente isso que travou a primeira versão deste teste: a exceção
+  // acontecia antes do try, o servidor nunca fechava, e o processo ficava
+  // pendurado esperando um socket que não existia mais.
+  global.fetch = (async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    const url = String(input);
+    if (!url.startsWith("https://rtc.live.cloudflare.com/"))
+      return originalFetch(input as any, init);
+    calls.push({ url, init: init! });
+    if (statusToReturn !== 201)
+      return new Response("falhou", { status: statusToReturn });
+    return new Response(JSON.stringify(cloudflareResponse), { status: 201 });
+  }) as typeof fetch;
+
+  try {
+    const app = await createApp(config);
+    app.http.listen(0, "127.0.0.1");
+    await once(app.http, "listening");
+    const url = `http://127.0.0.1:${(app.http.address() as any).port}`;
+    let a: Socket | undefined;
+    try {
+      a = await connect(url, (await session(url)).token);
+      data(await request(a, "join", { name: "Relay", code: "QACF" }));
+
+      const ice = data(await request<any>(a, "ice"));
+      assert.equal(ice.turn, true);
+      assert.deepEqual(ice.iceServers, cloudflareResponse.iceServers);
+      assert.ok(ice.expiresAt > Date.now());
+      assert.ok(ice.expiresAt <= Date.now() + 601000);
+
+      // A chamada bateu no endpoint certo, com o token no header — nunca no
+      // corpo nem em qualquer lugar visível ao cliente.
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].url, cloudflareUrl);
+      assert.equal(
+        (calls[0].init.headers as Record<string, string>).Authorization,
+        "Bearer token123",
+      );
+      assert.equal(JSON.parse(String(calls[0].init.body)).ttl, 600);
+      assert.equal(JSON.stringify(ice).includes("token123"), false);
+
+      // Uma segunda chamada de "ice" logo em seguida reaproveita a
+      // credencial — não bate na Cloudflare de novo. É a mesma pessoa
+      // pedindo de novo (ex: reconexão rápida) ou outro participante da sala.
+      const iceOutraVez = data(await request<any>(a, "ice"));
+      assert.equal(calls.length, 1);
+      assert.deepEqual(iceOutraVez.iceServers, cloudflareResponse.iceServers);
+    } finally {
+      a?.disconnect();
+      await app.close();
+    }
+
+    // A Cloudflare fora do ar não vira um servidor quebrado — o pedido falha
+    // com uma mensagem, não trava a sala nem derruba a conexão. Sala nova
+    // (sem cache de credencial ainda) para isolar este caso do de cima.
+    statusToReturn = 500;
+    const app2 = await createApp(config);
+    app2.http.listen(0, "127.0.0.1");
+    await once(app2.http, "listening");
+    const url2 = `http://127.0.0.1:${(app2.http.address() as any).port}`;
+    let b: Socket | undefined;
+    try {
+      b = await connect(url2, (await session(url2)).token);
+      data(await request(b, "join", { name: "Relay", code: "QACF2" }));
+      const falhou = await request(b, "ice");
+      assert.equal(falhou.ok, false);
+      assert.equal((falhou as any).code, "TURN_UNAVAILABLE");
+
+      // Volta a funcionar assim que a Cloudflare volta a responder — sem
+      // precisar reconectar nem reentrar na sala.
+      statusToReturn = 201;
+      const recuperou = data(await request<any>(b, "ice"));
+      assert.deepEqual(recuperou.iceServers, cloudflareResponse.iceServers);
+    } finally {
+      b?.disconnect();
+      await app2.close();
+    }
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+test("credencial TURN estática: par fixo da config, sem HMAC", async () => {
+  // Usuário e senha vêm sempre juntos.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "turn:relay.example:3478",
+      TURN_USERNAME: "usuario",
+    }),
+  );
+  // Estática e efêmera são modos diferentes de fazer a mesma coisa: juntas, não
+  // há como saber qual das duas o servidor deveria mandar.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "turn:relay.example:3478",
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+      TURN_SECRET: secret,
+    }),
+  );
+  // Credencial sem relay pra onde apontar é config pela metade.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+    }),
+  );
+  // URL malformada continua barrada, agora com mensagem própria.
+  assert.throws(() =>
+    readConfig({
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      TURN_URLS: "relay.example:3478",
+      TURN_USERNAME: "usuario",
+      TURN_PASSWORD: "senha",
+    }),
+  );
+  const config = readConfig({
+    PORT: "0",
+    SESSION_SECRET: secret,
+    ALLOWED_ORIGINS: origin,
+    TURN_URLS: "turn:relay.example:3478,turns:relay.example:5349",
+    TURN_USERNAME: "usuario-do-provedor",
+    TURN_PASSWORD: "senha-estatica-do-provedor",
+  });
+  const app = await createApp(config);
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as any).port}`;
+  const a = await connect(url, (await session(url)).token);
+  try {
+    data(await request(a, "join", { name: "Estatica", code: "QASTAT" }));
+    const ice = data(await request<any>(a, "ice"));
+    assert.equal(ice.turn, true);
+    const relay = ice.iceServers[1];
+    assert.deepEqual(relay.urls, [
+      "turn:relay.example:3478",
+      "turns:relay.example:5349",
+    ]);
+    // O par sai exatamente como entrou: sem prefixo de expiração no usuário e
+    // sem HMAC na credencial, que é o que distingue este modo do coturn.
+    assert.equal(relay.username, "usuario-do-provedor");
+    assert.equal(relay.credential, "senha-estatica-do-provedor");
+    // Duas chamadas devolvem a mesma credencial — não há rotação a esperar.
+    const outra = data(await request<any>(a, "ice"));
+    assert.equal(outra.iceServers[1].credential, relay.credential);
+  } finally {
+    a.disconnect();
+    await app.close();
+  }
+});

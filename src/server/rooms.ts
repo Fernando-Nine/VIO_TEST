@@ -1,7 +1,14 @@
 import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
-import { Fault, Limits, stableId, generateCode, issueToken } from "./security";
+import {
+  Fault,
+  Limits,
+  stableId,
+  generateCode,
+  issueToken,
+  log,
+} from "./security";
 import {
   schemas,
   commandSchema,
@@ -28,10 +35,69 @@ export class Rooms {
   readonly rooms = new Map<string, Room>();
   readonly membership = new Map<string, string>();
   private limits = new Limits();
+  // Uma credencial da Cloudflare vale pra sala inteira, não por participante —
+  // ao contrário do username do coturn, que embute o id de quem pediu. Isso é
+  // o pretendido: TURN autentica contra o relay, não identifica quem é quem no
+  // VIO, e reemitir uma credencial nova a cada "ice" bateria a API deles sem
+  // necessidade. Guarda até faltar um minuto pra expirar.
+  private cloudflareIce: { iceServers: unknown[]; expiresAt: number } | null =
+    null;
   constructor(
     private io: Server,
     private config: Config,
   ) {}
+  private async fetchCloudflareIce(): Promise<{
+    iceServers: unknown[];
+    expiresAt: number;
+  }> {
+    const now = Date.now();
+    if (this.cloudflareIce && this.cloudflareIce.expiresAt - now > 60_000)
+      return this.cloudflareIce;
+    const ttl = this.config.turnTtl;
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://rtc.live.cloudflare.com/v1/turn/keys/${this.config.cloudflareTurnKeyId}/credentials/generate-ice-servers`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.config.cloudflareTurnApiToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ttl }),
+          signal: AbortSignal.timeout(8000),
+        },
+      );
+    } catch (e) {
+      log("cloudflare_turn_unreachable", {
+        error: e instanceof Error ? e.message : String(e),
+      });
+      throw new Fault(
+        "TURN_UNAVAILABLE",
+        "Não foi possível obter credenciais de relay agora. Tente de novo em instantes.",
+      );
+    }
+    if (!response.ok) {
+      log("cloudflare_turn_error", { status: response.status });
+      throw new Fault(
+        "TURN_UNAVAILABLE",
+        "Não foi possível obter credenciais de relay agora. Tente de novo em instantes.",
+      );
+    }
+    const body = (await response.json().catch(() => null)) as {
+      iceServers?: unknown[];
+    } | null;
+    if (!body || !Array.isArray(body.iceServers)) {
+      log("cloudflare_turn_bad_response", {});
+      throw new Fault(
+        "TURN_UNAVAILABLE",
+        "Resposta inesperada do provedor de relay.",
+      );
+    }
+    const result = { iceServers: body.iceServers, expiresAt: now + ttl * 1000 };
+    this.cloudflareIce = result;
+    return result;
+  }
   snapshot(room: Room): Snapshot {
     return {
       epoch: this.epoch,
@@ -333,19 +399,39 @@ export class Rooms {
       return {};
     }
     if (action === "ice") {
+      // Três jeitos de ligar TURN, mutuamente exclusivos (config.ts garante que
+      // só um deles vem preenchido): Cloudflare Realtime, que emite a credencial
+      // do lado dela e este servidor só repassa; credencial efêmera derivada
+      // aqui por HMAC (coturn); ou par usuário/senha estático da config.
+      if (this.config.cloudflareTurnKeyId) {
+        const { iceServers, expiresAt } = await this.fetchCloudflareIce();
+        return { iceServers, expiresAt, turn: true };
+      }
       const expiresAt = Date.now() + this.config.turnTtl * 1000;
       const iceServers: unknown[] = [];
       if (this.config.stunUrls.length)
         iceServers.push({ urls: this.config.stunUrls });
       if (this.config.turnUrls.length) {
-        const username = Math.floor(expiresAt / 1000) + ":" + m.id;
-        iceServers.push({
-          urls: this.config.turnUrls,
-          username,
-          credential: createHmac("sha1", this.config.turnSecret)
-            .update(username)
-            .digest("base64"),
-        });
+        // Credencial estática não tem o que derivar: vai como veio da config.
+        // O expiresAt acima continua valendo como cadência de renovação do
+        // cliente, mas aqui ele não expira nada — só a troca manual da senha no
+        // painel do provedor invalida.
+        if (this.config.turnUsername) {
+          iceServers.push({
+            urls: this.config.turnUrls,
+            username: this.config.turnUsername,
+            credential: this.config.turnPassword,
+          });
+        } else {
+          const username = Math.floor(expiresAt / 1000) + ":" + m.id;
+          iceServers.push({
+            urls: this.config.turnUrls,
+            username,
+            credential: createHmac("sha1", this.config.turnSecret)
+              .update(username)
+              .digest("base64"),
+          });
+        }
       }
       return { iceServers, expiresAt, turn: !!this.config.turnUrls.length };
     }
