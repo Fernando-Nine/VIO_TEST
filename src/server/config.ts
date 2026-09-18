@@ -3,6 +3,7 @@ export interface Config {
   port: number;
   production: boolean;
   origins: string[];
+  appOrigins: string[];
   secret: string;
   sessionTtl: number;
   grace: number;
@@ -60,6 +61,41 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     )
   )
     throw new Error("Configure ALLOWED_ORIGINS com origens HTTPS explícitas.");
+
+  // Origens de casca nativa (Tauri, invólucro de celular). Ficam numa lista
+  // SEPARADA de propósito: a exigência de HTTPS acima protege a web e não pode
+  // ser afrouxada para caber um esquema próprio.
+  //
+  // O que uma casca manda: "tauri://localhost" no macOS/Linux e
+  // "http://tauri.localhost" no Windows; "capacitor://localhost" num invólucro
+  // de celular. Por isso http(s) aqui só passa em host local — senão esta lista
+  // viraria a porta dos fundos para burlar a regra de HTTPS logo acima.
+  const appOrigins = (env.ALLOWED_APP_ORIGINS || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  const origemDeAppValida = (valor: string) => {
+    if (valor === "null" || valor === "*") return false;
+    let url: URL;
+    try {
+      url = new URL(valor);
+    } catch {
+      return false;
+    }
+    // Origem pura: sem caminho, busca ou fragmento.
+    if (url.pathname !== "" && url.pathname !== "/") return false;
+    if (url.search || url.hash) return false;
+    if (url.protocol === "http:" || url.protocol === "https:")
+      return (
+        url.hostname === "localhost" || url.hostname.endsWith(".localhost")
+      );
+    return true;
+  };
+  if (!appOrigins.every(origemDeAppValida))
+    throw new Error(
+      "ALLOWED_APP_ORIGINS aceita só origem de casca nativa, sem caminho " +
+        "(ex: tauri://localhost, capacitor://localhost, http://tauri.localhost).",
+    );
   const trustProxy =
     !env.TRUST_PROXY || env.TRUST_PROXY === "false"
       ? false
@@ -124,6 +160,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port,
     production,
     origins: [...new Set(origins)],
+    appOrigins: [...new Set(appOrigins)],
     secret,
     trustProxy,
     sessionTtl: integer(env.SESSION_TTL_SECONDS, 3600, 300, 86400) * 1000,

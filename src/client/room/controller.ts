@@ -14,6 +14,7 @@ import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
 import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
 import { freshKey } from "../id";
+import { api, socketOrigin, invite, embedded } from "../endpoint";
 import { AudioOutput } from "../media/audio-output";
 export interface View {
   revision: number;
@@ -177,7 +178,7 @@ export class Controller {
   }
   async initialize() {
     if (this.config) return;
-    const response = await fetch("/api/config", {
+    const response = await fetch(api("/api/config"), {
       signal: AbortSignal.timeout(15000),
     });
     if (!response.ok)
@@ -194,7 +195,7 @@ export class Controller {
           undefined;
       } catch {}
     if (fresh || !this.session || this.session.expiresAt < Date.now() + 30000) {
-      const res = await fetch("/api/session", {
+      const res = await fetch(api("/api/session"), {
         method: "POST",
         signal: AbortSignal.timeout(15000),
       });
@@ -250,7 +251,7 @@ export class Controller {
       this.view.id = session.id;
       this.socket?.removeAllListeners();
       this.socket?.disconnect();
-      const socket = io(this.config!.signalingUrl || location.origin, {
+      const socket = io(this.config!.signalingUrl || socketOrigin(), {
         path: this.config!.socketPath,
         transports: ["websocket"],
         auth: { token: session.token },
@@ -353,9 +354,10 @@ export class Controller {
       await this.reconcile();
       this.peers.resume();
       this.bump();
-      if (this.persist) {
-        const url = new URL(location.href);
-        url.searchParams.set("sala", result.snapshot.code);
+      // So reescreve a barra de enderecos quando ela existe de verdade. Dentro
+      // de uma casca nativa nao ha barra, e o "link" seria do esquema da casca.
+      if (this.persist && !embedded) {
+        const url = invite(result.snapshot.code);
         history.replaceState(null, "", url);
       }
     } catch (e) {

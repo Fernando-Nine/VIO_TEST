@@ -420,6 +420,96 @@ test("credenciais TURN temporárias e configuração de produção fechada", asy
     await app.close();
   }
 });
+
+test("origem de casca nativa é aceita sem afrouxar a regra da web", async () => {
+  const app = "tauri://localhost";
+
+  // A lista de casca aceita esquema próprio e host local, e recusa o resto.
+  // Estas três recusas são o ponto do teste: sem elas ALLOWED_APP_ORIGINS
+  // viraria a porta dos fundos para burlar a exigência de HTTPS.
+  for (const ruim of [
+    "https://evil.example",
+    "http://evil.example",
+    "null",
+    "*",
+    "tauri://localhost/algum/caminho",
+  ])
+    assert.throws(
+      () =>
+        readConfig({
+          PORT: "0",
+          SESSION_SECRET: secret,
+          ALLOWED_ORIGINS: origin,
+          ALLOWED_APP_ORIGINS: ruim,
+        }),
+      new RegExp("ALLOWED_APP_ORIGINS"),
+      `deveria recusar ${ruim}`,
+    );
+
+  // A regra de produção continua valendo para a lista web.
+  assert.throws(() =>
+    readConfig({
+      NODE_ENV: "production",
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: "http://inseguro.example",
+      ALLOWED_APP_ORIGINS: app,
+    }),
+  );
+
+  const instance = await createApp(
+    readConfig({
+      PORT: "0",
+      SESSION_SECRET: secret,
+      ALLOWED_ORIGINS: origin,
+      ALLOWED_APP_ORIGINS: `${app},http://tauri.localhost`,
+      STUN_URLS: "",
+    }),
+  );
+  instance.http.listen(0, "127.0.0.1");
+  await once(instance.http, "listening");
+  const url = `http://127.0.0.1:${(instance.http.address() as any).port}`;
+  try {
+    const abrir = (origem?: string) =>
+      fetch(url + "/api/session", {
+        method: "POST",
+        ...(origem ? { headers: { Origin: origem } } : {}),
+      });
+
+    assert.equal((await abrir(app)).status, 200, "casca nativa deve entrar");
+    assert.equal(
+      (await abrir("http://tauri.localhost")).status,
+      200,
+      "casca do Windows deve entrar",
+    );
+    assert.equal((await abrir(origin)).status, 200, "web continua entrando");
+    assert.equal(
+      (await abrir("https://evil.example")).status,
+      403,
+      "origem desconhecida continua barrada",
+    );
+    assert.equal(
+      (await abrir()).status,
+      403,
+      "origem ausente continua barrada",
+    );
+
+    // E o socket segue a mesma regra do /api/session.
+    const token = (await (await abrir(app)).json()).token;
+    const socket = await connect(url, token, app);
+    try {
+      assert.equal(socket.connected, true, "socket da casca deve conectar");
+    } finally {
+      socket.disconnect();
+    }
+    await assert.rejects(
+      connect(url, token, "https://evil.example"),
+      "socket de origem desconhecida continua barrado",
+    );
+  } finally {
+    await instance.close();
+  }
+});
+
 test("Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn", async () => {
   // As duas variáveis vêm sempre juntas.
   assert.throws(() =>

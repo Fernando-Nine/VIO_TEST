@@ -43,6 +43,7 @@ import {
 } from "./components/RoomStatus";
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
+import { invite } from "./endpoint";
 import type { Participant, Publication } from "../shared/protocol";
 type Panel = "settings" | "people" | "about" | "share" | "history" | null;
 function Brand() {
@@ -279,8 +280,7 @@ export default function App({ engine }: { engine: Controller }) {
   };
   async function copy(link = true) {
     try {
-      const url = new URL(location.href);
-      url.searchParams.set("sala", view.snapshot!.code);
+      const url = invite(view.snapshot!.code);
       await navigator.clipboard.writeText(
         link ? url.href : view.snapshot!.code,
       );
