@@ -41,6 +41,7 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
+import { FloatingPeople } from "./components/FloatingPeople";
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
@@ -199,17 +200,20 @@ export default function App({ engine }: { engine: Controller }) {
   const video = useRef<HTMLVideoElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const visibleIds = useRef(new Set<string>());
+  const draggingCards = useRef(false);
   useEffect(() => {
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", view.snapshot ? "#0b0c13" : "#f4f2e9");
+      ?.setAttribute("content", "#0b0c13");
   }, [!!view.snapshot]);
   const wake = useCallback(() => {
     setActive(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       if (
+        !draggingCards.current &&
         !document.querySelector("dialog[open]") &&
+        !document.querySelector(".floating-people.has-menu") &&
         !document.activeElement?.matches(":focus-visible")
       )
         setActive(false);
@@ -310,11 +314,12 @@ export default function App({ engine }: { engine: Controller }) {
   }
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && source ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
       onPointerMove={wake}
       onPointerDown={wake}
       onKeyDown={wake}
       onFocus={wake}
+      onBlur={wake}
     >
       <header className="app-header">
         <div className="header-left">
@@ -327,7 +332,7 @@ export default function App({ engine }: { engine: Controller }) {
                 title="Copiar código da sala"
                 onClick={() => void copy(false)}
               >
-                {view.snapshot.code}
+                <span>{view.snapshot.code}</span>
                 <Copy size={14} />
               </button>
             </>
@@ -388,15 +393,10 @@ export default function App({ engine }: { engine: Controller }) {
           }}
         />
       ) : (
-        <main className="room">
+        <main className="room" id="main-content">
           <div className="room-heading">
             <div>
-              <span className="eyebrow">SALA COMPARTILHADA</span>
-              <h1>
-                {source
-                  ? "Todo mundo na mesma cena."
-                  : "Sua companhia está aqui."}
-              </h1>
+              <h1>{source ? "Na mesma cena." : "Sua companhia está aqui."}</h1>
               <RoomTimer engine={engine} />
             </div>
             <div className="room-capacity">
@@ -409,7 +409,10 @@ export default function App({ engine }: { engine: Controller }) {
             </div>
           </div>
           <div className="player-layout">
-            <div className="player" ref={player}>
+            <div
+              className={`player ${screens.length > 1 ? "has-streams" : ""} ${source ? "has-video" : ""}`}
+              ref={player}
+            >
               <div className="player-top">
                 <span className={source ? "live-label" : "player-label"}>
                   {source ? <Radio size={14} /> : <Monitor size={15} />}{" "}
@@ -552,113 +555,120 @@ export default function App({ engine }: { engine: Controller }) {
                   </div>
                 </div>
               )}
-            </div>
-            {screens.length > 1 && (
-              <div
-                className="stream-rail"
-                aria-label="Transmissões disponíveis"
+              {screens.length > 1 && (
+                <div
+                  className="stream-rail"
+                  aria-label="Transmissões disponíveis"
+                >
+                  {screens.map((p) => (
+                    <Preview
+                      key={p.id}
+                      publication={p}
+                      name={
+                        people.find((m) => m.id === p.owner)?.name ||
+                        "Participante"
+                      }
+                      engine={engine}
+                      visible={active && !panel}
+                      onVisible={previewVisible}
+                    />
+                  ))}
+                </div>
+              )}
+              <FloatingPeople
+                onInteraction={(busy) => {
+                  draggingCards.current = busy;
+                  wake();
+                }}
               >
-                {screens.map((p) => (
-                  <Preview
-                    key={p.id}
-                    publication={p}
-                    name={
-                      people.find((m) => m.id === p.owner)?.name ||
-                      "Participante"
-                    }
-                    engine={engine}
-                    visible={active && !panel}
-                    onVisible={previewVisible}
-                  />
+                {people.map((person) => (
+                  <Person key={person.id} person={person} engine={engine} />
                 ))}
-              </div>
-            )}
+                {people.length < view.snapshot.maxParticipants && (
+                  <button className="invite-seat" onClick={() => void copy()}>
+                    <span>
+                      <Users size={22} />
+                    </span>
+                    <small>Tem lugar aqui</small>
+                  </button>
+                )}
+              </FloatingPeople>
+              <footer className="dock" aria-label="Controles da sala">
+                <div className="dock-group">
+                  <button
+                    className={`dock-button ${micMuted ? "muted" : ""}`}
+                    aria-pressed={!micMuted}
+                    aria-label={
+                      hasVoice
+                        ? engine.captures.micMuted
+                          ? "Ativar microfone"
+                          : "Silenciar microfone"
+                        : "Conectar microfone"
+                    }
+                    disabled={!canMedia && !hasVoice}
+                    onClick={() => void engine.microphone()}
+                  >
+                    {micMuted ? <MicOff /> : <Mic />}
+                    <span>Microfone</span>
+                  </button>
+                  <button
+                    className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
+                    aria-pressed={engine.captures.deaf}
+                    aria-label={
+                      engine.captures.deaf
+                        ? "Desativar ensurdecer"
+                        : "Ensurdecer"
+                    }
+                    onClick={() => engine.deafen()}
+                  >
+                    {engine.captures.deaf ? <HeadphoneOff /> : <Headphones />}
+                    <span>Áudio</span>
+                  </button>
+                  <button
+                    className={`dock-button ${hasCamera ? "enabled" : ""}`}
+                    aria-label={hasCamera ? "Desligar câmera" : "Ligar câmera"}
+                    aria-pressed={hasCamera}
+                    disabled={!canMedia && !hasCamera}
+                    onClick={() => void engine.camera()}
+                  >
+                    {hasCamera ? <Camera /> : <CameraOff />}
+                    <span>Câmera</span>
+                  </button>
+                </div>
+                <span className="dock-divider" />
+                <button
+                  className={`share-button ${hasScreen ? "sharing" : ""}`}
+                  aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
+                  disabled={!canShare && !hasScreen}
+                  onClick={() =>
+                    hasScreen ? void engine.stop("screen") : open("share")
+                  }
+                >
+                  {hasScreen ? <Pause size={19} /> : <MonitorUp size={19} />}
+                  <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
+                </button>
+                <span className="dock-divider" />
+                <div className="dock-group">
+                  <button
+                    className="dock-button"
+                    aria-label="Ajustes"
+                    onClick={() => open("settings")}
+                  >
+                    <Settings2 />
+                    <span>Ajustes</span>
+                  </button>
+                  <button
+                    className="dock-button leave"
+                    aria-label="Sair da sala"
+                    onClick={() => void engine.leave()}
+                  >
+                    <LogOut />
+                    <span>Sair</span>
+                  </button>
+                </div>
+              </footer>
+            </div>
           </div>
-          <section className="people-strip" aria-label="Pessoas na sala">
-            {people.map((person) => (
-              <Person key={person.id} person={person} engine={engine} />
-            ))}
-            {people.length < view.snapshot.maxParticipants && (
-              <button className="invite-seat" onClick={() => void copy()}>
-                <span>
-                  <Users size={22} />
-                </span>
-                <small>Tem lugar aqui</small>
-              </button>
-            )}
-          </section>
-          <footer className="dock">
-            <div className="dock-group">
-              <button
-                className={`dock-button ${micMuted ? "muted" : ""}`}
-                aria-pressed={!micMuted}
-                aria-label={
-                  hasVoice
-                    ? engine.captures.micMuted
-                      ? "Ativar microfone"
-                      : "Silenciar microfone"
-                    : "Conectar microfone"
-                }
-                disabled={!canMedia && !hasVoice}
-                onClick={() => void engine.microphone()}
-              >
-                {micMuted ? <MicOff /> : <Mic />}
-                <span>Microfone</span>
-              </button>
-              <button
-                className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
-                aria-pressed={engine.captures.deaf}
-                aria-label={
-                  engine.captures.deaf ? "Desativar ensurdecer" : "Ensurdecer"
-                }
-                onClick={() => engine.deafen()}
-              >
-                {engine.captures.deaf ? <HeadphoneOff /> : <Headphones />}
-                <span>Áudio</span>
-              </button>
-              <button
-                className={`dock-button ${hasCamera ? "enabled" : ""}`}
-                aria-label={hasCamera ? "Desligar câmera" : "Ligar câmera"}
-                aria-pressed={hasCamera}
-                disabled={!canMedia && !hasCamera}
-                onClick={() => void engine.camera()}
-              >
-                {hasCamera ? <Camera /> : <CameraOff />}
-                <span>Câmera</span>
-              </button>
-            </div>
-            <span className="dock-divider" />
-            <button
-              className={`share-button ${hasScreen ? "sharing" : ""}`}
-              aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
-              disabled={!canShare && !hasScreen}
-              onClick={() =>
-                hasScreen ? void engine.stop("screen") : open("share")
-              }
-            >
-              {hasScreen ? <Pause size={19} /> : <MonitorUp size={19} />}
-              <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
-            </button>
-            <span className="dock-divider" />
-            <div className="dock-group">
-              <button
-                className="dock-button"
-                aria-label="Ajustes"
-                onClick={() => open("settings")}
-              >
-                <Settings2 />
-                <span>Ajustes</span>
-              </button>
-              <button
-                className="dock-button leave"
-                aria-label="Sair da sala"
-                onClick={() => void engine.leave()}
-              >
-                <LogOut />
-                <span>Sair</span>
-              </button>
-            </div>
-          </footer>
           {engine.captures.voiceBlocked() && (
             <button
               className="audio-unlock"

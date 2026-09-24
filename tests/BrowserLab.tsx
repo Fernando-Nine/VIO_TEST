@@ -5,6 +5,7 @@ import App from "../src/client/App";
 import { syntheticAdapter } from "./synthetic";
 import { freshKey } from "../src/client/id";
 import { mediaDeadline } from "../src/client/media/deadline";
+import { LayoutLab } from "./LayoutLab";
 import { FeatureLab } from "./FeatureLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
 async function until(condition: () => boolean, label: string, ms = 20000) {
@@ -24,6 +25,10 @@ export function BrowserLab() {
   const [shown, setShown] = useState(-1);
   const [mobile, setMobile] = useState(false);
   const [previewWidth, setPreviewWidth] = useState(390);
+  const [previewHeight, setPreviewHeight] = useState(844);
+  const [previewPage, setPreviewPage] = useState("/");
+  const [layoutReport, setLayoutReport] = useState("");
+  const previewFrame = useRef<HTMLIFrameElement>(null);
   const cleanup = useRef<() => Promise<void>>(async () => {});
   useEffect(
     () => () => {
@@ -349,8 +354,86 @@ export function BrowserLab() {
             <option value={320}>320 px</option>
             <option value={390}>390 px</option>
             <option value={768}>768 px</option>
+            <option value={1024}>1024 px</option>
+            <option value={1366}>1366 px</option>
+            <option value={1440}>1440 px</option>
+            <option value={1920}>1920 px</option>
           </select>
         </label>
+      )}
+      {mobile && (
+        <>
+          <label>
+            Altura da prévia
+            <select
+              value={previewHeight}
+              onChange={(e) => setPreviewHeight(+e.target.value)}
+            >
+              {[390, 600, 768, 844, 900, 1080].map((height) => (
+                <option value={height} key={height}>
+                  {height} px
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Página da prévia
+            <select
+              value={previewPage}
+              onChange={(e) => setPreviewPage(e.target.value)}
+            >
+              <option value="/">Entrada</option>
+              <option value="/qa-layout">Sala sintética</option>
+            </select>
+          </label>
+          <button
+            className="secondary"
+            onClick={() => {
+              const doc = previewFrame.current?.contentDocument;
+              if (!doc) return;
+              const root = doc.documentElement;
+              const player = doc
+                .querySelector(".player")
+                ?.getBoundingClientRect();
+              const cards = doc
+                .querySelector(".floating-people")
+                ?.getBoundingClientRect();
+              const dock = doc.querySelector(".dock")?.getBoundingClientRect();
+              setLayoutReport(
+                JSON.stringify(
+                  {
+                    width: root.clientWidth,
+                    scrollWidth: root.scrollWidth,
+                    height: root.clientHeight,
+                    scrollHeight: root.scrollHeight,
+                    playerHeight: player?.height,
+                    cardsInside:
+                      player && cards
+                        ? cards.left >= player.left &&
+                          cards.right <= player.right &&
+                          cards.top >= player.top &&
+                          cards.bottom <= player.bottom
+                        : null,
+                    dockInside:
+                      player && dock
+                        ? dock.left >= player.left &&
+                          dock.right <= player.right &&
+                          dock.bottom <= player.bottom
+                        : null,
+                    cardOpacity: doc.defaultView?.getComputedStyle(
+                      doc.querySelector(".floating-people") || root,
+                    ).opacity,
+                  },
+                  null,
+                  2,
+                ),
+              );
+            }}
+          >
+            Medir layout da prévia
+          </button>
+          <pre aria-label="Medições do layout">{layoutReport}</pre>
+        </>
       )}
       {controllers.map((e, i) => (
         <button key={i} className="secondary" onClick={() => setShown(i)}>
@@ -400,12 +483,13 @@ export function BrowserLab() {
       </button>
       {mobile && (
         <iframe
-          title={`VIO em ${previewWidth} por 844 pixels`}
-          src="/"
+          ref={previewFrame}
+          title={`VIO em ${previewWidth} por ${previewHeight} pixels`}
+          src={previewPage}
           style={{
             display: "block",
             width: previewWidth,
-            height: 844,
+            height: previewHeight,
             margin: "25px auto",
             border: "1px solid #555",
           }}
@@ -417,5 +501,7 @@ export function BrowserLab() {
 export async function mountLab(root: Root) {
   const config = await fetch("/api/config").then((r) => r.json());
   if (!config.testLab) throw new Error("Laboratório desabilitado.");
-  root.render(<BrowserLab />);
+  root.render(
+    location.pathname === "/qa-layout" ? <LayoutLab /> : <BrowserLab />,
+  );
 }

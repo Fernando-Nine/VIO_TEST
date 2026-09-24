@@ -1,0 +1,31 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> vio@2.2.0 test
+> node --import tsx --test tests/*.test.ts
+
+✔ ping distingue sinalização e tela, latência e conexão interrompida (1.525904ms)
+✔ saída muda voz, tela e elementos futuros; falha reverte a seleção (1.411051ms)
+✔ service worker jamais intercepta navegação, sala, sessão ou socket (12.413835ms)
+✔ changelog preserva o histórico inteiro e a mudança de sistema (2.757765ms)
+✔ arraste encaixa nas seis posições dentro da área útil do vídeo (2.804265ms)
+✔ redimensionamento mantém o painel acessível e limita arraste fora da tela (0.203928ms)
+✔ tokens assinados rejeitam adulteração e expiração (2.440325ms)
+✔ seis pessoas entram, a sétima é recusada e a duração pertence à sala (109.377876ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (23.198719ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (13.111674ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (10.410995ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (14.102631ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (10.742276ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (5.823115ms)
+✔ origem de casca nativa é aceita sem afrouxar a regra da web (14.928799ms)
+{"time":"2026-09-24T18:12:39.848Z","event":"cloudflare_turn_error","status":500}
+✔ Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn (13.628786ms)
+✔ credencial TURN estática: par fixo da config, sem HMAC (4.999621ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 666.089306

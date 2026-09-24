@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.1.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.2.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -46,12 +46,18 @@ Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
 
-## Entrada 2.1.0
+## Interface 2.2.0
 
-Composição em marfim e preto, azul sólido e verde-lima pontual, com Bricolage
-Grotesque e Instrument Serif locais. O formulário mantém criação e entrada por
-código, com inicial personalizada. A prévia Tela/Voz/Câmera responde a clique e
-teclado sem iniciar capturas. Animações leves respeitam movimento reduzido.
+Entrada e sala em carvão, branco suave e azul #2727F5, com Bricolage Grotesque e
+Instrument Serif locais. A entrada cabe na janela de desktop; celulares mantêm
+rolagem natural. O fundo geométrico se move suavemente e respeita movimento reduzido.
+
+A sala ocupa a altura disponível, com controles sobre a transmissão. Arraste a alça
+“Por aqui” para mover os cards entre seis encaixes, clique nela para escolher uma
+posição ou use as setas do teclado. Os cards desaparecem após 4,5 segundos sem
+atividade; o alfinete permite mantê-los visíveis. Mover o mouse, tocar ou usar o
+teclado traz os controles de volta. O foco de teclado e os menus abertos impedem a
+ocultação. A posição se adapta ao redimensionamento e à tela cheia.
 
 ## O que a interface oferece
 

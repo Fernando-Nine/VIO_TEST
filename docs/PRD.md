@@ -1,6 +1,6 @@
 # VIO — produto e aceite
 
-Atualizado em 16/09/2026, versão 2.1.0. Base reescrita, com importação exclusiva
+Atualizado em 24/09/2026, versão 2.2.0. Base reescrita, com importação exclusiva
 do CHANGELOG.md histórico do VIO_2; nenhum código anterior importado.
 
 ## Objetivo
@@ -44,3 +44,11 @@ teal para transmissão, by NerdQuest Studios · fundado por Nine. AGPLv3.
 | Operação | build, Render, Docker | build, health check, encerramento e rollback |
 
 O resultado de cada teste e as dependências externas constam em VALIDACAO.md.
+
+## Interface 2.2.0
+
+Tema escuro compartilhado entre entrada e sala. No desktop, entrada ajustada à
+janela; na sala, área principal flexível sem rolagem externa. Painel de participantes
+sobre o vídeo, com seis encaixes, arraste com captura do ponteiro e escolha por
+clique/setas. Ocultação após 4,5 segundos sem atividade, suspensa por foco de teclado,
+menus ou arraste; opção de manter os cards visíveis. Movimento reduzido respeitado.

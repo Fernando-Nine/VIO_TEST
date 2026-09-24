@@ -1,0 +1,50 @@
+[
+  {
+    "element": "Texto",
+    "ratio": 17.49,
+    "foreground": "#f1f2fa",
+    "background": "#0b0c13"
+  },
+  {
+    "element": "Secundário",
+    "ratio": 8.22,
+    "foreground": "#acafc3",
+    "background": "#151722"
+  },
+  {
+    "element": "Placeholder",
+    "ratio": 7.11,
+    "foreground": "#9a9eb7",
+    "background": "#0f111c"
+  },
+  {
+    "element": "CTA azul da marca",
+    "ratio": 7.18,
+    "foreground": "#f4f5ff",
+    "background": "#2727f5"
+  },
+  {
+    "element": "Foco e título",
+    "ratio": 8.57,
+    "foreground": "#a8adff",
+    "background": "#151722"
+  },
+  {
+    "element": "Borda campo",
+    "ratio": 3.6,
+    "foreground": "#656b8a",
+    "background": "#0f111c"
+  },
+  {
+    "element": "Nome no card",
+    "ratio": 13.9,
+    "foreground": "#e2e6f6",
+    "background": "#151a2b"
+  },
+  {
+    "element": "Alça cards",
+    "ratio": 7.97,
+    "foreground": "#acafc3",
+    "background": "#151a2b"
+  }
+]

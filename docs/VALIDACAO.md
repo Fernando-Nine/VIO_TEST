@@ -1,5 +1,36 @@
 # VIO — validação
 
+## Atualização 2.2.0 — 24/09/2026
+
+Build de produção e 17 testes aprovados após incorporar a main `d8ee610`:
+servidor remoto, três opções de TURN e seus testes foram preservados. Os dois
+novos casos verificam os seis encaixes dos cards e os limites após redimensionar.
+O histórico original continua íntegro, com 16 versões anteriores à nova base.
+
+Entrada conferida em 320/390 px sem rolagem horizontal, e em 1024 × 600,
+1366 × 768 e 1440 × 900 sem rolagem externa no desktop. Em 1024 × 600 o
+formulário fechado também cabe sem rolagem interna. Expandir as instruções de
+instalação permite rolar o próprio formulário em janelas baixas.
+
+Sala conferida com seis participantes e duas telas sintéticas em prévias de
+320 × 844, 390 × 844, 1024 × 600, 1366 × 768 e 768 × 390 (paisagem),
+sem rolagem externa. Cards e
+controles ficam dentro da área do vídeo. Arraste real por ponteiro, encaixe,
+reposicionamento por setas e menu por clique foram exercitados no navegador.
+Ocultação medida com opacity 0 / pointer-events none após inatividade, e
+alfinete mantendo opacity 1. O ensaio cobre interface e presença; não comprova
+transporte de mídia em redes físicas.
+
+Paleta final segue #2727F5. Contrastes calculados: texto principal 17,49:1,
+secundário 8,22:1, placeholder 7,11:1, CTA 7,18:1 e foco 8,57:1. A borda dos
+campos atinge 3,60:1. Valores completos em `evidence/contrast-2.2.0.json`.
+A revisão visual excluiu os padrões proibidos: sem gradiente roxo-azul,
+blob, cards de marketing repetidos, emojis, fonte anterior ou biblioteca de
+animação adicional. Movimento somente por transform/opacity; reduced-motion
+continua desabilitando os efeitos. Cursor de ação convencional, labels com
+espaço para o foco, animação decorativa sem captura nem imagens externas.
+
+
 ## Atualização 2.1.0 — 16/09/2026
 
 Build de produção e os 12 testes existentes aprovados. Entrada redesenhada

@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.1.0**, em 16/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.2.0**, em 24/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -34,6 +34,10 @@ seis participantes com explicação e ping visível com cores.
 Adições da 2.1.0: entrada redesenhada com tipografia expressiva, composição
 assimétrica, fundo marfim, prévia interativa de recursos, inicial personalizada
 e cursor próprio. Fluxos de sala, áudio, vídeo, instalação e histórico preservados.
+
+Adições da 2.2.0: tema escuro unificado, fundo sutil animado, entrada ajustada à
+altura do desktop, transmissão ampliada e painel de cards flutuante com seis
+encaixes, arraste, teclado, seleção por clique e ocultação opcional por inatividade.
 
 ## O que foi comprovado
 

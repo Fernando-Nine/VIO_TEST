@@ -76,3 +76,8 @@ pacote de código-fonte. O build produz `dist/client`, `dist/server/index.js` e
 | `tests/synthetic.ts` | Testes e laboratório sintético |
 | `tsconfig.json` | Configuração, licença ou guia inicial |
 | `vite.config.ts` | Configuração, licença ou guia inicial |
+
+Arquivos adicionados na 2.2.0: `src/client/room.css`,
+`src/client/components/FloatingPeople.tsx`, `src/client/components/floating-position.ts`,
+`tests/floating-position.test.ts` e `tests/LayoutLab.tsx`. A ilustração do cursor
+interativo foi removida; botões usam o ponteiro convencional do navegador.

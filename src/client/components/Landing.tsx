@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import {
   ArrowDownRight,
   ArrowRight,
-  ArrowUpRight,
   Camera,
   LoaderCircle,
   Mic,
@@ -175,8 +174,6 @@ export function Landing({
   busy: boolean;
   enter: () => void;
 }) {
-  const initial = [...name.trim()][0]?.toUpperCase();
-  const nameInput = useRef<HTMLInputElement>(null);
   return (
     <main className="landing" id="main-content">
       <section className="landing-hero" aria-labelledby="landing-title">
@@ -201,17 +198,6 @@ export function Landing({
             <br />
             Voz e câmera para estar por perto.
           </p>
-          <a
-            href="#join-vio"
-            className="join-shortcut"
-            aria-label="Ir para criar ou entrar em uma sala"
-            onClick={(event) => {
-              event.preventDefault();
-              nameInput.current?.focus();
-            }}
-          >
-            <ArrowDownRight size={26} aria-hidden="true" />
-          </a>
         </div>
       </section>
 
@@ -225,19 +211,7 @@ export function Landing({
           <span>ENTRADA LIVRE</span>
         </div>
         <div className="join-welcome">
-          <h2 id="join-heading">
-            Chega
-            <br />
-            mais.
-          </h2>
-          <span
-            className={`join-stamp ${initial ? "has-name" : ""}`}
-            aria-hidden="true"
-          >
-            <span key={initial || "arrow"}>
-              {initial || <ArrowUpRight size={30} />}
-            </span>
-          </span>
+          <h2 id="join-heading">Chega mais.</h2>
         </div>
         <p>Escolha um nome e encontre sua turma.</p>
         <form
@@ -249,7 +223,6 @@ export function Landing({
         >
           <label htmlFor="your-name">Como podemos chamar você?</label>
           <input
-            ref={nameInput}
             id="your-name"
             autoComplete="nickname"
             placeholder="Seu nome"
