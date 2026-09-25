@@ -24,11 +24,17 @@ export function RoomTimer({ engine }: { engine: Controller }) {
   );
 }
 
-export function RoomLimit({ limit }: { limit: number }) {
+export function RoomLimit({
+  count,
+  threshold = 6,
+}: {
+  count: number;
+  threshold?: number;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <span
-      className="limit-help"
+      className={`limit-help ${count >= threshold ? "capacity-warning" : ""}`}
       onKeyDown={(e) => {
         if (e.key === "Escape") setOpen(false);
       }}
@@ -36,7 +42,11 @@ export function RoomLimit({ limit }: { limit: number }) {
       <button
         type="button"
         className="icon-button"
-        aria-label="Por que a sala tem limite de pessoas?"
+        aria-label={
+          count >= threshold
+            ? "Envio mais pesado: entender o custo da sala"
+            : "Como o número de pessoas afeta a conexão?"
+        }
         aria-expanded={open}
         aria-describedby="room-limit-explanation"
         onClick={() => setOpen((v) => !v)}
@@ -48,9 +58,10 @@ export function RoomLimit({ limit }: { limit: number }) {
         role="tooltip"
         className={`limit-tooltip ${open ? "shown" : ""}`}
       >
-        Até {limit} pessoas. A mídia usa conexões diretas entre os navegadores.
-        Cada pessoa a mais aumenta o envio e o trabalho dos aparelhos. Salas
-        maiores precisam de outra estrutura para manter a qualidade.
+        A sala não bloqueia a entrada pelo número de pessoas. A partir de{" "}
+        {threshold} pessoas, o envio fica mais pesado: a mídia usa conexões
+        diretas entre os navegadores. Cada participante aumenta o uso de rede e
+        o trabalho dos aparelhos. Se travar, reduza a qualidade da tela.
       </span>
     </span>
   );

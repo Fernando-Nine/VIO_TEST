@@ -61,7 +61,8 @@ try {
   assert.match(await root.text(), /VIO/);
   const config = await (await request("/api/config")).json();
   assert.equal(config.testLab, false);
-  assert.equal(config.maxParticipants, 6);
+  assert.equal(config.maxParticipants, null);
+  assert.equal(config.recommendedParticipants, 6);
   checks.push(
     "Página principal, configuração pública e laboratório desativado",
   );
@@ -72,9 +73,9 @@ try {
   assert.equal(worker.status, 200);
   assert.match(worker.headers.get("cache-control"), /no-cache/);
   assert.match(worker.headers.get("content-type"), /javascript/);
-  assert.match(await worker.text(), /vio-static-2\.2\.0/);
+  assert.match(await worker.text(), /vio-static-2\.3\.0/);
   checks.push(
-    "Manifest e service worker 2.2.0 entregues com cache de atualização correto",
+    "Manifest e service worker 2.3.0 entregues com cache de atualização correto",
   );
   const source = await request("/source.tar.gz");
   assert.equal(source.status, 200);

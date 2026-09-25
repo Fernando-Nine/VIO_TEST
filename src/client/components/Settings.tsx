@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import type { Controller } from "../room/controller";
-import { presets, type Quality } from "../../shared/protocol";
+import {
+  presets,
+  screenResolutions,
+  type Quality,
+} from "../../shared/protocol";
+import { outputError } from "../media/audio-output";
 export function Settings({ engine }: { engine: Controller }) {
   const [tab, setTab] = useState<"video" | "audio">("video");
   const [savingVoice, setSavingVoice] = useState(false);
@@ -43,23 +48,42 @@ export function Settings({ engine }: { engine: Controller }) {
           {d.label || `Dispositivo ${i + 1}`}
         </option>
       ));
-  const chooseOutput = async (id: string) => {
+  const outputDevices = navigator.mediaDevices as MediaDevices & {
+    selectAudioOutput?: (options?: {
+      deviceId?: string;
+    }) => Promise<MediaDeviceInfo>;
+  };
+  const chooseOutput = async (id?: string) => {
     setSavingOutput(true);
     try {
-      await engine.output.select(id);
+      let selected = id || "";
+      if (id !== "" && outputDevices?.selectAudioOutput) {
+        try {
+          selected = (await outputDevices.selectAudioOutput({ deviceId: id }))
+            .deviceId;
+        } catch (error) {
+          // Cancelling the browser picker leaves the current output untouched.
+          if (error instanceof Error && error.name === "NotAllowedError")
+            return;
+          throw error;
+        }
+      }
+      await engine.output.select(selected);
       engine.savePreferences();
-    } catch {
+      // A list refresh failure must not report a successful output change as failed.
+      void navigator.mediaDevices
+        .enumerateDevices()
+        .then(setDevices)
+        .catch(() => {});
+    } catch (error) {
       engine.fail(
         new Error(
-          "Não foi possível selecionar essa saída de áudio. Confira a permissão do navegador ou escolha outra saída.",
+          `${outputError(error)} Escolha outra saída em Ajustes → Áudio.`,
         ),
       );
     } finally {
       setSavingOutput(false);
     }
-  };
-  const outputDevices = navigator.mediaDevices as MediaDevices & {
-    selectAudioOutput?: () => Promise<MediaDeviceInfo>;
   };
   return (
     <>
@@ -147,6 +171,26 @@ export function Settings({ engine }: { engine: Controller }) {
             ))}
           </div>
           <label>
+            Resolução do envio
+            <select
+              value={quality.resolution}
+              onChange={(e) =>
+                setQuality({ ...quality, resolution: +e.target.value })
+              }
+            >
+              {screenResolutions.map((resolution) => (
+                <option key={resolution} value={resolution}>
+                  {resolution}p
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="field-note">
+            Altura máxima do vídeo enviado. A proporção é preservada e uma
+            captura menor não é ampliada. Resoluções maiores precisam de mais
+            banda; confira o envio efetivo abaixo.
+          </p>
+          <label>
             Quadros por segundo <output>{quality.fps} FPS</output>
             <input
               aria-label="Quadros por segundo"
@@ -170,20 +214,6 @@ export function Settings({ engine }: { engine: Controller }) {
               value={quality.bitrate}
               onChange={(e) =>
                 setQuality({ ...quality, bitrate: +e.target.value })
-              }
-            />
-          </label>
-          <label>
-            Redução da resolução <output>÷ {quality.scale}</output>
-            <input
-              aria-label="Escala da resolução"
-              type="range"
-              min="1"
-              max="4"
-              step="0.5"
-              value={quality.scale}
-              onChange={(e) =>
-                setQuality({ ...quality, scale: +e.target.value })
               }
             />
           </label>
@@ -262,6 +292,11 @@ export function Settings({ engine }: { engine: Controller }) {
             <p className="field-note">
               Onde você ouve a conversa e o som das telas.
             </p>
+            {engine.output.restoreMessage && (
+              <p className="field-note" role="status">
+                {engine.output.restoreMessage}
+              </p>
+            )}
             <label>
               Reproduzir em
               <select
@@ -277,20 +312,13 @@ export function Settings({ engine }: { engine: Controller }) {
               <button
                 className="text-button"
                 disabled={savingOutput}
-                onClick={() => {
-                  void outputDevices.selectAudioOutput!()
-                    .then(async (device) => {
-                      setDevices(
-                        await navigator.mediaDevices.enumerateDevices(),
-                      );
-                      await chooseOutput(device.deviceId);
-                    })
-                    .catch((error) => {
-                      if (error?.name !== "NotAllowedError") engine.fail(error);
-                    });
-                }}
+                onClick={() =>
+                  void chooseOutput(engine.output.pendingDeviceId || undefined)
+                }
               >
-                Escolher outra saída no navegador
+                {engine.output.pendingDeviceId
+                  ? "Confirmar saída salva no navegador"
+                  : "Escolher outra saída no navegador"}
               </button>
             ) : (
               <p className="field-note">

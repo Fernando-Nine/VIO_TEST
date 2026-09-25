@@ -20,6 +20,7 @@ async function server(port = 0) {
       SESSION_SECRET: secret,
       ALLOWED_ORIGINS: origin,
       STUN_URLS: "",
+      MAX_PARTICIPANTS: "6", // A legacy deployment must not reintroduce the cap.
     }),
   );
   instance.http.listen(port, "127.0.0.1");
@@ -77,27 +78,26 @@ test("tokens assinados rejeitam adulteração e expiração", () => {
   assert.throws(() => verifyToken(secret, issued.token.slice(0, -5) + "AAAAA"));
   assert.throws(() => verifyToken(secret, issueToken(secret, -1).token));
 });
-test("seis pessoas entram, a sétima é recusada e a duração pertence à sala", async () => {
+test("oito pessoas entram sem teto de seis; aviso e duração pertencem à sala", async () => {
   const app = await server();
   const sockets: Socket[] = [];
   try {
     const config = await fetch(app.url + "/api/config").then((r) => r.json());
-    assert.equal(config.maxParticipants, 6);
+    assert.equal(config.maxParticipants, null);
+    assert.equal(config.recommendedParticipants, 6);
     const snapshots: Snapshot[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       const socket = await connect(app.url, (await session(app.url)).token);
       sockets.push(socket);
       const reply = await request<{ snapshot: Snapshot }>(socket, "join", {
         name: `Pessoa ${i + 1}`,
         code: "QALIMITE",
       });
-      if (i < 6) snapshots.push(data(reply).snapshot);
-      else {
-        assert.equal(reply.ok, false);
-        if (!reply.ok) assert.equal(reply.code, "ROOM_FULL");
-      }
+      snapshots.push(data(reply).snapshot);
     }
-    assert.equal(snapshots[5].participants.length, 6);
+    assert.equal(snapshots[7].participants.length, 8);
+    assert.equal(snapshots[7].recommendedParticipants, 6);
+    assert.equal(snapshots[7].maxParticipants, null);
     assert.equal(new Set(snapshots.map((s) => s.createdAt)).size, 1);
     assert.ok(snapshots[5].serverTime >= snapshots[0].serverTime);
     assert.ok(snapshots[0].createdAt <= snapshots[0].serverTime);

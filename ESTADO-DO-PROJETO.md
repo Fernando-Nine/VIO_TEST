@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.2.0**, em 24/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.3.0**, em 25/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -39,6 +39,13 @@ Adições da 2.2.0: tema escuro unificado, fundo sutil animado, entrada ajustada
 altura do desktop, transmissão ampliada e painel de cards flutuante com seis
 encaixes, arraste, teclado, seleção por clique e ocultação opcional por inatividade.
 
+Adições da 2.3.0: prévias maiores em 16:9, ocultação em 2 segundos, remoção do
+espaço lateral em monitores largos, resoluções nominais de 240p a 2160p,
+fontes sem cursiva e cursor de mão azul. Saída de áudio com validação de dispositivo
+salvo, proteção contra falhas de elementos removidos e recuperação na desconexão.
+Por pedido explícito do usuário, retirado o teto de seis pessoas: a partir de seis
+há aviso de custo, sem bloquear novos participantes. MAX_PARTICIPANTS é ignorada.
+
 ## O que foi comprovado
 
 Os resultados exatos, incluindo comandos, navegador e limitações do ambiente,
@@ -58,7 +65,7 @@ Consulte `docs/VALIDACAO.md` e `docs/evidence/media-browser.json`.
 - Relay TURN real: sem servidor/credenciais de relay configurados.
 - Captura física, revogação de permissão e reprodução em Safari/iPhone: dependem de
   navegador em HTTPS/localhost e dispositivos reais.
-- Capacidade efetiva de seis pessoas: precisa de medição em máquinas/redes físicas.
+- Capacidade de mídia com grupos maiores: precisa de medição em máquinas/redes físicas.
 
 A entrega é uma base executável com validação documentada. O aceite completo de mídia
 em produção permanece condicionado aos testes externos listados.

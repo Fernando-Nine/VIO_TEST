@@ -16,7 +16,7 @@ Decisão explícita de escopo, não limitação temporária:
 
 - Sem contas, senhas ou banco de dados. A sala nasce quando alguém entra e some quando esvazia.
 - Sem gravação, sem chat de texto, sem SFU / servidor de mídia.
-- Teto de 2 a 6 pessoas por sala (`MAX_PARTICIPANTS`, padrão 4). Malha P2P completa não escala além disso.
+- Por pedido explícito do usuário na 2.3.0, salas não têm teto de participantes. A partir de 6 pessoas, avisar do custo da malha P2P; `MAX_PARTICIPANTS` foi aposentada.
 - Não é Jitsi Meet. Feature que só faz sentido acima desse teto está fora.
 
 ## Arquitetura
@@ -216,8 +216,7 @@ Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.1.0.
 - Nunca adicionar dependência sem aprovação explícita. São 11 diretas hoje, e isso é um teto,
   não um ponto de partida.
 - Nunca commitar `.env`, segredo de TURN ou token.
-- Não subir `maxParticipants` acima de 6 sem SFU. A malha não aguenta, e o limite é validado
-  no `readConfig` de propósito.
+- Preservar o aviso de carga P2P a partir de 6 pessoas, sem impedir entrada: decisão explícita do usuário para a 2.3.0. Não apresentar a remoção do teto como garantia de capacidade de mídia ilimitada.
 
 ## Relação com o VIO_2
 

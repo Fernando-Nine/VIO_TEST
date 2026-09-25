@@ -104,7 +104,8 @@ export class Rooms {
       code: room.code,
       createdAt: room.createdAt,
       serverTime: Date.now(),
-      maxParticipants: this.config.maxParticipants,
+      maxParticipants: null,
+      recommendedParticipants: this.config.recommendedParticipants,
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
       ),
@@ -277,11 +278,6 @@ export class Rooms {
         this.rooms.set(code, room);
       }
       let member = room.members.get(socket.data.id);
-      if (!member && room.members.size >= this.config.maxParticipants)
-        throw new Fault(
-          "ROOM_FULL",
-          `Esta sala comporta ${this.config.maxParticipants} pessoas.`,
-        );
       if (member?.socketId && member.socketId !== socket.id)
         throw new Fault(
           "SESSION_IN_USE",

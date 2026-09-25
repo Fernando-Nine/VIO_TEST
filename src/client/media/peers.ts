@@ -1,6 +1,7 @@
 import type { IceConfig, Signal, Subscription } from "../../shared/protocol";
 import type { Captures } from "./capture";
 import { mediaDeadline } from "./deadline";
+import { videoEncoding } from "./video-quality";
 export interface PeerInfo {
   id: string;
   publicationId: string;
@@ -40,6 +41,7 @@ interface Peer {
   started: boolean;
   lastBytes?: number;
   lastTime?: number;
+  sourceHeight?: number;
   info: PeerInfo;
   events: AbortController;
 }
@@ -305,22 +307,22 @@ export class Peers {
       if (sender.track?.kind === "video") {
         const p = sender.getParameters();
         if (!p.encodings?.length) continue;
-        const quality =
-          peer.sub.publication.kind === "screen"
-            ? this.captures.quality
-            : { fps: 20, bitrate: 450, scale: 1 };
-        Object.assign(p.encodings[0], {
-          maxBitrate:
-            peer.sub.tier === "preview" ? 90000 : quality.bitrate * 1000,
-          maxFramerate: peer.sub.tier === "preview" ? 5 : quality.fps,
-          scaleResolutionDownBy:
-            peer.sub.tier === "preview" ? 1 : quality.scale,
-        });
+        const height = sender.track.getSettings().height;
+        Object.assign(
+          p.encodings[0],
+          videoEncoding(
+            this.captures.quality,
+            peer.sub.publication.kind,
+            peer.sub.tier,
+            height,
+          ),
+        );
         try {
           await mediaDeadline(
             sender.setParameters(p),
             "O navegador não confirmou os parâmetros do envio.",
           );
+          peer.sourceHeight = height;
         } catch {
           peer.info.error =
             "O navegador limitou os parâmetros do envio; confira as estatísticas efetivas.";
@@ -334,14 +336,17 @@ export class Peers {
         peer.sub.publication.kind === kind &&
         peer.sub.tier !== "preview"
       ) {
-        const source = this.captures.sources.get(peer.sub.publication.kind);
-        for (const sender of peer.pc.getSenders()) {
-          const track = source?.stream
-            .getTracks()
-            .find((t) => t.kind === sender.track?.kind);
-          if (track && sender.track !== track) await sender.replaceTrack(track);
-        }
-        await this.parameters(peer);
+        await this.serial(peer, async () => {
+          const source = this.captures.sources.get(peer.sub.publication.kind);
+          for (const sender of peer.pc.getSenders()) {
+            const track = source?.stream
+              .getTracks()
+              .find((t) => t.kind === sender.track?.kind);
+            if (track && sender.track !== track)
+              await sender.replaceTrack(track);
+          }
+          await this.parameters(peer);
+        });
       }
   }
   close(id: string) {
@@ -377,6 +382,18 @@ export class Peers {
       await Promise.allSettled(
         [...this.entries.values()].map(async (peer) => {
           if (peer.pc.connectionState === "closed") return;
+          if (
+            peer.outgoing &&
+            peer.sub.publication.kind === "screen" &&
+            peer.sub.tier === "main"
+          ) {
+            const height = peer.pc
+              .getSenders()
+              .find((s) => s.track?.kind === "video")
+              ?.track?.getSettings().height;
+            if (height !== peer.sourceHeight)
+              await this.serial(peer, () => this.parameters(peer));
+          }
           const stats = await peer.pc.getStats();
           let selected: any;
           let localCandidates = 0,

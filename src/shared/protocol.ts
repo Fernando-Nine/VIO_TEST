@@ -98,7 +98,8 @@ export interface Snapshot {
   createdAt: number;
   serverTime: number;
   participants: Participant[];
-  maxParticipants: number;
+  maxParticipants: null;
+  recommendedParticipants: number;
 }
 export interface Subscription {
   id: string;
@@ -118,17 +119,19 @@ export interface IceConfig {
 export interface RuntimeConfig {
   signalingUrl: string;
   socketPath: string;
-  maxParticipants: number;
+  maxParticipants: null;
+  recommendedParticipants: number;
   maxPreviews: number;
   testLab: boolean;
 }
 export interface Quality {
   fps: number;
   bitrate: number;
-  scale: number;
+  resolution: number;
 }
+export const screenResolutions = [240, 480, 720, 1080, 1440, 2160] as const;
 export const presets: Record<string, Quality> = {
-  Alta: { fps: 30, bitrate: 4000, scale: 1 },
-  Média: { fps: 24, bitrate: 1800, scale: 1.5 },
-  Baixa: { fps: 15, bitrate: 700, scale: 2 },
+  Alta: { fps: 30, bitrate: 4000, resolution: 1080 },
+  Média: { fps: 24, bitrate: 1800, resolution: 720 },
+  Baixa: { fps: 15, bitrate: 700, resolution: 480 },
 };

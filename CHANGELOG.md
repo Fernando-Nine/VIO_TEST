@@ -2,6 +2,22 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.3.0] - 2026-09-25
+
+Mais espaço, controles mais claros
+
+### Sala e compartilhamento
+- Prévias ao vivo maiores em 16:9, mantendo até duas miniaturas leves; cards e controles ocultos após 2 segundos de inatividade.
+- Removida a largura máxima antiga que deixava espaço vazio à direita em monitores maiores.
+- Salas sem bloqueio por quantidade de participantes. A partir de seis pessoas, um aviso explica o custo crescente das conexões diretas.
+- Resolução de envio selecionável em 240p, 480p, 720p, 1080p, 1440p e 2160p, preservando proporção e limite da captura original.
+
+### Áudio e interface
+- Saída padrão não é reaberta desnecessariamente. Falhas de vídeos removidos ou contextos encerrados não alteram a saída dos elementos ativos.
+- Dispositivos salvos são validados antes do uso; saída desconectada recebe recuperação única, com mensagem que distingue falha e retorno efetivo ao padrão.
+- Tipografia cursiva removida da entrada e da sala; Bricolage Grotesque e IBM Plex Mono locais mantêm a identidade moderna.
+- Cursor de mão próprio no azul #2727F5, combinando com o cursor de seta.
+
 ## [2.2.0] - 2026-09-24
 
 Luzes baixas. Mais espaço para assistir.

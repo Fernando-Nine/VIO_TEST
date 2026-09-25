@@ -1,6 +1,6 @@
 # VIO — produto e aceite
 
-Atualizado em 24/09/2026, versão 2.2.0. Base reescrita, com importação exclusiva
+Atualizado em 25/09/2026, versão 2.3.0. Base reescrita, com importação exclusiva
 do CHANGELOG.md histórico do VIO_2; nenhum código anterior importado.
 
 ## Objetivo
@@ -12,11 +12,11 @@ teal para transmissão, by NerdQuest Studios · fundado por Nine. AGPLv3.
 
 ## Decisões
 
-- React + TypeScript + Vite, CSS próprio, Bricolage Grotesque, Instrument Serif e IBM Plex Mono locais (OFL).
+- React + TypeScript + Vite, CSS próprio, Bricolage Grotesque e IBM Plex Mono locais (OFL).
 - Express e Socket.IO no mesmo servidor HTTP. Somente transporte WebSocket;
   evita afinidade de HTTP polling, mas redes que bloqueiam WebSocket impedem ingresso.
-- Uma instância, estado em memória, 6 participantes por padrão. Limite conservador,
-  não promessa de capacidade comprovada em todos os dispositivos.
+- Uma instância, estado em memória, sem teto de participantes por sala. A partir de
+  seis, aviso de carga P2P. Capacidade depende dos aparelhos e da rede.
 - Uma conexão WebRTC por assinatura dirigida. O publicador sempre oferece; o
   espectador responde. Telas cruzadas usam conexões distintas e não disputam ofertas.
 - Miniatura gerada uma vez na origem, em canvas de 320 × 180 / até 5 FPS,
@@ -45,10 +45,14 @@ teal para transmissão, by NerdQuest Studios · fundado por Nine. AGPLv3.
 
 O resultado de cada teste e as dependências externas constam em VALIDACAO.md.
 
-## Interface 2.2.0
+## Interface 2.3.0
 
 Tema escuro compartilhado entre entrada e sala. No desktop, entrada ajustada à
 janela; na sala, área principal flexível sem rolagem externa. Painel de participantes
 sobre o vídeo, com seis encaixes, arraste com captura do ponteiro e escolha por
-clique/setas. Ocultação após 4,5 segundos sem atividade, suspensa por foco de teclado,
+clique/setas. Ocultação após 2 segundos sem atividade, suspensa por foco de teclado,
 menus ou arraste; opção de manter os cards visíveis. Movimento reduzido respeitado.
+
+Resolução de envio por altura máxima: 240p, 480p, 720p, 1080p, 1440p e 2160p.
+Sem ampliação nem corte; prévias mantêm os próprios limites de banda. A área do
+vídeo ocupa a largura útil também em monitores acima de 1500 px.

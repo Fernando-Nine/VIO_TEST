@@ -97,6 +97,7 @@ input[type="checkbox"] {
 .in-room .room {
   flex: 1;
   width: 100%;
+  max-width: none;
   margin: 0;
   padding: 0 12px;
   min-height: 0;
@@ -199,10 +200,11 @@ input[type="checkbox"] {
   box-shadow: none;
 }
 .in-room .player-empty h2 {
-  font-family: "Instrument Serif", Georgia, serif;
-  font-weight: 400;
-  font-style: italic;
-  font-size: clamp(2rem, 3.5vw, 3.4rem);
+  font-family: var(--font);
+  font-weight: 650;
+  font-style: normal;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  letter-spacing: -0.045em;
 }
 .in-room .player-empty .eyebrow {
   color: #a5abc9;
@@ -279,6 +281,38 @@ input[type="checkbox"] {
 .in-room .preview-initial {
   color: #a8adff;
   font-size: 1rem;
+}
+.in-room .live-previews {
+  --preview-size: clamp(160px, 18vw, 248px);
+}
+.in-room .live-previews .stream-rail {
+  max-height: none;
+  align-items: flex-start;
+}
+.in-room .live-previews .preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  flex-basis: var(--preview-size);
+  width: var(--preview-size);
+  gap: 7px 5px;
+  padding: 4px 4px 7px;
+}
+.in-room .live-previews .preview-image {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+.in-room .live-previews .preview > span {
+  padding-left: 3px;
+}
+.has-streams.live-previews .floating-layer {
+  top: calc(100px + (var(--preview-size) - 10px) * 9 / 16);
+}
+.capacity-warning .icon-button {
+  color: #ffd08a;
+  background: #49321c;
+  border-radius: 50%;
 }
 .in-room .dock {
   position: absolute;
@@ -636,6 +670,12 @@ input[type="checkbox"] {
   }
 }
 @media (max-height: 540px) {
+  .in-room .live-previews {
+    --preview-size: 160px;
+  }
+  .has-streams.live-previews .floating-layer {
+    top: 108px;
+  }
   .in-room .app-header {
     flex-basis: 48px;
     height: 48px;
@@ -693,6 +733,14 @@ input[type="checkbox"] {
   }
   .floating-people .invite-seat > span {
     height: 32px;
+  }
+}
+@media (max-height: 540px) and (min-width: 640px) {
+  .has-streams.live-previews .floating-layer {
+    top: 54px;
+  }
+  .has-streams.live-previews .floating-people {
+    max-width: calc(100% - 344px);
   }
 }
 @media (prefers-reduced-motion: reduce) {

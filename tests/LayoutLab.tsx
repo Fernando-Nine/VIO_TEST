@@ -17,8 +17,17 @@ export function LayoutLab() {
   );
   async function prepare() {
     setStatus("Preparando…");
-    const names = ["Ana", "Bia", "Caio", "Davi", "Eva", "Fábio"];
-    const sources = names.map((name) => syntheticAdapter(name, "#283722"));
+    const names = [
+      "Ana",
+      "Bia",
+      "Caio",
+      "Davi",
+      "Eva",
+      "Fábio",
+      "Gabi",
+      "Hugo",
+    ];
+    const sources = names.map((name) => syntheticAdapter(name, "#2727f5"));
     const engines = sources.map(
       (source) => new Controller(source.adapter, false),
     );
@@ -48,7 +57,7 @@ export function LayoutLab() {
     <main className="lab">
       <h1>Ensaio de layout</h1>
       <p>
-        Seis sessões e duas telas sintéticas. O ensaio verifica a interface; não
+        Oito sessões e duas telas sintéticas. O ensaio verifica a interface; não
         comprova recepção de mídia entre dispositivos.
       </p>
       <button

@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.2.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.3.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -46,22 +46,23 @@ Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
 
-## Interface 2.2.0
+## Interface 2.3.0
 
 Entrada e sala em carvão, branco suave e azul #2727F5, com Bricolage Grotesque e
-Instrument Serif locais. A entrada cabe na janela de desktop; celulares mantêm
+IBM Plex Mono locais. A entrada cabe na janela de desktop; celulares mantêm
 rolagem natural. O fundo geométrico se move suavemente e respeita movimento reduzido.
 
-A sala ocupa a altura disponível, com controles sobre a transmissão. Arraste a alça
+Prévias ao vivo usam cards maiores em 16:9; o vídeo principal ocupa toda a largura,
+inclusive em monitores largos. A sala ocupa a altura disponível, com controles sobre a transmissão. Arraste a alça
 “Por aqui” para mover os cards entre seis encaixes, clique nela para escolher uma
-posição ou use as setas do teclado. Os cards desaparecem após 4,5 segundos sem
+posição ou use as setas do teclado. Os cards desaparecem após 2 segundos sem
 atividade; o alfinete permite mantê-los visíveis. Mover o mouse, tocar ou usar o
 teclado traz os controles de volta. O foco de teclado e os menus abertos impedem a
 ocultação. A posição se adapta ao redimensionamento e à tela cheia.
 
 ## O que a interface oferece
 
-- Salas por código, sem conta e sem anfitrião. Até seis pessoas por padrão; o “?” explica o custo das conexões diretas.
+- Salas por código, sem conta e sem anfitrião. Sem teto por sala; a partir de seis pessoas, o “?” destaca o custo das conexões diretas.
 - Compartilhamento simultâneo de telas. Cada espectador escolhe uma tela principal.
 - Miniaturas ao vivo opcionais, desligadas por padrão, com iniciais no lugar do vídeo.
   Quando ligadas, até duas miniaturas visíveis são recebidas em baixa resolução, sem áudio.
@@ -72,7 +73,7 @@ ocultação. A posição se adapta ao redimensionamento e à tela cheia.
 - Instalação PWA em celulares; salas, sessões e sockets nunca passam pelo service worker.
 - Câmera independente da tela, prévia local espelhada e troca de dispositivo.
 - Mute, ensurdecer, volume da tela e volume local de voz por pessoa.
-- Qualidade por preset ou FPS, bitrate e escala; valores efetivos no diagnóstico.
+- Qualidade por preset ou FPS, bitrate e resolução de 240p a 2160p; valores efetivos no diagnóstico.
 - Convites, painéis, estados de erro, versão e histórico acessível.
 - Sons discretos e diferentes para compartilhar/parar, mutar/desmutar e ensurdecer.
   Desative todos em **Ajustes → Áudio → Sons dos controles**.
@@ -107,14 +108,17 @@ A aplicação principal usa um servidor Node na Render. P2P transmite diretament
 quando existe uma rota; TURN retransmite a mídia quando configurado e selecionado.
 Portanto, mídia **pode passar por um servidor TURN**. Não há gravação.
 
-Padrão: seis participantes. O valor anterior de quatro era uma configuração conservadora.
-O limite existe porque cada navegador envia mídia aos demais; salas maiores exigem
-outra arquitetura, como uma SFU. A capacidade efetiva depende de
-CPU, navegador e upload de cada pessoa. A tela consome aproximadamente seu limite de
-bitrate vezes o número de espectadores principais, mais miniaturas e overhead.
-No preset Alta, três espectadores podem demandar aproximadamente 12 Mbps só de vídeo
-da tela. Voz e câmera acrescentam tráfego. A configuração permite de duas a seis
-pessoas, mas aumentar o limite não substitui medição. SFU é uma evolução futura.
+Não há bloqueio de entrada por quantidade de participantes. A partir de seis, a
+interface destaca o custo da malha P2P. Isso não garante capacidade ilimitada:
+CPU, navegador e upload de cada pessoa continuam determinando a qualidade. A tela
+consome aproximadamente seu bitrate vezes o número de espectadores principais,
+mais miniaturas e overhead. No preset Alta, três espectadores podem demandar
+aproximadamente 12 Mbps só de vídeo. Voz e câmera acrescentam tráfego; uma SFU
+continua sendo uma evolução futura para grupos maiores.
+
+A variável antiga `MAX_PARTICIPANTS` deixou de ser usada, inclusive em instalações
+que ainda a tenham definida. Limites de salas, conexões por IP e taxa de pedidos
+permanecem ativos. A API informa `maxParticipants: null` e `recommendedParticipants: 6`.
 
 A captura exige HTTPS ou localhost, interação explícita e permissão. O suporte a
 captura de tela, áudio de aba/janela/sistema, câmera e tela cheia varia por navegador
@@ -136,13 +140,16 @@ isolamento de áudio universal. [Limites e fontes](docs/NAVEGADORES.md).
 | `STUN_URLS` | STUN público Google | Lista separada por vírgula; pode ser vazia |
 | `TURN_URLS`, `TURN_SECRET` | vazios | Configuração opcional de relay |
 | `TURN_TTL_SECONDS` | 600 | Expiração das credenciais TURN |
-| `MAX_PARTICIPANTS` | 6 | Pessoas por sala; intervalo aceito 2–6 |
 | `MAX_ROOMS` | 200 | Limite de salas em memória |
 | `MAX_SOCKETS_PER_IP` | 20 | Conexões simultâneas por IP |
 | `RECONNECT_GRACE_SECONDS` | 90 | Preserva presença durante queda temporária |
 | `ROOM_TTL_SECONDS` | 300 | Expiração de salas vazias |
 | `WEB_CONCURRENCY` | 1 | Exige uma instância |
 | `ENABLE_TEST_LAB` | 0 | Laboratório somente em desenvolvimento |
+
+A saída de áudio salva só é reaplicada quando o dispositivo está acessível. Se a
+permissão ou o identificador mudou, confirme a saída em Ajustes → Áudio. Desconectar
+o dispositivo selecionado aciona uma tentativa de retorno ao padrão do sistema.
 
 Todas são lidas em runtime pelo servidor. Sem chaves privadas no frontend.
 

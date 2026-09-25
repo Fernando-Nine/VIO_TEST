@@ -180,7 +180,7 @@ export function BrowserLab() {
       report(
         "Troca da transmissão principal encerra apenas a assinatura anterior",
       );
-      await b.quality({ fps: 10, bitrate: 400, scale: 2 });
+      await b.quality({ fps: 10, bitrate: 400, resolution: 480 });
       await until(
         () =>
           b.peers
@@ -407,6 +407,17 @@ export function BrowserLab() {
                     height: root.clientHeight,
                     scrollHeight: root.scrollHeight,
                     playerHeight: player?.height,
+                    playerWidth: player?.width,
+                    playerLeft: player?.left,
+                    playerRightGap: player
+                      ? root.clientWidth - player.right
+                      : null,
+                    previewWidth: doc
+                      .querySelector(".preview-image")
+                      ?.getBoundingClientRect().width,
+                    previewHeight: doc
+                      .querySelector(".preview-image")
+                      ?.getBoundingClientRect().height,
                     cardsInside:
                       player && cards
                         ? cards.left >= player.left &&

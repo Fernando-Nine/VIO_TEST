@@ -81,3 +81,8 @@ Arquivos adicionados na 2.2.0: `src/client/room.css`,
 `src/client/components/FloatingPeople.tsx`, `src/client/components/floating-position.ts`,
 `tests/floating-position.test.ts` e `tests/LayoutLab.tsx`. A ilustração do cursor
 interativo foi removida; botões usam o ponteiro convencional do navegador.
+
+Módulos da 2.3.0: `src/client/media/video-quality.ts` calcula os parâmetros de envio;
+`tests/video-quality.test.ts` cobre resolução e limites de miniaturas, e
+`tests/audio-output.test.ts` cobre seleção, remoção de elementos e recuperação da saída.
+`public/cursors/vio-hand.svg` acompanha o cursor azul de seta.

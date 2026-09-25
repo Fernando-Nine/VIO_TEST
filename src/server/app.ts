@@ -72,7 +72,8 @@ export async function createApp(config: Config = readConfig(), dev = false) {
     res.json({
       signalingUrl: config.signalingUrl,
       socketPath: config.socketPath,
-      maxParticipants: config.maxParticipants,
+      maxParticipants: null,
+      recommendedParticipants: config.recommendedParticipants,
       maxPreviews: config.maxPreviews,
       testLab: config.testLab,
     }),

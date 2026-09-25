@@ -217,7 +217,7 @@ export default function App({ engine }: { engine: Controller }) {
         !document.activeElement?.matches(":focus-visible")
       )
         setActive(false);
-    }, 4500);
+    }, 2000);
   }, []);
   useEffect(() => {
     wake();
@@ -402,15 +402,18 @@ export default function App({ engine }: { engine: Controller }) {
             <div className="room-capacity">
               <button className="text-button" onClick={() => open("people")}>
                 <Users size={17} />
-                {people.length} de {view.snapshot.maxParticipants}
+                {people.length} {people.length === 1 ? "pessoa" : "pessoas"}
                 <ChevronDown size={14} />
               </button>
-              <RoomLimit limit={view.snapshot.maxParticipants} />
+              <RoomLimit
+                count={people.length}
+                threshold={view.snapshot.recommendedParticipants}
+              />
             </div>
           </div>
           <div className="player-layout">
             <div
-              className={`player ${screens.length > 1 ? "has-streams" : ""} ${source ? "has-video" : ""}`}
+              className={`player ${screens.length > 1 ? "has-streams" : ""} ${engine.previewsEnabled ? "live-previews" : ""} ${source ? "has-video" : ""}`}
               ref={player}
             >
               <div className="player-top">
@@ -584,14 +587,12 @@ export default function App({ engine }: { engine: Controller }) {
                 {people.map((person) => (
                   <Person key={person.id} person={person} engine={engine} />
                 ))}
-                {people.length < view.snapshot.maxParticipants && (
-                  <button className="invite-seat" onClick={() => void copy()}>
-                    <span>
-                      <Users size={22} />
-                    </span>
-                    <small>Tem lugar aqui</small>
-                  </button>
-                )}
+                <button className="invite-seat" onClick={() => void copy()}>
+                  <span>
+                    <Users size={22} />
+                  </span>
+                  <small>Tem lugar aqui</small>
+                </button>
               </FloatingPeople>
               <footer className="dock" aria-label="Controles da sala">
                 <div className="dock-group">

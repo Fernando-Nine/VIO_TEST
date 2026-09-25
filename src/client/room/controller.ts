@@ -15,7 +15,7 @@ import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
-import { AudioOutput } from "../media/audio-output";
+import { AudioOutput, outputError } from "../media/audio-output";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -40,14 +40,16 @@ export class Controller {
   socket?: Socket;
   readonly captures: Captures;
   readonly peers: Peers;
-  readonly output = new AudioOutput(() => {
-    this.fail(
-      new Error(
-        "Não foi possível usar a saída de áudio escolhida. O som voltou à saída padrão.",
-      ),
-    );
+  readonly output = new AudioOutput((error, recovered) => {
+    if (recovered)
+      this.view.notice = `${outputError(error)} O som agora usa a saída padrão do sistema.`;
+    else
+      this.fail(
+        new Error(`${outputError(error)} Confira a saída em Ajustes → Áudio.`),
+      );
     this.savePreferences();
   });
+  private unwatchOutput?: () => void;
   publications = new Map<Kind, Publication>();
   visiblePreviews = new Set<string>();
   private listeners = new Set<() => void>();
@@ -119,7 +121,7 @@ export class Controller {
         this.sounds = p.sounds !== false;
         this.previewsEnabled = p.previewsEnabled === true;
         if (this.output.supported && typeof p.outputDevice === "string")
-          this.output.deviceId = p.outputDevice;
+          void this.output.restore(p.outputDevice).then(() => this.bump());
         if (Number.isFinite(p.manualGain))
           this.captures.setManualGain(p.manualGain);
         if (Number.isFinite(p.threshold))
@@ -137,6 +139,7 @@ export class Controller {
             this.captures.voiceSettings[key] = p.voiceSettings[key];
       } catch {}
     }
+    this.unwatchOutput = this.output.watchDevices();
   }
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -167,7 +170,7 @@ export class Controller {
             cameraDevice: this.captures.cameraDevice,
             sounds: this.sounds,
             previewsEnabled: this.previewsEnabled,
-            outputDevice: this.output.deviceId,
+            outputDevice: this.output.pendingDeviceId || this.output.deviceId,
             manualGain: this.captures.manualGain,
             threshold: this.captures.threshold,
             voiceSettings: this.captures.voiceSettings,
@@ -690,6 +693,8 @@ export class Controller {
     await this.leave();
     this.peers.destroy();
     this.cues.close();
+    this.unwatchOutput?.();
+    this.output.destroy();
     this.listeners.clear();
   }
 }

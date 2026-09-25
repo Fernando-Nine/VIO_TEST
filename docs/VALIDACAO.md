@@ -1,5 +1,49 @@
 # VIO — validação
 
+## Atualização 2.3.0 — 25/09/2026
+
+Build de produção e 27 testes aprovados. O ensaio do servidor abriu oito sessões
+na mesma sala com `MAX_PARTICIPANTS=6` legado: nenhuma recusada, aviso a partir de
+seis e duração comum preservados. Segurança, isolamento, reconexão, três caminhos
+TURN e histórico original continuaram aprovados.
+
+Os testes de áudio verificaram seleção em voz/tela/elementos futuros, rollback,
+nenhuma reabertura desnecessária da saída padrão, elemento removido durante uma
+operação, dispositivo salvo indisponível, restauração atrasada, desconexão com um
+único aviso e falha real ao voltar ao padrão. O comportamento de IDs e permissões
+foi conferido na especificação: https://www.w3.org/TR/audio-output/.
+Isso não identifica com certeza a causa em cada aparelho do usuário nem substitui
+um teste de troca/desconexão de fones físicos no sistema operacional.
+
+Resoluções de 240p a 2160p verificadas nos parâmetros do encoder, com proporção
+preservada e sem ampliação de uma fonte menor. Prévia continua independente em
+320 × 180 / 5 FPS / 90 kbps; câmera continua com seu próprio limite. A mudança
+do tamanho de uma janela compartilhada recalcula a escala durante a coleta de stats.
+
+Chrome 151, fontes sintéticas, oito participantes e duas telas: sala medida em
+1920 × 1080, 1024 × 600, 320 × 844 e 768 × 390. Não houve rolagem externa;
+cards e controles permaneceram dentro do vídeo após terminar o reposicionamento.
+Em 1920, player de 1894 px com margens de 12 px, sem a faixa vazia à direita.
+Prévias de 238 × 133,875 px no desktop e 150 × 84,375 px no menor viewport.
+Em paisagem baixa, os cards usam menos largura para não cobrir as duas primeiras
+prévias no encaixe inicial. Ocultação configurada em 2000 ms, observada com opacity 0;
+menu aberto e foco de teclado mantêm os controles acessíveis. Seletor de resolução
+operado pela interface, incluindo 1080p sobre uma fonte sintética de 720p.
+
+Entrada medida em 320 px sem overflow horizontal e em 1024 × 600 sem rolagem externa.
+Fonte cursiva e seu pacote removidos; fontes restantes são locais. Cursor de mão SVG
+segue #2727F5 com contorno claro. Revisão da lista visual de exclusões concluída:
+sem novas decorações, fontes genéricas, gradiente roxo-azul, blobs, emojis ou biblioteca
+de animação. Contrastes da paleta 2.2.0 preservados e foco visível mantido.
+
+`render.yaml` validado contra o esquema oficial atual. `MAX_PARTICIPANTS` foi retirado
+do modelo; instalações existentes podem conservá-lo sem efeito. Sem alteração de
+serviço, plano, número de instâncias, segredos ou repositórios antigos.
+
+Evidências: `evidence/build-2.3.0.txt` e `evidence/tests-2.3.0.txt`. A checagem visual
+comprova interface/presença; o transporte real de mídia entre dispositivos continua
+com a limitação de ambiente documentada abaixo.
+
 ## Atualização 2.2.0 — 24/09/2026
 
 Build de produção e 17 testes aprovados após incorporar a main `d8ee610`:
