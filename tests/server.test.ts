@@ -161,8 +161,8 @@ test("três sessões, nomes iguais, publicações simultâneas e assinatura sele
       }),
     );
     const room = app.rooms.rooms.get("QA1234")!;
-    assert.equal(room.subscriptions.size, 1);
-    assert.equal(room.subscriptions.has(first.id), false);
+    assert.equal(room.subscriptions.size, 2);
+    assert.equal(room.subscriptions.has(first.id), true);
     assert.equal(room.subscriptions.has(second.id), true);
     assert.equal(room.members.get(joins[0].id)?.publications[0].id, a.id);
     const routed = new Promise<any>((resolve) =>
@@ -721,6 +721,99 @@ test("credencial TURN estática: par fixo da config, sem HMAC", async () => {
     assert.equal(outra.iceServers[1].credential, relay.credential);
   } finally {
     a.disconnect();
+    await app.close();
+  }
+});
+
+test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é independente", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 4; i++) {
+      const socket = await connect(app.url, (await session(app.url)).token);
+      sockets.push(socket);
+      data(
+        await request(socket, "join", { name: `Pessoa ${i}`, code: "QAPAIR" }),
+      );
+    }
+    const publications: Publication[] = [];
+    for (let i = 0; i < 3; i++)
+      publications.push(
+        data(
+          await request<Publication>(sockets[i], "publish", {
+            kind: "screen",
+            key: crypto.randomUUID(),
+            audio: true,
+            muted: false,
+          }),
+        ),
+      );
+    const viewer = sockets[3];
+    const intents = publications.map((p) => ({
+      publicationId: p.id,
+      tier: "main",
+      nonce: crypto.randomUUID(),
+    }));
+    const a = data(
+      await request<Subscription>(viewer, "subscribe", intents[0]),
+    );
+    const b = data(
+      await request<Subscription>(viewer, "subscribe", intents[1]),
+    );
+    const room = app.rooms.rooms.get("QAPAIR")!;
+    assert.equal(room.subscriptions.size, 2);
+    for (const [i, id] of [
+      [0, a.id],
+      [1, b.id],
+    ] as const)
+      assert.equal(
+        data(await request<Subscription>(viewer, "subscribe", intents[i])).id,
+        id,
+      );
+    const rejected = await request(viewer, "subscribe", intents[2]);
+    assert.equal(rejected.ok, false);
+    if (!rejected.ok) assert.equal(rejected.code, "SCREEN_LIMIT");
+    assert.deepEqual([...room.subscriptions.keys()], [a.id, b.id]);
+    const replacement = data(
+      await request<Subscription>(viewer, "subscribe", {
+        ...intents[0],
+        nonce: crypto.randomUUID(),
+      }),
+    );
+    assert.notEqual(replacement.id, a.id);
+    assert.equal(room.subscriptions.has(b.id), true);
+    const voice = data(
+      await request<Publication>(sockets[0], "publish", {
+        kind: "voice",
+        key: crypto.randomUUID(),
+        audio: true,
+        muted: false,
+      }),
+    );
+    const voiceSub = data(
+      await request<Subscription>(viewer, "subscribe", {
+        publicationId: voice.id,
+        tier: "main",
+        nonce: crypto.randomUUID(),
+      }),
+    );
+    assert.equal(room.subscriptions.size, 3);
+    data(await request(viewer, "unsubscribe", { id: replacement.id }));
+    const c = data(
+      await request<Subscription>(viewer, "subscribe", intents[2]),
+    );
+    assert.equal(room.subscriptions.has(b.id), true);
+    assert.equal(room.subscriptions.has(c.id), true);
+    data(
+      await request(sockets[1], "unpublish", {
+        publicationId: publications[1].id,
+      }),
+    );
+    assert.equal(room.subscriptions.has(b.id), false);
+    assert.equal(room.subscriptions.has(c.id), true);
+    assert.equal(room.subscriptions.has(voiceSub.id), true);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
     await app.close();
   }
 });

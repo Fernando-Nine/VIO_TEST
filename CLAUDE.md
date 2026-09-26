@@ -44,6 +44,12 @@ da pessoa.** É sempre pelo `publicationId`.
 
 ### `tier`: `main` e `preview`
 
+Na 2.4.0, por pedido do usuário, cada espectador pode escolher até duas telas
+para assistir em `main`, com áudio nas duas. A segunda tela assistida não é uma
+miniatura passiva. Foco só muda apresentação: preservar IDs, RTCPeerConnections,
+MediaStreams e elementos de vídeo. Nunca abrir uma publicação nova automaticamente.
+
+
 A mesma publicação é entregue em duas qualidades. `main` é o que você está assistindo, com a
 qualidade dos Ajustes. `preview` é a miniatura no cartão do participante, e é **deliberadamente
 miserável**: 90 kbps, 5 fps, sem redução de escala (`peers.ts`). No máximo `maxPreviews` (2)

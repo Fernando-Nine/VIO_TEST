@@ -7,10 +7,14 @@ import { Controller } from "./room/controller";
 import "./styles.css";
 import "./landing.css";
 import "./room.css";
+import "./finish.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
 const engine = new Controller();
-if (import.meta.env.DEV && ["/qa", "/qa-layout"].includes(location.pathname))
+if (
+  import.meta.env.DEV &&
+  ["/qa", "/qa-layout", "/qa-watch"].includes(location.pathname)
+)
   void import("../../tests/BrowserLab")
     .then((lab) => lab.mountLab(root))
     .catch(() => root.render(<App engine={engine} />));

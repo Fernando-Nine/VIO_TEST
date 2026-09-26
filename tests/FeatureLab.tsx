@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Captures } from "../src/client/media/capture";
 import { observeVoiceActivity } from "../src/client/media/voice-activity";
+import { ScreenPlayback } from "../src/client/media/screen-playback";
 
 const pause = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -23,6 +24,7 @@ export function FeatureLab() {
     setRunning(true);
     setResults([]);
     const context = new AudioContext();
+    const playback = new ScreenPlayback();
     const oscillator = context.createOscillator();
     oscillator.frequency.value = 440;
     const amplitude = context.createGain();
@@ -145,6 +147,30 @@ export function FeatureLab() {
         );
       }
       source.disconnect();
+      const screenGraph = playback.create(destination.stream)!;
+      const screenSource = context.createMediaStreamSource(screenGraph.stream);
+      screenSource.connect(analyser);
+      screenGraph.setVolume(1);
+      const screenBase = await rms();
+      assert(screenBase > 0.02, "Nenhum sinal na reprodução de tela");
+      screenGraph.setVolume(3);
+      const screenHigh = (await rms()) / screenBase;
+      screenGraph.setVolume(0);
+      const screenSilent = await rms();
+      assert(
+        Math.abs(screenHigh - 3) < 0.25,
+        "Ganho da tela não alcançou 300%",
+      );
+      assert(screenSilent < 0.001, "Volume zero da tela não silenciou");
+      screenGraph.close();
+      assert(
+        track.readyState === "live",
+        "Reprodução interrompeu a captura original",
+      );
+      screenSource.disconnect();
+      report(
+        `Áudio da tela: 300% = ${screenHigh.toFixed(2)}×; zero silencia; captura preservada`,
+      );
       analyser.disconnect();
       silent.disconnect();
     } catch (error) {
@@ -155,6 +181,7 @@ export function FeatureLab() {
     } finally {
       stopObserving();
       captures.stop("voice");
+      playback.close();
       oscillator.stop();
       destination.stream.getTracks().forEach((track) => track.stop());
       await context.close();

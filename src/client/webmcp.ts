@@ -45,6 +45,7 @@ export function registerRoomTools(engine: Controller) {
               .map((p) => p.id),
           })) || [],
         selected: engine.view.selected,
+        watching: engine.view.watching,
       };
     },
   });
@@ -76,6 +77,7 @@ export function registerRoomTools(engine: Controller) {
       engine.select(publicationId);
       return {
         selected: engine.view.selected,
+        watching: engine.view.watching,
         status: "assinatura solicitada",
       };
     },

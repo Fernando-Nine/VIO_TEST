@@ -29,7 +29,7 @@ vários deles, o ExpressTurn entre eles, que reservam a autenticação por segre
 compartilhado para os planos pagos.
 
 ```dotenv
-TURN_URLS=turn:free.expressturn.com:3478
+TURN_URLS=turn:free.expressturn.com:3478?transport=udp,turn:free.expressturn.com:3478?transport=tcp
 TURN_USERNAME=o_usuario_que_o_provedor_deu
 TURN_PASSWORD=a_senha_que_o_provedor_deu
 ```
@@ -163,3 +163,12 @@ servidor, nos três caminhos — inclusive a Cloudflare fora do ar e a mútua ex
 entre as famílias de variável. A conectividade real via TURN e entre redes
 distintas exige infraestrutura externa e ainda não foi comprovada. O teste não deve
 ser marcado como concluído apenas porque o endpoint retornou credenciais.
+
+## Implantação VIO_TEST — 26/09/2026
+
+ExpressTURN configurado no serviço Render existente com UDP e TCP na porta 3478.
+Usuário e senha ficam em variáveis de ambiente, fora do Git e dos relatórios.
+A sessão autenticada e já presente na sala recebe os servidores ICE; o navegador
+tenta as rotas diretas e de relay. O diagnóstico permite testar somente TURN.
+Deploy de configuração concluído não equivale a alocação TURN ou transporte
+comprovado; consultar VALIDACAO.md para o resultado efetivo do ensaio.

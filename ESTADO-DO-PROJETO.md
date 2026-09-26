@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.3.0**, em 25/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.4.0**, em 26/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -46,6 +46,15 @@ salvo, proteção contra falhas de elementos removidos e recuperação na descon
 Por pedido explícito do usuário, retirado o teto de seis pessoas: a partir de seis
 há aviso de custo, sem bloquear novos participantes. MAX_PARTICIPANTS é ignorada.
 
+Adições da 2.4.0: entrada manual em transmissões, duas telas assistidas com áudio
+independente e foco que preserva ambas as conexões e elementos de mídia.
+Terceira tela substitui somente a principal; fechar uma mantém a outra.
+Degradês no tema azul, brilho breve e hovers sutis com movimento reduzido respeitado.
+Grade de participantes com altura limitada e opção de esconder/restaurar; aviso circular
+mais discreto e marca VIO clicável. Chamada independente das telas, microfone inicialmente
+desligado. Volume, fullscreen e PiP no dock; ganho de tela opcional até 300%, switches
+e seletores nativos modernizados. Document PiP interativo quando suportado.
+
 ## O que foi comprovado
 
 Os resultados exatos, incluindo comandos, navegador e limitações do ambiente,
@@ -62,7 +71,7 @@ Consulte `docs/VALIDACAO.md` e `docs/evidence/media-browser.json`.
 ## Dependências externas
 
 - Render publicado e respondendo por HTTPS; entrada em sala confirmada no navegador. Testes de mídia entre dispositivos e recuperação durante deploy permanecem pendentes.
-- Relay TURN real: sem servidor/credenciais de relay configurados.
+- ExpressTURN configurado no Render em 26/09/2026, UDP/TCP na porta 3478, com credenciais apenas em variáveis de ambiente. Configuração não comprova transporte de mídia via relay.
 - Captura física, revogação de permissão e reprodução em Safari/iPhone: dependem de
   navegador em HTTPS/localhost e dispositivos reais.
 - Capacidade de mídia com grupos maiores: precisa de medição em máquinas/redes físicas.
@@ -72,5 +81,11 @@ em produção permanece condicionado aos testes externos listados.
 
 ## Fora desta entrega por definição
 
-Tauri, WASAPI, instalador Windows, SFU, múltiplas instâncias, contas, gravação,
-chat textual e cobrança. Nenhum desses módulos foi alegado como entregue.
+SFU, múltiplas instâncias, contas, gravação, chat textual e cobrança.
+
+## Próxima etapa solicitada
+
+Aplicativo Windows instalável com WASAPI. Preparação em `docs/DESKTOP-WASAPI.md`,
+com contrato de integração, ordem de implementação e critérios de teste físico.
+O instalador e a captura WASAPI não fazem parte do executável web 2.4.0 e ainda
+não foram implementados. A PWA atual não recebe acesso nativo por estar instalada.

@@ -5,6 +5,7 @@ import App from "../src/client/App";
 import { syntheticAdapter } from "./synthetic";
 import { freshKey } from "../src/client/id";
 import { mediaDeadline } from "../src/client/media/deadline";
+import { WatchLab } from "./WatchLab";
 import { LayoutLab } from "./LayoutLab";
 import { FeatureLab } from "./FeatureLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
@@ -95,6 +96,7 @@ export function BrowserLab() {
       await mediaDeadline(
         Promise.all(
           engines.map(async (e) => {
+            e.joinCall();
             await e.microphone();
             await e.camera();
           }),
@@ -384,6 +386,7 @@ export function BrowserLab() {
             >
               <option value="/">Entrada</option>
               <option value="/qa-layout">Sala sintética</option>
+              <option value="/qa-watch">Duas telas</option>
             </select>
           </label>
           <button
@@ -434,6 +437,35 @@ export function BrowserLab() {
                     cardOpacity: doc.defaultView?.getComputedStyle(
                       doc.querySelector(".floating-people") || root,
                     ).opacity,
+                    watched: [...doc.querySelectorAll(".watched-screen")].map(
+                      (screen) => {
+                        const rect = screen.getBoundingClientRect();
+                        const video = screen.querySelector("video")!;
+                        return {
+                          label: screen.getAttribute("aria-label"),
+                          width: rect.width,
+                          height: rect.height,
+                          inside:
+                            rect.left >= 0 &&
+                            rect.right <= root.clientWidth &&
+                            rect.top >= 0 &&
+                            rect.bottom <= root.clientHeight,
+                          playing: !video.paused,
+                          muted: video.muted,
+                          controlsInside: [
+                            ...screen.querySelectorAll("button, input"),
+                          ].every((el) => {
+                            const r = el.getBoundingClientRect();
+                            return (
+                              r.left >= rect.left &&
+                              r.right <= rect.right &&
+                              r.top >= rect.top &&
+                              r.bottom <= rect.bottom
+                            );
+                          }),
+                        };
+                      },
+                    ),
                   },
                   null,
                   2,
@@ -513,6 +545,12 @@ export async function mountLab(root: Root) {
   const config = await fetch("/api/config").then((r) => r.json());
   if (!config.testLab) throw new Error("Laboratório desabilitado.");
   root.render(
-    location.pathname === "/qa-layout" ? <LayoutLab /> : <BrowserLab />,
+    location.pathname === "/qa-layout" ? (
+      <LayoutLab />
+    ) : location.pathname === "/qa-watch" ? (
+      <WatchLab />
+    ) : (
+      <BrowserLab />
+    ),
   );
 }

@@ -89,7 +89,7 @@ export function ConnectionStatus({
       (p) =>
         p.kind === "screen" &&
         p.tier === "main" &&
-        (p.sending || p.publicationId === view.selected),
+        (p.sending || view.watching.includes(p.publicationId)),
     );
   const metric = connectionMetric(
     view.status,

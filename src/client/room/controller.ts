@@ -16,12 +16,15 @@ import { SoundCues } from "../media/sounds";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
+import { ScreenPlayback } from "../media/screen-playback";
+import { watchScreen, unwatchScreen } from "./watching";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
   snapshot: Snapshot | null;
   id: string;
   selected: string;
+  watching: string[];
   error: string;
   notice: string;
   signalingPing?: number;
@@ -33,6 +36,7 @@ export class Controller {
     snapshot: null,
     id: "",
     selected: "",
+    watching: [],
     error: "",
     notice: "",
   };
@@ -65,6 +69,14 @@ export class Controller {
   private joining = false;
   private generation = 0;
   private disposed = false;
+  readonly playback = new ScreenPlayback();
+  inCall = false;
+  private callGeneration = 0;
+  private voicePending = false;
+  private cameraPending = false;
+  peopleHidden = false;
+  fineAudio = false;
+  private screenLevels = new Map<string, { volume: number; muted: boolean }>();
   sounds = true;
   previewsEnabled = false;
   remoteMute = false;
@@ -74,6 +86,11 @@ export class Controller {
   private snapshotReceivedAt = 0;
   private icePending?: Promise<IceConfig>;
   private missingSince = new Map<string, number>();
+  private screenCatalog = new Map<
+    string,
+    { publication: Publication; name: string }
+  >();
+  private missingScreens = new Map<string, number>();
   constructor(
     adapter?: CaptureAdapter,
     private persist = true,
@@ -119,6 +136,8 @@ export class Controller {
         this.captures.micDevice = p.micDevice || "";
         this.captures.cameraDevice = p.cameraDevice || "";
         this.sounds = p.sounds !== false;
+        this.peopleHidden = p.peopleHidden === true;
+        this.fineAudio = p.fineAudio === true && this.playback.supported;
         this.previewsEnabled = p.previewsEnabled === true;
         if (this.output.supported && typeof p.outputDevice === "string")
           void this.output.restore(p.outputDevice).then(() => this.bump());
@@ -169,6 +188,8 @@ export class Controller {
             micDevice: this.captures.micDevice,
             cameraDevice: this.captures.cameraDevice,
             sounds: this.sounds,
+            peopleHidden: this.peopleHidden,
+            fineAudio: this.fineAudio,
             previewsEnabled: this.previewsEnabled,
             outputDevice: this.output.pendingDeviceId || this.output.deviceId,
             manualGain: this.captures.manualGain,
@@ -302,8 +323,17 @@ export class Controller {
       socket.on("subscription-ended", (id: string) => this.peers.close(id));
       socket.on("publication-ended", (id: string) => {
         this.peers.closePublication(id);
-        if (this.view.selected === id) this.view.selected = "";
-        this.bump();
+        if (this.view.snapshot)
+          this.view.snapshot = {
+            ...this.view.snapshot,
+            participants: this.view.snapshot.participants.map((person) => ({
+              ...person,
+              publications: person.publications.filter((p) => p.id !== id),
+            })),
+          };
+        this.screenCatalog.delete(id);
+        this.visiblePreviews.delete(id);
+        this.stopWatching(id);
       });
       socket.on("signal", (signal) => void this.peers.signal(signal));
       socket.connect();
@@ -378,18 +408,32 @@ export class Controller {
       return;
     this.view.snapshot = snapshot;
     this.snapshotReceivedAt = performance.now();
-    if (!this.view.selected) {
-      const screens = snapshot.participants
-        .flatMap((m) => m.publications)
-        .filter((p) => p.kind === "screen");
-      this.view.selected =
-        (screens.find((p) => p.owner !== this.view.id) || screens[0])?.id || "";
-    }
+    const present = new Set<string>();
+    for (const person of snapshot.participants)
+      for (const publication of person.publications)
+        if (publication.kind === "screen") {
+          present.add(publication.id);
+          this.screenCatalog.set(publication.id, {
+            publication,
+            name: person.name,
+          });
+          this.missingScreens.delete(publication.id);
+        }
+    for (const id of this.view.watching)
+      if (!present.has(id) && !this.missingScreens.has(id))
+        this.missingScreens.set(id, Date.now());
+    for (const id of this.screenCatalog.keys())
+      if (!present.has(id) && !this.view.watching.includes(id))
+        this.screenCatalog.delete(id);
     this.bump();
     if (this.view.status === "connected") void this.reconcile();
   }
   private async syncCapture(kind: Kind, ended = false) {
     if (this.view.status !== "connected") return;
+    if (kind !== "screen" && !this.inCall && this.captures.sources.has(kind)) {
+      this.captures.stop(kind);
+      return;
+    }
     const source = this.captures.sources.get(kind);
     const previous = this.publications.get(kind);
     if (!source || ended) {
@@ -473,8 +517,76 @@ export class Controller {
       this.fail(e);
     }
   }
+  screenLevel(id: string) {
+    return (
+      this.screenLevels.get(id) || { volume: this.screenVolume, muted: false }
+    );
+  }
+  setScreenLevel(
+    id: string,
+    patch: Partial<{ volume: number; muted: boolean }>,
+  ) {
+    const next = { ...this.screenLevel(id), ...patch };
+    if (!Number.isFinite(next.volume)) return;
+    next.volume = Math.min(this.fineAudio ? 3 : 1, Math.max(0, next.volume));
+    this.screenLevels.set(id, next);
+    this.playback.unlock();
+    this.bump();
+  }
+  setFineAudio(enabled: boolean) {
+    this.fineAudio = enabled && this.playback.supported;
+    if (!this.fineAudio)
+      for (const [id, level] of this.screenLevels)
+        this.screenLevels.set(id, {
+          ...level,
+          volume: Math.min(1, level.volume),
+        });
+    this.savePreferences();
+  }
+  togglePeople() {
+    this.peopleHidden = !this.peopleHidden;
+    this.savePreferences();
+  }
+  joinCall() {
+    if (this.inCall || !this.view.snapshot) return;
+    this.callGeneration++;
+    this.inCall = true;
+    this.captures.micMuted = true;
+    this.captures.deaf = false;
+    this.playback.unlock();
+    this.bump();
+    void this.reconcile();
+  }
+  async leaveCall() {
+    this.callGeneration++;
+    this.inCall = false;
+    this.captures.micMuted = true;
+    this.captures.deaf = false;
+    await Promise.all([this.stop("voice"), this.stop("camera")]);
+    this.bump();
+    void this.reconcile();
+  }
   select(id: string) {
-    this.view.selected = id;
+    this.watch(id);
+  }
+  screenInfo(id: string) {
+    return this.screenCatalog.get(id);
+  }
+  watch(id: string, together = false) {
+    if (!this.screenCatalog.has(id)) return;
+    this.playback.unlock();
+    const next = watchScreen(this.view, id, together);
+    const changed = next.watching !== this.view.watching;
+    this.view.watching = next.watching;
+    this.view.selected = next.selected;
+    this.bump();
+    if (changed) void this.reconcile();
+  }
+  stopWatching(id: string) {
+    const next = unwatchScreen(this.view, id);
+    this.view.watching = next.watching;
+    this.view.selected = next.selected;
+    this.missingScreens.delete(id);
     this.bump();
     void this.reconcile();
   }
@@ -499,13 +611,19 @@ export class Controller {
     void this.reconcile();
   }
   previews(ids: string[]) {
-    this.visiblePreviews = new Set(
+    const next = new Set(
       this.previewsEnabled
         ? ids
-            .filter((id) => id !== this.view.selected)
+            .filter((id) => !this.view.watching.includes(id))
             .slice(0, this.config?.maxPreviews || 2)
         : [],
     );
+    if (
+      next.size === this.visiblePreviews.size &&
+      [...next].every((id) => this.visiblePreviews.has(id))
+    )
+      return;
+    this.visiblePreviews = next;
     void this.reconcile();
   }
   private async reconcile() {
@@ -518,6 +636,8 @@ export class Controller {
     try {
       do {
         this.reconcileAgain = false;
+        for (const [id, since] of this.missingScreens)
+          if (Date.now() - since >= 30000) this.stopWatching(id);
         const desired = new Map<
           string,
           { publicationId: string; tier: Tier }
@@ -526,8 +646,9 @@ export class Controller {
           (m) => m.publications,
         );
         for (const p of publications) {
-          if (p.owner === this.view.id) continue;
-          if (p.kind !== "screen" || p.id === this.view.selected)
+          if (p.owner === this.view.id || (p.kind !== "screen" && !this.inCall))
+            continue;
+          if (p.kind !== "screen" || this.view.watching.includes(p.id))
             desired.set(p.id + ":main", { publicationId: p.id, tier: "main" });
           else if (this.previewsEnabled && this.visiblePreviews.has(p.id))
             desired.set(p.id + ":preview", {
@@ -544,6 +665,8 @@ export class Controller {
               : undefined;
             if (
               !publications.some((p) => p.id === id) &&
+              ((peer?.sub.publication.kind !== "screen" && this.inCall) ||
+                this.view.watching.includes(id)) &&
               peer?.pc.connectionState === "connected"
             ) {
               const since = this.missingSince.get(id) ?? Date.now();
@@ -591,10 +714,23 @@ export class Controller {
     }
   }
   async microphone() {
+    if (!this.inCall || this.voicePending) return;
+    const generation = this.callGeneration;
+    this.voicePending = true;
     if (this.sounds) this.cues.unlock();
     try {
-      if (!this.captures.sources.has("voice")) await this.captures.startVoice();
-      else this.captures.micMuted = !this.captures.micMuted;
+      if (!this.captures.sources.has("voice")) {
+        await this.captures.startVoice();
+        if (
+          !this.inCall ||
+          generation !== this.callGeneration ||
+          !this.captures.sources.has("voice")
+        ) {
+          await this.stop("voice");
+          return;
+        }
+        this.captures.micMuted = false;
+      } else this.captures.micMuted = !this.captures.micMuted;
       this.captures.syncMute();
       if (this.sounds)
         this.cues.play(this.captures.micMuted ? "mute" : "unmute");
@@ -602,21 +738,33 @@ export class Controller {
       await this.captureQueue;
     } catch (e) {
       this.fail(e);
+    } finally {
+      this.voicePending = false;
     }
   }
   deafen() {
+    if (!this.inCall) return;
     this.captures.deaf = !this.captures.deaf;
     this.captures.syncMute();
     if (this.sounds) this.cues.play(this.captures.deaf ? "deafen" : "undeafen");
     this.bump();
   }
   async camera() {
+    if (!this.inCall || this.cameraPending) return;
+    const generation = this.callGeneration;
+    this.cameraPending = true;
     try {
       if (this.captures.sources.has("camera")) this.captures.stop("camera");
-      else await this.captures.startCamera();
+      else {
+        await this.captures.startCamera();
+        if (!this.inCall || generation !== this.callGeneration)
+          await this.stop("camera");
+      }
       await this.captureQueue;
     } catch (e) {
       this.fail(e);
+    } finally {
+      this.cameraPending = false;
     }
   }
   async stop(kind: Kind) {
@@ -672,15 +820,25 @@ export class Controller {
     this.socket?.removeAllListeners();
     this.socket?.disconnect();
     this.captures.stopAll();
+    this.callGeneration++;
+    this.inCall = false;
+    this.captures.micMuted = true;
+    this.captures.deaf = false;
+    this.screenLevels.clear();
     this.peers.closeAll();
     this.publications.clear();
     this.subscriptions.clear();
+    this.screenCatalog.clear();
+    this.missingScreens.clear();
+    this.missingSince.clear();
+    this.visiblePreviews.clear();
     this.view = {
       revision: 0,
       status: "idle",
       snapshot: null,
       id: "",
       selected: "",
+      watching: [],
       error: "",
       notice: "",
     };
@@ -693,6 +851,7 @@ export class Controller {
     await this.leave();
     this.peers.destroy();
     this.cues.close();
+    this.playback.close();
     this.unwatchOutput?.();
     this.output.destroy();
     this.listeners.clear();

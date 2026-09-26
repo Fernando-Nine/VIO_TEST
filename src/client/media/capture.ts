@@ -47,6 +47,17 @@ export interface LocalSource {
   stream: MediaStream;
 }
 export class Captures {
+  get canShare() {
+    return (
+      this.adapter !== browserCapture ||
+      !!navigator.mediaDevices?.getDisplayMedia
+    );
+  }
+  get canUseDevices() {
+    return (
+      this.adapter !== browserCapture || !!navigator.mediaDevices?.getUserMedia
+    );
+  }
   sources = new Map<Kind, LocalSource>();
   quality: Quality = { ...presets.Média };
   micMuted = false;
@@ -135,6 +146,7 @@ export class Captures {
   async startVoice() {
     if (this.sources.has("voice")) return;
     this.context = new AudioContext();
+    const context = this.context;
     void this.context.resume();
     let raw: MediaStream;
     try {
@@ -147,9 +159,13 @@ export class Captures {
         video: false,
       });
     } catch (e) {
-      void this.context.close();
-      this.context = undefined;
+      void context.close().catch(() => {});
+      if (this.context === context) this.context = undefined;
       throw e;
+    }
+    if (this.context !== context || context.state === "closed") {
+      raw.getTracks().forEach((track) => track.stop());
+      return;
     }
     this.rawVoice = raw;
     this.input = this.context.createMediaStreamSource(raw);

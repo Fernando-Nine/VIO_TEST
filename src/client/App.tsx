@@ -1,12 +1,18 @@
 import {
   useCallback,
+  useLayoutEffect,
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowUpRight,
+  Phone,
+  PhoneOff,
+  Maximize,
+  PictureInPicture2,
   AudioLines,
   Camera,
   CameraOff,
@@ -16,20 +22,15 @@ import {
   Headphones,
   HeadphoneOff,
   LogOut,
-  Maximize,
   Mic,
   MicOff,
   Monitor,
   MonitorUp,
   Pause,
-  Radio,
   Settings2,
   Users,
-  Volume2,
-  VolumeX,
   X,
   Eye,
-  EyeOff,
   Link as LinkIcon,
 } from "lucide-react";
 import { Controller } from "./room/controller";
@@ -41,11 +42,15 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
+import { VolumeControl } from "./components/VolumeControl";
+import { usePictureInPicture } from "./media/picture-in-picture";
+import { ScreenStage } from "./components/ScreenStage";
+import { ScreenPicker } from "./components/ScreenPicker";
 import { FloatingPeople } from "./components/FloatingPeople";
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
-import type { Participant, Publication } from "../shared/protocol";
+import type { Participant } from "../shared/protocol";
 type Panel = "settings" | "people" | "about" | "share" | "history" | null;
 function Brand() {
   return (
@@ -118,71 +123,6 @@ function Person({
     </div>
   );
 }
-function Preview({
-  publication,
-  name,
-  engine,
-  visible,
-  onVisible,
-}: {
-  publication: Publication;
-  name: string;
-  engine: Controller;
-  visible: boolean;
-  onVisible: (id: string, state: boolean) => void;
-}) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const own = publication.owner === engine.view.id;
-  const selected = engine.view.selected === publication.id;
-  useEffect(() => {
-    if (!ref.current || !visible || !engine.previewsEnabled) {
-      onVisible(publication.id, false);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        onVisible(publication.id, entries[0].isIntersecting && visible);
-      },
-      { threshold: 0.4 },
-    );
-    observer.observe(ref.current);
-    return () => {
-      observer.disconnect();
-      onVisible(publication.id, false);
-    };
-  }, [publication.id, visible, onVisible, engine.previewsEnabled, selected]);
-  const stream =
-    !engine.previewsEnabled || !visible
-      ? undefined
-      : own
-        ? engine.captures.sources.get("screen")?.stream
-        : engine.peers.stream(publication.id, selected ? "main" : "preview");
-  return (
-    <button
-      ref={ref}
-      className={`preview ${selected ? "selected" : ""}`}
-      onClick={() => engine.select(publication.id)}
-      aria-pressed={selected}
-      aria-label={`Assistir tela de ${name}`}
-    >
-      <div className="preview-image">
-        {stream ? (
-          <Media stream={stream} label={`Miniatura de ${name}`} />
-        ) : (
-          <span className="preview-initial">
-            {[...name.trim()][0]?.toUpperCase() || "?"}
-          </span>
-        )}
-        <span className="preview-live">AO VIVO</span>
-      </div>
-      <span>
-        {name}
-        {own ? " (você)" : ""}
-      </span>
-      {selected && <Check size={14} />}
-    </button>
-  );
-}
 export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
@@ -191,13 +131,35 @@ export default function App({ engine }: { engine: Controller }) {
     new URLSearchParams(location.search).get("sala") || "",
   );
   const [audio, setAudio] = useState(true);
-  const [hidePreview, setHidePreview] = useState(false);
   const [copied, setCopied] = useState(false);
   const [active, setActive] = useState(true);
-  const [screenMuted, setScreenMuted] = useState(false);
   const [full, setFull] = useState(false);
   const player = useRef<HTMLDivElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
+  const playerMount = useRef<HTMLDivElement>(null);
+  const dock = useRef<HTMLElement>(null);
+  const [playerHost] = useState(() => {
+    const element = document.createElement("div");
+    element.className = "player-host";
+    return element;
+  });
+  const pip = usePictureInPicture();
+  useLayoutEffect(() => {
+    if (!view.snapshot || !playerMount.current) return;
+    playerMount.current.append(playerHost);
+    const measure = () =>
+      player.current?.style.setProperty(
+        "--dock-height",
+        `${dock.current?.offsetHeight || 64}px`,
+      );
+    const observer = new ResizeObserver(measure);
+    if (dock.current) observer.observe(dock.current);
+    measure();
+    return () => {
+      pip.close();
+      observer.disconnect();
+      playerHost.remove();
+    };
+  }, [!!view.snapshot, playerHost, pip.close]);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const visibleIds = useRef(new Set<string>());
   const draggingCards = useRef(false);
@@ -213,7 +175,9 @@ export default function App({ engine }: { engine: Controller }) {
       if (
         !draggingCards.current &&
         !document.querySelector("dialog[open]") &&
-        !document.querySelector(".floating-people.has-menu") &&
+        !document.querySelector(
+          ".floating-people.has-menu, .dock-volume.has-menu",
+        ) &&
         !document.activeElement?.matches(":focus-visible")
       )
         setActive(false);
@@ -251,37 +215,38 @@ export default function App({ engine }: { engine: Controller }) {
   const people = view.snapshot?.participants || [];
   const all = people.flatMap((m) => m.publications);
   const screens = all.filter((p) => p.kind === "screen");
-  const selected = all.find((p) => p.id === view.selected);
-  const selectedOwner = people.find((p) => p.id === selected?.owner);
-  const ownScreen = selected?.owner === view.id;
-  const source = ownScreen
-    ? engine.captures.sources.get("screen")?.stream
-    : engine.peers.stream(view.selected);
-  const muted =
-    ownScreen || screenMuted || engine.remoteMute || engine.captures.deaf;
+  const watching = view.watching.length > 0;
+  const available = screens.filter((p) => !view.watching.includes(p.id));
+  const availableKey = available.map((p) => p.id).join(",");
+  useEffect(() => {
+    if (availableKey) wake();
+  }, [availableKey, wake]);
   const hasScreen = engine.captures.sources.has("screen");
   const hasVoice = engine.captures.sources.has("voice");
   const hasCamera = engine.captures.sources.has("camera");
   const micMuted =
     !hasVoice || engine.captures.micMuted || engine.captures.deaf;
-  const canShare = !!navigator.mediaDevices?.getDisplayMedia;
-  const canMedia = !!navigator.mediaDevices?.getUserMedia;
-  const mediaStats = engine.peers
-    .infos()
-    .find(
-      (p) =>
-        !p.sending && p.publicationId === view.selected && p.tier === "main",
-    );
+  const canShare = engine.captures.canShare;
+  const canMedia = engine.captures.canUseDevices;
   const allStats = engine.peers.infos();
   const canFullscreen =
     !!document.fullscreenEnabled ||
     !!(
-      video.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void }
+      player.current?.querySelector(".is-focused video") as HTMLVideoElement & {
+        webkitEnterFullscreen?: () => void;
+      }
     )?.webkitEnterFullscreen;
   const open = (p: Panel) => {
+    if (p) pip.close();
     setPanel(p);
     wake();
   };
+  async function goHome() {
+    pip.close();
+    await engine.leave();
+    setCode("");
+    setPanel(null);
+  }
   async function copy(link = true) {
     try {
       const url = invite(view.snapshot!.code);
@@ -302,7 +267,9 @@ export default function App({ engine }: { engine: Controller }) {
       else if (player.current?.requestFullscreen && document.fullscreenEnabled)
         await player.current.requestFullscreen();
       else {
-        const el = video.current as HTMLVideoElement & {
+        const el = player.current?.querySelector(
+          ".is-focused video",
+        ) as HTMLVideoElement & {
           webkitEnterFullscreen?: () => void;
         };
         if (el?.webkitEnterFullscreen) el.webkitEnterFullscreen();
@@ -323,7 +290,14 @@ export default function App({ engine }: { engine: Controller }) {
     >
       <header className="app-header">
         <div className="header-left">
-          <Brand />
+          <button
+            className="brand-home"
+            aria-label="VIO · Voltar ao início"
+            title="Voltar à seleção de sala"
+            onClick={() => void goHome()}
+          >
+            <Brand />
+          </button>
           {view.snapshot && (
             <>
               <span className="header-divider" />
@@ -344,7 +318,11 @@ export default function App({ engine }: { engine: Controller }) {
               engine={engine}
               diagnostics={() => open("about")}
             />
-            <button className="secondary invite" onClick={() => void copy()}>
+            <button
+              className="secondary invite"
+              aria-label={copied ? "Convite copiado" : "Convidar"}
+              onClick={() => void copy()}
+            >
               {copied ? <Check size={16} /> : <LinkIcon size={16} />}
               <span>{copied ? "Copiado" : "Convidar"}</span>
             </button>
@@ -396,7 +374,9 @@ export default function App({ engine }: { engine: Controller }) {
         <main className="room" id="main-content">
           <div className="room-heading">
             <div>
-              <h1>{source ? "Na mesma cena." : "Sua companhia está aqui."}</h1>
+              <h1>
+                {watching ? "Na mesma cena." : "Sua companhia está aqui."}
+              </h1>
               <RoomTimer engine={engine} />
             </div>
             <div className="room-capacity">
@@ -411,264 +391,272 @@ export default function App({ engine }: { engine: Controller }) {
               />
             </div>
           </div>
-          <div className="player-layout">
-            <div
-              className={`player ${screens.length > 1 ? "has-streams" : ""} ${engine.previewsEnabled ? "live-previews" : ""} ${source ? "has-video" : ""}`}
-              ref={player}
-            >
-              <div className="player-top">
-                <span className={source ? "live-label" : "player-label"}>
-                  {source ? <Radio size={14} /> : <Monitor size={15} />}{" "}
-                  {source
-                    ? `TELA DE ${selectedOwner?.name?.toUpperCase() || "PARTICIPANTE"}`
-                    : "ESPAÇO PARA ASSISTIR"}
-                </span>
-                {source && (
-                  <span className="technical">
-                    {mediaStats?.height ? `${mediaStats.height}p` : "WebRTC"}
-                    {mediaStats?.fps ? ` / ${mediaStats.fps} FPS` : ""}
-                  </span>
-                )}
+          <div className="player-layout" ref={playerMount}>
+            {pip.detached && (
+              <div className="pip-placeholder">
+                <PictureInPicture2 size={28} />
+                <p>A sessão está na janela flutuante.</p>
+                <button className="secondary" onClick={pip.close}>
+                  Trazer de volta
+                </button>
               </div>
-              {source && !(ownScreen && hidePreview) ? (
-                <Media
-                  stream={source}
-                  label="Transmissão principal"
-                  className="main-video"
-                  videoRef={video}
-                  muted={muted}
-                  volume={engine.screenVolume}
-                  output={ownScreen ? undefined : engine.output}
-                />
-              ) : (
-                <div className="player-empty">
-                  <div className="empty-icon">
-                    {ownScreen && hidePreview ? (
-                      <EyeOff size={30} />
-                    ) : (
-                      <MonitorUp size={32} />
-                    )}
-                  </div>
-                  <span className="eyebrow">
-                    {ownScreen && hidePreview
-                      ? "PRÉVIA OCULTA"
-                      : "SEM PRESSA PARA DAR PLAY"}
-                  </span>
-                  <h2>
-                    {ownScreen && hidePreview
-                      ? "Você continua transmitindo."
-                      : selected
-                        ? "Conectando à transmissão…"
-                        : "O que vamos assistir?"}
-                  </h2>
-                  <p>
-                    {ownScreen && hidePreview
-                      ? "As outras pessoas continuam recebendo sua tela."
-                      : selected
-                        ? "Aguardando a mídia. Veja o estado da conexão em Sobre a sala."
-                        : "Compartilhe uma aba, uma janela ou sua tela inteira."}
-                  </p>
-                  {!hasScreen && canShare && (
-                    <button className="secondary" onClick={() => open("share")}>
-                      <MonitorUp size={17} /> Compartilhar tela
-                    </button>
-                  )}
-                  {!canShare && !source && (
-                    <p className="field-note">
-                      {!window.isSecureContext
-                        ? "Abra o VIO em HTTPS ou localhost para liberar as opções de captura."
-                        : "Este navegador pode assistir. A captura de tela não está disponível aqui."}
-                    </p>
-                  )}
-                </div>
-              )}
-              {selected && !ownScreen && mediaStats?.state !== "connected" && (
-                <div className="media-connection" role="status">
-                  <strong>
-                    {mediaStats?.error
-                      ? "A mídia ainda não conectou"
-                      : "Conectando à transmissão…"}
-                  </strong>
-                  <p>
-                    {mediaStats?.error ||
-                      "A sala está aberta. Aguardando uma rota para receber esta tela."}
-                  </p>
-                  <button className="secondary" onClick={() => open("about")}>
-                    Ver conexão
-                  </button>
-                </div>
-              )}
-              {source && (
-                <div className="player-controls">
-                  <div className="volume-control">
-                    <button
-                      className="icon-button"
-                      disabled={ownScreen}
-                      aria-label={
-                        muted
-                          ? "Ativar áudio da transmissão"
-                          : "Silenciar transmissão"
-                      }
-                      onClick={() => setScreenMuted(!screenMuted)}
-                    >
-                      {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
-                    </button>
-                    <input
-                      aria-label="Volume da transmissão"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step=".05"
-                      value={engine.screenVolume}
-                      disabled={ownScreen}
-                      onChange={(e) => {
-                        engine.screenVolume = +e.target.value;
-                        engine.bump();
-                      }}
-                    />
-                    <span>
-                      {ownScreen
-                        ? "Prévia sem áudio"
-                        : `${Math.round(engine.screenVolume * 100)}%`}
-                    </span>
-                  </div>
-                  <div className="player-actions">
-                    {ownScreen && (
-                      <button
-                        className="icon-button"
-                        aria-label={
-                          hidePreview
-                            ? "Mostrar prévia local"
-                            : "Ocultar prévia local"
-                        }
-                        onClick={() => setHidePreview(!hidePreview)}
-                      >
-                        {hidePreview ? <Eye size={19} /> : <EyeOff size={19} />}
-                      </button>
-                    )}
-                    {canFullscreen && (
-                      <button
-                        className="icon-button"
-                        aria-label={full ? "Sair da tela cheia" : "Tela cheia"}
-                        onClick={() => void fullscreen()}
-                      >
-                        <Maximize size={19} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              {screens.length > 1 && (
-                <div
-                  className="stream-rail"
-                  aria-label="Transmissões disponíveis"
-                >
-                  {screens.map((p) => (
-                    <Preview
-                      key={p.id}
-                      publication={p}
-                      name={
-                        people.find((m) => m.id === p.owner)?.name ||
-                        "Participante"
-                      }
-                      engine={engine}
-                      visible={active && !panel}
-                      onVisible={previewVisible}
-                    />
-                  ))}
-                </div>
-              )}
-              <FloatingPeople
-                onInteraction={(busy) => {
-                  draggingCards.current = busy;
-                  wake();
-                }}
+            )}
+            {createPortal(
+              <div
+                className={`player ${available.length > 0 ? "has-streams" : ""} ${engine.previewsEnabled ? "live-previews" : ""} ${watching ? "has-video" : ""}`}
+                ref={player}
               >
-                {people.map((person) => (
-                  <Person key={person.id} person={person} engine={engine} />
-                ))}
-                <button className="invite-seat" onClick={() => void copy()}>
-                  <span>
-                    <Users size={22} />
-                  </span>
-                  <small>Tem lugar aqui</small>
-                </button>
-              </FloatingPeople>
-              <footer className="dock" aria-label="Controles da sala">
-                <div className="dock-group">
-                  <button
-                    className={`dock-button ${micMuted ? "muted" : ""}`}
-                    aria-pressed={!micMuted}
-                    aria-label={
-                      hasVoice
-                        ? engine.captures.micMuted
-                          ? "Ativar microfone"
-                          : "Silenciar microfone"
-                        : "Conectar microfone"
-                    }
-                    disabled={!canMedia && !hasVoice}
-                    onClick={() => void engine.microphone()}
+                {watching ? (
+                  <ScreenStage
+                    engine={engine}
+                    diagnostics={() => open("about")}
+                  />
+                ) : (
+                  <div className="player-empty">
+                    <div className="empty-icon">
+                      <MonitorUp size={32} />
+                    </div>
+                    <span className="eyebrow">VOCÊ ESCOLHE O QUE ASSISTIR</span>
+                    <h2>
+                      {screens.length
+                        ? "Tem tela ao vivo."
+                        : "O que vamos assistir?"}
+                    </h2>
+                    <p>
+                      {screens.length
+                        ? "Clique em Assistir para abrir uma transmissão. O áudio começa junto com ela."
+                        : "Compartilhe uma aba, uma janela ou sua tela inteira."}
+                    </p>
+                    {!screens.length && !hasScreen && canShare && (
+                      <button
+                        className="secondary"
+                        onClick={() => open("share")}
+                      >
+                        <MonitorUp size={17} /> Compartilhar tela
+                      </button>
+                    )}
+                    {!screens.length && !canShare && (
+                      <p className="field-note">
+                        {!window.isSecureContext
+                          ? "Abra o VIO em HTTPS ou localhost para liberar as opções de captura."
+                          : "Este navegador pode assistir. A captura de tela não está disponível aqui."}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {available.length > 0 && (
+                  <div
+                    className="stream-rail"
+                    role="region"
+                    aria-label="Transmissões disponíveis"
                   >
-                    {micMuted ? <MicOff /> : <Mic />}
-                    <span>Microfone</span>
-                  </button>
-                  <button
-                    className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
-                    aria-pressed={engine.captures.deaf}
-                    aria-label={
-                      engine.captures.deaf
-                        ? "Desativar ensurdecer"
-                        : "Ensurdecer"
-                    }
-                    onClick={() => engine.deafen()}
-                  >
-                    {engine.captures.deaf ? <HeadphoneOff /> : <Headphones />}
-                    <span>Áudio</span>
-                  </button>
-                  <button
-                    className={`dock-button ${hasCamera ? "enabled" : ""}`}
-                    aria-label={hasCamera ? "Desligar câmera" : "Ligar câmera"}
-                    aria-pressed={hasCamera}
-                    disabled={!canMedia && !hasCamera}
-                    onClick={() => void engine.camera()}
-                  >
-                    {hasCamera ? <Camera /> : <CameraOff />}
-                    <span>Câmera</span>
-                  </button>
-                </div>
-                <span className="dock-divider" />
-                <button
-                  className={`share-button ${hasScreen ? "sharing" : ""}`}
-                  aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
-                  disabled={!canShare && !hasScreen}
-                  onClick={() =>
-                    hasScreen ? void engine.stop("screen") : open("share")
-                  }
+                    {available.map((p) => (
+                      <ScreenPicker
+                        key={p.id}
+                        publication={p}
+                        name={
+                          people.find((m) => m.id === p.owner)?.name ||
+                          "Participante"
+                        }
+                        engine={engine}
+                        visible={(active && !panel) || !watching}
+                        onVisible={previewVisible}
+                      />
+                    ))}
+                  </div>
+                )}
+                <FloatingPeople
+                  count={people.length}
+                  hidden={engine.peopleHidden}
+                  hide={() => engine.togglePeople()}
+                  onInteraction={(busy) => {
+                    draggingCards.current = busy;
+                    wake();
+                  }}
                 >
-                  {hasScreen ? <Pause size={19} /> : <MonitorUp size={19} />}
-                  <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
-                </button>
-                <span className="dock-divider" />
-                <div className="dock-group">
-                  <button
-                    className="dock-button"
-                    aria-label="Ajustes"
-                    onClick={() => open("settings")}
-                  >
-                    <Settings2 />
-                    <span>Ajustes</span>
+                  {people.map((person) => (
+                    <Person key={person.id} person={person} engine={engine} />
+                  ))}
+                  <button className="invite-seat" onClick={() => void copy()}>
+                    <span>
+                      <Users size={22} />
+                    </span>
+                    <small>Tem lugar aqui</small>
                   </button>
+                </FloatingPeople>
+                <footer
+                  ref={dock}
+                  className="dock"
+                  aria-label="Controles da sala"
+                >
+                  <div className="dock-group call-controls">
+                    {!engine.inCall ? (
+                      <button
+                        className="secondary call-join"
+                        onClick={() => engine.joinCall()}
+                        aria-label="Entrar na chamada com microfone desligado"
+                      >
+                        <Phone size={18} />
+                        <span>Entrar na chamada</span>
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          className={`dock-button ${micMuted ? "muted" : ""}`}
+                          aria-pressed={!micMuted}
+                          aria-label={
+                            hasVoice
+                              ? engine.captures.micMuted
+                                ? "Ativar microfone"
+                                : "Silenciar microfone"
+                              : "Conectar microfone"
+                          }
+                          disabled={!canMedia && !hasVoice}
+                          onClick={() => void engine.microphone()}
+                        >
+                          {micMuted ? <MicOff /> : <Mic />}
+                          <span>Microfone</span>
+                        </button>
+                        <button
+                          className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
+                          aria-pressed={engine.captures.deaf}
+                          aria-label={
+                            engine.captures.deaf
+                              ? "Desativar ensurdecer"
+                              : "Ensurdecer"
+                          }
+                          onClick={() => engine.deafen()}
+                        >
+                          {engine.captures.deaf ? (
+                            <HeadphoneOff />
+                          ) : (
+                            <Headphones />
+                          )}
+                          <span>Áudio</span>
+                        </button>
+                        <button
+                          className={`dock-button ${hasCamera ? "enabled" : ""}`}
+                          aria-label={
+                            hasCamera ? "Desligar câmera" : "Ligar câmera"
+                          }
+                          aria-pressed={hasCamera}
+                          disabled={!canMedia && !hasCamera}
+                          onClick={() => void engine.camera()}
+                        >
+                          {hasCamera ? <Camera /> : <CameraOff />}
+                          <span>Câmera</span>
+                        </button>
+                        <button
+                          className="dock-button leave-call"
+                          aria-label="Sair da chamada"
+                          title="Sair da chamada e continuar assistindo"
+                          onClick={() => void engine.leaveCall()}
+                        >
+                          <PhoneOff />
+                          <span>Sair da voz</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <span className="dock-divider" />
                   <button
-                    className="dock-button leave"
-                    aria-label="Sair da sala"
-                    onClick={() => void engine.leave()}
+                    className={`share-button ${hasScreen ? "sharing" : ""}`}
+                    aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
+                    disabled={!canShare && !hasScreen}
+                    onClick={() =>
+                      hasScreen ? void engine.stop("screen") : open("share")
+                    }
                   >
-                    <LogOut />
-                    <span>Sair</span>
+                    {hasScreen ? <Pause size={19} /> : <MonitorUp size={19} />}
+                    <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
                   </button>
-                </div>
-              </footer>
-            </div>
+                  <span className="dock-divider" />
+                  {(watching || pip.interactive) && (
+                    <div className="dock-group playback-controls">
+                      {watching && <VolumeControl engine={engine} />}
+                      {watching && canFullscreen && (
+                        <button
+                          className="dock-button"
+                          aria-label={
+                            full ? "Sair da tela cheia" : "Tela cheia"
+                          }
+                          title="Tela cheia"
+                          disabled={pip.detached}
+                          onClick={() => void fullscreen()}
+                        >
+                          <Maximize />
+                          <span>Tela cheia</span>
+                        </button>
+                      )}
+                      {pip.supported && (
+                        <button
+                          className="dock-button"
+                          aria-label={
+                            pip.detached
+                              ? "Voltar da janela flutuante"
+                              : pip.active
+                                ? "Fechar janela flutuante"
+                                : "Picture-in-picture"
+                          }
+                          title="Janela flutuante"
+                          onClick={() =>
+                            void pip
+                              .toggle(
+                                playerHost,
+                                player.current?.querySelector<HTMLVideoElement>(
+                                  ".is-focused video",
+                                ) || null,
+                              )
+                              .catch((e) => engine.fail(e))
+                          }
+                        >
+                          <PictureInPicture2 />
+                          <span>Flutuante</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <div className="dock-group">
+                    <button
+                      className="dock-button"
+                      aria-label={
+                        engine.peopleHidden
+                          ? "Mostrar participantes"
+                          : "Ocultar participantes"
+                      }
+                      aria-expanded={!engine.peopleHidden}
+                      aria-controls="floating-participants"
+                      title={
+                        engine.peopleHidden
+                          ? "Mostrar participantes"
+                          : "Ocultar participantes"
+                      }
+                      onClick={() => engine.togglePeople()}
+                    >
+                      <Users />
+                      <span>Pessoas</span>
+                    </button>
+                    <button
+                      className="dock-button"
+                      aria-label="Ajustes"
+                      onClick={() => open("settings")}
+                    >
+                      <Settings2 />
+                      <span>Ajustes</span>
+                    </button>
+                    <button
+                      className="dock-button leave"
+                      aria-label="Sair da sala"
+                      onClick={() => void goHome()}
+                    >
+                      <LogOut />
+                      <span>Sair</span>
+                    </button>
+                  </div>
+                </footer>
+              </div>,
+              playerHost,
+            )}
           </div>
           {engine.captures.voiceBlocked() && (
             <button
@@ -687,7 +675,9 @@ export default function App({ engine }: { engine: Controller }) {
                 key={p.id}
                 stream={engine.peers.stream(p.id)}
                 output={engine.output}
-                muted={engine.captures.deaf || engine.remoteMute}
+                muted={
+                  !engine.inCall || engine.captures.deaf || engine.remoteMute
+                }
                 volume={engine.volumes.get(p.owner) ?? 1}
                 label={
                   people.find((m) => m.id === p.owner)?.name || "Participante"
@@ -734,6 +724,7 @@ export default function App({ engine }: { engine: Controller }) {
                 </span>
                 <input
                   type="checkbox"
+                  role="switch"
                   checked={audio}
                   onChange={(e) => setAudio(e.target.checked)}
                 />
@@ -869,6 +860,7 @@ export default function App({ engine }: { engine: Controller }) {
                       </span>
                       <input
                         type="checkbox"
+                        role="switch"
                         disabled={!engine.peers.ice.turn}
                         checked={engine.peers.forceRelay}
                         onChange={(e) =>

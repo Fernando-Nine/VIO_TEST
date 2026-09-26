@@ -2,6 +2,28 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.4.0] - 2026-09-26
+
+Duas telas, a conversa continua
+
+### Escolher, combinar e alternar
+- Novas transmissões aguardam seu clique em Assistir; nenhuma tela é aberta automaticamente.
+- Em conjunto mantém duas telas em qualidade principal, uma grande e outra menor, com áudio independente nas duas.
+- Trocar o foco entre as telas já abertas preserva as conexões, os vídeos e seus volumes. Uma terceira tela substitui somente o foco escolhido.
+- Parar de assistir libera apenas aquela transmissão. Se a principal terminar, a outra tela já aberta assume o foco.
+
+### A sala se adapta
+- Participantes em grade compacta com rolagem interna, opção de esconder e restaurar, mantendo arraste e encaixes.
+- Aviso de carga a partir de seis pessoas com ícone circular discreto. Clicar na marca VIO sai da sala e volta à entrada.
+- Entrar na chamada fica separado de assistir às telas. A conversa só começa após esse clique, com o microfone desligado; sair da chamada mantém as telas.
+- Volume das telas no dock: hover abre a barra, clique silencia a tela em foco e toque abre os controles. Ajuste fino opcional libera ganho local até 300%.
+- Tela cheia e picture-in-picture no dock. Quando há suporte a Document PiP, a janela flutuante mantém os controles interativos; demais navegadores usam o PiP de vídeo disponível.
+- Switches nos ajustes e seletores nativos com visual escuro aprimorado, preservando teclado e compatibilidade.
+
+### Acabamentos discretos
+- Degradês escuros e azuis, brilho breve nos botões de ação e pequenos movimentos de hover, mantendo #2727F5 como cor da marca.
+- Controles sobre as duas telas com foco de teclado visível; movimentos respeitam a preferência por animação reduzida.
+
 ## [2.3.0] - 2026-09-25
 
 Mais espaço, controles mais claros

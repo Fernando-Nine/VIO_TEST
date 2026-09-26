@@ -39,3 +39,17 @@ Node 24 foi usado neste ambiente, com as versões exatas registradas no lockfile
 A família LTS foi escolhida para execução, e a instalação resolveu versões compatíveis
 de Vite e seu plugin React. [Node: releases](https://nodejs.org/en/about/previous-releases),
 [Vite: requisitos](https://vite.dev/guide/).
+
+## Reprodução e controles — consulta em 26/09/2026
+
+Document PiP oferece uma janela com HTML e controles da sessão quando a API é
+detectada. O VIO copia estilos e move o host do player sem trocar publicações.
+Fechar a janela devolve o host; o navegador pode restringir tamanho e posicionamento.
+Sem Document PiP, usa PiP de vídeo quando disponível. Não há promessa de paridade
+de controles no fallback ou em toda PWA instalada.
+[Chrome: Document Picture-in-Picture](https://developer.chrome.com/docs/web-platform/document-picture-in-picture).
+
+Seletores continuam sendo elementos nativos. `appearance: base-select` e
+`::picker(select)` melhoram o menu nos navegadores que oferecem suporte; os demais
+mantêm o seletor da plataforma.
+[Chrome: customizable select](https://developer.chrome.com/blog/a-customizable-select).

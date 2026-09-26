@@ -1,5 +1,72 @@
 # VIO — validação
 
+## Atualização 2.4.0 — 26/09/2026
+
+30 testes automatizados aprovados. O servidor mantém duas assinaturas principais
+com IDs estáveis, rejeita a terceira sem fechar as abertas, permite substituição
+explícita e preserva voz. Seleção pura verifica foco sem mudança da lista/ordem,
+substituição só da principal e promoção da tela que já estava aberta.
+Histórico integral do VIO_2, origem, identidade, payloads, TURN, saída de áudio,
+service worker e reinício real de servidor continuam cobertos pela suíte.
+
+Chrome 151, `tests/WatchLab.tsx`: quatro sessões reais de sinalização; três fontes
+sintéticas. No ingresso, zero telas assistidas e zero assinaturas de tela recebidas.
+Depois de Assistir e Em conjunto, os dois elementos de vídeo e seus MediaStreams
+permaneceram idênticos, progredindo e sem eventos de pause ao alternar o foco.
+A revisão com áudio separado preservou também os dois elementos audio e seus streams, tocando e não mudos; os vídeos ficam mudos para evitar duplicação. Mute
+individual persistiu na troca; ensurdecer silenciou ambos e restaurou o mute manual.
+Encerrar a principal promoveu a secundária; fechar a última não abriu outra.
+Em 320 × 844, os dois vídeos e seus controles ficaram dentro do player, sem
+rolagem externa; a tela secundária mediu 172 × 96,75 px. Também conferidos
+768 × 390 e 1920 × 1080: vídeos, controles, cards e dock dentro do player;
+sem rolagem externa. No monitor amplo, secundária de 420 × 236,25 px.
+Ao habilitar prévias, a miniatura de uma terceira transmissão mediu 234 × 131,625 px,
+sem alterar a reprodução das duas telas escolhidas.
+Depois da otimização de prévias, alternar duas vezes não emitiu comandos de
+assinatura. Trocar pela terceira preservou o vídeo e o áudio da secundária.
+
+Esse laboratório fornece as fontes sintéticas diretamente à camada de reprodução,
+para verificar DOM e continuidade sem depender de ICE. As assinaturas passam pelo
+servidor real, mas o ensaio **não comprova transporte WebRTC entre aparelhos**.
+Uma segunda aba independente entrou na sala (cinco sessões) e escolheu duas
+transmissões; os vídeos remotos ficaram sem quadros neste ambiente.
+Os limites de teste físico/relay documentados abaixo permanecem. Não foi alegado
+aceite de captura física, Safari/iPhone ou continuidade audível em redes diferentes.
+
+Degradê de CTA com contraste mínimo de 6,68:1; no pico do brilho, 5,25:1.
+Texto e controles novos superam AA. Efeitos acrescentados usam transform/opacity,
+respeitam reduced-motion e restringem hovers animados a ponteiro fino.
+Revisão visual executada: azul #2727F5, tema escuro, fontes locais modernas,
+sem roxo-azul genérico, blob, emojis, cursores com direção errada, cards de marketing
+repetidos ou dependências de animação. Sem dependências novas ou mudança de plano.
+
+Complemento da sala: oito participantes em grade com altura limitada; esconder e
+restaurar funcionaram. Em 320 × 844 e 768 × 390, sem rolagem externa e com painel/dock
+dentro do vídeo. Aviso medido em 28 × 28 px, raio de 50%, fundo transparente.
+Entrada na chamada verificada pela UI: sem fontes locais e sem voz recebida antes;
+após entrar, uma assinatura de voz e microfone ainda desligado, sem captura local.
+Ativar microfone criou somente voz; sair removeu voz/assinatura da conversa e preservou
+os mesmos quatro elementos de reprodução das duas telas, sem pause.
+Switch de ganho habilitou 300% no range; End chegou a 300% e Escape fechou o popover.
+Seleção de 1080p refletiu o valor aceito. FeatureLab mediu ganho real de tela 3,00×,
+volume zero silencioso e captura original ainda viva após desmontar a reprodução.
+PiP nativo de vídeo abriu/fechou no Chrome de teste, confirmado pelo estado do botão.
+Document PiP interativo depende de contexto seguro e não foi exercitado nesta prévia HTTP.
+
+ExpressTURN foi configurado no serviço Render, UDP/TCP 3478, e o deploy de configuração
+ficou live. Credenciais não foram incluídas no Git. BrowserLab com os mesmos servidores
+ICE configurados: presença, duas publicações de tela e voz/câmera aprovadas; timeout de
+40 segundos aguardando conexões. 32 peers com descrições local/remota estáveis, zero
+candidatos enviados/recebidos e zero bytes. O ensaio não confirma alocação nem transporte
+TURN. É necessário validar com dois dispositivos e redes reais. Resultado preservado
+em `evidence/media-turn-2.4.0.json`, sem credenciais.
+
+A próxima etapa Windows/WASAPI está especificada em DESKTOP-WASAPI.md; nenhum
+instalador ou módulo nativo é alegado como entregue.
+
+Evidências: `evidence/tests-2.4.0.txt`, `evidence/build-2.4.0.txt`,
+`evidence/contrast-2.4.0.json` e `evidence/ui-2.4.0.json`.
+
 ## Atualização 2.3.0 — 25/09/2026
 
 Build de produção e 27 testes aprovados. O ensaio do servidor abriu oito sessões

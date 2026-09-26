@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.3.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.4.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -46,7 +46,7 @@ Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
 
-## Interface 2.3.0
+## Interface 2.4.0
 
 Entrada e sala em carvão, branco suave e azul #2727F5, com Bricolage Grotesque e
 IBM Plex Mono locais. A entrada cabe na janela de desktop; celulares mantêm
@@ -54,7 +54,7 @@ rolagem natural. O fundo geométrico se move suavemente e respeita movimento red
 
 Prévias ao vivo usam cards maiores em 16:9; o vídeo principal ocupa toda a largura,
 inclusive em monitores largos. A sala ocupa a altura disponível, com controles sobre a transmissão. Arraste a alça
-“Por aqui” para mover os cards entre seis encaixes, clique nela para escolher uma
+com a contagem de pessoas para mover os cards entre seis encaixes, clique nela para escolher uma
 posição ou use as setas do teclado. Os cards desaparecem após 2 segundos sem
 atividade; o alfinete permite mantê-los visíveis. Mover o mouse, tocar ou usar o
 teclado traz os controles de volta. O foco de teclado e os menus abertos impedem a
@@ -63,7 +63,7 @@ ocultação. A posição se adapta ao redimensionamento e à tela cheia.
 ## O que a interface oferece
 
 - Salas por código, sem conta e sem anfitrião. Sem teto por sala; a partir de seis pessoas, o “?” destaca o custo das conexões diretas.
-- Compartilhamento simultâneo de telas. Cada espectador escolhe uma tela principal.
+- Compartilhamento simultâneo de telas. Cada espectador escolhe quando assistir e pode manter duas telas abertas, com foco intercambiável.
 - Miniaturas ao vivo opcionais, desligadas por padrão, com iniciais no lugar do vídeo.
   Quando ligadas, até duas miniaturas visíveis são recebidas em baixa resolução, sem áudio.
 - Ajustes nas abas Vídeo e Áudio. Microfone com limiar de abertura separado do volume.
@@ -87,7 +87,7 @@ credenciais ou conectividade externa.
 
 1. Digite seu nome. Deixe o código vazio para criar uma sala com código aleatório.
 2. Copie o convite e envie por um canal de sua escolha.
-3. Ative microfone e câmera quando quiser. Eles começam desconectados.
+3. Clique em Entrar na chamada para ouvir a conversa. O microfone entra desligado; só é capturado ao ativá-lo. Sair da chamada preserva as telas assistidas.
 4. Clique em Compartilhar e selecione a fonte no navegador. A existência de áudio é
    detectada pela trilha efetivamente retornada, não pela opção solicitada.
 5. Escolha a tela no seletor. Ajustes de reprodução são locais.
@@ -178,8 +178,7 @@ de produção. Preserve o JSON de resultados, informando navegador, sistema e re
 
 O contrato `CaptureAdapter` permite substituir a captura do navegador em uma futura
 versão Tauri. A etapa Windows precisará implementar e validar WASAPI, seleção de
-processo/janela, permissões, empacotamento e assinatura do instalador. Nada disso é
-incluído nesta entrega web.
+processo/janela, permissões, empacotamento e assinatura do instalador. A preparação e o aceite da próxima etapa estão em [DESKTOP-WASAPI.md](docs/DESKTOP-WASAPI.md). O instalador e a captura nativa ainda não estão implementados.
 
 ## Licença
 
@@ -187,3 +186,38 @@ incluído nesta entrega web.
 próprias licenças; os textos OFL estão em `docs/licenses`. O histórico mostrado no app
 e o CHANGELOG usam `src/shared/releases.ts` e `src/shared/legacy-releases.json`.
 O arquivo anterior completo, preservado byte a byte, está em `docs/CHANGELOG-VIO_2.md`.
+
+## Assistir em conjunto
+
+Clique em **Assistir** numa transmissão disponível. A segunda oferece **Trocar foco**
+(substitui a principal) e **Em conjunto** (mantém ambas, com a segunda menor).
+Na tela menor, o botão de setas alterna o foco sem recriar conexões ou vídeos.
+Cada tela mantém volume e mute próprios; ensurdecer silencia todas.
+O X para de assistir apenas àquela tela. Ao encerrar a principal, a secundária
+já aberta assume o foco; novas transmissões continuam aguardando escolha.
+Com duas abertas, escolher uma terceira substitui só a principal.
+
+As duas telas assistidas recebem qualidade principal com áudio. Isso usa mais rede
+e processamento que assistir a uma. As miniaturas opcionais continuam leves,
+mudas e limitadas a duas; não são as telas abertas em conjunto.
+
+Degradês discretos seguem o azul da marca. Brilho no hover dos botões de ação e
+pequenos deslocamentos usam transform/opacity, sem dependências adicionais.
+
+## Controles da sala 2.4
+
+O painel de participantes usa duas ou três colunas e altura limitada. Esconda pelo
+ícone de minimizar ou pelo botão Pessoas no dock; o mesmo botão restaura a grade.
+O aviso de carga continua informativo, com ícone circular discreto, sem limitar entradas.
+A marca VIO volta à entrada e encerra sua participação na sala.
+
+Volume, tela cheia e PiP ficam junto dos controles da chamada. No desktop, passe
+o mouse sobre Volume para abrir as barras; clicar no ícone silencia a tela em foco.
+No celular, tocar abre as barras. Cada transmissão assistida tem volume próprio.
+Em Ajustes → Vídeo → Áudio das telas, o switch Ajuste fino libera até 300%; desligá-lo
+limita os volumes novamente a 100%. O ganho é local e não altera o áudio enviado.
+
+A janela Document PiP, quando suportada, mantém os controles da sessão e os mesmos
+elementos de mídia. Fechá-la devolve a sessão à janela principal. Em navegadores
+com apenas PiP de vídeo, os controles disponíveis são os do navegador. Instalar a
+PWA não acrescenta WASAPI nem suporte de PiP ausente na plataforma.

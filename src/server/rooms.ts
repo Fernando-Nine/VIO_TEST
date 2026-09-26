@@ -351,14 +351,20 @@ export class Rooms {
       const own = [...room.subscriptions.values()].filter(
         (s) => s.viewer === m.id,
       );
-      if (data.tier === "main" && p.kind === "screen")
-        for (const s of own)
-          if (
+      if (
+        data.tier === "main" &&
+        p.kind === "screen" &&
+        own.filter(
+          (s) =>
             s.tier === "main" &&
             s.publication.kind === "screen" &&
-            s.publication.id !== p.id
-          )
-            this.closeSub(room, s);
+            s.publication.id !== p.id,
+        ).length >= 2
+      )
+        throw new Fault(
+          "SCREEN_LIMIT",
+          "Feche uma das duas telas antes de assistir a outra.",
+        );
       if (
         data.tier === "preview" &&
         own.filter((s) => s.tier === "preview" && s.publication.id !== p.id)

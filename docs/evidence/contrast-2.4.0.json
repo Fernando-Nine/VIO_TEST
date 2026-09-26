@@ -1,0 +1,37 @@
+[
+  {
+    "text": "#f4f5ff",
+    "background": "#3535ee",
+    "contrast": 6.68
+  },
+  {
+    "text": "#f4f5ff",
+    "background": "#2727f5",
+    "contrast": 7.18
+  },
+  {
+    "text": "#f4f5ff",
+    "background": "#2222c9",
+    "contrast": 9.04
+  },
+  {
+    "text": "#c0c5ff",
+    "background": "#171c30",
+    "contrast": 10.18
+  },
+  {
+    "text": "#c7cce7",
+    "background": "#101320",
+    "contrast": 11.64
+  },
+  {
+    "text": "#f1f2fa",
+    "background": "#1b1e2c",
+    "contrast": 14.84
+  },
+  {
+    "text": "#f4f5ff",
+    "background": "brightest CTA + peak sheen",
+    "contrast": 5.25
+  }
+]

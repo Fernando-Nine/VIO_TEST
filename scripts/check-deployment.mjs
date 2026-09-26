@@ -73,9 +73,9 @@ try {
   assert.equal(worker.status, 200);
   assert.match(worker.headers.get("cache-control"), /no-cache/);
   assert.match(worker.headers.get("content-type"), /javascript/);
-  assert.match(await worker.text(), /vio-static-2\.3\.0/);
+  assert.match(await worker.text(), /vio-static-2\.4\.0/);
   checks.push(
-    "Manifest e service worker 2.3.0 entregues com cache de atualização correto",
+    "Manifest e service worker 2.4.0 entregues com cache de atualização correto",
   );
   const source = await request("/source.tar.gz");
   assert.equal(source.status, 200);
@@ -109,6 +109,16 @@ try {
   }
   assert.equal(new Set(members.map((m) => m.id)).size, 3);
   checks.push("Três sessões independentes entram na mesma sala por WSS");
+  const ice = await command(sockets[0], "ice");
+  assert.equal(ice.turn, true);
+  const relay = ice.iceServers.filter((server) => server.credential);
+  assert.ok(relay.length > 0);
+  const relayUrls = relay.flatMap((server) => [server.urls].flat());
+  assert.ok(relayUrls.some((value) => value.endsWith("?transport=udp")));
+  assert.ok(relayUrls.some((value) => value.endsWith("?transport=tcp")));
+  checks.push(
+    "Sessão da sala recebe TURN UDP/TCP; credenciais omitidas do relatório",
+  );
   const publications = [];
   for (const socket of sockets.slice(0, 2))
     publications.push(
@@ -124,6 +134,12 @@ try {
     tier: "main",
     nonce: crypto.randomUUID(),
   });
+  const secondary = await command(sockets[2], "subscribe", {
+    publicationId: publications[1].id,
+    tier: "main",
+    nonce: crypto.randomUUID(),
+  });
+  assert.notEqual(secondary.id, subscription.id);
   const routed = new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => reject(new Error("Sinal não recebido")),

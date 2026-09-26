@@ -86,3 +86,16 @@ Módulos da 2.3.0: `src/client/media/video-quality.ts` calcula os parâmetros de
 `tests/video-quality.test.ts` cobre resolução e limites de miniaturas, e
 `tests/audio-output.test.ts` cobre seleção, remoção de elementos e recuperação da saída.
 `public/cursors/vio-hand.svg` acompanha o cursor azul de seta.
+
+Módulos da 2.4.0: `src/client/components/ScreenStage.tsx` mantém os vídeos montados
+ao mudar o foco; `ScreenPicker.tsx` oferece as escolhas de assistir e combinar.
+`src/client/room/watching.ts` e `tests/watching.test.ts` cobrem seleção/substituição.
+`src/client/finish.css` concentra degradês, hovers e layout das telas assistidas.
+`tests/WatchLab.tsx` verifica identidade dos elementos, progressão e áudio sintético
+com sinalização real. É um ensaio de renderização, não prova transporte WebRTC.
+
+`ScreenAudio.tsx` e `media/screen-playback.ts` mantêm áudio e ganho locais por
+transmissão; `VolumeControl.tsx` reúne as barras no dock.
+`media/picture-in-picture.ts` move o host estável para Document PiP quando disponível,
+com retorno ao fechar; usa PiP nativo de vídeo como fallback.
+`docs/DESKTOP-WASAPI.md` prepara o próximo ciclo Windows, ainda sem binário nativo.

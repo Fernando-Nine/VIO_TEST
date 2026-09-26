@@ -5,7 +5,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { GripHorizontal, Pin, PinOff } from "lucide-react";
+import { GripHorizontal, Pin, PinOff, Minus } from "lucide-react";
 import {
   anchors,
   anchorPoint,
@@ -19,8 +19,14 @@ import {
 export function FloatingPeople({
   children,
   onInteraction,
+  count,
+  hidden,
+  hide,
 }: {
   children: ReactNode;
+  count: number;
+  hidden: boolean;
+  hide: () => void;
   onInteraction: (busy: boolean) => void;
 }) {
   const layer = useRef<HTMLDivElement>(null);
@@ -61,7 +67,7 @@ export function FloatingPeople({
     if (panel.current) observer.observe(panel.current);
     measure();
     return () => observer.disconnect();
-  }, []);
+  }, [hidden]);
   const position = point
     ? clampPoint(point, bounds)
     : anchorPoint(anchor, bounds);
@@ -87,7 +93,7 @@ export function FloatingPeople({
       event.currentTarget.releasePointerCapture(event.pointerId);
   }
   return (
-    <div className="floating-layer" ref={layer}>
+    <div className="floating-layer" ref={layer} hidden={hidden}>
       {target && (
         <div
           className="snap-target"
@@ -102,9 +108,13 @@ export function FloatingPeople({
       <section
         ref={panel}
         className={`floating-people ${point ? "is-dragging" : ""} ${pinned ? "is-pinned" : ""} ${menu ? "has-menu" : ""}`}
+        id="floating-participants"
         aria-label="Pessoas na sala"
         data-position={anchor}
-        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          width: count < 3 ? 200 : 282,
+        }}
       >
         <div className="floating-toolbar">
           <button
@@ -192,7 +202,9 @@ export function FloatingPeople({
             }}
           >
             <GripHorizontal size={16} aria-hidden="true" />
-            <span>Por aqui</span>
+            <span>
+              {count} {count === 1 ? "pessoa" : "pessoas"}
+            </span>
           </button>
           <button
             className="cards-pin"
@@ -205,8 +217,19 @@ export function FloatingPeople({
           >
             {pinned ? <PinOff size={14} /> : <Pin size={14} />}
           </button>
+          <button
+            className="cards-pin"
+            aria-label="Ocultar participantes"
+            title="Ocultar participantes"
+            onClick={hide}
+          >
+            <Minus size={16} />
+          </button>
         </div>
         <div
+          style={{
+            gridTemplateColumns: `repeat(${count < 3 ? 2 : 3}, minmax(0, 1fr))`,
+          }}
           className="people-strip"
           tabIndex={0}
           aria-label="Cards dos participantes; role para ver todos"

@@ -141,14 +141,38 @@ export function Settings({ engine }: { engine: Controller }) {
             </span>
             <input
               type="checkbox"
+              role="switch"
               checked={engine.previewsEnabled}
               onChange={(e) => engine.setPreviews(e.target.checked)}
             />
           </label>
           <p className="field-note">
             Ao ligar, até duas miniaturas visíveis recebem vídeo reduzido. Isso
-            usa banda adicional de quem compartilha. A tela principal continua
-            funcionando com a opção desligada.
+            usa banda adicional de quem compartilha. As telas escolhidas
+            continuam funcionando com a opção desligada.
+          </p>
+        </fieldset>
+        <fieldset>
+          <legend>Áudio das telas</legend>
+          <label className="toggle">
+            <span>
+              Ajuste fino de áudio
+              <small>
+                Libera até 300% no controle de volume das telas que você
+                assiste.
+              </small>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={engine.fineAudio}
+              disabled={!engine.playback.supported}
+              onChange={(e) => engine.setFineAudio(e.target.checked)}
+            />
+          </label>
+          <p className="field-note">
+            O ganho é só para você. Acima de 100%, sons já altos podem
+            distorcer. Ao desligar, os volumes voltam ao máximo de 100%.
           </p>
         </fieldset>
         <fieldset>
@@ -383,6 +407,7 @@ export function Settings({ engine }: { engine: Controller }) {
               </span>
               <input
                 type="checkbox"
+                role="switch"
                 disabled={!supports[key] || savingVoice}
                 checked={capture.voiceSettings[key]}
                 onChange={(e) => {
@@ -442,6 +467,7 @@ export function Settings({ engine }: { engine: Controller }) {
             </span>
             <input
               type="checkbox"
+              role="switch"
               checked={engine.sounds}
               onChange={(e) => {
                 engine.sounds = e.target.checked;
@@ -456,6 +482,7 @@ export function Settings({ engine }: { engine: Controller }) {
             </span>
             <input
               type="checkbox"
+              role="switch"
               checked={engine.remoteMute}
               onChange={(e) => {
                 engine.remoteMute = e.target.checked;
