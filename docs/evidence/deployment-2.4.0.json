@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-09-26T17:38:38.956Z",
+  "origin": "https://vio-test.onrender.com",
+  "checks": [
+    "HTTPS, healthz, CSP e HSTS",
+    "Página principal, configuração pública e laboratório desativado",
+    "Manifest e service worker 2.4.0 entregues com cache de atualização correto",
+    "Código-fonte disponível para download",
+    "Sessão de origem externa recusada"
+  ],
+  "mediaTransport": "NOT_TESTED",
+  "status": "FAIL",
+  "error": "websocket error",
+  "browserSupplement": {
+    "version": "2.4.0",
+    "roomJoin": "PASS",
+    "serverPingMs": 28,
+    "documentPiP": "PASS: open, join call, return to room",
+    "physicalMedia": "NOT_TESTED",
+    "turnAvailableToRoom": true
+  }
+}

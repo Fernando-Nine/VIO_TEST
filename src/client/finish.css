@@ -608,6 +608,9 @@
 .pip-surface .floating-layer {
   display: none;
 }
+.pip-surface .dock-button[aria-controls="floating-participants"] {
+  display: none;
+}
 .pip-surface .watched-screen.is-secondary {
   width: 32%;
   min-width: 150px;

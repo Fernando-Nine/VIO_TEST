@@ -126,7 +126,7 @@
     "Remote WebRTC across physical devices and real output hardware not validated",
     "Mobile viewports are same-origin iframes, not physical phones",
     "TURN configured; real BrowserLab transport timed out with zero ICE candidates and zero bytes",
-    "Document PiP and installed Windows app require native-platform validation"
+    "Document PiP with real media between devices and installed Windows app require native-platform validation"
   ],
   "separateTab": {
     "joinedSameRoom": true,
@@ -159,7 +159,7 @@
     "screenGainCleanupPreservesCapture": true,
     "escapeClosesVolume": true,
     "nativePiP": "opened and closed through UI, state labels confirmed",
-    "documentPiP": "not exercised in local HTTP preview",
+    "documentPiP": "HTTPS production: opened, join-call control functional, returned host to main window preserving call; no physical media",
     "brandReturnsToLanding": true
   },
   "screenshot": "vio-2.4-sala-1790444089152.jpg"

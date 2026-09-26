@@ -51,7 +51,10 @@ Switch de ganho habilitou 300% no range; End chegou a 300% e Escape fechou o pop
 Seleção de 1080p refletiu o valor aceito. FeatureLab mediu ganho real de tela 3,00×,
 volume zero silencioso e captura original ainda viva após desmontar a reprodução.
 PiP nativo de vídeo abriu/fechou no Chrome de teste, confirmado pelo estado do botão.
-Document PiP interativo depende de contexto seguro e não foi exercitado nesta prévia HTTP.
+Na prévia HTTP, Document PiP não estava disponível. Após o primeiro deploy 2.4,
+a sala HTTPS abriu uma janela Document PiP com CSS e controles; Entrar na chamada
+funcionou dentro dela e Voltar devolveu o player à sala com a chamada preservada.
+Esse teste não solicitou hardware nem transmitiu mídia entre janelas/dispositivos.
 
 ExpressTURN foi configurado no serviço Render, UDP/TCP 3478, e o deploy de configuração
 ficou live. Credenciais não foram incluídas no Git. BrowserLab com os mesmos servidores
@@ -60,6 +63,12 @@ ICE configurados: presença, duas publicações de tela e voz/câmera aprovadas;
 candidatos enviados/recebidos e zero bytes. O ensaio não confirma alocação nem transporte
 TURN. É necessário validar com dois dispositivos e redes reais. Resultado preservado
 em `evidence/media-turn-2.4.0.json`, sem credenciais.
+
+Checagem da publicação: Render live no commit 5a7b889; página exibindo 2.4.0.
+HTTP: healthz, CSP/HSTS, configuração, manifest/service worker, código-fonte e recusa
+de origem externa aprovados. O script Node falhou ao conectar WSS; pelo navegador,
+o ingresso na mesma origem funcionou, com ping do servidor e uso dos controles.
+Evidência de Document PiP: `evidence/vio-2.4-pip-1790444416386.jpg`.
 
 A próxima etapa Windows/WASAPI está especificada em DESKTOP-WASAPI.md; nenhum
 instalador ou módulo nativo é alegado como entregue.

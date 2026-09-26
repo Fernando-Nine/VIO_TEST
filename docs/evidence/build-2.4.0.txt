@@ -27,8 +27,8 @@ dist/client/assets/ibm-plex-mono-latin-ext-400-normal-BmRBH3aV.woff2           1
 dist/client/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2               14.70 kB
 dist/client/assets/bricolage-grotesque-latin-ext-wght-normal-CcLUaPy7.woff2    18.66 kB
 dist/client/assets/bricolage-grotesque-latin-wght-normal-DLoelf7F.woff2        41.34 kB
-dist/client/assets/index-CIBCIJOW.css                                          60.90 kB │ gzip:  13.76 kB
-dist/client/assets/index-y6DIpQig.js                                          447.72 kB │ gzip: 134.83 kB
+dist/client/assets/index-DIeCE8Uj.css                                          60.96 kB │ gzip:  13.78 kB
+dist/client/assets/index-jH9Pq0J5.js                                          447.72 kB │ gzip: 134.83 kB
 
-✓ built in 202ms
+✓ built in 185ms
 VIO 2.4.0: cliente, servidor e código-fonte compilados.
