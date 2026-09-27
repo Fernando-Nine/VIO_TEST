@@ -35,6 +35,8 @@ import { Controller } from "./room/controller";
 import { RemoteVoice } from "./components/Media";
 import { Dialog } from "./components/Dialog";
 import { Settings } from "./components/Settings";
+import { ColorPicker } from "./components/ColorPicker";
+import { participantStyle } from "./components/participant-style";
 import {
   ConnectionStatus,
   RoomTimer,
@@ -442,6 +444,7 @@ export default function App({ engine }: { engine: Controller }) {
                             engine={engine}
                             visible={visible}
                             onVisible={previewVisible}
+                            onEditColor={() => open("people")}
                           />
                         ))}
                       {peopleFilter !== "all" &&
@@ -671,7 +674,9 @@ export default function App({ engine }: { engine: Controller }) {
                 muted={
                   !engine.inCall || engine.captures.deaf || engine.remoteMute
                 }
-                volume={engine.volumes.get(p.owner) ?? 1}
+                volume={
+                  (engine.volumes.get(p.owner) ?? 1) * engine.masterVolume
+                }
                 label={
                   people.find((m) => m.id === p.owner)?.name || "Participante"
                 }
@@ -740,8 +745,13 @@ export default function App({ engine }: { engine: Controller }) {
           )}
           {panel === "people" && (
             <>
+              <ColorPicker engine={engine} />
               {people.map((m) => (
-                <div className="participant-setting" key={m.id}>
+                <div
+                  className="participant-setting"
+                  key={m.id}
+                  style={participantStyle(m.color, engine.participantColors)}
+                >
                   <div>
                     <span className="small-avatar">
                       {m.name.slice(0, 2).toUpperCase()}

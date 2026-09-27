@@ -9,7 +9,7 @@ type BoostState = { stream?: MediaStream; active: boolean; failed: boolean };
 export function ScreenAudio({
   stream,
   engine,
-  muted,
+  muted: mutedByUser,
   volume,
   name,
 }: {
@@ -20,6 +20,8 @@ export function ScreenAudio({
   name: string;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
+  const masterVolume = engine.masterVolume;
+  const muted = mutedByUser || masterVolume === 0;
   const [blocked, setBlocked] = useState(false);
   const [retry, setRetry] = useState(0);
   const [boost, setBoost] = useState<BoostState>({
@@ -74,7 +76,7 @@ export function ScreenAudio({
     if (!element || !stream) return;
     let active = true;
     element.muted = muted || boosted;
-    element.volume = Math.max(0, Math.min(1, volume));
+    element.volume = Math.max(0, Math.min(1, volume)) * masterVolume;
     // Unmuting can require a new play attempt after an autoplay rejection.
     if (stream.getAudioTracks().some((track) => track.readyState === "live"))
       void element.play().then(
@@ -90,7 +92,7 @@ export function ScreenAudio({
     return () => {
       active = false;
     };
-  }, [volume, muted, boosted, stream, retry]);
+  }, [volume, masterVolume, muted, boosted, stream, retry]);
   const boostFailed = wantsBoost && boost.stream === stream && boost.failed;
   return (
     <>
@@ -105,7 +107,7 @@ export function ScreenAudio({
         <ScreenBoost
           stream={stream}
           engine={engine}
-          volume={volume}
+          volume={volume * masterVolume}
           muted={muted || !boosted}
           name={name}
           retry={retry}

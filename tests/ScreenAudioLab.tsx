@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { ScreenAudio } from "../src/client/components/ScreenAudio";
+import { RemoteVoice } from "../src/client/components/Media";
 import { Controller } from "../src/client/room/controller";
 import { addRemoteTrack } from "../src/client/media/remote-stream";
 
@@ -109,6 +110,15 @@ export function ScreenAudioLab() {
       report(
         "80%: faixa tardia toca no stream original, sem criar amplificador",
       );
+      const voice = host.current!.querySelector<HTMLAudioElement>(
+        '[aria-label="Voz de teste"]',
+      )!;
+      await until(
+        () => !voice.paused && voice.readyState >= 2,
+        "Voz tardia não começou a tocar",
+      );
+      let voicePauses = 0;
+      voice.addEventListener("pause", () => voicePauses++);
       const baseline = await rms(stream);
       assert(baseline > 0.01, "Fonte sintética sem sinal");
       show(0);
@@ -122,6 +132,53 @@ export function ScreenAudioLab() {
       );
       assert(graphCalls === 0, "Ajuste normal criou grafo de áudio");
       report("Volume zero, mute e desmute funcionam na reprodução direta");
+      engine.masterVolume = 0.5;
+      show(0.8);
+      await until(
+        () => element.volume === 0.4,
+        "Volume geral não multiplicou o volume da tela",
+      );
+      assert(
+        voice.volume === 0.3 && !voice.muted,
+        "Volume geral não multiplicou 60% de voz por 50%",
+      );
+      assert(
+        element === native() &&
+          element.srcObject === stream &&
+          !element.paused &&
+          graphCalls === 0,
+        "Volume geral recriou o player ou iniciou processamento obrigatório",
+      );
+      engine.masterVolume = 0;
+      show(0.8);
+      await until(
+        () => element.muted && element.volume === 0,
+        "Volume geral zero não silenciou a tela",
+      );
+      assert(
+        voice.muted && voice.volume === 0,
+        "Volume geral zero deixou voz audível",
+      );
+      engine.masterVolume = 1;
+      show(0.8);
+      await until(
+        () => !element.muted && element.volume === 0.8,
+        "Restaurar volume geral perdeu o volume da tela",
+      );
+      report(
+        "Volume geral multiplica 80% × 50% = 40%; zerar e restaurar preserva player e volume individual",
+      );
+      assert(
+        voice.volume === 0.6 &&
+          !voice.muted &&
+          !voice.paused &&
+          voice.srcObject === stream &&
+          voicePauses === 0,
+        "Ajustar volume geral interrompeu ou substituiu a reprodução da voz",
+      );
+      report(
+        "Voz tardia funciona; volume geral mantém a fonte e o player tocando sem pausas",
+      );
 
       engine.playback.unlock();
       show(3);
@@ -155,6 +212,38 @@ export function ScreenAudioLab() {
       );
       report(
         `300%: sinal ${ratio.toFixed(2)}×, sem saída duplicada; renderer original continua tocando`,
+      );
+      const originalGraph = graph,
+        boostedElement = boosted(),
+        calls = graphCalls;
+      engine.masterVolume = 0.5;
+      show(3);
+      const masterRatio = (await rms(graph!.stream)) / baseline;
+      assert(
+        Math.abs(masterRatio - 1.5) < 0.15,
+        "Volume geral não controlou a amplificação",
+      );
+      engine.masterVolume = 0;
+      show(3);
+      await until(
+        () => !!boosted()?.muted && element.muted,
+        "Volume geral zero deixou um caminho tocando",
+      );
+      assert((await rms(graph!.stream)) < 0.0001, "Ganho não chegou a zero");
+      engine.masterVolume = 1;
+      show(3);
+      await until(
+        () => !boosted()?.muted,
+        "Ganho não retomou após volume geral zero",
+      );
+      assert(
+        graph === originalGraph &&
+          boosted() === boostedElement &&
+          graphCalls === calls,
+        "Volume geral recriou o amplificador",
+      );
+      report(
+        `Volume geral controla ganho: 300% × 50% = ${masterRatio.toFixed(2)}×; zero e retomada sem recriar o grafo`,
       );
 
       await graph!.context.suspend();
@@ -216,13 +305,11 @@ export function ScreenAudioLab() {
           readyState: element?.readyState,
           time: element?.currentTime,
           muted: element?.muted,
-          track: stream
-            .getAudioTracks()
-            .map((t) => ({
-              state: t.readyState,
-              muted: t.muted,
-              enabled: t.enabled,
-            })),
+          track: stream.getAudioTracks().map((t) => ({
+            state: t.readyState,
+            muted: t.muted,
+            enabled: t.enabled,
+          })),
           error: element?.error?.message,
           message: host.current?.textContent,
         }),
@@ -240,7 +327,7 @@ export function ScreenAudioLab() {
   }
   return (
     <section aria-label="Regressão do áudio da transmissão">
-      <h2>Áudio da transmissão · 2.4.1</h2>
+      <h2>Áudio da transmissão e volume geral · 2.6.0</h2>
       <p>
         Componente real com sinal sintético. Não comprova transporte WebRTC
         entre aparelhos.
@@ -255,7 +342,17 @@ export function ScreenAudioLab() {
           : "Verificar reprodução e recuperação"}
       </button>
       <div ref={host} style={{ position: "relative", minHeight: 80 }}>
-        {scene && <ScreenAudio {...scene} name="Bancada" />}
+        {scene && (
+          <>
+            <ScreenAudio {...scene} name="Bancada" />
+            <RemoteVoice
+              stream={scene.stream}
+              muted={scene.muted}
+              volume={0.6 * scene.engine.masterVolume}
+              label="Voz de teste"
+            />
+          </>
+        )}
       </div>
       <pre aria-label="Resultado do áudio da transmissão">
         {results.join("\n")}

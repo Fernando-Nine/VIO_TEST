@@ -1,0 +1,4 @@
+PASS · Uma entrada própria e uma remota; snapshots de cor/chamada não repetem o som
+PASS · Reconexão preserva a cor e não repete o aviso de entrada
+PASS · Eventos independentes, prévia explícita e dois volumes respeitam o silêncio
+PASS · Saída explícita toca uma vez e encerra a cor daquela sala; desmontagem é silenciosa

@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.5.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -21,7 +21,7 @@ reconexão, ICE restart, credenciais TURN temporárias e diagnóstico.
 
 Interface React com CSS próprio, fontes locais, versão/histórico, convites, painéis,
 responsividade, controles por teclado, sons de compartilhamento e sons distintos de
-mute/desmute/ensurdecer. Sons opcionais e em volume discreto.
+mute/desmute/ensurdecer. Sons opcionais com volumes e eventos ajustáveis.
 
 Configuração para uma instância na Render, Docker, proxy reverso, `.env.example`,
 health check, pacote de código-fonte no app, licença e documentação de implantação.
@@ -98,24 +98,21 @@ SFU, múltiplas instâncias, contas, gravação, chat textual e cobrança.
 
 Aplicativo Windows instalável com WASAPI. Preparação em `docs/DESKTOP-WASAPI.md`,
 com contrato de integração, ordem de implementação e critérios de teste físico.
-O instalador e a captura WASAPI não fazem parte do executável web 2.4.0 e ainda
+O instalador e a captura WASAPI não fazem parte do executável web 2.6.0 e ainda
 não foram implementados. A PWA atual não recebe acesso nativo por estar instalada.
 
-## Próxima atualização solicitada em 27/09/2026
+## Preferências entregues na 2.6.0
 
-Concluir e publicar primeiro a 2.5.0 (troca de salas e múltiplas telas).
-Depois, trabalhar preferências do aplicativo: sons de entrada/saída, intensidade
-mais perceptível, habilitação por tipo de evento e volume geral; uma aba adequada
-nos Ajustes, deixando espaço para atalhos futuros da versão instalável.
+Aba Aplicativo com volume geral local, volume dos efeitos, oito eventos de som
+independentes e prévias. Entrada e saída da sala agora têm sons; reconexões não
+repetem a entrada. A intensidade dos efeitos aumentou, com envelope curto e
+coalescência de avisos simultâneos. Preferências persistem neste navegador.
 
-Personalização por participante na sala: presets rosa, amarelo, verde, anil, ciano,
-vermelho, roxo e laranja; opção adicional em círculo com +, entrada HEX e seletor
-visual de tonalidade. Aplicação opcional às bordas e indicadores de transmissão,
-controlada nas preferências de aparência. Explicar/substituir as cores de avatar
-hoje aparentando verde/amarelo. Preservar contraste, estado acessível e validação
-no servidor para a cor compartilhada. Ainda não implementado nesta versão.
+Cores pessoais com oito presets, círculo +, seletor HSV por ponteiro/teclado e HEX.
+Aplicação explícita e sincronizada com a sala, somente para o próprio participante;
+validação estrita e limite de 20 alterações/minuto por identidade. Cor permanece na
+reconexão e volta ao anil ao sair. Opção local de estender as cores às transmissões.
+Texto dos avatares e destaques têm contraste calculado; ping e alertas não mudam.
 
-Segurança tem prioridade: a troca imediata não deve remover autenticação ou limites.
-O servidor já limita sessão, entrada e sockets por IP; revisão e teste de rotação
-incluídos na 2.5.0. Não aplicar teto global de cinco por IP sem considerar pessoas
-compartilhando a mesma rede.
+Segurança da troca de sala permanece: autenticação, verificação de dono, origens e
+limites por IP não foram removidos. Aplicativo nativo/WASAPI segue como próxima etapa.

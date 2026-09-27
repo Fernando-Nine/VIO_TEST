@@ -2,6 +2,22 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.6.0] - 2026-09-27
+
+Seu som, sua cor
+
+### Preferências do aplicativo
+- Nova aba Aplicativo nos Ajustes, com volume geral para vozes, telas e efeitos locais, sem alterar o áudio enviado pelo microfone.
+- Sons de entrada e saída da sala, efeitos mais presentes e oito eventos que podem ser habilitados separadamente. Volume dos efeitos e botão para experimentar cada som.
+- Reconexões, mudanças de cor e atualizações de presença não repetem o aviso de entrada. Preferências ficam salvas neste navegador.
+- O volume geral preserva os players e o ganho opcional até 300%, incluindo silêncio e retorno ao volume anterior. Vozes aguardam faixas tardias e não são reiniciadas ao ajustar o volume.
+
+### Identidade por participante
+- Em Pessoas, escolha entre rosa, amarelo, verde, anil, ciano, vermelho, roxo e laranja. O círculo com + abre o seletor visual de matiz, saturação e brilho, com entrada HEX e controle por teclado.
+- A cor aplicada é compartilhada com a sala, permanece nas reconexões e volta ao anil após sair. Cada sessão altera apenas a própria cor, com validação e limite no servidor.
+- Opção local para usar as cores nas bordas das telas, indicador ao vivo e destaque de fala. Avatares mantêm as cores escolhidas; estados de conexão e alertas preservam seus significados.
+- Contraste calculado para as iniciais e os destaques, inclusive com cores personalizadas muito claras ou escuras.
+
 ## [2.5.0] - 2026-09-27
 
 Sua sala, várias telas

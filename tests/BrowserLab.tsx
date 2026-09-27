@@ -9,6 +9,7 @@ import { mediaDeadline } from "../src/client/media/deadline";
 import { WatchLab } from "./WatchLab";
 import { LayoutLab } from "./LayoutLab";
 import { FeatureLab } from "./FeatureLab";
+import { PreferencesLab } from "./PreferencesLab";
 import { ScreenAudioLab } from "./ScreenAudioLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
 async function until(condition: () => boolean, label: string, ms = 20000) {
@@ -339,6 +340,7 @@ export function BrowserLab() {
       <h1>VIO · laboratório de integração</h1>
       <FeatureLab />
       <ScreenAudioLab />
+      <PreferencesLab />
       <p>
         Fontes sintéticas. Três sessões independentes usam o servidor e conexões
         WebRTC reais. Nenhum microfone, câmera ou tela pessoal é capturado.

@@ -347,6 +347,7 @@ test("reentrada após reinício real do servidor preserva identidade e IDs de pu
       await request<{ id: string }>(a, "join", {
         name: "Retorno",
         code: "QARESTART",
+        color: "#26D0C7",
       }),
     );
     const publication = data(
@@ -367,6 +368,7 @@ test("reentrada após reinício real do servidor preserva identidade e IDs de pu
       await request<{ id: string; snapshot: Snapshot }>(a, "join", {
         name: "Retorno",
         code: "QARESTART",
+        color: "#26D0C7",
       }),
     );
     const recovered = data(
@@ -378,6 +380,7 @@ test("reentrada após reinício real do servidor preserva identidade e IDs de pu
       }),
     );
     assert.equal(again.id, join.id);
+    assert.equal(again.snapshot.participants[0].color, "#26D0C7");
     assert.equal(recovered.id, publication.id);
     assert.equal(again.snapshot.participants.length, 1);
     data(await request(a, "join", { name: "Retorno", code: "QARESTART" }));
@@ -876,6 +879,98 @@ test("trocar identidades não contorna limites de sessão e entrada por IP", asy
     assert.equal(app.rooms.rooms.has("RATEBLOCK"), false);
   } finally {
     sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("cor pertence à própria sessão, sincroniza e permanece na reconexão", async () => {
+  const app = await server();
+  const identity = await session(app.url);
+  let a = await connect(app.url, identity.token);
+  const b = await connect(app.url, (await session(app.url)).token);
+  const outsider = await connect(app.url, (await session(app.url)).token);
+  try {
+    const first = data(
+      await request<{ id: string; snapshot: Snapshot }>(a, "join", {
+        name: "Ana",
+        code: "QACOLOR",
+      }),
+    );
+    assert.equal(first.snapshot.participants[0].color, "#2727F5");
+    data(await request(b, "join", { name: "Bia", code: "QACOLOR" }));
+    assert.equal(
+      (await request(outsider, "color", { color: "#FF0000" })).ok,
+      false,
+    );
+    const changed = new Promise<Snapshot>((resolve) =>
+      b.once("snapshot", resolve),
+    );
+    data(await request(a, "color", { color: "#ec75b5" }));
+    const snapshot = await changed;
+    assert.equal(
+      snapshot.participants.find((p) => p.id === first.id)?.color,
+      "#EC75B5",
+    );
+    assert.equal(
+      snapshot.participants.find((p) => p.id !== first.id)?.color,
+      "#2727F5",
+    );
+    for (const payload of [
+      { color: "#00FF00", owner: first.id },
+      { color: "#fff;display:none" },
+      { color: "<svg>" },
+      { color: "#12345678" },
+    ])
+      assert.equal((await request(b, "color", payload)).ok, false);
+    const offline = new Promise<Snapshot>((resolve) =>
+      b.once("snapshot", resolve),
+    );
+    a.disconnect();
+    await offline;
+    a = await connect(app.url, identity.token);
+    const rejoin = data(
+      await request<{ snapshot: Snapshot }>(a, "join", {
+        name: "Ana",
+        code: "QACOLOR",
+        color: "#2727F5",
+      }),
+    );
+    assert.equal(
+      rejoin.snapshot.participants.find((p) => p.id === first.id)?.color,
+      "#EC75B5",
+    );
+    data(await request(a, "leave"));
+    const next = data(
+      await request<{ snapshot: Snapshot }>(a, "join", {
+        name: "Ana",
+        code: "QACOLOR2",
+      }),
+    );
+    assert.equal(next.snapshot.participants[0].color, "#2727F5");
+  } finally {
+    a.disconnect();
+    b.disconnect();
+    outsider.disconnect();
+    await app.close();
+  }
+});
+
+test("alterações de cor têm limite por identidade sem bloquear os outros participantes", async () => {
+  const app = await server();
+  const a = await connect(app.url, (await session(app.url)).token);
+  const b = await connect(app.url, (await session(app.url)).token);
+  try {
+    data(await request(a, "join", { name: "Ana", code: "QACOLORRATE" }));
+    data(await request(b, "join", { name: "Bia", code: "QACOLORRATE" }));
+    for (let i = 0; i < 20; i++)
+      data(await request(a, "color", { color: i % 2 ? "#FF0000" : "#00FF00" }));
+    const denied = await request(a, "color", { color: "#0000FF" });
+    assert.equal(denied.ok, false);
+    if (!denied.ok) assert.equal(denied.code, "RATE_LIMIT");
+    data(await request(b, "color", { color: "#60CFDC" }));
+  } finally {
+    a.disconnect();
+    b.disconnect();
     await app.close();
   }
 });

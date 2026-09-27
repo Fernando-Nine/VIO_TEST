@@ -3,6 +3,10 @@ export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
 export const uuid = z.string().uuid();
+export const participantColor = z
+  .string()
+  .regex(/^#[\da-fA-F]{6}$/)
+  .transform((color) => color.toUpperCase());
 export const roomCode = z
   .string()
   .trim()
@@ -18,10 +22,12 @@ export const schemas = {
         .max(32)
         .regex(/^[^\p{Cc}\p{Cf}]+$/u),
       code: roomCode.optional(),
+      color: participantColor.optional(),
     })
     .strict(),
   leave: z.object({}).strict(),
   call: z.object({ active: z.boolean() }).strict(),
+  color: z.object({ color: participantColor }).strict(),
   publish: z
     .object({
       kind: z.enum(kinds),
@@ -90,6 +96,7 @@ export interface Publication {
 export interface Participant {
   id: string;
   name: string;
+  color: string;
   online: boolean;
   inCall: boolean;
   publications: Publication[];

@@ -3,6 +3,7 @@ import { Controller } from "../src/client/room/controller";
 import App from "../src/client/App";
 import { syntheticAdapter } from "./synthetic";
 import { freshKey } from "../src/client/id";
+import { colorPresets } from "../src/shared/colors";
 
 type Baseline = {
   video: HTMLMediaElement;
@@ -210,6 +211,18 @@ export function WatchLab() {
         <p>Não comprova transporte de áudio/vídeo entre aparelhos.</p>
         <button onClick={record}>Registrar antes da troca</button> ·{" "}
         <button onClick={verify}>Verificar continuidade</button> ·{" "}
+        <button
+          onClick={() =>
+            void Promise.all(
+              publishers.current.map((room, i) =>
+                room.setColor(colorPresets[i].color),
+              ),
+            ).catch((error) => setReport(String(error)))
+          }
+        >
+          Colorir transmissores
+        </button>{" "}
+        ·{" "}
         <button onClick={() => void publishers.current[1].stop("screen")}>
           Encerrar tela de Bia
         </button>

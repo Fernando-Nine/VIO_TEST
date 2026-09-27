@@ -60,6 +60,23 @@ cartão multiplicaria o upload de quem transmite pelo número de espectadores. *
 uma prévia a `main` para "ficar mais bonito"** — o custo cai em cima de quem publica, não de
 quem olha.
 
+### Preferências locais e cores
+
+A aba Aplicativo controla `masterVolume` (0–1) e `soundVolume` (0–1). O volume geral
+multiplica somente a reprodução local de voz, telas e efeitos. Nunca aplicar esse
+fator à captura/enviada. Ajustar volume de voz não deve reassociar ou pausar o stream.
+No ganho de tela, a decisão de manter o grafo depende do volume individual acima de
+100%, não do produto com o volume geral; zero não desmonta o grafo.
+
+`Participant.color` aceita somente HEX de seis dígitos no protocolo. O comando
+`color` altera o membro autenticado, sem aceitar id de terceiro, limitado a 20/min.
+O seletor faz prévia local; só Aplicar cor envia. Cor é da sala, preservada nas
+reconexões e descartada na saída explícita. Alertas e ping não recebem essa cor.
+Preferências de sons/aparência ficam no navegador, não no snapshot.
+
+Sons de presença distinguem entrada/saída de oscilação de `online`; primeiro snapshot,
+repetições e mudança de epoch não geram uma sequência de avisos de outras pessoas.
+
 ### Identidade estável
 
 O participante tem um id próprio (UUID), independente do socket. Quando a conexão cai, ele
@@ -227,7 +244,7 @@ herdado do projeto que veio antes. A 2.0.0 carrega `systemChange: true` e é a f
 para trás, o histórico descreve um app que por dentro não existe mais. **Não apague essa
 marca** — sem ela o histórico mente por omissão.
 
-Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.5.0.
+Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.6.0.
 
 ## Fora de limite
 

@@ -95,22 +95,41 @@ export function RemoteVoice({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.srcObject = stream || null;
-    el.muted = muted;
-    el.volume = volume;
+    let active = true;
     const play = () => {
-      if (stream)
-        void el
-          .play()
-          .then(() => setBlocked(false))
-          .catch(() => setBlocked(true));
+      if (
+        !stream?.getAudioTracks().some((track) => track.readyState === "live")
+      )
+        return;
+      if (el.srcObject !== stream || el.readyState === 0 || el.ended)
+        el.srcObject = stream;
+      void el.play().then(
+        () => active && setBlocked(false),
+        () => active && setBlocked(true),
+      );
     };
     play();
     stream?.addEventListener("addtrack", play);
     return () => {
+      active = false;
       stream?.removeEventListener("addtrack", play);
       el.pause();
       el.srcObject = null;
+    };
+  }, [stream]);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.muted = muted || volume === 0;
+    element.volume = Math.min(1, Math.max(0, volume));
+    let active = true;
+    if (stream?.getAudioTracks().some((track) => track.readyState === "live"))
+      void element.play().then(
+        () => active && setBlocked(false),
+        () => active && setBlocked(true),
+      );
+    return () => {
+      active = false;
     };
   }, [stream, muted, volume]);
   useEffect(() => {
@@ -119,10 +138,15 @@ export function RemoteVoice({
   return (
     <>
       <audio ref={ref} aria-label={label} autoPlay />
-      {blocked && !muted && (
+      {blocked && !muted && volume > 0 && (
         <button
           className="audio-unlock"
-          onClick={() => void ref.current?.play().then(() => setBlocked(false))}
+          onClick={() =>
+            void ref.current?.play().then(
+              () => setBlocked(false),
+              () => setBlocked(true),
+            )
+          }
         >
           <Play size={16} /> Ouvir {label}
         </button>

@@ -1,6 +1,52 @@
 # VIO — validação
 
 
+## Atualização 2.6.0 — 27/09/2026
+
+39 testes automatizados aprovados e build de produção/TypeScript estrito concluídos.
+Os novos casos cobrem validação de HEX, ações limitadas à identidade autenticada,
+20 alterações de cor/minuto, isolamento entre participantes, reconexão e contraste
+AA das iniciais/destaques para 4.096 amostras RGB e todos os presets. O reinício
+real do servidor também confirma restauração da cor informada pelo cliente.
+
+Chrome 151, ScreenAudioLab: nove cenários aprovados com o componente real e sinal
+sintético. Volume geral a 50% transforma uma tela a 80% em 40%; ganho de 300% em
+1,50× medido. Zerar/restaurar preserva o grafo, o elemento e o stream. Voz a 60%
+chega a 30% com geral a 50%, retoma sem pausas e aguarda faixas tardias. Mantidos
+os casos de fallback nativo quando o amplificador falha ou suspende.
+
+PreferencesLab com Controllers de produção e servidor real: sons de entrada e
+saída própria/remota, ausência de repetição na reconexão e em snapshots de cor/
+chamada, silêncio por evento ou pelos dois volumes, prévia explícita, cor preservada
+na reconexão e reiniciada ao sair. Desmontagem sem aviso duplicado.
+
+Interface: escolha de preset e HEX propagou para uma segunda sessão. HEX inválido
+impediu Aplicar cor; matiz e quadro responderam ao teclado. Aba Aplicativo, switches
+e seletor completo cabem em 320 px sem overflow horizontal. Setas navegam pelas
+três abas, incluindo a volta de Aplicativo para Vídeo. Contraste dos destaques é
+calculado; erros, avisos de conexão e ping não herdam a cor pessoal.
+
+WatchLab: cinco vídeos e cinco áudios sintéticos preservaram os mesmos elementos,
+streams e assinaturas, com progresso de reprodução, zero pausas e zero comandos
+novos de assinatura ao trocar aparência e zerar/restaurar o volume geral. Bordas
+receberam as cinco cores individuais; ao desativar a opção, voltaram ao acento
+padrão sem alterar os avatares. O ensaio usa alimentação local deliberada e não
+comprova transporte WebRTC entre aparelhos.
+
+Revisão visual executada: tema escuro e azul #2727F5 preservados; nenhum blob,
+fonte cursiva, gradiente genérico de startup, decoração espalhada ou biblioteca
+adicional. A faixa multicolorida pertence somente ao controle funcional de matiz.
+Hovers novos usam transform/opacity e respeitam movimento reduzido. Foco de teclado
+visível; interface sem novas imagens de conteúdo. Uma nova sessão de navegador
+carregou o volume geral de 99% e o evento de ligar microfone desabilitado.
+
+Evidências: `evidence/tests-2.6.0.txt`, `evidence/build-2.6.0.txt`,
+`evidence/audio-2.6.0.txt`, `evidence/preferences-2.6.0.txt`,
+`evidence/continuity-2.6.0.json` e capturas `vio-2.6.0-*.jpg`.
+Escuta em periféricos físicos, Safari/iPhone, mídia entre redes via TURN e recuperação
+com mídia durante deploy continuam dependendo de aparelhos reais. Não foram
+anunciados como aprovados. O aplicativo nativo/WASAPI continua fora desta versão.
+
 ## Atualização 2.5.0 — 27/09/2026
 
 34 testes automatizados aprovados: seis assinaturas principais simultâneas,

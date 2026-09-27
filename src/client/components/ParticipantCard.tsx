@@ -1,20 +1,23 @@
 import { useCallback } from "react";
-import { AudioLines, Headphones, MicOff, Monitor } from "lucide-react";
+import { AudioLines, Headphones, MicOff, Monitor, Palette } from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { Media, useSpeaking } from "./Media";
 import { ScreenPicker } from "./ScreenPicker";
+import { participantStyle } from "./participant-style";
 
 export function ParticipantCard({
   person,
   engine,
   visible,
   onVisible,
+  onEditColor,
 }: {
   person: Participant;
   engine: Controller;
   visible: boolean;
   onVisible: (id: string, visible: boolean) => void;
+  onEditColor: () => void;
 }) {
   const own = person.id === engine.view.id;
   const voice = person.publications.find((p) => p.kind === "voice");
@@ -40,6 +43,7 @@ export function ParticipantCard({
     <article
       className={`participant-card ${speaking ? "speaking" : ""} ${!person.online ? "offline" : ""}`}
       aria-label={`${person.name}${speaking ? ", falando" : ""}`}
+      style={participantStyle(person.color, engine.participantColors)}
     >
       <div className="participant-identity">
         <div className="participant-avatar">
@@ -51,6 +55,16 @@ export function ParticipantCard({
             />
           ) : (
             <span>{[...person.name].slice(0, 2).join("").toUpperCase()}</span>
+          )}
+          {own && (
+            <button
+              className="edit-person-color"
+              aria-label="Escolher minha cor"
+              title="Escolher minha cor"
+              onClick={onEditColor}
+            >
+              <Palette size={14} />
+            </button>
           )}
         </div>
         <div>

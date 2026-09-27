@@ -5,9 +5,10 @@ import {
   screenResolutions,
   type Quality,
 } from "../../shared/protocol";
+import { ApplicationSettings } from "./ApplicationSettings";
 import { outputError } from "../media/audio-output";
 export function Settings({ engine }: { engine: Controller }) {
-  const [tab, setTab] = useState<"video" | "audio">("video");
+  const [tab, setTab] = useState<"video" | "audio" | "app">("video");
   const [savingVoice, setSavingVoice] = useState(false);
   const [savingOutput, setSavingOutput] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -92,7 +93,7 @@ export function Settings({ engine }: { engine: Controller }) {
         role="tablist"
         aria-label="Categorias dos ajustes"
       >
-        {(["video", "audio"] as const).map((value, index) => (
+        {(["video", "audio", "app"] as const).map((value, index) => (
           <button
             key={value}
             id={`settings-tab-${value}`}
@@ -110,15 +111,23 @@ export function Settings({ engine }: { engine: Controller }) {
                 return;
               e.preventDefault();
               const next =
-                e.key === "Home" ? 0 : e.key === "End" ? 1 : 1 - index;
-              setTab(next === 0 ? "video" : "audio");
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? 2
+                    : (index + (e.key === "ArrowRight" ? 1 : 2)) % 3;
+              setTab((["video", "audio", "app"] as const)[next]);
               e.currentTarget.closest(".sheet-body")?.scrollTo({ top: 0 });
               e.currentTarget.parentElement
                 ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
                 [next]?.focus();
             }}
           >
-            {value === "video" ? "Vídeo" : "Áudio"}
+            {value === "video"
+              ? "Vídeo"
+              : value === "audio"
+                ? "Áudio"
+                : "Aplicativo"}
           </button>
         ))}
       </div>
@@ -462,22 +471,7 @@ export function Settings({ engine }: { engine: Controller }) {
           <legend>Preferências</legend>
           <label className="toggle">
             <span>
-              Sons dos controles
-              <small>Compartilhar, parar, mutar, desmutar e ensurdecer.</small>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={engine.sounds}
-              onChange={(e) => {
-                engine.sounds = e.target.checked;
-                engine.savePreferences();
-              }}
-            />
-          </label>
-          <label className="toggle">
-            <span>
-              Silenciar toda reprodução
+              Silenciar vozes e transmissões
               <small>Mantém seu envio de voz como está.</small>
             </span>
             <input
@@ -491,6 +485,15 @@ export function Settings({ engine }: { engine: Controller }) {
             />
           </label>
         </fieldset>
+      </div>
+      <div
+        role="tabpanel"
+        className="settings-panel"
+        id="settings-panel-app"
+        aria-labelledby="settings-tab-app"
+        hidden={tab !== "app"}
+      >
+        <ApplicationSettings engine={engine} />
       </div>
     </>
   );

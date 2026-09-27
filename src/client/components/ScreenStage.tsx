@@ -18,6 +18,7 @@ import type { Controller } from "../room/controller";
 import { ScreenAudio } from "./ScreenAudio";
 import { Media } from "./Media";
 import { Dialog } from "./Dialog";
+import { participantStyle } from "./participant-style";
 import { anchors } from "./floating-position";
 import {
   arrangeScreen,
@@ -169,16 +170,17 @@ function WatchedScreen({
       className={`watched-screen ${focused ? "is-focused" : "is-secondary"} ${hidden ? "local-hidden" : ""} ${dragging ? "is-dragging" : ""}`}
       aria-label={`Tela de ${name}${focused ? ", em foco" : ", em conjunto"}`}
       data-publication={id}
-      style={
-        focused
-          ? undefined
+      style={{
+        ...participantStyle(info?.color, engine.participantColors),
+        ...(focused
+          ? {}
           : {
               width: rect.width,
               height: rect.height,
               transform: `translate(${rect.x}px, ${rect.y}px)`,
               zIndex: layer,
-            }
-      }
+            }),
+      }}
       onPointerDown={focused ? undefined : front}
       onFocus={focused ? undefined : front}
     >

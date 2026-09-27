@@ -14,7 +14,8 @@ export function VolumeControl({ engine }: { engine: Controller }) {
     ? engine.view.selected
     : ids[0];
   const level = engine.screenLevel(target || "");
-  const forcedMute = engine.captures.deaf || engine.remoteMute;
+  const forcedMute =
+    engine.captures.deaf || engine.remoteMute || engine.masterVolume === 0;
   useEffect(() => {
     if (!open) return;
     const doc = root.current?.ownerDocument;
@@ -137,7 +138,9 @@ export function VolumeControl({ engine }: { engine: Controller }) {
           })}
           {forcedMute && (
             <p className="field-note">
-              A reprodução está silenciada nos controles da sala.
+              {engine.masterVolume === 0
+                ? "O volume geral está zerado em Ajustes → Aplicativo."
+                : "A reprodução está silenciada nos controles da sala."}
             </p>
           )}
           {engine.fineAudio && (

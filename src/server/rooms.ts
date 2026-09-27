@@ -1,6 +1,7 @@
 import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
+import { defaultColor } from "../shared/colors";
 import {
   Fault,
   Limits,
@@ -164,6 +165,7 @@ export class Rooms {
       join: 12,
       leave: 12,
       call: 30,
+      color: 20,
       publish: 30,
       unpublish: 30,
       state: 100,
@@ -287,6 +289,7 @@ export class Rooms {
       member = {
         id: socket.data.id,
         name: data.name,
+        color: member?.color || data.color || defaultColor,
         online: true,
         inCall: member?.inCall || false,
         lastSeen: Date.now(),
@@ -303,6 +306,11 @@ export class Rooms {
       return { id: member.id, snapshot: this.snapshot(room) };
     }
     const [room, m] = this.member(socket);
+    if (action === "color") {
+      m.color = data.color;
+      this.broadcast(room);
+      return { color: m.color };
+    }
     if (action === "leave") {
       this.leave(room, m);
       await socket.leave(room.code);

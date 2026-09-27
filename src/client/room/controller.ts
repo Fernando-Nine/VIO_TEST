@@ -13,6 +13,13 @@ import type {
 import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
 import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
+import {
+  readSoundEvents,
+  volumePreference,
+  type Cue,
+} from "../media/sound-preferences";
+import { presenceCues } from "./presence-cues";
+import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
@@ -58,7 +65,9 @@ export class Controller {
   visiblePreviews = new Set<string>();
   private listeners = new Set<() => void>();
   private session?: { token: string; id: string; expiresAt: number };
-  private intent?: { name: string; code?: string };
+  private intent?: { name: string; code?: string; color?: string };
+  private roomEntered = false;
+  roomColor = defaultColor;
   private subscriptions = new Map<
     string,
     { nonce: string; id?: string; epoch?: string }
@@ -82,6 +91,10 @@ export class Controller {
   fineAudio = false;
   private screenLevels = new Map<string, { volume: number; muted: boolean }>();
   sounds = true;
+  soundEvents = readSoundEvents(undefined);
+  soundVolume = 0.7;
+  masterVolume = 1;
+  participantColors = true;
   previewsEnabled = false;
   remoteMute = false;
   screenVolume = 0.8;
@@ -92,7 +105,7 @@ export class Controller {
   private missingSince = new Map<string, number>();
   private screenCatalog = new Map<
     string,
-    { publication: Publication; name: string }
+    { publication: Publication; name: string; color: string }
   >();
   private missingScreens = new Map<string, number>();
   constructor(
@@ -145,6 +158,10 @@ export class Controller {
         this.captures.micDevice = p.micDevice || "";
         this.captures.cameraDevice = p.cameraDevice || "";
         this.sounds = p.sounds !== false;
+        this.soundEvents = readSoundEvents(p.soundEvents);
+        this.soundVolume = volumePreference(p.soundVolume, 0.7);
+        this.masterVolume = volumePreference(p.masterVolume, 1);
+        this.participantColors = p.participantColors !== false;
         this.peopleHidden = p.peopleHidden === true;
         this.fineAudio = p.fineAudio === true && this.playback.supported;
         this.previewsEnabled = p.previewsEnabled === true;
@@ -168,6 +185,7 @@ export class Controller {
       } catch {}
     }
     this.unwatchOutput = this.output.watchDevices();
+    this.updateCueVolume();
   }
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -193,6 +211,7 @@ export class Controller {
     this.bump();
   }
   savePreferences() {
+    this.updateCueVolume();
     if (this.persist)
       try {
         localStorage.setItem(
@@ -202,6 +221,10 @@ export class Controller {
             micDevice: this.captures.micDevice,
             cameraDevice: this.captures.cameraDevice,
             sounds: this.sounds,
+            soundEvents: this.soundEvents,
+            soundVolume: this.soundVolume,
+            masterVolume: this.masterVolume,
+            participantColors: this.participantColors,
             peopleHidden: this.peopleHidden,
             fineAudio: this.fineAudio,
             previewsEnabled: this.previewsEnabled,
@@ -212,6 +235,23 @@ export class Controller {
           }),
         );
       } catch {}
+    this.bump();
+  }
+  private updateCueVolume() {
+    this.cues.setVolume(this.sounds ? this.masterVolume * this.soundVolume : 0);
+  }
+  playCue(cue: Cue, preview = false): Promise<boolean> {
+    if (this.disposed || !this.sounds || (!preview && !this.soundEvents[cue]))
+      return Promise.resolve(false);
+    this.updateCueVolume();
+    return this.cues.play(cue);
+  }
+  async setColor(value: string) {
+    const color = normalizeColor(value);
+    if (!color) throw new Error("Use uma cor HEX válida, como #2727F5.");
+    const result = await this.request<{ color: string }>("color", { color });
+    this.roomColor = result.color;
+    if (this.intent) this.intent.color = result.color;
     this.bump();
   }
   async initialize() {
@@ -296,7 +336,11 @@ export class Controller {
     this.view.status = "connecting";
     this.view.error = "";
     this.bump();
-    this.intent = { name, code: code?.trim().toUpperCase() || undefined };
+    this.intent = {
+      name,
+      code: code?.trim().toUpperCase() || undefined,
+      color: this.roomColor,
+    };
     try {
       await this.initialize();
       if (!current()) return;
@@ -379,7 +423,10 @@ export class Controller {
   private async newSession() {
     if (!this.intent) return;
     const intent = this.intent;
-    await this.leave();
+    const entered = this.roomEntered;
+    await this.leave(false);
+    this.roomEntered = entered;
+    this.roomColor = intent.color || defaultColor;
     await this.enter(intent.name, intent.code);
   }
   async retry(newSession = false) {
@@ -415,7 +462,11 @@ export class Controller {
       void this.heartbeat();
       this.view.error = "";
       this.view.notice = "";
-      this.receiveSnapshot(result.snapshot);
+      this.receiveSnapshot(result.snapshot, false);
+      if (!this.roomEntered) {
+        this.roomEntered = true;
+        void this.playCue("room-enter");
+      }
       await this.refreshIce();
       if (!current()) return;
       if (this.inCall) await this.request("call", { active: true });
@@ -439,13 +490,27 @@ export class Controller {
       this.fail(e);
     }
   }
-  private receiveSnapshot(snapshot: Snapshot) {
+  private receiveSnapshot(snapshot: Snapshot, announce = true) {
     if (
       !this.intent ||
       (this.intent.code && snapshot.code !== this.intent.code)
     )
       return;
+    if (announce && this.roomEntered && this.view.status === "connected")
+      for (const cue of presenceCues(
+        this.view.snapshot,
+        snapshot,
+        this.view.id,
+      ))
+        void this.playCue(cue);
     this.view.snapshot = snapshot;
+    const ownColor = snapshot.participants.find(
+      (p) => p.id === this.view.id,
+    )?.color;
+    if (ownColor) {
+      this.roomColor = ownColor;
+      this.intent.color = ownColor;
+    }
     this.snapshotReceivedAt = performance.now();
     const present = new Set<string>();
     for (const person of snapshot.participants)
@@ -455,6 +520,7 @@ export class Controller {
           this.screenCatalog.set(publication.id, {
             publication,
             name: person.name,
+            color: person.color || defaultColor,
           });
           this.missingScreens.delete(publication.id);
         }
@@ -483,7 +549,8 @@ export class Controller {
         await this.request("unpublish", { publicationId: previous.id }).catch(
           () => {},
         );
-        if (kind === "screen") this.chime(false);
+        if (generation === this.generation && kind === "screen")
+          this.chime(false);
       }
       this.bump();
       return;
@@ -523,7 +590,7 @@ export class Controller {
     this.bump();
   }
   private chime(up: boolean) {
-    if (this.sounds) this.cues.play(up ? "share-on" : "share-off");
+    void this.playCue(up ? "share-on" : "share-off");
   }
   async refreshIce() {
     if (this.icePending) return this.icePending;
@@ -814,8 +881,7 @@ export class Controller {
         this.captures.micMuted = false;
       } else this.captures.micMuted = !this.captures.micMuted;
       this.captures.syncMute();
-      if (this.sounds)
-        this.cues.play(this.captures.micMuted ? "mute" : "unmute");
+      void this.playCue(this.captures.micMuted ? "mute" : "unmute");
       this.savePreferences();
       await this.captureQueue;
     } catch (e) {
@@ -828,7 +894,7 @@ export class Controller {
     if (!this.inCall) return;
     this.captures.deaf = !this.captures.deaf;
     this.captures.syncMute();
-    if (this.sounds) this.cues.play(this.captures.deaf ? "deafen" : "undeafen");
+    void this.playCue(this.captures.deaf ? "deafen" : "undeafen");
     this.bump();
   }
   async camera() {
@@ -891,7 +957,11 @@ export class Controller {
       this.fail(e);
     }
   }
-  async leave() {
+  async leave(announce = true) {
+    this.cues.cancel();
+    if (announce && this.roomEntered) void this.playCue("room-leave");
+    this.roomEntered = false;
+    this.roomColor = defaultColor;
     this.intent = undefined;
     this.generation++;
     clearInterval(this.ticker);

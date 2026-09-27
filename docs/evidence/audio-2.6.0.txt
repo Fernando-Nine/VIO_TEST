@@ -1,0 +1,9 @@
+PASS · 80%: faixa tardia toca no stream original, sem criar amplificador
+PASS · Volume zero, mute e desmute funcionam na reprodução direta
+PASS · Volume geral multiplica 80% × 50% = 40%; zerar e restaurar preserva player e volume individual
+PASS · Voz tardia funciona; volume geral mantém a fonte e o player tocando sem pausas
+PASS · 300%: sinal 3.00×, sem saída duplicada; renderer original continua tocando
+PASS · Volume geral controla ganho: 300% × 50% = 1.50×; zero e retomada sem recriar o grafo
+PASS · Suspender o processamento restaura áudio nativo a 100%; retomar devolve o ganho
+PASS · Falha do amplificador mantém áudio original a 100% e oferece nova tentativa
+PASS · Desmontagem preserva a captura; nenhum hardware pessoal foi solicitado

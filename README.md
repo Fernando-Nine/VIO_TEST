@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.4.1** · **AGPLv3** · **Node 24**
+Nova implementação **2.6.0** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -227,3 +227,22 @@ A janela Document PiP, quando suportada, mantém os controles da sessão e os me
 elementos de mídia. Fechá-la devolve a sessão à janela principal. Em navegadores
 com apenas PiP de vídeo, os controles disponíveis são os do navegador. Instalar a
 PWA não acrescenta WASAPI nem suporte de PiP ausente na plataforma.
+
+
+## Sons e cores — 2.6.0
+
+Em **Ajustes → Aplicativo**, o volume geral ajusta tudo que você ouve: vozes,
+áudio das telas e efeitos. Os volumes individuais continuam guardados. O envio do
+microfone não é alterado. O volume dos efeitos controla apenas os avisos do VIO,
+com oito eventos independentes e botões para experimentar cada som. Suas escolhas
+ficam salvas neste navegador; desativar os sons não apaga essas preferências.
+
+Em **Pessoas**, ou clicando no próprio avatar, escolha uma das oito cores ou abra o
+círculo com +. O quadro ajusta saturação/brilho por arraste ou setas; a barra muda a
+matiz, e o campo HEX aceita três ou seis dígitos. **Aplicar cor** compartilha a escolha
+com a sala. Ela permanece nas reconexões e volta ao anil depois de uma saída explícita.
+
+**Cores das pessoas nas transmissões**, na aba Aplicativo, controla somente sua
+visualização dos destaques de fala, bordas e sinal de ao vivo. A cor dos avatares é
+mantida. Ping, alertas e erros continuam com suas cores de estado. A cor compartilhada
+é validada e limitada a 20 alterações por minuto por identidade autenticada.
