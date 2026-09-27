@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.4.0** · **AGPLv3** · **Node 24**
+Nova implementação **2.4.1** · **AGPLv3** · **Node 24**
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render

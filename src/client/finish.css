@@ -462,6 +462,13 @@
   .sheet select::picker(select) {
     appearance: base-select;
   }
+  .sheet select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: start;
+  }
   .sheet select::picker(select) {
     background: #171b2a;
     border: 1px solid #626b96;
@@ -472,6 +479,9 @@
     max-height: min(340px, 60dvh);
   }
   .sheet select::picker-icon {
+    flex: none;
+    margin-inline-start: auto;
+    line-height: 1;
     color: #a8adff;
     transition: transform 160ms ease;
   }

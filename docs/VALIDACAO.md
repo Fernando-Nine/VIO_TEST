@@ -1,5 +1,40 @@
 # VIO — validação
 
+## Correção 2.4.1 — 26/09/2026
+
+Regressão reproduzida no componente real: associar um MediaStream vazio antes de
+chegar áudio deixou o elemento em readyState 0, sem erro e sem progresso. A correção
+aguarda a faixa e mantém o stream original no elemento nativo. Até 100%, nenhum
+grafo de ganho é criado. A revisão também identificou que Peers montava o stream
+via addTrack sem emitir eventos: o amplificador da 2.4 podia ficar com entrada vazia
+quando áudio chegava depois. Os helpers usados em produção agora notificam adição
+e remoção após a mutação. Isso corresponde à especificação:
+https://w3c.github.io/mediacapture-main/#event-summary.
+
+Chrome 151, ScreenAudioLab pelo botão da página: reprodução tardia a 80%; volume
+zero; mute/desmute; ganho medido em 3,00×; renderer original ainda tocando; retorno
+nativo a 100% quando o AudioContext foi suspenso ou a criação do amplificador
+falhou deliberadamente; retomada do ganho; desmontagem sem parar a captura.
+FeatureLab também passou com a faixa adicionada após criar o grafo, usando os
+mesmos helpers de Peers. Indicador e ganho de microfone permaneceram aprovados.
+
+WatchLab: dois vídeos e dois áudios permaneceram idênticos, com os mesmos streams,
+progresso de reprodução e zero pausas ao trocar o foco por botão. Nenhum comando
+novo de assinatura. Os dois áudios estavam tocando e não mudos; vídeos mudos para
+não duplicar o som. Todos os 30 testes de servidor/estado/segurança e o build passaram.
+
+Seta reproduzida com display:block e alinhamento normal no select. A correção usa
+flex e alinhamento central, com ícone à direita. Conferência visual do controle
+aberto e fechado; seleção por teclado mudou de 1080p para 1440p e fechou a lista.
+Mantidos foco visível, tema escuro e fallback nativo. Evidências em
+`evidence/audio-2.4.1.json`, `evidence/tests-2.4.1.txt`, `evidence/build-2.4.1.txt`
+e `evidence/vio-2.4.1-select-1790470121670.jpg`.
+
+Os ensaios usam sinal sintético no navegador e sinalização real na sala de teste.
+Não comprovam áudio audível entre dois aparelhos, periféricos físicos, Safari/iPhone
+ou relay TURN. Essas limitações da bancada permanecem; não se afirma reprodução
+integral do ambiente do usuário.
+
 ## Atualização 2.4.0 — 26/09/2026
 
 30 testes automatizados aprovados. O servidor mantém duas assinaturas principais

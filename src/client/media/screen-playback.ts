@@ -1,4 +1,4 @@
-/** A shared audio clock; each watched screen keeps its own gain and output stream. */
+/** Optional amplification only. Native playback must remain attached to the raw stream. */
 export class ScreenPlayback {
   private context?: AudioContext;
   get supported() {
@@ -6,8 +6,13 @@ export class ScreenPlayback {
   }
   unlock() {
     if (!this.supported) return;
-    this.context ??= new AudioContext();
-    void this.context.resume().catch(() => {});
+    try {
+      if (!this.context || this.context.state === "closed")
+        this.context = new AudioContext();
+      void this.context.resume().catch(() => {});
+    } catch {
+      // A failed amplifier must never prevent normal screen audio from playing.
+    }
   }
   create(stream: MediaStream) {
     this.unlock();

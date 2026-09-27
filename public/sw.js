@@ -1,5 +1,5 @@
 /* Only immutable app assets. Room navigation and live traffic ALWAYS use the network. */
-const CACHE = "vio-static-2.4.0";
+const CACHE = "vio-static-2.4.1";
 const ICONS = [
   "/icons/vio-192.png",
   "/icons/vio-512.png",

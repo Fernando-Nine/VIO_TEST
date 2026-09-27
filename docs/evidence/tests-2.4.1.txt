@@ -1,0 +1,44 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> vio@2.4.1 test
+> node --import tsx --test tests/*.test.ts
+
+✔ saída padrão não é reaberta a cada vídeo, voz ou som de botão (2.077739ms)
+✔ vídeo removido durante troca não derruba a saída da conversa (0.309794ms)
+✔ desconexão de dispositivo restaura áudio uma vez e elementos futuros usam o padrão (0.426756ms)
+✔ dispositivo salvo invisível não é aplicado; confirmação fica nos ajustes (0.330065ms)
+✔ restauração atrasada nunca substitui uma escolha feita pelo usuário (0.247773ms)
+✔ falha real no destino de um novo vídeo restaura todos os elementos (0.338777ms)
+✔ falha ao voltar ao padrão não informa recuperação inexistente (0.692667ms)
+✔ ping distingue sinalização e tela, latência e conexão interrompida (0.799763ms)
+✔ saída muda voz, tela e elementos futuros; falha reverte a seleção (1.753152ms)
+✔ service worker jamais intercepta navegação, sala, sessão ou socket (15.842126ms)
+✔ changelog preserva o histórico inteiro e a mudança de sistema (1.568151ms)
+✔ arraste encaixa nas seis posições dentro da área útil do vídeo (1.632655ms)
+✔ redimensionamento mantém o painel acessível e limita arraste fora da tela (0.174235ms)
+✔ tokens assinados rejeitam adulteração e expiração (2.48051ms)
+✔ oito pessoas entram sem teto de seis; aviso e duração pertencem à sala (98.454843ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (20.156806ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (11.380849ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (9.822753ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (12.903133ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (7.908233ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (4.998955ms)
+✔ origem de casca nativa é aceita sem afrouxar a regra da web (15.288603ms)
+{"time":"2026-09-27T00:46:44.801Z","event":"cloudflare_turn_error","status":500}
+✔ Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn (11.942162ms)
+✔ credencial TURN estática: par fixo da config, sem HMAC (4.74343ms)
+✔ duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é independente (19.407597ms)
+✔ 240p a 2160p definem a altura enviada e preservam a proporção (0.849056ms)
+✔ fonte menor não é ampliada e mudança de tamanho recalcula a redução (0.143651ms)
+✔ a escolha de 4K não aumenta bitrate, FPS ou escala da miniatura nem da câmera (0.564468ms)
+✔ assistir é explícito; foco mantém a mesma lista, ordem e assinaturas desejadas (1.573549ms)
+✔ trocar pela terceira tela preserva a secundária e fechar promove só a já aberta (0.297076ms)
+ℹ tests 30
+ℹ suites 0
+ℹ pass 30
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 646.584765

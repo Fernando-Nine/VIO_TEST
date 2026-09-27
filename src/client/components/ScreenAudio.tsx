@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
 import type { Controller } from "../room/controller";
 
+type BoostState = { stream?: MediaStream; active: boolean; failed: boolean };
+
+/** Keep the original remote track playing, including while amplification is active.
+ * Chromium's WebRTC renderer can otherwise feed silence into Web Audio. */
 export function ScreenAudio({
   stream,
   engine,
@@ -16,61 +20,203 @@ export function ScreenAudio({
   name: string;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
-  const graph = useRef<ReturnType<typeof engine.playback.create>>(undefined);
   const [blocked, setBlocked] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [boost, setBoost] = useState<BoostState>({
+    active: false,
+    failed: false,
+  });
+  const wantsBoost = volume > 1;
+  const boosted =
+    wantsBoost && boost.stream === stream && boost.active && !blocked;
   useEffect(() => {
     const element = audio.current;
     if (!element || !stream) return;
-    const processed = engine.playback.create(stream);
-    graph.current = processed;
-    element.srcObject = processed?.stream || stream;
-    const play = () =>
-      void element
-        .play()
-        .then(() => setBlocked(processed?.context.state === "suspended"))
-        .catch(() => setBlocked(true));
+    let active = true;
+    // Never replace this with a generated stream: normal audio needs no graph.
+    const play = () => {
+      if (!stream.getAudioTracks().some((track) => track.readyState === "live"))
+        return;
+      // Wait for audio before binding: an initially inactive stream can stay at
+      // HAVE_NOTHING in Chromium even after a later track is added.
+      if (
+        element.srcObject !== stream ||
+        element.readyState === 0 ||
+        element.ended
+      )
+        element.srcObject = stream;
+      void element.play().then(
+        () => active && setBlocked(false),
+        (error: unknown) => {
+          if (
+            active &&
+            !(error instanceof DOMException && error.name === "AbortError")
+          )
+            setBlocked(true);
+        },
+      );
+    };
     play();
     stream.addEventListener("addtrack", play);
     return () => {
+      active = false;
       stream.removeEventListener("addtrack", play);
       element.pause();
       element.srcObject = null;
-      processed?.close();
-      graph.current = undefined;
     };
-  }, [stream, engine]);
+  }, [stream]);
   useEffect(() => {
     if (audio.current && engine.output.supported)
       return engine.output.register(audio.current);
   }, [engine]);
   useEffect(() => {
-    if (!audio.current) return;
-    audio.current.muted = muted;
-    audio.current.volume = graph.current ? 1 : Math.min(1, volume);
-    graph.current?.setVolume(volume);
-  }, [volume, muted, stream]);
+    const element = audio.current;
+    if (!element || !stream) return;
+    let active = true;
+    element.muted = muted || boosted;
+    element.volume = Math.max(0, Math.min(1, volume));
+    // Unmuting can require a new play attempt after an autoplay rejection.
+    if (stream.getAudioTracks().some((track) => track.readyState === "live"))
+      void element.play().then(
+        () => active && setBlocked(false),
+        (error: unknown) => {
+          if (
+            active &&
+            !(error instanceof DOMException && error.name === "AbortError")
+          )
+            setBlocked(true);
+        },
+      );
+    return () => {
+      active = false;
+    };
+  }, [volume, muted, boosted, stream, retry]);
+  const boostFailed = wantsBoost && boost.stream === stream && boost.failed;
   return (
     <>
       <audio
         ref={audio}
         aria-label={`Áudio da tela de ${name}`}
+        data-screen-audio="native"
         autoPlay
-        muted={muted}
+        muted={muted || boosted}
       />
-      {blocked && !muted && (
+      {wantsBoost && stream && (
+        <ScreenBoost
+          stream={stream}
+          engine={engine}
+          volume={volume}
+          muted={muted || !boosted}
+          name={name}
+          retry={retry}
+          onState={setBoost}
+        />
+      )}
+      {!muted && ((blocked && !boosted) || boostFailed) && (
         <button
           className="play-blocked"
+          title={
+            boostFailed
+              ? "O áudio continua em até 100%. Clique para tentar ativar o ganho extra."
+              : undefined
+          }
           onClick={() => {
-            engine.playback.unlock();
-            void audio.current
-              ?.play()
-              .then(() => setBlocked(false))
-              .catch(() => setBlocked(true));
+            if (wantsBoost) engine.playback.unlock();
+            void audio.current?.play().then(
+              () => setBlocked(false),
+              () => setBlocked(true),
+            );
+            setRetry((value) => value + 1);
           }}
         >
-          <Volume2 size={16} /> Ativar áudio de {name}
+          <Volume2 size={16} />
+          {blocked && !boosted
+            ? `Ativar áudio de ${name}`
+            : "Ativar amplificação"}
         </button>
       )}
     </>
+  );
+}
+
+/** Only mounted above 100%. If unavailable, the native element remains audible. */
+function ScreenBoost({
+  stream,
+  engine,
+  volume,
+  muted,
+  name,
+  retry,
+  onState,
+}: {
+  stream: MediaStream;
+  engine: Controller;
+  volume: number;
+  muted: boolean;
+  name: string;
+  retry: number;
+  onState: (state: BoostState) => void;
+}) {
+  const audio = useRef<HTMLAudioElement>(null);
+  const graph = useRef<ReturnType<typeof engine.playback.create>>(undefined);
+  useEffect(() => {
+    const element = audio.current;
+    if (!element) return;
+    let active = true;
+    const state = () => {
+      if (!active) return;
+      const ready =
+        !!graph.current &&
+        graph.current.context.state === "running" &&
+        !element.paused;
+      onState({ stream, active: ready, failed: !ready });
+    };
+    try {
+      const processed = engine.playback.create(stream);
+      if (!processed) throw new Error("Amplification unavailable");
+      graph.current = processed;
+      element.srcObject = processed.stream;
+      processed.context.addEventListener("statechange", state);
+    } catch {
+      onState({ stream, active: false, failed: true });
+    }
+    const play = () => {
+      if (graph.current)
+        void element.play().then(state, () => {
+          if (active) onState({ stream, active: false, failed: true });
+        });
+    };
+    play();
+    stream.addEventListener("addtrack", play);
+    element.addEventListener("pause", state);
+    element.addEventListener("playing", state);
+    return () => {
+      active = false;
+      stream.removeEventListener("addtrack", play);
+      element.removeEventListener("pause", state);
+      element.removeEventListener("playing", state);
+      graph.current?.context.removeEventListener("statechange", state);
+      element.pause();
+      element.srcObject = null;
+      graph.current?.close();
+      graph.current = undefined;
+      onState({ stream, active: false, failed: false });
+    };
+  }, [stream, engine, onState, retry]);
+  useEffect(() => {
+    if (audio.current && engine.output.supported)
+      return engine.output.register(audio.current);
+  }, [engine]);
+  useEffect(() => {
+    graph.current?.setVolume(volume);
+  }, [volume, stream, retry]);
+  return (
+    <audio
+      ref={audio}
+      autoPlay
+      muted={muted}
+      data-screen-audio="boost"
+      aria-label={`Áudio amplificado da tela de ${name}`}
+    />
   );
 }

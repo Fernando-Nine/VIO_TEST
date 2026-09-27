@@ -7,9 +7,24 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.4.0";
+export const version = "2.4.1";
 export const currentRelease: Release = {
   version,
+  date: "2026-09-26",
+  title: "Áudio da transmissão e ajustes corrigidos",
+  sections: [
+    {
+      title: "Correções",
+      items: [
+        "Áudio das telas volta à reprodução direta até 100%, sem depender do processamento de ganho. Faixas que chegam depois do vídeo são notificadas e conectadas ao player.",
+        "Amplificação opcional até 300% mantém a faixa original ativa. Se o processamento ficar indisponível, a reprodução continua em até 100%, com opção de tentar novamente.",
+        "Setas dos seletores alinhadas à direita, na mesma linha do valor, preservando seleção por teclado e o visual escuro.",
+      ],
+    },
+  ],
+};
+const togetherRelease: Release = {
+  version: "2.4.0",
   date: "2026-09-26",
   title: "Duas telas, a conversa continua",
   sections: [
@@ -143,6 +158,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  togetherRelease,
   controlsRelease,
   darkRelease,
   entranceRelease,

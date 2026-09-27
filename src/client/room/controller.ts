@@ -530,11 +530,12 @@ export class Controller {
     if (!Number.isFinite(next.volume)) return;
     next.volume = Math.min(this.fineAudio ? 3 : 1, Math.max(0, next.volume));
     this.screenLevels.set(id, next);
-    this.playback.unlock();
+    if (next.volume > 1) this.playback.unlock();
     this.bump();
   }
   setFineAudio(enabled: boolean) {
     this.fineAudio = enabled && this.playback.supported;
+    if (this.fineAudio) this.playback.unlock();
     if (!this.fineAudio)
       for (const [id, level] of this.screenLevels)
         this.screenLevels.set(id, {
@@ -553,7 +554,6 @@ export class Controller {
     this.inCall = true;
     this.captures.micMuted = true;
     this.captures.deaf = false;
-    this.playback.unlock();
     this.bump();
     void this.reconcile();
   }
@@ -574,7 +574,7 @@ export class Controller {
   }
   watch(id: string, together = false) {
     if (!this.screenCatalog.has(id)) return;
-    this.playback.unlock();
+    if (this.screenLevel(id).volume > 1) this.playback.unlock();
     const next = watchScreen(this.view, id, together);
     const changed = next.watching !== this.view.watching;
     this.view.watching = next.watching;

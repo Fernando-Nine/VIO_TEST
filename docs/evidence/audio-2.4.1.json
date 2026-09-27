@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-09-27T00:48:30.022Z",
+  "audio": "PASS · 80%: faixa tardia toca no stream original, sem criar amplificador\nPASS · Volume zero, mute e desmute funcionam na reprodução direta\nPASS · 300%: sinal 3.00×, sem saída duplicada; renderer original continua tocando\nPASS · Suspender o processamento restaura áudio nativo a 100%; retomar devolve o ganho\nPASS · Falha do amplificador mantém áudio original a 100% e oferece nova tentativa\nPASS · Desmontagem preserva a captura; nenhum hardware pessoal foi solicitado",
+  "gainAndVoice": "Verificar indicador e ganho 2.0\nPASS · Indicador acende com a trilha que chega após o cartão\nPASS · Silêncio, remoção e substituição funcionam no mesmo MediaStream\nPASS · Volume real: 300% = 3.00×; 20% = 0.20×; sensibilidade preservada\nPASS · Fonte sintética sem AGC: rejeição preserva a configuração e o ganho manual\nPASS · Áudio tardio da tela: 300% = 3.00×; zero silencia; captura preservada",
+  "continuity": {
+    "videos": [
+      {
+        "type": "video",
+        "sameElement": true,
+        "sameStream": true,
+        "advancing": true,
+        "pauses": 0,
+        "playing": true,
+        "audible": false,
+        "liveAudio": true
+      },
+      {
+        "type": "audio",
+        "sameElement": true,
+        "sameStream": true,
+        "advancing": true,
+        "pauses": 0,
+        "playing": true,
+        "audible": true,
+        "liveAudio": true
+      },
+      {
+        "type": "video",
+        "sameElement": true,
+        "sameStream": true,
+        "advancing": true,
+        "pauses": 0,
+        "playing": true,
+        "audible": false,
+        "liveAudio": true
+      },
+      {
+        "type": "audio",
+        "sameElement": true,
+        "sameStream": true,
+        "advancing": true,
+        "pauses": 0,
+        "playing": true,
+        "audible": true,
+        "liveAudio": true
+      }
+    ],
+    "sameSubscriptions": true,
+    "subscriptionCommandsSinceRecord": 0,
+    "focused": "htLxZxnSKW7ZmJvn2lAye226FtpdUMg7",
+    "watching": [
+      "Ftaj8zcxD6mgOGDqGy6gEJxvBIVIL1t7",
+      "htLxZxnSKW7ZmJvn2lAye226FtpdUMg7"
+    ],
+    "inCall": false,
+    "micMuted": false,
+    "localSources": [],
+    "incomingVoice": 0,
+    "errors": ""
+  },
+  "limits": "Synthetic media rendered locally; this does not validate WebRTC between physical devices or TURN relay."
+}

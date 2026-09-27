@@ -104,6 +104,17 @@ zero do `voice-activity.ts`. **Tirar `RemoteVoice` da árvore, ou deixar de mont
 cartão, mata o indicador sem erro nenhum** — e o dreno, sozinho, não segura. Se um dia o áudio
 remoto passar a tocar por outro caminho, confira o indicador na mesma leva.
 
+Na reprodução de tela, manter o `<audio>` original conectado à faixa remota e tocando,
+mesmo mudo durante amplificação. Até 100%, usar reprodução nativa; ganho acima disso
+é opcional e sua falha deve retornar ao caminho nativo. Esperar uma faixa de áudio
+antes de associar um stream inicialmente vazio ao elemento.
+
+Streams remotos são montados manualmente por `Peers.ontrack`. Usar os helpers de
+`media/remote-stream.ts`: `addTrack()` e `removeTrack()` chamados por script **não**
+emitem eventos de faixa. Sem notificação, ganho e indicador podem permanecer ligados
+ao estado vazio. A bancada ScreenAudioLab cobre o componente real e FeatureLab usa
+os mesmos helpers de produção para a chegada tardia.
+
 Grafo de áudio próprio em `capture.ts`: `fonte → analisador → portão (GainNode) → destino`.
 O analisador fica **antes** do portão — com ele depois, o portão fechado zeraria o medidor e
 nunca mais reabriria. O portão corta por ganho com retenção de 180 ms, e o limiar é em **dB**

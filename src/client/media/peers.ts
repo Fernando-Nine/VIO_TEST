@@ -2,6 +2,7 @@ import type { IceConfig, Signal, Subscription } from "../../shared/protocol";
 import type { Captures } from "./capture";
 import { mediaDeadline } from "./deadline";
 import { videoEncoding } from "./video-quality";
+import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
 export interface PeerInfo {
   id: string;
   publicationId: string;
@@ -143,11 +144,10 @@ export class Peers {
       { signal: peer.events.signal },
     );
     pc.ontrack = (e) => {
-      if (!peer.stream.getTracks().some((t) => t.id === e.track.id))
-        peer.stream.addTrack(e.track);
+      addRemoteTrack(peer.stream, e.track);
       e.track.onunmute = () => this.changed();
       e.track.onended = () => {
-        peer.stream.removeTrack(e.track);
+        removeRemoteTrack(peer.stream, e.track);
         this.changed();
       };
       this.changed();

@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Captures } from "../src/client/media/capture";
 import { observeVoiceActivity } from "../src/client/media/voice-activity";
 import { ScreenPlayback } from "../src/client/media/screen-playback";
+import {
+  addRemoteTrack,
+  removeRemoteTrack,
+} from "../src/client/media/remote-stream";
 
 const pause = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -52,20 +56,17 @@ export function FeatureLab() {
       await pause(160);
       assert(!speaking, "Stream vazio não deve acender");
       const track = destination.stream.getAudioTracks()[0];
-      emptyStream.addTrack(track);
-      emptyStream.dispatchEvent(new Event("addtrack"));
+      addRemoteTrack(emptyStream, track);
       await until(() => speaking, "Não detectou trilha de áudio tardia");
       report("Indicador acende com a trilha que chega após o cartão");
       amplitude.gain.value = 0;
       await until(() => !speaking, "Não apagou após silêncio");
       amplitude.gain.value = 0.07;
       await until(() => speaking, "Não retomou após silêncio");
-      emptyStream.removeTrack(track);
-      emptyStream.dispatchEvent(new Event("removetrack"));
+      removeRemoteTrack(emptyStream, track);
       await until(() => !speaking, "Não apagou após remoção da trilha");
       const replacement = track.clone();
-      emptyStream.addTrack(replacement);
-      emptyStream.dispatchEvent(new Event("addtrack"));
+      addRemoteTrack(emptyStream, replacement);
       await until(() => speaking, "Não detectou substituição da trilha");
       stopObserving();
       stopObserving = () => {};
@@ -147,9 +148,12 @@ export function FeatureLab() {
         );
       }
       source.disconnect();
-      const screenGraph = playback.create(destination.stream)!;
+      const lateScreen = new MediaStream();
+      const screenGraph = playback.create(lateScreen)!;
       const screenSource = context.createMediaStreamSource(screenGraph.stream);
       screenSource.connect(analyser);
+      // Same mutation used by Peers.ontrack; addTrack alone must not go unnoticed.
+      addRemoteTrack(lateScreen, track);
       screenGraph.setVolume(1);
       const screenBase = await rms();
       assert(screenBase > 0.02, "Nenhum sinal na reprodução de tela");
@@ -169,7 +173,7 @@ export function FeatureLab() {
       );
       screenSource.disconnect();
       report(
-        `Áudio da tela: 300% = ${screenHigh.toFixed(2)}×; zero silencia; captura preservada`,
+        `Áudio tardio da tela: 300% = ${screenHigh.toFixed(2)}×; zero silencia; captura preservada`,
       );
       analyser.disconnect();
       silent.disconnect();

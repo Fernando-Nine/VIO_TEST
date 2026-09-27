@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.4.0**, em 26/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.4.1**, em 26/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -54,6 +54,10 @@ Grade de participantes com altura limitada e opção de esconder/restaurar; avis
 mais discreto e marca VIO clicável. Chamada independente das telas, microfone inicialmente
 desligado. Volume, fullscreen e PiP no dock; ganho de tela opcional até 300%, switches
 e seletores nativos modernizados. Document PiP interativo quando suportado.
+
+Correções da 2.4.1: reprodução nativa das telas até 100%, faixas tardias notificadas
+aos consumidores e ganho extra isolado com retorno ao áudio nativo em caso de falha.
+Setas dos seletores alinhadas à direita. Duas telas, volumes e foco preservados.
 
 ## O que foi comprovado
 
