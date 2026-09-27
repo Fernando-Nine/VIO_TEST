@@ -7,9 +7,32 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.4.1";
+export const version = "2.5.0";
 export const currentRelease: Release = {
   version,
+  date: "2026-09-27",
+  title: "Sua sala, várias telas",
+  sections: [
+    {
+      title: "Pessoas e transmissões no mesmo lugar",
+      items: [
+        "Painel único com quem está compartilhando e quem entrou na chamada, inclusive participantes que apenas escutam. Filtros Todos, Telas e Chamada.",
+        "Assistir abre uma tela; Em conjunto adiciona outras sem o antigo limite de duas. Focar mantém as demais abertas; Só esta fecha as outras por escolha explícita.",
+        "Janelas secundárias móveis e redimensionáveis, com organização à direita ou embaixo, encaixes nas bordas e alternativas por botão e teclado.",
+        "Trocar o foco, mover e ajustar janelas preserva vídeos, conexões e áudio independente. O painel de pessoas compartilha a área livre sem uma faixa reservada para transmissões.",
+      ],
+    },
+    {
+      title: "Troca de sala e continuidade",
+      items: [
+        "Sair libera a interface imediatamente. Confirmações atrasadas e capturas pendentes da sala antiga não interferem na seguinte, mesmo quando a conexão caiu antes da saída.",
+        "Assinaturas já confirmadas não são repetidas a cada atualização de presença. Prévia opcional continua limitada a duas miniaturas leves; o aviso de custo da conexão direta permanece.",
+      ],
+    },
+  ],
+};
+const audioFixRelease: Release = {
+  version: "2.4.1",
   date: "2026-09-26",
   title: "Áudio da transmissão e ajustes corrigidos",
   sections: [
@@ -158,6 +181,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  audioFixRelease,
   togetherRelease,
   controlsRelease,
   darkRelease,

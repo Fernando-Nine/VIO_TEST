@@ -725,11 +725,11 @@ test("credencial TURN estática: par fixo da config, sem HMAC", async () => {
   }
 });
 
-test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é independente", async () => {
+test("várias telas mantêm IDs; encerrar uma preserva as outras; voz é independente", async () => {
   const app = await server();
   const sockets: Socket[] = [];
   try {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 7; i++) {
       const socket = await connect(app.url, (await session(app.url)).token);
       sockets.push(socket);
       data(
@@ -737,7 +737,7 @@ test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é
       );
     }
     const publications: Publication[] = [];
-    for (let i = 0; i < 3; i++)
+    for (let i = 0; i < 6; i++)
       publications.push(
         data(
           await request<Publication>(sockets[i], "publish", {
@@ -748,7 +748,7 @@ test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é
           }),
         ),
       );
-    const viewer = sockets[3];
+    const viewer = sockets[6];
     const intents = publications.map((p) => ({
       publicationId: p.id,
       tier: "main",
@@ -770,10 +770,13 @@ test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é
         data(await request<Subscription>(viewer, "subscribe", intents[i])).id,
         id,
       );
-    const rejected = await request(viewer, "subscribe", intents[2]);
-    assert.equal(rejected.ok, false);
-    if (!rejected.ok) assert.equal(rejected.code, "SCREEN_LIMIT");
-    assert.deepEqual([...room.subscriptions.keys()], [a.id, b.id]);
+    const extra: Subscription[] = [];
+    for (const intent of intents.slice(2))
+      extra.push(
+        data(await request<Subscription>(viewer, "subscribe", intent)),
+      );
+    assert.equal(room.subscriptions.size, 6);
+    assert.ok(extra.every((sub) => room.subscriptions.has(sub.id)));
     const replacement = data(
       await request<Subscription>(viewer, "subscribe", {
         ...intents[0],
@@ -797,7 +800,7 @@ test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é
         nonce: crypto.randomUUID(),
       }),
     );
-    assert.equal(room.subscriptions.size, 3);
+    assert.equal(room.subscriptions.size, 7);
     data(await request(viewer, "unsubscribe", { id: replacement.id }));
     const c = data(
       await request<Subscription>(viewer, "subscribe", intents[2]),
@@ -812,6 +815,65 @@ test("duas telas mantêm IDs; terceira é recusada sem fechar as abertas; voz é
     assert.equal(room.subscriptions.has(b.id), false);
     assert.equal(room.subscriptions.has(c.id), true);
     assert.equal(room.subscriptions.has(voiceSub.id), true);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("presença na chamada inclui quem só escuta e não publica microfone", async () => {
+  const app = await server();
+  const a = await connect(app.url, (await session(app.url)).token);
+  try {
+    const joined = data(
+      await request<{ id: string; snapshot: Snapshot }>(a, "join", {
+        name: "Ouvinte",
+        code: "QACALL",
+      }),
+    );
+    assert.equal(joined.snapshot.participants[0].inCall, false);
+    data(await request(a, "call", { active: true }));
+    const room = app.rooms.rooms.get("QACALL")!;
+    assert.equal(app.rooms.snapshot(room).participants[0].inCall, true);
+    assert.deepEqual(app.rooms.snapshot(room).participants[0].publications, []);
+    data(await request(a, "call", { active: false }));
+    assert.equal(app.rooms.snapshot(room).participants[0].inCall, false);
+    assert.equal(
+      (await request(a, "call", { active: true, owner: "someone" })).ok,
+      false,
+    );
+  } finally {
+    a.disconnect();
+    await app.close();
+  }
+});
+
+test("trocar identidades não contorna limites de sessão e entrada por IP", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    const tokens: string[] = [];
+    for (let i = 0; i < 30; i++) tokens.push((await session(app.url)).token);
+    const blocked = await fetch(app.url + "/api/session", {
+      method: "POST",
+      headers: { Origin: origin },
+    });
+    assert.equal(blocked.status, 429);
+    // Five identities stay below each token's limit, but share the IP budget.
+    for (const token of tokens.slice(0, 5))
+      sockets.push(await connect(app.url, token));
+    for (let i = 0; i < 40; i++) {
+      const socket = sockets[i % sockets.length];
+      data(await request(socket, "join", { name: "Teste", code: "RATE" + i }));
+      data(await request(socket, "leave"));
+    }
+    const denied = await request(sockets[0], "join", {
+      name: "Teste",
+      code: "RATEBLOCK",
+    });
+    assert.equal(denied.ok, false);
+    if (!denied.ok) assert.equal(denied.code, "RATE_LIMIT");
+    assert.equal(app.rooms.rooms.has("RATEBLOCK"), false);
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();

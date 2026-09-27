@@ -17,7 +17,7 @@ Decisão explícita de escopo, não limitação temporária:
 - Sem contas, senhas ou banco de dados. A sala nasce quando alguém entra e some quando esvazia.
 - Sem gravação, sem chat de texto, sem SFU / servidor de mídia.
 - Por pedido explícito do usuário na 2.3.0, salas não têm teto de participantes. A partir de 6 pessoas, avisar do custo da malha P2P; `MAX_PARTICIPANTS` foi aposentada.
-- Não é Jitsi Meet. Feature que só faz sentido acima desse teto está fora.
+- A arquitetura continua P2P; não apresentar ausência de teto como garantia de capacidade.
 
 ## Arquitetura
 
@@ -44,9 +44,9 @@ da pessoa.** É sempre pelo `publicationId`.
 
 ### `tier`: `main` e `preview`
 
-Na 2.4.0, por pedido do usuário, cada espectador pode escolher até duas telas
-para assistir em `main`, com áudio nas duas. A segunda tela assistida não é uma
-miniatura passiva. Foco só muda apresentação: preservar IDs, RTCPeerConnections,
+Na 2.5.0, por pedido do usuário, cada espectador pode escolher várias telas
+para assistir em `main`, com áudio independente, sem teto de duas. As telas menores
+não são miniaturas passivas. O custo de rede e processamento continua crescendo. Foco só muda apresentação: preservar IDs, RTCPeerConnections,
 MediaStreams e elementos de vídeo. Nunca abrir uma publicação nova automaticamente.
 
 
@@ -71,6 +71,11 @@ quem você é depois de uma queda — não o `socket.id`, que muda.
 
 O `epoch` no snapshot identifica a instância da sala. Se ele mudar, o servidor reiniciou e o
 cliente precisa refazer tudo do zero, não remendar.
+
+Saída explícita invalida a geração local imediatamente e libera a interface sem
+esperar ACK. A sessão anônima é renovada na próxima entrada; reconexões automáticas
+preservam a identidade. Respostas de gerações antigas nunca podem alterar a nova sala.
+Presença na chamada é `Participant.inCall`, independente de publicar voz.
 
 ### Negociação
 
@@ -128,7 +133,7 @@ nunca mais reabriria. O portão corta por ganho com retenção de 180 ms, e o li
   VIO_2, e é intencional: o vocabulário do WebRTC é inglês, e traduzir `publication` ou
   `subscription` só criaria uma segunda língua para a mesma coisa.
 - Prettier é a formatação. Não discuta estilo à mão.
-- Ícones: `lucide-react`. Fontes: Manrope (interface) e IBM Plex Mono (leitura técnica —
+- Ícones: `lucide-react`. Fontes: Bricolage Grotesque (interface) e IBM Plex Mono (leitura técnica —
   código da sala, ping, FPS, bitrate).
 - Toda string visível ao usuário é frase completa em português, com acento.
 - Erro que o usuário vê tem `code` e mensagem em português (`Fault`), nunca stack trace.
@@ -222,7 +227,7 @@ herdado do projeto que veio antes. A 2.0.0 carrega `systemChange: true` e é a f
 para trás, o histórico descreve um app que por dentro não existe mais. **Não apague essa
 marca** — sem ela o histórico mente por omissão.
 
-Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.1.0.
+Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.5.0.
 
 ## Fora de limite
 

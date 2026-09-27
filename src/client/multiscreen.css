@@ -1,0 +1,402 @@
+/* One participant/source panel; no reserved rail competing with the video. */
+.player .floating-layer {
+  inset: 44px 12px calc(var(--dock-height, 64px) + 24px);
+  z-index: 40;
+}
+.player .floating-people {
+  max-width: 100%;
+  padding: 4px 7px 7px;
+  background: #121623f5;
+  border-color: #414762;
+}
+.floating-toolbar {
+  gap: 2px;
+}
+.cards-handle {
+  color: #d3d7ee;
+  font: 500 0.75rem var(--font);
+}
+.cards-handle small {
+  color: #a8adca;
+  margin-left: 3px;
+}
+.people-filters {
+  display: flex;
+  gap: 4px;
+  padding: 5px 2px 8px;
+}
+.people-filters button {
+  min-height: 32px;
+  flex: 1;
+  font-size: 0.72rem;
+  border-radius: 5px;
+  color: #b9bfd6;
+  border: 1px solid transparent;
+}
+.people-filters button[aria-pressed="true"] {
+  background: #252751;
+  border-color: #5c61a0;
+  color: #f0f1ff;
+}
+.people-filters small {
+  font: 0.625rem var(--mono);
+  margin-left: 4px;
+}
+.player .people-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-height: min(360px, 43dvh);
+  overflow: auto;
+  gap: 6px;
+  padding: 2px;
+}
+.player.live-previews .people-strip {
+  grid-template-columns: minmax(0, 1fr);
+}
+.participant-card {
+  min-width: 0;
+  align-self: start;
+  border: 1px solid #373e58;
+  border-radius: 7px;
+  padding: 8px;
+  background: #1a1e30;
+  transition: border-color 150ms ease;
+}
+.participant-card.speaking {
+  border-color: #959bff;
+  box-shadow: inset 0 0 0 1px #959bff;
+}
+.participant-card.offline {
+  opacity: 0.65;
+}
+.participant-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.participant-identity > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.participant-identity strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e9ecff;
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.participant-identity strong small {
+  font-size: 0.625rem;
+  color: #aeb5d3;
+}
+.participant-avatar {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #2b3052;
+  color: #dce0ff;
+  font-size: 0.7rem;
+}
+.participant-avatar video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.participant-status,
+.participant-sharing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #b2bad6;
+  font-size: 0.625rem;
+  line-height: 1.5;
+}
+.participant-sharing {
+  color: #b6b9ff;
+  margin-top: 7px;
+}
+.participant-screen-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin-top: 5px;
+}
+.screen-action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 0 auto;
+  gap: 4px;
+  padding: 4px 6px;
+  min-height: 30px;
+  font-size: 0.64rem;
+  color: #e2e5ff;
+  background: #282c48;
+  border: 1px solid #4c5375;
+  border-radius: 4px;
+  transition: background 150ms ease;
+}
+.screen-action:hover {
+  background: #353b68;
+}
+.screen-action[aria-pressed="true"] {
+  color: #f3f3ff;
+  background: #323291;
+  border-color: #777ceb;
+}
+.screen-action.screen-stop {
+  flex: 0 0 30px;
+}
+.participant-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: 7px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #0c0f1b;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  color: #ccd1ff;
+}
+.participant-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.preview-watch {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  background: #121629ef;
+  border: 1px solid #666e96;
+  padding: 4px 7px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.people-invite,
+.people-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  color: #b9c0dc;
+  font-size: 0.72rem;
+}
+.people-empty {
+  padding: 12px;
+  margin: 0;
+}
+.screen-arrangements {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 5px 2px;
+  font-size: 0.7rem;
+}
+.screen-arrangements span {
+  margin-right: auto;
+  color: #b9c0dc;
+}
+.screen-arrangements button {
+  border: 1px solid #555e83;
+  border-radius: 4px;
+  padding: 6px;
+  min-height: 32px;
+}
+.available-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: #3535ba;
+  color: white;
+  font: 0.6rem var(--mono);
+}
+/* The work area only bounds overlays. The focused video still uses the entire player. */
+.screen-window-area {
+  position: absolute;
+  inset: 44px 12px calc(var(--dock-height, 64px) + 24px);
+  pointer-events: none;
+}
+.screen-window-area > .watched-screen {
+  pointer-events: auto;
+}
+.screen-window-area > .is-focused {
+  inset: -44px -12px calc(-1 * (var(--dock-height, 64px) + 24px));
+  z-index: 0;
+}
+.screen-window-area > .is-secondary {
+  inset: 0 auto auto 0;
+  min-width: 0;
+  max-width: none;
+  aspect-ratio: auto;
+  border-color: #656d97;
+  border-radius: 7px;
+  box-shadow: 0 10px 30px #0006;
+  transition: transform 160ms ease;
+}
+.screen-window-area > .is-secondary.is-dragging {
+  transition: none;
+  user-select: none;
+}
+.screen-window-area .is-secondary .screen-caption {
+  padding: 2px 3px;
+  gap: 0;
+  background: linear-gradient(#0b0d18f5, #0b0d18b8);
+}
+.screen-window-area .is-secondary .icon-button {
+  min-width: 27px;
+  min-height: 30px;
+  padding: 4px;
+}
+.screen-drag {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  color: #e1e5fc;
+  min-height: 30px;
+  padding: 3px;
+  cursor: grab;
+  touch-action: none;
+}
+.screen-drag:active {
+  cursor: grabbing;
+  transform: none;
+}
+.screen-drag span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.67rem;
+}
+.screen-drag svg {
+  flex-shrink: 0;
+}
+.screen-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: #e5e8ff;
+  background: #11152ad9;
+  border-radius: 6px 0 0;
+  cursor: nwse-resize;
+  touch-action: none;
+  transition: opacity 180ms ease;
+}
+.in-room.idle .screen-resize {
+  opacity: 0;
+}
+.in-room.idle
+  .watched-screen:is(:hover, :focus-within, .is-dragging)
+  :is(.screen-caption, .screen-resize) {
+  opacity: 1;
+  pointer-events: auto;
+}
+.screen-size-label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 14px;
+}
+.screen-size-label input {
+  width: 100%;
+}
+.screen-size-label output {
+  font: 0.8rem var(--mono);
+  color: #b8c0e3;
+}
+.screen-size-presets,
+.screen-position-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.screen-position-presets button {
+  font-size: 0.72rem;
+  padding: 9px 6px;
+}
+.screen-size-presets button {
+  padding: 9px 4px;
+}
+.volume-popover {
+  max-height: min(430px, 65dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pip-surface .floating-layer:not([hidden]) {
+  display: block;
+}
+.pip-surface .dock-button[aria-controls="floating-participants"] {
+  display: flex;
+}
+@media (max-width: 600px) {
+  .player .floating-layer,
+  .screen-window-area {
+    top: 36px;
+    right: 8px;
+    left: 8px;
+  }
+  .screen-window-area > .is-focused {
+    top: -36px;
+    left: -8px;
+    right: -8px;
+  }
+  .player .people-strip {
+    max-height: min(280px, 35dvh);
+  }
+  .screen-position-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen-window-area > .is-secondary,
+  .screen-resize {
+    transition: none;
+  }
+}
+
+.participant-screen-actions.is-watched {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.participant-screen-actions.is-watched .screen-action {
+  min-width: 0;
+  padding-inline: 4px;
+  white-space: nowrap;
+}
+.participant-screen-actions.is-watched .screen-action svg {
+  flex-shrink: 0;
+}
+
+.people-toggle {
+  position: relative;
+}
+.people-toggle .available-count {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  margin: 0;
+}

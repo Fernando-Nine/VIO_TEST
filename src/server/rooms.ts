@@ -163,6 +163,7 @@ export class Rooms {
     const rates: Record<Action, number> = {
       join: 12,
       leave: 12,
+      call: 30,
       publish: 30,
       unpublish: 30,
       state: 100,
@@ -287,6 +288,7 @@ export class Rooms {
         id: socket.data.id,
         name: data.name,
         online: true,
+        inCall: member?.inCall || false,
         lastSeen: Date.now(),
         publications: member?.publications || [],
         socketId: socket.id,
@@ -306,7 +308,16 @@ export class Rooms {
       await socket.leave(room.code);
       return {};
     }
+    if (action === "call") {
+      m.inCall = data.active;
+      if (!m.inCall)
+        for (const p of [...m.publications])
+          if (p.kind !== "screen") this.removePublication(room, p);
+      this.broadcast(room);
+      return {};
+    }
     if (action === "publish") {
+      if (data.kind !== "screen") m.inCall = true;
       let p = m.publications.find(
         (p) => p.kind === data.kind && p.key === data.key,
       );
@@ -351,20 +362,6 @@ export class Rooms {
       const own = [...room.subscriptions.values()].filter(
         (s) => s.viewer === m.id,
       );
-      if (
-        data.tier === "main" &&
-        p.kind === "screen" &&
-        own.filter(
-          (s) =>
-            s.tier === "main" &&
-            s.publication.kind === "screen" &&
-            s.publication.id !== p.id,
-        ).length >= 2
-      )
-        throw new Fault(
-          "SCREEN_LIMIT",
-          "Feche uma das duas telas antes de assistir a outra.",
-        );
       if (
         data.tier === "preview" &&
         own.filter((s) => s.tier === "preview" && s.publication.id !== p.id)

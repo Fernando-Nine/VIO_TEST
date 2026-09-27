@@ -5,7 +5,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { GripHorizontal, Pin, PinOff, Minus } from "lucide-react";
+import { GripHorizontal, Pin, PinOff, Minus, LayoutGrid } from "lucide-react";
 import {
   anchors,
   anchorPoint,
@@ -22,8 +22,14 @@ export function FloatingPeople({
   count,
   hidden,
   hide,
+  active,
+  toolbar,
+  arrange,
 }: {
-  children: ReactNode;
+  children: (visible: boolean) => ReactNode;
+  toolbar: ReactNode;
+  active: boolean;
+  arrange: (mode: "right" | "bottom") => void;
   count: number;
   hidden: boolean;
   hide: () => void;
@@ -32,7 +38,7 @@ export function FloatingPeople({
   const layer = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLElement>(null);
   const handle = useRef<HTMLButtonElement>(null);
-  const [anchor, setAnchor] = useState<Anchor>("top-right");
+  const [anchor, setAnchor] = useState<Anchor>("top-left");
   const [bounds, setBounds] = useState<Bounds>({
     width: 0,
     height: 0,
@@ -42,6 +48,7 @@ export function FloatingPeople({
   const [point, setPoint] = useState<Point | null>(null);
   const [target, setTarget] = useState<Anchor | null>(null);
   const [menu, setMenu] = useState(false);
+  const [organizing, setOrganizing] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const gesture = useRef<{
@@ -107,13 +114,13 @@ export function FloatingPeople({
       )}
       <section
         ref={panel}
-        className={`floating-people ${point ? "is-dragging" : ""} ${pinned ? "is-pinned" : ""} ${menu ? "has-menu" : ""}`}
+        className={`floating-people ${point ? "is-dragging" : ""} ${pinned ? "is-pinned" : ""} ${menu || organizing ? "has-menu" : ""}`}
         id="floating-participants"
-        aria-label="Pessoas na sala"
+        aria-label="Pessoas e telas"
         data-position={anchor}
         style={{
           transform: `translate(${position.x}px, ${position.y}px)`,
-          width: count < 3 ? 200 : 282,
+          width: 366,
         }}
       >
         <div className="floating-toolbar">
@@ -203,8 +210,17 @@ export function FloatingPeople({
           >
             <GripHorizontal size={16} aria-hidden="true" />
             <span>
-              {count} {count === 1 ? "pessoa" : "pessoas"}
+              Pessoas e telas <small>{count}</small>
             </span>
+          </button>
+          <button
+            className="cards-pin"
+            aria-label="Organizar telas"
+            aria-expanded={organizing}
+            onClick={() => setOrganizing(!organizing)}
+            title="Organizar telas"
+          >
+            <LayoutGrid size={15} />
           </button>
           <button
             className="cards-pin"
@@ -219,22 +235,45 @@ export function FloatingPeople({
           </button>
           <button
             className="cards-pin"
-            aria-label="Ocultar participantes"
-            title="Ocultar participantes"
+            aria-label="Ocultar pessoas e telas"
+            title="Ocultar pessoas e telas"
             onClick={hide}
           >
             <Minus size={16} />
           </button>
         </div>
+        {organizing && (
+          <div
+            className="screen-arrangements"
+            role="group"
+            aria-label="Organizar telas menores"
+          >
+            <span>Telas menores</span>
+            <button
+              onClick={() => {
+                arrange("right");
+                setOrganizing(false);
+              }}
+            >
+              À direita
+            </button>
+            <button
+              onClick={() => {
+                arrange("bottom");
+                setOrganizing(false);
+              }}
+            >
+              Embaixo
+            </button>
+          </div>
+        )}
+        {toolbar}
         <div
-          style={{
-            gridTemplateColumns: `repeat(${count < 3 ? 2 : 3}, minmax(0, 1fr))`,
-          }}
           className="people-strip"
           tabIndex={0}
-          aria-label="Cards dos participantes; role para ver todos"
+          aria-label="Pessoas e transmissões; role para ver todas"
         >
-          {children}
+          {children(!hidden && (active || pinned || menu || organizing))}
         </div>
         {menu && (
           <div

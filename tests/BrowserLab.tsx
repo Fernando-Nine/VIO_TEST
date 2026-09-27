@@ -1,3 +1,4 @@
+import { RoomSwitchLab } from "./RoomSwitchLab";
 import { useEffect, useRef, useState } from "react";
 import type { Root } from "react-dom/client";
 import { Controller } from "../src/client/room/controller";
@@ -388,7 +389,7 @@ export function BrowserLab() {
             >
               <option value="/">Entrada</option>
               <option value="/qa-layout">Sala sintética</option>
-              <option value="/qa-watch">Duas telas</option>
+              <option value="/qa-watch">Várias telas</option>
             </select>
           </label>
           <button
@@ -547,7 +548,9 @@ export async function mountLab(root: Root) {
   const config = await fetch("/api/config").then((r) => r.json());
   if (!config.testLab) throw new Error("Laboratório desabilitado.");
   root.render(
-    location.pathname === "/qa-layout" ? (
+    location.pathname === "/qa-switch" ? (
+      <RoomSwitchLab />
+    ) : location.pathname === "/qa-layout" ? (
       <LayoutLab />
     ) : location.pathname === "/qa-watch" ? (
       <WatchLab />

@@ -21,6 +21,7 @@ export const schemas = {
     })
     .strict(),
   leave: z.object({}).strict(),
+  call: z.object({ active: z.boolean() }).strict(),
   publish: z
     .object({
       kind: z.enum(kinds),
@@ -90,6 +91,7 @@ export interface Participant {
   id: string;
   name: string;
   online: boolean;
+  inCall: boolean;
   publications: Publication[];
 }
 export interface Snapshot {

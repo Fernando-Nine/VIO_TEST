@@ -17,7 +17,7 @@ import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
 import { ScreenPlayback } from "../media/screen-playback";
-import { watchScreen, unwatchScreen } from "./watching";
+import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -59,14 +59,17 @@ export class Controller {
   private listeners = new Set<() => void>();
   private session?: { token: string; id: string; expiresAt: number };
   private intent?: { name: string; code?: string };
-  private subscriptions = new Map<string, { nonce: string; id?: string }>();
+  private subscriptions = new Map<
+    string,
+    { nonce: string; id?: string; epoch?: string }
+  >();
   private ticker?: ReturnType<typeof setInterval>;
   private iceTimer?: ReturnType<typeof setTimeout>;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
   private captureQueue = Promise.resolve();
-  private reconciling = false;
+  private reconciling?: number;
   private reconcileAgain = false;
-  private joining = false;
+  private joinAttempt = 0;
   private generation = 0;
   private disposed = false;
   readonly playback = new ScreenPlayback();
@@ -75,6 +78,7 @@ export class Controller {
   private voicePending = false;
   private cameraPending = false;
   peopleHidden = false;
+  screenArrangement = { mode: "right" as "right" | "bottom", revision: 0 };
   fineAudio = false;
   private screenLevels = new Map<string, { volume: number; muted: boolean }>();
   sounds = true;
@@ -97,8 +101,13 @@ export class Controller {
   ) {
     this.captures = new Captures(adapter, (kind, ended) => {
       this.bump();
+      const generation = this.generation;
       this.captureQueue = this.captureQueue
-        .then(() => this.syncCapture(kind, ended))
+        .then(() =>
+          generation === this.generation
+            ? this.syncCapture(kind, ended)
+            : undefined,
+        )
         .catch((e) => this.fail(e));
     });
     this.peers = new Peers(
@@ -170,6 +179,11 @@ export class Controller {
     for (const listener of this.listeners) listener();
   }
   fail(error: unknown) {
+    if (
+      this.disposed ||
+      (error instanceof DOMException && error.name === "AbortError")
+    )
+      return;
     this.view.error = mediaError(error);
     this.bump();
   }
@@ -212,6 +226,7 @@ export class Controller {
     this.config = await response.json();
   }
   private async getSession(fresh = false) {
+    const generation = this.generation;
     if (!fresh && this.persist && !this.session)
       try {
         this.session =
@@ -227,7 +242,10 @@ export class Controller {
         throw new Error(
           "Não foi possível abrir uma sessão. Aguarde e tente novamente.",
         );
-      this.session = await res.json();
+      const session = await res.json();
+      if (generation !== this.generation)
+        throw new DOMException("Room changed", "AbortError");
+      this.session = session;
       this.storeSession();
     }
     return this.session!;
@@ -239,19 +257,25 @@ export class Controller {
       } catch {}
   }
   request<T = unknown>(action: Action, data: unknown = {}): Promise<T> {
+    const socket = this.socket,
+      generation = this.generation;
     return new Promise((resolve, reject) => {
-      if (!this.socket?.connected) {
+      if (!socket?.connected) {
         reject(
           new Error("Reconectando à sala. Aguarde para tentar esta ação."),
         );
         return;
       }
-      this.socket
+      socket
         .timeout(10000)
         .emit(
           "command",
           { action, data },
           (error: Error | null, reply: Reply<T>) => {
+            if (generation !== this.generation || socket !== this.socket) {
+              reject(new DOMException("Room changed", "AbortError"));
+              return;
+            }
             if (error)
               reject(
                 new Error("A sala demorou a responder. Tente reconectar."),
@@ -264,6 +288,10 @@ export class Controller {
     });
   }
   async enter(name: string, code?: string) {
+    if (this.disposed) return;
+    if (this.intent || this.socket) void this.leave();
+    const generation = ++this.generation;
+    const current = () => generation === this.generation && !this.disposed;
     if (this.sounds) this.cues.unlock();
     this.view.status = "connecting";
     this.view.error = "";
@@ -271,7 +299,9 @@ export class Controller {
     this.intent = { name, code: code?.trim().toUpperCase() || undefined };
     try {
       await this.initialize();
+      if (!current()) return;
       const session = await this.getSession();
+      if (!current()) return;
       this.view.id = session.id;
       this.socket?.removeAllListeners();
       this.socket?.disconnect();
@@ -311,6 +341,7 @@ export class Controller {
         this.bump();
       });
       socket.io.on("reconnect_failed", () => {
+        if (!current()) return;
         this.view.status = "failed";
         this.bump();
       });
@@ -340,6 +371,7 @@ export class Controller {
       clearInterval(this.ticker);
       this.ticker = setInterval(() => void this.heartbeat(), 10000);
     } catch (e) {
+      if (!current()) return;
       this.view.status = "failed";
       this.fail(e);
     }
@@ -347,10 +379,7 @@ export class Controller {
   private async newSession() {
     if (!this.intent) return;
     const intent = this.intent;
-    await this.getSession(true);
-    this.peers.closeAll();
-    this.publications.clear();
-    this.subscriptions.clear();
+    await this.leave();
     await this.enter(intent.name, intent.code);
   }
   async retry(newSession = false) {
@@ -365,15 +394,21 @@ export class Controller {
     }
   }
   private async rejoin() {
-    if (this.joining || !this.intent) return;
-    this.joining = true;
-    const generation = ++this.generation;
+    if (!this.intent) return;
+    const generation = this.generation,
+      attempt = ++this.joinAttempt,
+      socket = this.socket;
+    const current = () =>
+      generation === this.generation &&
+      attempt === this.joinAttempt &&
+      socket === this.socket &&
+      !!this.intent;
     try {
       const result = await this.request<{ id: string; snapshot: Snapshot }>(
         "join",
         this.intent,
       );
-      if (generation !== this.generation || !this.intent) return;
+      if (!current() || !this.intent) return;
       this.intent.code = result.snapshot.code;
       this.view.id = result.id;
       this.view.status = "connected";
@@ -382,9 +417,14 @@ export class Controller {
       this.view.notice = "";
       this.receiveSnapshot(result.snapshot);
       await this.refreshIce();
-      for (const kind of this.captures.sources.keys())
+      if (!current()) return;
+      if (this.inCall) await this.request("call", { active: true });
+      for (const kind of this.captures.sources.keys()) {
+        if (!current()) return;
         await this.syncCapture(kind);
+      }
       await this.reconcile();
+      if (!current()) return;
       this.peers.resume();
       this.bump();
       // So reescreve a barra de enderecos quando ela existe de verdade. Dentro
@@ -394,10 +434,9 @@ export class Controller {
         history.replaceState(null, "", url);
       }
     } catch (e) {
+      if (!current()) return;
       this.view.status = "failed";
       this.fail(e);
-    } finally {
-      this.joining = false;
     }
   }
   private receiveSnapshot(snapshot: Snapshot) {
@@ -434,6 +473,7 @@ export class Controller {
       this.captures.stop(kind);
       return;
     }
+    const generation = this.generation;
     const source = this.captures.sources.get(kind);
     const previous = this.publications.get(kind);
     if (!source || ended) {
@@ -472,6 +512,11 @@ export class Controller {
       audio: source.stream.getAudioTracks().length > 0,
       muted,
     });
+    if (
+      generation !== this.generation ||
+      this.captures.sources.get(kind) !== source
+    )
+      return;
     this.publications.set(kind, publication);
     await this.peers.update(kind);
     if (!previous && kind === "screen") this.chime(true);
@@ -482,8 +527,11 @@ export class Controller {
   }
   async refreshIce() {
     if (this.icePending) return this.icePending;
-    this.icePending = this.request<IceConfig>("ice")
+    const generation = this.generation;
+    const pending = this.request<IceConfig>("ice")
       .then((config) => {
+        if (generation !== this.generation)
+          throw new DOMException("Room changed", "AbortError");
         this.peers.ice = config;
         clearTimeout(this.iceTimer);
         this.iceTimer = setTimeout(
@@ -496,9 +544,10 @@ export class Controller {
         return config;
       })
       .finally(() => {
-        this.icePending = undefined;
+        if (this.icePending === pending) this.icePending = undefined;
       });
-    return this.icePending;
+    this.icePending = pending;
+    return pending;
   }
   async heartbeat() {
     if (this.view.status !== "connected") return;
@@ -548,18 +597,29 @@ export class Controller {
     this.peopleHidden = !this.peopleHidden;
     this.savePreferences();
   }
+  arrangeScreens(mode: "right" | "bottom") {
+    this.screenArrangement = {
+      mode,
+      revision: this.screenArrangement.revision + 1,
+    };
+    this.bump();
+  }
   joinCall() {
     if (this.inCall || !this.view.snapshot) return;
     this.callGeneration++;
     this.inCall = true;
+    void this.request("call", { active: true }).catch((e) => this.fail(e));
     this.captures.micMuted = true;
     this.captures.deaf = false;
     this.bump();
     void this.reconcile();
   }
   async leaveCall() {
+    void this.request("call", { active: false }).catch((e) => this.fail(e));
     this.callGeneration++;
     this.inCall = false;
+    this.voicePending = false;
+    this.cameraPending = false;
     this.captures.micMuted = true;
     this.captures.deaf = false;
     await Promise.all([this.stop("voice"), this.stop("camera")]);
@@ -581,6 +641,15 @@ export class Controller {
     this.view.selected = next.selected;
     this.bump();
     if (changed) void this.reconcile();
+  }
+  watchOnly(id: string) {
+    if (!this.screenCatalog.has(id)) return;
+    if (this.screenLevel(id).volume > 1) this.playback.unlock();
+    const next = watchOnlyScreen(this.view, id);
+    this.view.watching = next.watching;
+    this.view.selected = next.selected;
+    this.bump();
+    void this.reconcile();
   }
   stopWatching(id: string) {
     const next = unwatchScreen(this.view, id);
@@ -627,15 +696,17 @@ export class Controller {
     void this.reconcile();
   }
   private async reconcile() {
-    if (this.reconciling) {
+    const generation = this.generation;
+    if (this.reconciling === generation) {
       this.reconcileAgain = true;
       return;
     }
     if (this.view.status !== "connected" || !this.view.snapshot) return;
-    this.reconciling = true;
+    this.reconciling = generation;
     try {
       do {
         this.reconcileAgain = false;
+        const epoch = `${this.view.snapshot!.epoch}:${this.joinAttempt}`;
         for (const [id, since] of this.missingScreens)
           if (Date.now() - since >= 30000) this.stopWatching(id);
         const desired = new Map<
@@ -680,6 +751,7 @@ export class Controller {
                 () => {},
               );
             }
+            if (generation !== this.generation) return;
             this.subscriptions.delete(key);
           }
         }
@@ -690,27 +762,38 @@ export class Controller {
             intent = { nonce: freshKey() };
             this.subscriptions.set(key, intent);
           }
+          if (
+            intent.id &&
+            intent.epoch === epoch &&
+            this.peers.entries.has(intent.id)
+          )
+            continue;
           const sub = await this.request<Subscription>("subscribe", {
             ...data,
             nonce: intent.nonce,
           });
+          if (generation !== this.generation) return;
           intent.id = sub.id;
+          intent.epoch = epoch;
           await this.peers.accept(sub);
+          if (generation !== this.generation) return;
         }
       } while (this.reconcileAgain && this.view.status === "connected");
     } catch (e) {
-      if (this.view.status === "connected") this.fail(e);
+      if (generation === this.generation && this.view.status === "connected")
+        this.fail(e);
     } finally {
-      this.reconciling = false;
+      if (this.reconciling === generation) this.reconciling = undefined;
     }
   }
   async startScreen(audio: boolean) {
+    const generation = this.generation;
     if (this.sounds) this.cues.unlock();
     try {
       await this.captures.startScreen(audio);
       await this.captureQueue;
     } catch (e) {
-      this.fail(e);
+      if (generation === this.generation) this.fail(e);
     }
   }
   async microphone() {
@@ -726,7 +809,6 @@ export class Controller {
           generation !== this.callGeneration ||
           !this.captures.sources.has("voice")
         ) {
-          await this.stop("voice");
           return;
         }
         this.captures.micMuted = false;
@@ -737,9 +819,9 @@ export class Controller {
       this.savePreferences();
       await this.captureQueue;
     } catch (e) {
-      this.fail(e);
+      if (generation === this.callGeneration) this.fail(e);
     } finally {
-      this.voicePending = false;
+      if (generation === this.callGeneration) this.voicePending = false;
     }
   }
   deafen() {
@@ -757,14 +839,13 @@ export class Controller {
       if (this.captures.sources.has("camera")) this.captures.stop("camera");
       else {
         await this.captures.startCamera();
-        if (!this.inCall || generation !== this.callGeneration)
-          await this.stop("camera");
+        if (!this.inCall || generation !== this.callGeneration) return;
       }
       await this.captureQueue;
     } catch (e) {
-      this.fail(e);
+      if (generation === this.callGeneration) this.fail(e);
     } finally {
-      this.cameraPending = false;
+      if (generation === this.callGeneration) this.cameraPending = false;
     }
   }
   async stop(kind: Kind) {
@@ -816,12 +897,32 @@ export class Controller {
     clearInterval(this.ticker);
     clearTimeout(this.iceTimer);
     clearTimeout(this.reconnectTimer);
-    if (this.socket?.connected) await this.request("leave").catch(() => {});
-    this.socket?.removeAllListeners();
-    this.socket?.disconnect();
+    const socket = this.socket;
+    this.socket = undefined;
+    socket?.removeAllListeners();
+    socket?.io.removeAllListeners("reconnect_failed");
+    // Release the local room now; the old socket owns only its own acknowledgement.
+    if (socket?.connected)
+      socket
+        .timeout(1500)
+        .emit("command", { action: "leave", data: {} }, () =>
+          socket.disconnect(),
+        );
+    else socket?.disconnect();
+    this.session = undefined;
+    if (this.persist)
+      try {
+        sessionStorage.removeItem("vio:session");
+      } catch {}
+    this.icePending = undefined;
+    this.reconciling = undefined;
+    this.reconcileAgain = false;
+    this.captureQueue = Promise.resolve();
     this.captures.stopAll();
     this.callGeneration++;
     this.inCall = false;
+    this.voicePending = false;
+    this.cameraPending = false;
     this.captures.micMuted = true;
     this.captures.deaf = false;
     this.screenLevels.clear();

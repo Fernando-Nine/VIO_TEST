@@ -1,0 +1,18 @@
+{
+  "afterDelayedAck": {
+    "status": "connected",
+    "code": "QANOVA",
+    "id": "ee1f6aa7-0669-4851-b397-8fc7bcd5eb1e",
+    "connected": true,
+    "error": "",
+    "peers": 0
+  },
+  "afterDisconnectedLeave": {
+    "status": "connected",
+    "code": "QATERCEIRA",
+    "id": "d0f0e215-8086-496d-af42-b2327cd80262",
+    "connected": true,
+    "error": "",
+    "peers": 0
+  }
+}

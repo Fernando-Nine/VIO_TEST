@@ -1,7 +1,7 @@
 # VIO Windows — próximo ciclo
 
 Preparação em 26/09/2026, depois da versão web 2.4.0. O objetivo é um instalador
-Windows que compartilhe a janela escolhida com áudio WASAPI, preserve as duas telas
+Windows que compartilhe a janela escolhida com áudio WASAPI, preserve as múltiplas telas
 assistidas e ofereça uma janela flutuante com os controles da chamada.
 Este documento é a especificação de implementação; **não existe binário WASAPI
 entregue ou validado nesta versão**. Instalar a PWA não libera APIs Win32.

@@ -63,7 +63,7 @@ ocultação. A posição se adapta ao redimensionamento e à tela cheia.
 ## O que a interface oferece
 
 - Salas por código, sem conta e sem anfitrião. Sem teto por sala; a partir de seis pessoas, o “?” destaca o custo das conexões diretas.
-- Compartilhamento simultâneo de telas. Cada espectador escolhe quando assistir e pode manter duas telas abertas, com foco intercambiável.
+- Compartilhamento simultâneo de telas. Cada espectador escolhe quando assistir e pode manter várias telas abertas, com foco intercambiável.
 - Miniaturas ao vivo opcionais, desligadas por padrão, com iniciais no lugar do vídeo.
   Quando ligadas, até duas miniaturas visíveis são recebidas em baixa resolução, sem áudio.
 - Ajustes nas abas Vídeo e Áudio. Microfone com limiar de abertura separado do volume.
@@ -189,24 +189,30 @@ O arquivo anterior completo, preservado byte a byte, está em `docs/CHANGELOG-VI
 
 ## Assistir em conjunto
 
-Clique em **Assistir** numa transmissão disponível. A segunda oferece **Trocar foco**
-(substitui a principal) e **Em conjunto** (mantém ambas, com a segunda menor).
-Na tela menor, o botão de setas alterna o foco sem recriar conexões ou vídeos.
-Cada tela mantém volume e mute próprios; ensurdecer silencia todas.
-O X para de assistir apenas àquela tela. Ao encerrar a principal, a secundária
-já aberta assume o foco; novas transmissões continuam aguardando escolha.
-Com duas abertas, escolher uma terceira substitui só a principal.
+O painel **Pessoas e telas** reúne presença, chamada e transmissões. **Assistir** abre
+uma tela; **Em conjunto** acrescenta outras, sem o antigo limite de duas.
+**Focar** promove uma tela já aberta, preservando todas as conexões, vídeos e áudios.
+**Só esta** fecha as demais por escolha explícita. O X fecha somente aquela tela;
+se a principal terminar, uma das telas já abertas assume o foco.
 
-As duas telas assistidas recebem qualidade principal com áudio. Isso usa mais rede
-e processamento que assistir a uma. As miniaturas opcionais continuam leves,
-mudas e limitadas a duas; não são as telas abertas em conjunto.
+Arraste o nome das janelas menores para movê-las e o canto inferior para ajustar
+o tamanho. As setas do teclado também funcionam. O menu **Organizar tela** oferece
+barra de tamanho, três tamanhos prontos e seis posições por clique. No painel de
+pessoas, **Organizar telas** redistribui as janelas à direita ou embaixo.
+Posições são ajustadas aos limites da área útil quando a janela muda de tamanho.
+Nenhuma faixa lateral é reservada; o vídeo principal ocupa todo o player.
+
+Cada tela assistida usa qualidade principal com áudio e volume independente.
+Mais telas exigem mais rede e processamento; não há garantia de capacidade ilimitada.
+As prévias opcionais dos cartões continuam leves, mudas e limitadas a duas.
+A referência de interação está em [docs/MULTITELAS-UX.md](docs/MULTITELAS-UX.md).
 
 Degradês discretos seguem o azul da marca. Brilho no hover dos botões de ação e
 pequenos deslocamentos usam transform/opacity, sem dependências adicionais.
 
-## Controles da sala 2.4
+## Controles da sala 2.5
 
-O painel de participantes usa duas ou três colunas e altura limitada. Esconda pelo
+O painel de participantes usa duas colunas e altura limitada; com prévias, usa uma coluna mais ampla. Esconda pelo
 ícone de minimizar ou pelo botão Pessoas no dock; o mesmo botão restaura a grade.
 O aviso de carga continua informativo, com ícone circular discreto, sem limitar entradas.
 A marca VIO volta à entrada e encerra sua participação na sala.

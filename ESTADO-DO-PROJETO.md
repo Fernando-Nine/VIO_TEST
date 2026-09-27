@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Versão **2.4.1**, em 26/09/2026. Sistema reescrito do zero; o protótipo desta base
+Versão **2.5.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -59,6 +59,13 @@ Correções da 2.4.1: reprodução nativa das telas até 100%, faixas tardias no
 aos consumidores e ganho extra isolado com retorno ao áudio nativo em caso de falha.
 Setas dos seletores alinhadas à direita. Duas telas, volumes e foco preservados.
 
+Adições da 2.5.0: painel Pessoas e telas com presença explícita na chamada,
+filtros e seleção de transmissões. Várias telas assistidas, sem o teto de duas;
+janelas menores móveis, redimensionáveis, organização à direita/embaixo e controles
+por teclado/botão. Foco preserva os elementos e o áudio. Saída imediata com isolamento
+de respostas antigas e cancelamento de capturas pendentes. Confirmações repetidas
+de assinaturas deixam de ser enviadas enquanto a sala permanece na mesma conexão.
+
 ## O que foi comprovado
 
 Os resultados exatos, incluindo comandos, navegador e limitações do ambiente,
@@ -93,3 +100,22 @@ Aplicativo Windows instalável com WASAPI. Preparação em `docs/DESKTOP-WASAPI.
 com contrato de integração, ordem de implementação e critérios de teste físico.
 O instalador e a captura WASAPI não fazem parte do executável web 2.4.0 e ainda
 não foram implementados. A PWA atual não recebe acesso nativo por estar instalada.
+
+## Próxima atualização solicitada em 27/09/2026
+
+Concluir e publicar primeiro a 2.5.0 (troca de salas e múltiplas telas).
+Depois, trabalhar preferências do aplicativo: sons de entrada/saída, intensidade
+mais perceptível, habilitação por tipo de evento e volume geral; uma aba adequada
+nos Ajustes, deixando espaço para atalhos futuros da versão instalável.
+
+Personalização por participante na sala: presets rosa, amarelo, verde, anil, ciano,
+vermelho, roxo e laranja; opção adicional em círculo com +, entrada HEX e seletor
+visual de tonalidade. Aplicação opcional às bordas e indicadores de transmissão,
+controlada nas preferências de aparência. Explicar/substituir as cores de avatar
+hoje aparentando verde/amarelo. Preservar contraste, estado acessível e validação
+no servidor para a cor compartilhada. Ainda não implementado nesta versão.
+
+Segurança tem prioridade: a troca imediata não deve remover autenticação ou limites.
+O servidor já limita sessão, entrada e sockets por IP; revisão e teste de rotação
+incluídos na 2.5.0. Não aplicar teto global de cinco por IP sem considerar pessoas
+compartilhando a mesma rede.

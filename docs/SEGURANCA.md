@@ -46,3 +46,27 @@ instalados na data da consulta. Isso não prevê vulnerabilidades futuras.
 
 As decisões seguem os princípios de validar origem, autorizar mensagens, limitar
 payload e tráfego e evitar logs sensíveis da [OWASP para WebSocket](https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html).
+
+## Saída imediata e mudança de sala (2.5)
+
+A interface deixa de aguardar o ACK de saída, mas o servidor mantém as verificações.
+O socket anterior recebe apenas seu próprio pedido de saída e é desconectado após
+a resposta ou timeout de 1,5 s. Capturas e peers locais são encerrados imediatamente.
+Na saída explícita, a próxima entrada recebe nova sessão anônima; reconexões
+involuntárias preservam identidade e regras de recuperação.
+
+Rotacionar a sessão não renova os limites por IP: 30 emissões de sessão/minuto,
+40 tentativas de entrada/minuto, 60 handshakes/minuto e, por padrão, 20 sockets
+simultâneos por IP (configurável). Há também limites por identidade/ação e total de
+salas. Os limites são verificados no servidor. Um teste cobre emissão da 31ª sessão
+e a 41ª tentativa de entrada com cinco identidades diferentes no mesmo IP.
+
+Uma identidade continua restrita a uma sala; tokens assinados, verificação do socket
+do membro, dono de publicação/assinatura, origem e validação estrita permanecem.
+Após perda de rede, a presença antiga pode ficar offline durante o grace de 90 s;
+isso não mantém captura local nem uma conexão ativa da interface que saiu.
+
+Os limites são por IP, não prova de identidade humana. Redes compartilhadas dividem
+o orçamento; reduzi-lo globalmente para cinco bloquearia salas legítimas nessa rede.
+Não há promessa de impedir todo abuso distribuído. Esta atualização não desativa
+nenhuma proteção para tornar a troca mais rápida.

@@ -1,0 +1,119 @@
+{
+  "videos": [
+    {
+      "type": "video",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": false,
+      "liveAudio": true
+    },
+    {
+      "type": "audio",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": true,
+      "liveAudio": true
+    },
+    {
+      "type": "video",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": false,
+      "liveAudio": true
+    },
+    {
+      "type": "audio",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": true,
+      "liveAudio": true
+    },
+    {
+      "type": "video",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": false,
+      "liveAudio": true
+    },
+    {
+      "type": "audio",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": true,
+      "liveAudio": true
+    },
+    {
+      "type": "video",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": false,
+      "liveAudio": true
+    },
+    {
+      "type": "audio",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": true,
+      "liveAudio": true
+    },
+    {
+      "type": "video",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": false,
+      "liveAudio": true
+    },
+    {
+      "type": "audio",
+      "sameElement": true,
+      "sameStream": true,
+      "advancing": true,
+      "pauses": 0,
+      "playing": true,
+      "audible": true,
+      "liveAudio": true
+    }
+  ],
+  "sameSubscriptions": true,
+  "subscriptionCommandsSinceRecord": 0,
+  "focused": "5fhy0GwC_L-deDGsYYd1rFlcFNQu48zV",
+  "watching": [
+    "ZUtzrgxbBXTLEpzRkY1UcIvJD9DtJWvP",
+    "TxNEjUlTLY_ylMo3yqZirXKqxRaFS5M8",
+    "5fhy0GwC_L-deDGsYYd1rFlcFNQu48zV",
+    "E-boXefe-sSJyWIM3TU_eJqwoAfRg31B",
+    "x7BDxDTDIkIn85m0iaX1CewaDwa4XJE9"
+  ],
+  "inCall": false,
+  "micMuted": false,
+  "localSources": [],
+  "incomingVoice": 0,
+  "errors": ""
+}

@@ -1,0 +1,122 @@
+{
+  "phone": {
+    "width": 318,
+    "scrollWidth": 318,
+    "height": 842,
+    "scrollHeight": 842,
+    "playerHeight": 714,
+    "playerWidth": 306,
+    "playerLeft": 6,
+    "playerRightGap": 6,
+    "cardsInside": true,
+    "dockInside": true,
+    "cardOpacity": "1",
+    "watched": [
+      {
+        "label": "Tela de Ana, em foco",
+        "width": 304,
+        "height": 712,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Bia, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Caio, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Davi, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Eva, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      }
+    ]
+  },
+  "landscape": {
+    "width": 766,
+    "scrollWidth": 766,
+    "height": 388,
+    "scrollHeight": 388,
+    "playerHeight": 306,
+    "playerWidth": 742,
+    "playerLeft": 12,
+    "playerRightGap": 12,
+    "cardsInside": true,
+    "dockInside": true,
+    "cardOpacity": "1",
+    "watched": [
+      {
+        "label": "Tela de Ana, em foco",
+        "width": 740,
+        "height": 304,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Bia, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Caio, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Davi, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      },
+      {
+        "label": "Tela de Eva, em conjunto",
+        "width": 144,
+        "height": 81,
+        "inside": true,
+        "playing": true,
+        "muted": true,
+        "controlsInside": true
+      }
+    ]
+  }
+}

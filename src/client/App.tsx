@@ -13,7 +13,6 @@ import {
   PhoneOff,
   Maximize,
   PictureInPicture2,
-  AudioLines,
   Camera,
   CameraOff,
   Check,
@@ -24,7 +23,6 @@ import {
   LogOut,
   Mic,
   MicOff,
-  Monitor,
   MonitorUp,
   Pause,
   Settings2,
@@ -34,7 +32,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { Controller } from "./room/controller";
-import { Media, RemoteVoice, useSpeaking } from "./components/Media";
+import { RemoteVoice } from "./components/Media";
 import { Dialog } from "./components/Dialog";
 import { Settings } from "./components/Settings";
 import {
@@ -45,12 +43,11 @@ import {
 import { VolumeControl } from "./components/VolumeControl";
 import { usePictureInPicture } from "./media/picture-in-picture";
 import { ScreenStage } from "./components/ScreenStage";
-import { ScreenPicker } from "./components/ScreenPicker";
+import { ParticipantCard } from "./components/ParticipantCard";
 import { FloatingPeople } from "./components/FloatingPeople";
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
-import type { Participant } from "../shared/protocol";
 type Panel = "settings" | "people" | "about" | "share" | "history" | null;
 function Brand() {
   return (
@@ -58,69 +55,6 @@ function Brand() {
       vio
       <span className="brand-dot" />
     </span>
-  );
-}
-function Person({
-  person,
-  engine,
-}: {
-  person: Participant;
-  engine: Controller;
-}) {
-  const own = person.id === engine.view.id;
-  const voice = person.publications.find((p) => p.kind === "voice");
-  const camera = person.publications.find((p) => p.kind === "camera");
-  const screen = person.publications.some((p) => p.kind === "screen");
-  const stream = voice
-    ? own
-      ? engine.captures.sources.get("voice")?.stream
-      : engine.peers.stream(voice.id)
-    : undefined;
-  const level = useCallback(() => engine.captures.voiceLevel, [engine]);
-  const speaking = useSpeaking(
-    stream,
-    !!voice?.muted || !voice || !person.online,
-    own ? level : undefined,
-  );
-  const cameraStream = camera
-    ? own
-      ? engine.captures.sources.get("camera")?.stream
-      : engine.peers.stream(camera.id)
-    : undefined;
-  return (
-    <div
-      className={`person ${speaking ? "speaking" : ""} ${!person.online ? "offline" : ""}`}
-      aria-label={`${person.name}${speaking ? ", falando" : ""}`}
-    >
-      <div className="person-image">
-        {cameraStream ? (
-          <Media
-            stream={cameraStream}
-            className={own ? "mirrored" : ""}
-            label={`Câmera de ${person.name}`}
-          />
-        ) : (
-          <span className="initial">
-            {person.name.slice(0, 2).toUpperCase()}
-          </span>
-        )}
-        <span className={`voice-badge ${!voice || voice.muted ? "muted" : ""}`}>
-          {!voice || voice.muted ? (
-            <MicOff size={12} />
-          ) : (
-            <AudioLines size={12} />
-          )}
-        </span>
-      </div>
-      <div className="person-caption">
-        <span>
-          {person.name}
-          {own && <small> você</small>}
-        </span>
-        {screen && <Monitor size={13} className="live-text" />}
-      </div>
-      {!person.online && <small>Reconectando</small>}
-    </div>
   );
 }
 export default function App({ engine }: { engine: Controller }) {
@@ -132,6 +66,9 @@ export default function App({ engine }: { engine: Controller }) {
   );
   const [audio, setAudio] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [peopleFilter, setPeopleFilter] = useState<"all" | "screens" | "call">(
+    "all",
+  );
   const [active, setActive] = useState(true);
   const [full, setFull] = useState(false);
   const player = useRef<HTMLDivElement>(null);
@@ -403,13 +340,17 @@ export default function App({ engine }: { engine: Controller }) {
             )}
             {createPortal(
               <div
-                className={`player ${available.length > 0 ? "has-streams" : ""} ${engine.previewsEnabled ? "live-previews" : ""} ${watching ? "has-video" : ""}`}
+                className={`player ${engine.previewsEnabled ? "live-previews" : ""} ${watching ? "has-video" : ""}`}
                 ref={player}
               >
                 {watching ? (
                   <ScreenStage
                     engine={engine}
                     diagnostics={() => open("about")}
+                    onInteraction={(busy) => {
+                      draggingCards.current = busy;
+                      wake();
+                    }}
                   />
                 ) : (
                   <div className="player-empty">
@@ -424,7 +365,7 @@ export default function App({ engine }: { engine: Controller }) {
                     </h2>
                     <p>
                       {screens.length
-                        ? "Clique em Assistir para abrir uma transmissão. O áudio começa junto com ela."
+                        ? "Escolha uma transmissão em Pessoas e telas. Use Em conjunto para acompanhar mais telas."
                         : "Compartilhe uma aba, uma janela ou sua tela inteira."}
                     </p>
                     {!screens.length && !hasScreen && canShare && (
@@ -444,29 +385,37 @@ export default function App({ engine }: { engine: Controller }) {
                     )}
                   </div>
                 )}
-                {available.length > 0 && (
-                  <div
-                    className="stream-rail"
-                    role="region"
-                    aria-label="Transmissões disponíveis"
-                  >
-                    {available.map((p) => (
-                      <ScreenPicker
-                        key={p.id}
-                        publication={p}
-                        name={
-                          people.find((m) => m.id === p.owner)?.name ||
-                          "Participante"
-                        }
-                        engine={engine}
-                        visible={(active && !panel) || !watching}
-                        onVisible={previewVisible}
-                      />
-                    ))}
-                  </div>
-                )}
                 <FloatingPeople
                   count={people.length}
+                  active={(active && !panel) || !watching}
+                  arrange={(mode) => engine.arrangeScreens(mode)}
+                  toolbar={
+                    <div
+                      className="people-filters"
+                      role="group"
+                      aria-label="Filtrar pessoas"
+                    >
+                      {(
+                        [
+                          ["all", "Todos", people.length],
+                          ["screens", "Telas", screens.length],
+                          [
+                            "call",
+                            "Chamada",
+                            people.filter((p) => p.inCall).length,
+                          ],
+                        ] as const
+                      ).map(([filter, label, count]) => (
+                        <button
+                          key={filter}
+                          aria-pressed={peopleFilter === filter}
+                          onClick={() => setPeopleFilter(filter)}
+                        >
+                          {label} <small>{count}</small>
+                        </button>
+                      ))}
+                    </div>
+                  }
                   hidden={engine.peopleHidden}
                   hide={() => engine.togglePeople()}
                   onInteraction={(busy) => {
@@ -474,15 +423,51 @@ export default function App({ engine }: { engine: Controller }) {
                     wake();
                   }}
                 >
-                  {people.map((person) => (
-                    <Person key={person.id} person={person} engine={engine} />
-                  ))}
-                  <button className="invite-seat" onClick={() => void copy()}>
-                    <span>
-                      <Users size={22} />
-                    </span>
-                    <small>Tem lugar aqui</small>
-                  </button>
+                  {(visible) => (
+                    <>
+                      {people
+                        .filter(
+                          (person) =>
+                            peopleFilter === "all" ||
+                            (peopleFilter === "call"
+                              ? person.inCall
+                              : person.publications.some(
+                                  (p) => p.kind === "screen",
+                                )),
+                        )
+                        .map((person) => (
+                          <ParticipantCard
+                            key={person.id}
+                            person={person}
+                            engine={engine}
+                            visible={visible}
+                            onVisible={previewVisible}
+                          />
+                        ))}
+                      {peopleFilter !== "all" &&
+                        !people.some((person) =>
+                          peopleFilter === "call"
+                            ? person.inCall
+                            : person.publications.some(
+                                (p) => p.kind === "screen",
+                              ),
+                        ) && (
+                          <p className="people-empty">
+                            {peopleFilter === "call"
+                              ? "Ninguém na chamada ainda."
+                              : "Nenhuma tela compartilhada."}
+                          </p>
+                        )}
+                      {peopleFilter === "all" && (
+                        <button
+                          className="people-invite"
+                          onClick={() => void copy()}
+                        >
+                          <Users size={15} /> Convidar para a sala
+                        </button>
+                      )}
+                    </>
+                  )}
                 </FloatingPeople>
                 <footer
                   ref={dock}
@@ -618,23 +603,31 @@ export default function App({ engine }: { engine: Controller }) {
                   )}
                   <div className="dock-group">
                     <button
-                      className="dock-button"
+                      className="dock-button people-toggle"
                       aria-label={
                         engine.peopleHidden
-                          ? "Mostrar participantes"
-                          : "Ocultar participantes"
+                          ? "Mostrar pessoas e telas"
+                          : "Ocultar pessoas e telas"
                       }
                       aria-expanded={!engine.peopleHidden}
                       aria-controls="floating-participants"
                       title={
                         engine.peopleHidden
-                          ? "Mostrar participantes"
-                          : "Ocultar participantes"
+                          ? "Mostrar pessoas e telas"
+                          : "Ocultar pessoas e telas"
                       }
                       onClick={() => engine.togglePeople()}
                     >
                       <Users />
-                      <span>Pessoas</span>
+                      <span>Pessoas e telas</span>
+                      {available.length > 0 && (
+                        <small
+                          className="available-count"
+                          aria-label={`${available.length} transmissões disponíveis`}
+                        >
+                          {available.length}
+                        </small>
+                      )}
                     </button>
                     <button
                       className="dock-button"

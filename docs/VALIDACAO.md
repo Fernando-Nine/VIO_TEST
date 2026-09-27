@@ -1,5 +1,38 @@
 # VIO — validação
 
+
+## Atualização 2.5.0 — 27/09/2026
+
+34 testes automatizados aprovados: seis assinaturas principais simultâneas,
+IDs estáveis, remoção independente, presença na chamada sem microfone, isolamento
+de comandos, limites por IP mesmo com rotação de identidades e geometria de janelas
+em desktop/celular. Build e TypeScript estrito aprovados.
+
+Chrome 151, WatchLab: cinco vídeos sintéticos com seus cinco áudios, sinalização
+real e alimentação local deliberada para testar o player. Foco, teclas de movimento,
+redimensionamento e presets mantiveram os dez elementos e streams idênticos,
+reprodução avançando, zero pausas e zero comandos novos de assinatura. Todos os
+áudios estavam tocando e não mudos. Arraste pelo ponteiro mudou a posição da janela.
+O teste continua sem comprovar transporte de áudio/vídeo entre dispositivos físicos.
+
+RoomSwitchLab: primeira sala aceita pelo servidor, com ACK de entrada retido;
+saída e entrada na segunda sem liberar o ACK. Liberar a resposta antiga manteve a
+segunda conectada. Repetido após desconectar a sinalização antes da saída: terceira
+sala conectou com nova sessão, sem erro. Capturas/peers da sala anterior são limpos.
+
+ScreenAudioLab: os seis cenários de reprodução direta, faixa tardia, volume, mute,
+ganho 3×, suspensão/falha do amplificador e limpeza continuam aprovados.
+
+Layout: cinco telas dentro da área útil, sem rolagem externa, em 320 × 844 e
+768 × 390; orientação menor recalcula as posições. Medições finais coletadas após
+estabilizar a transição. Controles e painel permanecem dentro do player.
+
+Evidências: `evidence/multiscreen-2.5.0.json`, `evidence/room-switch-2.5.0.json`,
+`evidence/layout-2.5.0.json`, `evidence/audio-2.5.0.txt`, `evidence/tests-2.5.0.txt`
+e `evidence/build-2.5.0.txt`. Decisões de interação: `MULTITELAS-UX.md`.
+Limitações: áudio físico, iPhone/Safari, TURN entre redes reais e continuidade de
+mídia durante reinício remoto ainda exigem ensaio com aparelhos reais.
+
 ## Correção 2.4.1 — 26/09/2026
 
 Regressão reproduzida no componente real: associar um MediaStream vazio antes de

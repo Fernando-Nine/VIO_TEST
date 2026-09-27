@@ -31,13 +31,17 @@ export function WatchLab() {
   );
   async function prepare() {
     setBusy(true);
-    const sources = ["Ana", "Bia", "Caio", "Você"].map((name, i) =>
-      syntheticAdapter(name, ["#252768", "#234b56", "#51334c", "#2727f5"][i]),
+    const sources = ["Ana", "Bia", "Caio", "Davi", "Eva", "Você"].map(
+      (name, i) =>
+        syntheticAdapter(
+          name,
+          ["#252768", "#234b56", "#51334c", "#343e70", "#394437", "#2727f5"][i],
+        ),
     );
     const rooms = sources.map(
       (source) => new Controller(source.adapter, false),
     );
-    publishers.current = rooms.slice(0, 3);
+    publishers.current = rooms.slice(0, 5);
     cleanup.current = async () => {
       await Promise.all(rooms.map((room) => room.destroy()));
       sources.forEach((s) => s.dispose());
@@ -47,17 +51,20 @@ export function WatchLab() {
         "PAIR" + freshKey().replaceAll("-", "").slice(0, 10).toUpperCase();
       for (const [i, room] of rooms.entries()) {
         room.sounds = false;
-        await room.enter(["Ana", "Bia", "Caio", "Você"][i], code);
+        await room.enter(
+          ["Ana", "Bia", "Caio", "Davi", "Eva", "Você"][i],
+          code,
+        );
       }
       const start = Date.now();
       while (!rooms.every((room) => room.view.status === "connected")) {
         if (Date.now() - start > 15000) throw new Error("Sala não conectou");
         await new Promise((r) => setTimeout(r, 100));
       }
-      for (const room of rooms.slice(0, 3)) await room.startScreen(true);
+      for (const room of rooms.slice(0, 5)) await room.startScreen(true);
       rooms[0].joinCall();
       await rooms[0].microphone();
-      const viewer = rooms[3];
+      const viewer = rooms[5];
       const originalStream = viewer.peers.stream.bind(viewer.peers);
       viewer.peers.stream = (id, tier = "main") => {
         const owner = rooms.find((room) =>
@@ -211,9 +218,9 @@ export function WatchLab() {
     </>
   ) : (
     <main className="lab">
-      <h1>Ensaio de duas telas</h1>
+      <h1>Ensaio de várias telas</h1>
       <p>
-        Quatro sessões; três vídeos sintéticos com áudio. Nenhum dispositivo
+        Seis sessões; cinco vídeos sintéticos com áudio. Nenhum dispositivo
         pessoal é capturado.
       </p>
       <button
@@ -221,7 +228,7 @@ export function WatchLab() {
         disabled={busy}
         onClick={() => void prepare()}
       >
-        Preparar duas telas
+        Preparar várias telas
       </button>
       <pre>{report}</pre>
     </main>

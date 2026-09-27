@@ -52,6 +52,7 @@ export class Peers {
   forceRelay = false;
   private statsTimer: ReturnType<typeof setInterval>;
   private collecting = false;
+  private generation = 0;
   constructor(
     private me: () => string,
     private captures: Captures,
@@ -86,7 +87,12 @@ export class Peers {
     return peer.queue;
   }
   async accept(sub: Subscription) {
-    if (this.ice.expiresAt < Date.now()) this.ice = await this.freshIce();
+    const generation = this.generation;
+    if (this.ice.expiresAt < Date.now()) {
+      const ice = await this.freshIce();
+      if (generation !== this.generation) return;
+      this.ice = ice;
+    }
     const existing = this.entries.get(sub.id);
     if (existing) {
       if (existing.pc.connectionState === "failed") this.recover(existing);
@@ -461,6 +467,7 @@ export class Peers {
     }
   }
   closeAll() {
+    this.generation++;
     for (const id of [...this.entries.keys()]) this.close(id);
   }
   destroy() {

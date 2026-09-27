@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 export function Dialog({
   title,
@@ -10,16 +10,21 @@ export function Dialog({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const el = ref.current;
+    const previous = el?.ownerDocument.activeElement as HTMLElement | null;
     el?.showModal();
-    return () => el?.close();
+    return () => {
+      el?.close();
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
   }, []);
   return (
     <dialog
       ref={ref}
       className="sheet"
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         close();
@@ -30,7 +35,7 @@ export function Dialog({
     >
       <div className="sheet-content">
         <header>
-          <h2 id="dialog-title">{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button
             aria-label="Fechar painel"
             className="icon-button"

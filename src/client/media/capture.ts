@@ -87,6 +87,7 @@ export class Captures {
     video: HTMLVideoElement;
     timer: ReturnType<typeof setInterval>;
   };
+  private generation = { screen: 0, voice: 0, camera: 0 };
   private thumbnailPending?: Promise<MediaStream>;
   constructor(
     private adapter: CaptureAdapter = browserCapture,
@@ -116,7 +117,12 @@ export class Captures {
   }
   async startScreen(audio: boolean) {
     if (this.sources.has("screen")) return;
+    const generation = ++this.generation.screen;
     const stream = await this.adapter.screen(audio);
+    if (generation !== this.generation.screen) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     for (const track of stream.getAudioTracks()) {
       try {
         await mediaDeadline(
@@ -131,6 +137,10 @@ export class Captures {
         this.audioMessage =
           "O navegador não aceitou todos os ajustes de processamento de áudio.";
       }
+    }
+    if (generation !== this.generation.screen) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
     }
     const hasAudio = stream.getAudioTracks().length > 0;
     const surface = stream.getVideoTracks()[0]?.getSettings().displaySurface;
@@ -295,6 +305,7 @@ export class Captures {
     this.changed("voice");
   }
   async startCamera(deviceId = this.cameraDevice, facing = this.facing) {
+    const generation = ++this.generation.camera;
     const stream = await this.adapter.device({
       video: {
         width: { ideal: 640 },
@@ -306,6 +317,10 @@ export class Captures {
       },
       audio: false,
     });
+    if (generation !== this.generation.camera) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     this.cameraDevice = deviceId;
     this.facing = facing;
     this.save("camera", stream);
@@ -391,6 +406,7 @@ export class Captures {
     }
   }
   stop(kind: Kind) {
+    this.generation[kind]++;
     const source = this.sources.get(kind);
     this.sources.delete(kind);
     source?.stream.getTracks().forEach((t) => t.stop());
@@ -411,6 +427,6 @@ export class Captures {
     this.changed(kind, true);
   }
   stopAll() {
-    for (const kind of [...this.sources.keys()]) this.stop(kind);
+    for (const kind of ["screen", "voice", "camera"] as const) this.stop(kind);
   }
 }
