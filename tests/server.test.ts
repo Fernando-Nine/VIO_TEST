@@ -464,7 +464,7 @@ test("origem de casca nativa é aceita sem afrouxar a regra da web", async () =>
       PORT: "0",
       SESSION_SECRET: secret,
       ALLOWED_ORIGINS: origin,
-      ALLOWED_APP_ORIGINS: `${app},http://tauri.localhost`,
+      ALLOWED_APP_ORIGINS: `${app},http://tauri.localhost,https://tauri.localhost`,
       STUN_URLS: "",
     }),
   );
@@ -478,7 +478,24 @@ test("origem de casca nativa é aceita sem afrouxar a regra da web", async () =>
         ...(origem ? { headers: { Origin: origem } } : {}),
       });
 
-    assert.equal((await abrir(app)).status, 200, "casca nativa deve entrar");
+    const nativeSession = await abrir(app);
+    assert.equal(nativeSession.status, 200, "casca nativa deve entrar");
+    assert.equal(nativeSession.headers.get("Access-Control-Allow-Origin"), app);
+    const windowsSession = await abrir("https://tauri.localhost");
+    assert.equal(windowsSession.status, 200);
+    assert.equal(
+      windowsSession.headers.get("Access-Control-Allow-Origin"),
+      "https://tauri.localhost",
+    );
+    const nativeConfig = await fetch(url + "/api/config", {
+      headers: { Origin: "https://tauri.localhost" },
+    });
+    assert.equal(
+      nativeConfig.headers.get("Access-Control-Allow-Origin"),
+      "https://tauri.localhost",
+    );
+    const deniedCors = await abrir("https://evil.example");
+    assert.equal(deniedCors.headers.get("Access-Control-Allow-Origin"), null);
     assert.equal(
       (await abrir("http://tauri.localhost")).status,
       200,

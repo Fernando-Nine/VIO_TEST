@@ -1,10 +1,15 @@
-# VIO Windows — próximo ciclo
+# VIO Windows — contrato de captura
+
+Atualização de 28/09/2026: implementação da prévia nativa em `src-tauri/` e
+`src/client/desktop/`; build e instalador em `.github/workflows/windows.yml`.
+Consulte [o guia Windows](WINDOWS.md) para o estado de validação e os passos de uso.
+O restante deste documento preserva o contrato que orienta a implementação.
 
 Preparação em 26/09/2026, depois da versão web 2.4.0. O objetivo é um instalador
 Windows que compartilhe a janela escolhida com áudio WASAPI, preserve as múltiplas telas
 assistidas e ofereça uma janela flutuante com os controles da chamada.
-Este documento é a especificação de implementação; **não existe binário WASAPI
-entregue ou validado nesta versão**. Instalar a PWA não libera APIs Win32.
+Instalar a PWA não libera APIs Win32. A prova física do WASAPI no Windows continua
+sendo condição para anunciar a versão desktop como estável.
 
 ## Base já disponível
 
@@ -13,7 +18,7 @@ React/TypeScript, sinalização Render e protocolo de publicações permanecem.
 de microfone/câmera. A captura nativa deve respeitar essa interface, o evento ended
 e o encerramento das trilhas. As capacidades de captura agora vêm do adapter.
 `VITE_API_BASE`, `VITE_WEB_URL` e `ALLOWED_APP_ORIGINS` já separam servidor, convite
-web e origem da aplicação. Nenhuma origem nativa foi liberada no Render nesta etapa.
+web e origem da aplicação. A prévia usa somente `https://tauri.localhost`.
 
 O host estável do player já permite transportar vídeo e controles para uma janela
 Document PiP no navegador. No aplicativo nativo, reutilizar a apresentação e o

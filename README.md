@@ -17,6 +17,10 @@ a mudança de sistema e continua a numeração após a 1.9.0. Consulte [o estado
 
 ## Executar
 
+Para a prévia instalável **Windows 11 x64 / WASAPI**, consulte
+[docs/WINDOWS.md](docs/WINDOWS.md). A interface web permanece em 2.6.0; o host
+desktop é 2.7.0-beta.1, com validação física de áudio pendente.
+
 ```bash
 npm ci
 cp .env.example .env

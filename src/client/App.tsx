@@ -49,7 +49,9 @@ import { ParticipantCard } from "./components/ParticipantCard";
 import { FloatingPeople } from "./components/FloatingPeople";
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
-import { invite } from "./endpoint";
+import { api, invite } from "./endpoint";
+import { desktop } from "./desktop/bridge";
+import { NativeShare } from "./desktop/NativeShare";
 type Panel = "settings" | "people" | "about" | "share" | "history" | null;
 function Brand() {
   return (
@@ -689,7 +691,7 @@ export default function App({ engine }: { engine: Controller }) {
           by <strong>NerdQuest Studios</strong> · fundado por Nine
         </span>
         <button onClick={() => open("history")} className="version">
-          v{version}
+          v{desktop ? import.meta.env.VITE_DESKTOP_VERSION : version}
           <ArrowUpRight size={12} />
         </button>
       </footer>
@@ -707,7 +709,10 @@ export default function App({ engine }: { engine: Controller }) {
           close={() => open(null)}
         >
           {panel === "settings" && <Settings engine={engine} />}
-          {panel === "share" && (
+          {panel === "share" && desktop && (
+            <NativeShare engine={engine} close={() => open(null)} />
+          )}
+          {panel === "share" && !desktop && (
             <>
               <div className="share-intro">
                 <MonitorUp size={32} />
@@ -891,7 +896,7 @@ export default function App({ engine }: { engine: Controller }) {
               {engine.captures.audioMessage && (
                 <p className="field-note">{engine.captures.audioMessage}</p>
               )}
-              <a className="text-button" href="/source.tar.gz" download>
+              <a className="text-button" href={api("/source.tar.gz")} download>
                 Código-fonte · AGPLv3 <ArrowUpRight size={15} />
               </a>
             </>
@@ -936,7 +941,7 @@ export default function App({ engine }: { engine: Controller }) {
                 Nova base do VIO. As evidências de teste e os limites desta
                 entrega estão na documentação do código-fonte.
               </p>
-              <a className="text-button" href="/source.tar.gz" download>
+              <a className="text-button" href={api("/source.tar.gz")} download>
                 Baixar código-fonte <ArrowUpRight size={15} />
               </a>
             </>

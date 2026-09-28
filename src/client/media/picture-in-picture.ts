@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { desktop, nativeInvoke } from "../desktop/bridge";
 
 type DocumentPip = {
   requestWindow(options: { width: number; height: number }): Promise<Window>;
@@ -11,11 +12,17 @@ export function usePictureInPicture() {
   const restore = useRef<() => void>(() => {});
   const [detached, setDetached] = useState(false);
   const [native, setNative] = useState(false);
+  const compact = useRef(false);
+  const [desktopCompact, setDesktopCompact] = useState(false);
   const api = (window as Window & { documentPictureInPicture?: DocumentPip })
     .documentPictureInPicture;
-  const supported = !!api || !!document.pictureInPictureEnabled;
+  const supported = desktop || !!api || !!document.pictureInPictureEnabled;
   const close = useCallback(() => {
     generation.current++;
+    if (desktop && (compact.current || opening.current))
+      void nativeInvoke("desktop_compact", { enabled: false }).catch(() => {});
+    compact.current = false;
+    setDesktopCompact(false);
     const pip = active.current;
     restore.current();
     pip?.close();
@@ -37,6 +44,23 @@ export function usePictureInPicture() {
   }, []);
   async function toggle(host: HTMLElement, video: HTMLVideoElement | null) {
     if (opening.current) return;
+    if (desktop) {
+      const attempt = ++generation.current;
+      const enabled = !compact.current;
+      opening.current = true;
+      try {
+        await nativeInvoke("desktop_compact", { enabled });
+        if (attempt !== generation.current) {
+          await nativeInvoke("desktop_compact", { enabled: false });
+          return;
+        }
+        compact.current = enabled;
+        setDesktopCompact(enabled);
+      } finally {
+        opening.current = false;
+      }
+      return;
+    }
     if (active.current || document.pictureInPictureElement) {
       close();
       return;
@@ -112,9 +136,9 @@ export function usePictureInPicture() {
   }
   return {
     supported,
-    interactive: !!api,
+    interactive: desktop || !!api,
     detached,
-    active: detached || native,
+    active: detached || native || desktopCompact,
     toggle,
     close,
   };

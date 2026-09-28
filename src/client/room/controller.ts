@@ -860,6 +860,7 @@ export class Controller {
       await this.captures.startScreen(audio);
       await this.captureQueue;
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       if (generation === this.generation) this.fail(e);
     }
   }

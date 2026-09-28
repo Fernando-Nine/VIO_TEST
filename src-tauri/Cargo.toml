@@ -1,0 +1,26 @@
+[package]
+name = "vio-desktop"
+version = "2.7.0-beta.1"
+description = "VIO para Windows com captura de áudio WASAPI"
+authors = ["NerdQuest Studios"]
+license = "AGPL-3.0-only"
+edition = "2021"
+rust-version = "1.85"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+cc = "1"
+
+[target.'cfg(windows)'.dependencies]
+tauri = { version = "2", default-features = false, features = ["wry", "compression", "common-controls-v6"] }
+serde = { version = "1", features = ["derive"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

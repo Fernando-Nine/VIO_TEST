@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
+import { desktop } from "../desktop/bridge";
 interface InstallPrompt extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -25,7 +26,7 @@ export function InstallApp() {
       window.removeEventListener("appinstalled", done);
     };
   }, []);
-  if (installed) return null;
+  if (installed || desktop) return null;
   return (
     <details className="install-app">
       <summary>

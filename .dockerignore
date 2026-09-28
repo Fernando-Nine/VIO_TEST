@@ -7,3 +7,5 @@ dist
 test-results
 *.log
 .sites-runtime
+src-tauri/target
+src-tauri/gen

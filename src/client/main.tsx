@@ -4,6 +4,9 @@ import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource/ibm-plex-mono/400.css";
 import App from "./App";
 import { Controller } from "./room/controller";
+import { desktop } from "./desktop/bridge";
+import { windowsCapture } from "./desktop/capture";
+import "./desktop/desktop.css";
 import "./styles.css";
 import "./landing.css";
 import "./room.css";
@@ -12,7 +15,7 @@ import "./multiscreen.css";
 import "./preferences.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
-const engine = new Controller();
+const engine = new Controller(desktop ? windowsCapture : undefined);
 if (
   import.meta.env.DEV &&
   ["/qa", "/qa-layout", "/qa-watch", "/qa-switch"].includes(location.pathname)
@@ -22,7 +25,7 @@ if (
     .catch(() => root.render(<App engine={engine} />));
 else root.render(<App engine={engine} />);
 const unregister = registerRoomTools(engine);
-if (import.meta.env.PROD && "serviceWorker" in navigator)
+if (import.meta.env.PROD && !desktop && "serviceWorker" in navigator)
   window.addEventListener(
     "load",
     () => {

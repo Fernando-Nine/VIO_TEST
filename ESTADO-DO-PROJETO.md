@@ -14,6 +14,13 @@ VIO e VIO_2 estão fora do escopo de alterações e não foram alterados.
 
 ## Implementado
 
+Preparação desktop em 28/09/2026: Tauri 2, módulo C++ WASAPI por processo,
+ponte PCM binária/AudioWorklet, seletor explícito de aplicativo, janela compacta
+com controles existentes e workflow Windows para instalador NSIS x64.
+Código em `feat/windows-wasapi`; versão nativa 2.7.0-beta.1. Prova física de captura
+e instalação em Windows continua pendente; não é uma versão desktop estável.
+Veja [o guia de compilação e validação](docs/WINDOWS.md).
+
 Servidor Node/Express/Socket.IO, contratos TypeScript, sessões assinadas, salas e
 presença, assinaturas seletivas de tela, captura de tela/voz/câmera, miniatura reduzida
 na origem, controles de qualidade e reprodução, mute/ensurdecer, troca de dispositivos,
