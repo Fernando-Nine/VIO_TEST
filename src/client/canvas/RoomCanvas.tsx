@@ -14,6 +14,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/react";
 import { Accessibility, Feedback } from "@dnd-kit/dom";
+import { Rectangle } from "@dnd-kit/geometry";
 import {
   ArrowDown,
   ArrowUp,
@@ -41,6 +42,7 @@ import {
 import { floatingBox, useCanvasGeometry } from "./geometry";
 import { useStripInput } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
+import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
 
 const plugins = (
@@ -191,6 +193,11 @@ export function RoomCanvas(props: Props) {
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
   );
+  const dragOrigin = useRef<{
+    box: Rectangle;
+    initial: Point;
+    point: Point;
+  } | null>(null);
   const [announcement, announce] = useState("");
   const [roving, setRoving] = useState<string | null>(null);
   const [newInStrip, setNewInStrip] = useState(0);
@@ -498,6 +505,10 @@ export function RoomCanvas(props: Props) {
   const currentFloat = state.floating.find((f) => f.widgetId === organizing);
   const visibleSlots =
     geometry.bounds.width < 380 ? 1 : geometry.bounds.width < 680 ? 2 : 3;
+  const dropSlots = state.slots.flatMap((slot) => {
+    const box = geometry.slots.get(slot.id);
+    return box?.visible && !slot.offer ? [{ ...box, id: slot.id }] : [];
+  });
 
   return (
     <div className="room-canvas">
@@ -577,25 +588,83 @@ export function RoomCanvas(props: Props) {
       </div>
       <DragDropProvider
         plugins={plugins}
-        onDragStart={(event) => {
+        onDragStart={(event, manager) => {
           const id = String(event.operation.source?.id || "");
+          const rect = event.operation.source?.element?.getBoundingClientRect();
+          if (!rect) return;
+          const initial = { ...event.operation.position.initial };
+          const box = Rectangle.from(rect);
+          dragOrigin.current = { box, initial, point: initial };
+          // Feedback "none" keeps media hosts stable, but also omits dnd-kit's
+          // geometry. Supply it explicitly for collision and keyboard sensors.
+          manager.dragOperation.shape = box;
           setDrag({ id, x: 0, y: 0 });
           props.interaction(true);
         }}
-        onDragMove={(event) =>
-          setDrag(
-            (current) =>
-              current && { ...current, ...event.operation.transform },
-          )
-        }
+        onDragMove={(event, manager) => {
+          const origin = dragOrigin.current;
+          const base = root.current?.getBoundingClientRect();
+          if (!origin || !base) return;
+          // dragmove runs before the library updates position/transform. Use
+          // the event's requested coordinates, not its previous snapshot.
+          let point = event.to || {
+            x: origin.point.x + (event.by?.x || 0),
+            y: origin.point.y + (event.by?.y || 0),
+          };
+          const native = event.nativeEvent;
+          if (
+            native &&
+            "key" in native &&
+            !state.freeMovement &&
+            !state.single
+          ) {
+            const target = adjacentDropSlot(
+              { x: origin.point.x - base.left, y: origin.point.y - base.top },
+              String(native.key),
+              dropSlots,
+            );
+            point = target
+              ? {
+                  x: base.left + target.x + target.width / 2,
+                  y: base.top + target.y + target.height / 2,
+                }
+              : origin.point;
+            event.preventDefault();
+            manager.actions.move({ to: point, propagate: false });
+          }
+          origin.point = point;
+          const x = point.x - origin.initial.x,
+            y = point.y - origin.initial.y;
+          manager.dragOperation.shape = new Rectangle(
+            origin.box.left + x,
+            origin.box.top + y,
+            origin.box.width,
+            origin.box.height,
+          );
+          setDrag({ id: String(event.operation.source?.id || ""), x, y });
+        }}
         onDragEnd={(event) => {
-          const id = String(event.operation.source?.id || ""),
-            target = event.operation.target?.id;
-          if (!event.canceled && id) {
-            if (target && !state.freeMovement) {
-              store.reorder(id, String(target));
+          const id = String(event.operation.source?.id || "");
+          const origin = dragOrigin.current;
+          const base = root.current?.getBoundingClientRect();
+          if (!event.canceled && id && origin && base) {
+            const native = event.nativeEvent;
+            const point =
+              native && "clientX" in native && "clientY" in native
+                ? { x: Number(native.clientX), y: Number(native.clientY) }
+                : origin.point;
+            const target = dropSlotAt(
+              { x: point.x - base.left, y: point.y - base.top },
+              dropSlots,
+              geometry.bounds,
+            );
+            if (target && !state.freeMovement && !state.single) {
+              store.reorder(id, target.id);
               announce("Widget encaixado na posição escolhida.");
-            } else {
+            } else if (
+              state.freeMovement ||
+              state.floating.some((f) => f.widgetId === id)
+            ) {
               const floating = state.floating.find((f) => f.widgetId === id);
               const slot = state.slots.find((s) => s.widgetId === id);
               const box = floating
@@ -606,17 +675,22 @@ export function RoomCanvas(props: Props) {
                   id,
                   fitted({
                     x:
-                      (box.x + event.operation.transform.x) /
+                      (box.x + point.x - origin.initial.x) /
                       geometry.bounds.width,
                     y:
-                      (box.y + event.operation.transform.y) /
+                      (box.y + point.y - origin.initial.y) /
                       geometry.bounds.height,
                     width: Math.min(0.8, box.width / geometry.bounds.width),
                     height: Math.min(0.8, box.height / geometry.bounds.height),
                   }),
                 );
+            } else {
+              announce(
+                "Solte sobre um espaço para encaixar. O widget manteve sua posição.",
+              );
             }
           }
+          dragOrigin.current = null;
           setDrag(null);
           props.interaction(false);
         }}

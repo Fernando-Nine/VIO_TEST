@@ -9,6 +9,48 @@ import {
   type WidgetInstance,
 } from "../src/client/canvas/model";
 import { floatingBox, overlap } from "../src/client/canvas/geometry";
+import { adjacentDropSlot, dropSlotAt } from "../src/client/canvas/drag";
+
+const dropSlots = [
+  { id: "large", x: 0, y: 0, width: 700, height: 600 },
+  { id: "top", x: 710, y: 0, width: 290, height: 190 },
+  { id: "middle", x: 710, y: 200, width: 290, height: 190 },
+  { id: "bottom", x: 710, y: 400, width: 290, height: 200 },
+];
+test("arraste usa posição final do ponteiro e não a área do widget grande", () => {
+  const bounds = { x: 0, y: 0, width: 1000, height: 600 };
+  assert.equal(dropSlotAt({ x: 850, y: 300 }, dropSlots, bounds)?.id, "middle");
+  assert.equal(dropSlotAt({ x: 705, y: 300 }, dropSlots, bounds), undefined);
+  assert.equal(
+    dropSlotAt(
+      { x: 850, y: 650 },
+      [
+        ...dropSlots,
+        { id: "outside-strip", x: 710, y: 610, width: 290, height: 190 },
+      ],
+      bounds,
+    ),
+    undefined,
+  );
+});
+test("arraste por teclado avança uma posição visível, incluindo o foco grande", () => {
+  assert.equal(
+    adjacentDropSlot({ x: 350, y: 300 }, "ArrowRight", dropSlots)?.id,
+    "middle",
+  );
+  assert.equal(
+    adjacentDropSlot({ x: 855, y: 295 }, "ArrowUp", dropSlots)?.id,
+    "top",
+  );
+  assert.equal(
+    adjacentDropSlot({ x: 855, y: 295 }, "ArrowLeft", dropSlots)?.id,
+    "large",
+  );
+  assert.equal(
+    adjacentDropSlot({ x: 855, y: 500 }, "ArrowDown", dropSlots),
+    undefined,
+  );
+});
 const widget = (id: string, transient = true): WidgetInstance => ({
   id,
   type: "screen",

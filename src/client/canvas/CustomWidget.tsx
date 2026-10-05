@@ -91,6 +91,7 @@ function TextBlock({
         <textarea
           maxLength={2000}
           value={draft}
+          disabled={busy}
           onChange={(e) => {
             if (!dirty) setBase(revision);
             setDraft(e.target.value);
@@ -248,79 +249,108 @@ export function CustomWidget({
           </button>
         )}
       </div>
-      {value.blocks.map((block) => (
-        <section className="custom-block" key={block.id}>
-          {block.kind === "score" && (
-            <>
-              <strong>{block.label}</strong>
-              <div className="widget-score">
-                <button
-                  aria-label={`Diminuir ${block.label}`}
-                  onClick={() =>
-                    act({ kind: "score", blockId: block.id, delta: -1 })
-                  }
+      <div className="custom-blocks">
+        {value.blocks.map((block) => (
+          <section className="custom-block" key={block.id}>
+            {block.kind === "score" && (
+              <>
+                <strong>{block.label}</strong>
+                <div className="widget-score">
+                  <button
+                    aria-label={`Diminuir ${block.label}`}
+                    onClick={() =>
+                      act({ kind: "score", blockId: block.id, delta: -1 })
+                    }
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <output aria-label={`Pontos de ${block.label}`}>
+                    {block.value}
+                  </output>
+                  <button
+                    aria-label={`Aumentar ${block.label}`}
+                    onClick={() =>
+                      act({ kind: "score", blockId: block.id, delta: 1 })
+                    }
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </>
+            )}
+            {block.kind === "text" &&
+              (shared ? (
+                <TextBlock
+                  block={block}
+                  revision={value.revision}
+                  save={operate}
+                />
+              ) : (
+                <div className="widget-text">
+                  <label>
+                    {block.label}
+                    <textarea
+                      maxLength={2000}
+                      value={block.value}
+                      onChange={(event) =>
+                        act({
+                          kind: "text",
+                          blockId: block.id,
+                          value: event.target.value,
+                          revision: value.revision,
+                        })
+                      }
+                    />
+                  </label>
+                  <span className="field-note">Salvo neste navegador.</span>
+                </div>
+              ))}
+            {block.kind === "timer" && (
+              <>
+                <strong>{block.label}</strong>
+                <output
+                  className="widget-clock"
+                  aria-label="Tempo do cronômetro"
                 >
-                  <Minus size={18} />
-                </button>
-                <output aria-label={`Pontos de ${block.label}`}>
-                  {block.value}
+                  {clock(
+                    block.duration
+                      ? block.duration - timerElapsed(block, now)
+                      : timerElapsed(block, now),
+                  )}
                 </output>
-                <button
-                  aria-label={`Aumentar ${block.label}`}
-                  onClick={() =>
-                    act({ kind: "score", blockId: block.id, delta: 1 })
-                  }
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-            </>
-          )}
-          {block.kind === "text" && (
-            <TextBlock block={block} revision={value.revision} save={operate} />
-          )}
-          {block.kind === "timer" && (
-            <>
-              <strong>{block.label}</strong>
-              <output className="widget-clock" aria-label="Tempo do cronômetro">
-                {clock(
-                  block.duration
-                    ? block.duration - timerElapsed(block, now)
-                    : timerElapsed(block, now),
-                )}
-              </output>
-              <div className="widget-inline-actions">
-                <button
-                  className="secondary"
-                  onClick={() =>
-                    act({
-                      kind: "timer",
-                      blockId: block.id,
-                      action: block.startedAt === null ? "start" : "pause",
-                      revision: value.revision,
-                    })
-                  }
-                >
-                  {block.startedAt === null ? "Iniciar" : "Pausar"}
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() =>
-                    act({
-                      kind: "timer",
-                      blockId: block.id,
-                      action: "reset",
-                      revision: value.revision,
-                    })
-                  }
-                >
-                  Zerar
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      ))}
+                <div className="widget-inline-actions">
+                  <button
+                    className="secondary"
+                    onClick={() =>
+                      act({
+                        kind: "timer",
+                        blockId: block.id,
+                        action: block.startedAt === null ? "start" : "pause",
+                        revision: value.revision,
+                      })
+                    }
+                  >
+                    {block.startedAt === null ? "Iniciar" : "Pausar"}
+                  </button>
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      act({
+                        kind: "timer",
+                        blockId: block.id,
+                        action: "reset",
+                        revision: value.revision,
+                      })
+                    }
+                  >
+                    Zerar
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+        ))}
+      </div>
       {error && (
         <p className="error-text" role="alert">
           {error}

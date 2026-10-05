@@ -693,6 +693,11 @@
   flex-direction: column;
   gap: 12px;
 }
+.custom-blocks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 .widget-scope {
   display: flex;
   align-items: center;
@@ -920,12 +925,8 @@
   }
 }
 @container (min-width: 600px) {
-  .custom-widget {
-    display: grid;
+  .custom-blocks {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  .widget-scope {
-    grid-column: 1/-1;
   }
 }
 @media (min-width: 680px) {
