@@ -31,7 +31,7 @@ export function ParticipantCard({
   const level = useCallback(() => engine.captures.voiceLevel, [engine]);
   const speaking = useSpeaking(
     stream,
-    !!voice?.muted || !voice || !person.online,
+    !visible || !!voice?.muted || !voice || !person.online,
     own ? level : undefined,
   );
   const cameraStream = camera

@@ -1,0 +1,219 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  CanvasStore,
+  fitted,
+  newCanvas,
+  persistentCanvas,
+  restoreCanvas,
+  type WidgetInstance,
+} from "../src/client/canvas/model";
+import { floatingBox, overlap } from "../src/client/canvas/geometry";
+const widget = (id: string, transient = true): WidgetInstance => ({
+  id,
+  type: "screen",
+  title: id,
+  config: { publicationId: id },
+  transient,
+});
+function filled(count: number) {
+  const store = new CanvasStore();
+  store.change((s) => {
+    s.widgets = [];
+    s.floating = [];
+  });
+  for (let i = 1; i < count; i++) store.addSlot();
+  for (let i = 0; i < count; i++) store.add(widget(`video-${i}`));
+  return store;
+}
+test("nova transmissão reserva só espaço vazio; recusar preserva grid e conteúdo", () => {
+  const store = filled(1);
+  store.addSlot();
+  const before = store.getSnapshot();
+  store.offer({ id: "incoming", title: "Ana" });
+  assert.equal(store.getSnapshot().slots[1].offer?.id, "incoming");
+  assert.equal(store.getSnapshot().widgets.length, 1);
+  store.decline("incoming");
+  assert.deepEqual(store.getSnapshot().slots, before.slots);
+  assert.deepEqual(store.getSnapshot().widgets, before.widgets);
+});
+test("grid cheio não expande sozinho; criar espaço é explícito e permite mais de seis", () => {
+  const store = filled(6);
+  const before = store.getSnapshot();
+  store.offer({ id: "seventh", title: "Bia" });
+  assert.deepEqual(store.getSnapshot().slots, before.slots);
+  assert.equal(store.getSnapshot().pending[0].id, "seventh");
+  store.accept("seventh", widget("seventh"), "new");
+  assert.equal(store.getSnapshot().slots.length, 7);
+  assert.equal(store.getSnapshot().slots[6].widgetId, "seventh");
+  assert.equal(store.getSnapshot().floating.length, 0);
+});
+test("aceitar flutuante libera convite sem mudar os demais espaços", () => {
+  const store = filled(2);
+  store.addSlot();
+  const original = store.getSnapshot().slots;
+  store.offer({ id: "third", title: "Caio" });
+  store.accept("third", widget("third"), "float");
+  assert.deepEqual(store.getSnapshot().slots, original);
+  assert.equal(store.getSnapshot().floating[0].widgetId, "third");
+});
+test("tela grande participa do grid; focar troca posições e não ativa foco único", () => {
+  const store = filled(4);
+  store.preset("focus-left");
+  const ids = store.getSnapshot().widgets.map((w) => w.id);
+  store.focus("video-2");
+  assert.equal(store.getSnapshot().slots[0].widgetId, "video-2");
+  assert.equal(store.getSnapshot().slots[2].widgetId, "video-0");
+  assert.equal(store.getSnapshot().single, false);
+  assert.deepEqual(
+    store.getSnapshot().widgets.map((w) => w.id),
+    ids,
+  );
+  assert.equal(store.getSnapshot().floating.length, 0);
+  store.change((s) => {
+    s.single = true;
+  });
+  store.focus("video-3");
+  assert.equal(store.getSnapshot().single, true);
+  assert.deepEqual(
+    store.getSnapshot().widgets.map((w) => w.id),
+    ids,
+  );
+});
+test("tira cresce só no fim, reordena linearmente e devolve o foco à posição de origem", () => {
+  const store = filled(4);
+  store.preset("strip-right");
+  const original = store.getSnapshot().slots;
+  store.offer({ id: "new", title: "Davi" });
+  assert.deepEqual(store.getSnapshot().slots.slice(0, 4), original);
+  assert.equal(store.getSnapshot().pending.length, 0);
+  store.reorder("video-1", original[3].id);
+  assert.deepEqual(
+    store
+      .getSnapshot()
+      .slots.slice(0, 4)
+      .map((s) => s.widgetId),
+    ["video-0", "video-2", "video-3", "video-1"],
+  );
+  store.focus("video-3");
+  assert.deepEqual(
+    store
+      .getSnapshot()
+      .slots.slice(0, 4)
+      .map((s) => s.widgetId),
+    ["video-3", "video-2", "video-0", "video-1"],
+  );
+  assert.equal(store.getSnapshot().slots[4].offer?.id, "new");
+});
+test("esconder mantém lugar e identidade; restaurar não transforma grid em flutuante", () => {
+  const store = filled(4);
+  const before = store.getSnapshot();
+  store.minimize("video-1");
+  assert.deepEqual(store.getSnapshot().slots, before.slots);
+  assert.deepEqual(store.getSnapshot().hidden, ["video-1"]);
+  store.minimize("video-1");
+  assert.equal(store.getSnapshot().hidden.length, 0);
+  assert.equal(store.getSnapshot().floating.length, 0);
+});
+test("persistência remove publicações e widgets de outra sala, mantém conteúdo individual", () => {
+  const store = filled(2);
+  store.add(
+    {
+      id: "local",
+      type: "notes",
+      title: "Notas",
+      config: {},
+      state: { title: "rascunho" },
+    },
+    undefined,
+    true,
+  );
+  store.add(
+    {
+      id: "room-only",
+      type: "custom",
+      title: "Sala",
+      config: { sharedId: "shared" },
+      transient: true,
+    },
+    undefined,
+    true,
+  );
+  const restored = restoreCanvas(
+    JSON.parse(JSON.stringify(persistentCanvas(store.getSnapshot()))),
+  );
+  assert.deepEqual(
+    restored.widgets.map((w) => w.id),
+    ["local"],
+  );
+  assert.deepEqual(restored.widgets[0].state, { title: "rascunho" });
+  assert.ok(restored.slots.every((s) => !s.widgetId && !s.offer));
+  assert.equal(restored.floating.length, 1);
+});
+test("layout corrompido e posições fora da tela não tornam o app inacessível", () => {
+  assert.equal(restoreCanvas({ schemaVersion: 9 }).schemaVersion, 1);
+  const raw = newCanvas();
+  raw.slots.push({ ...raw.slots[0] });
+  assert.equal(restoreCanvas(raw).slots.length, 1);
+  for (const rect of [
+    { x: Infinity, y: NaN, width: -4, height: Infinity },
+    { x: 3, y: -1, width: 0.8, height: 0.9 },
+  ]) {
+    const fit = fitted(rect);
+    const box = floatingBox(fit, { x: 0, y: 0, width: 320, height: 180 });
+    assert.ok(
+      box.x >= 0 &&
+        box.y >= 0 &&
+        box.x + box.width <= 320 &&
+        box.y + box.height <= 180,
+    );
+  }
+  assert.deepEqual(
+    overlap(
+      { x: 0, y: 100, width: 80, height: 60 },
+      { x: 0, y: 0, width: 100, height: 120 },
+    ),
+    { x: 0, y: 100, width: 80, height: 20 },
+  );
+});
+
+test("reduzir preset não coloca transmissões sobre o grid sem escolha explícita", () => {
+  const store = filled(4);
+  store.preset("grid-1");
+  assert.equal(store.getSnapshot().slots.length, 1);
+  assert.equal(store.getSnapshot().floating.length, 3);
+  assert.ok(store.getSnapshot().floating.every((f) => f.minimized && f.parked));
+  store.focus("video-2");
+  assert.equal(store.getSnapshot().slots[0].widgetId, "video-2");
+  assert.ok(store.getSnapshot().floating.every((f) => f.minimized));
+  assert.deepEqual(
+    new Set(store.getSnapshot().widgets.map((w) => w.id)),
+    new Set(["video-0", "video-1", "video-2", "video-3"]),
+  );
+});
+
+test("convite no fim da tira não ocupa buraco anterior nem desloca outros itens", () => {
+  const store = filled(4);
+  store.preset("strip-left");
+  store.remove("video-2");
+  store.offer({ id: "new", title: "Nova" });
+  assert.equal(store.getSnapshot().slots[2].widgetId, undefined);
+  assert.equal(store.getSnapshot().slots[2].offer, undefined);
+  assert.equal(store.getSnapshot().slots[4].offer?.id, "new");
+});
+
+test("fim de transmissão durante arraste não cria widget fantasma e foco preserva convite", () => {
+  const store = filled(2);
+  const slot = store.getSnapshot().slots[0].id;
+  store.remove("video-0");
+  store.detach("video-0");
+  store.move("video-0", slot);
+  store.focus("video-0");
+  assert.equal(store.getSnapshot().floating.length, 0);
+  assert.equal(store.getSnapshot().slots[0].widgetId, undefined);
+  store.offer({ id: "incoming", title: "Nova" });
+  store.focus("video-1");
+  assert.equal(store.getSnapshot().slots[0].widgetId, "video-1");
+  assert.equal(store.getSnapshot().slots[1].offer?.id, "incoming");
+  assert.equal(store.getSnapshot().widgets.length, 1);
+});

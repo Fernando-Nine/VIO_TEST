@@ -1,6 +1,64 @@
 # VIO — validação
 
 
+## Prévia 2.7.0-rc.1 — 05/10/2026
+
+Ramo isolado `feat/canvas-widgets`, baseado na produção 2.6.0. Ainda não publicado.
+
+**54 testes aprovados**, zero falhas, TypeScript estrito e build de produção concluídos.
+Saída da suíte: `docs/evidence/canvas-tests.txt`. O log `cloudflare_turn_error` com
+status 500 é a resposta simulada de um teste de falha, não um erro de produção.
+
+O canvas é carregado apenas ao entrar na sala. Build medido: entrada de 472,69 kB
+(142,67 kB gzip), chunk do canvas de 152,16 kB (48,44 kB gzip), CSS de 89,35 kB
+(19,26 kB gzip), excluindo fontes. Os números são do build local e podem variar após
+ajustes; não constituem medição de desempenho em dispositivos.
+A confirmação do usuário autorizou a Parte B, tira linear, adaptação móvel e widgets
+individuais com compartilhamento opcional. A lembrança posterior foi aplicada: a tela
+grande integra o grid; foco não cria sobreposição nem ativa foco único implicitamente.
+
+Automação: testes de layout, serialização, aceite/recusa, mais de seis espaços,
+esconder/restaurar, foco, reordenação, redução de presets e fim da tira. Servidor real
+com múltiplas sessões: isolamento entre salas, autoria de estrutura/exclusão, operações
+concorrentes, deduplicação, conflitos de revisão, cotas e limpeza quando a sala esvazia.
+Comando `demand` restrito ao espectador de `main`; mock do sender confirma pausa/retomada
+do vídeo sem tocar na faixa de captura ou no sender de áudio. Esse mock não comprova
+transporte WebRTC. Reinício de servidor e demais regressões permanecem na suíte existente.
+
+Auditoria de produção: zero vulnerabilidades reportadas por `npm audit --omit=dev`
+em 05/10/2026. Dependência adicionada: `@dnd-kit/react` 0.5.0 fixada. Auditoria não
+substitui revisão de código ou verificação dos navegadores.
+
+**Bloqueio de validação visual atual:** a tentativa de abrir a bancada local em
+`http://terminal.local:4174/qa-layout` retornou `net::ERR_BLOCKED_BY_CLIENT`.
+Não há capturas de tela ou resultados visuais desta prévia. Não foi usado outro
+mecanismo para contornar esse bloqueio. O serviço Render está sem PR previews; não foi
+criado um serviço adicional nem alterada a produção para testar código não conferido.
+As provas de navegador nas seções antigas pertencem às respectivas versões e não
+certificam esta mudança.
+
+### Roteiro manual antes de promover o ramo
+
+1. Execute `ENABLE_TEST_LAB=1 npm run test:media` em ambiente de desenvolvimento,
+   com origem/porta coerentes. Abra `/qa-layout` para interface e `/qa-watch` para
+   renderização sintética com sinalização real. Este último tem cinco publicadores e
+   botões Registrar antes da troca / Verificar continuidade, atualizados para o canvas.
+2. Em `/qa-watch`, escolha um preset, aceite telas pelos controles visíveis e registre.
+   Arraste widgets, troque o grande com itens da tira, use Organizar por teclado,
+   destaque/redimensione, esconda/restaure, mude de preset e use foco único. Compare
+   elementos, streams, IDs de assinatura e comandos. Os players de áudio devem continuar.
+3. Confira desktop, 320/375/390 px, paisagem, zoom de 200%, teclado e movimento reduzido.
+   Verifique alinhamento de três itens, passo unitário, scroll sobre vídeos, toque,
+   foco fora da tira e retorno do foco de modais. A rolagem de um widget longo tem prioridade.
+4. Cruze a ponte do volume com o mouse; abra por toque e teclado; Escape deve fechar
+   e devolver foco. Confira borda, olho de espectadores e controles no PiP quando suportado.
+5. Com duas sessões, compartilhe notas/placar/timer, edite simultaneamente, recarregue,
+   saia como criador e encerre a sala. Estrutura não pode ser alterada por terceiros;
+   rascunhos conflitantes precisam permanecer e o estado deve ser apagado ao esvaziar.
+6. Repita captura, áudio e retorno do vídeo com duas abas e PC + celular reais. Teste
+   servidor reiniciado e rede interrompida. Confirme bytes/bitrate/FPS efetivos de slots
+   fora da tira ou em segundo plano. O laboratório sintético não substitui esse ensaio.
+
 ## Atualização 2.6.0 — 27/09/2026
 
 39 testes automatizados aprovados e build de produção/TypeScript estrito concluídos.

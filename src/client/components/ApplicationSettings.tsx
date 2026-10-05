@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Play, Volume2, Palette } from "lucide-react";
 import type { Controller } from "../room/controller";
 import { soundEvents, type Cue } from "../media/sound-preferences";
 
 export function ApplicationSettings({ engine }: { engine: Controller }) {
+  const canvas = useSyncExternalStore(
+    engine.canvas.subscribe,
+    engine.canvas.getSnapshot,
+  );
   const [feedback, setFeedback] = useState("");
   const [playing, setPlaying] = useState<Cue | null>(null);
   const canPreview =
@@ -20,6 +24,28 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
   }
   return (
     <>
+      <fieldset>
+        <legend>Organização dos widgets</legend>
+        <label className="toggle">
+          <span>
+            Movimento livre
+            <small>
+              Desativa o encaixe ao arrastar telas e cartões. O menu de cada
+              widget continua oferecendo posições no grid.
+            </small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            checked={canvas.freeMovement}
+            onChange={(e) =>
+              engine.canvas.change((s) => {
+                s.freeMovement = e.target.checked;
+              })
+            }
+          />
+        </label>
+      </fieldset>
       <fieldset className="application-volume">
         <legend>
           <Volume2 size={17} /> Volume do aplicativo

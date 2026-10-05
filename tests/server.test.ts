@@ -974,3 +974,319 @@ test("alterações de cor têm limite por identidade sem bloquear os outros part
     await app.close();
   }
 });
+
+test("widgets compartilhados isolam salas e estrutura, preservam operações concorrentes e rascunhos", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 3; i++)
+      sockets.push(await connect(app.url, (await session(app.url)).token));
+    const [owner, member, outsider] = sockets;
+    const joined = data(
+      await request<{ id: string }>(owner, "join", {
+        name: "Criador",
+        code: "QAWIDGET",
+      }),
+    );
+    data(await request(member, "join", { name: "Colega", code: "QAWIDGET" }));
+    data(
+      await request(outsider, "join", {
+        name: "Outra sala",
+        code: "OUTRAWIDGET",
+      }),
+    );
+    const id = crypto.randomUUID(),
+      score = crypto.randomUUID(),
+      text = crypto.randomUUID();
+    const content = {
+      title: "Partida",
+      blocks: [
+        { id: score, kind: "score", label: "Pontos", value: 0 },
+        { id: text, kind: "text", label: "Notas", value: "Original" },
+      ],
+    };
+    const received = new Promise<{ widget: { owner: string } }>((resolve) =>
+      member.once("widget-updated", resolve),
+    );
+    data(await request(owner, "widget-create", { id, content }));
+    assert.equal((await received).widget.owner, joined.id);
+    for (const actor of [member, outsider]) {
+      assert.equal(
+        (await request(actor, "widget-structure", { id, revision: 0, content }))
+          .ok,
+        false,
+      );
+      assert.equal((await request(actor, "widget-delete", { id })).ok, false);
+    }
+    assert.equal(
+      (
+        await request(outsider, "widget-operate", {
+          id,
+          operationId: crypto.randomUUID(),
+          operation: { kind: "score", blockId: score, delta: 1 },
+        })
+      ).ok,
+      false,
+    );
+    const operationId = crypto.randomUUID();
+    const increment = {
+      id,
+      operationId,
+      operation: { kind: "score", blockId: score, delta: 1 },
+    };
+    data(await request(member, "widget-operate", increment));
+    data(await request(member, "widget-operate", increment));
+    await Promise.all(
+      [owner, member].map((actor) =>
+        request(actor, "widget-operate", {
+          ...increment,
+          operationId: crypto.randomUUID(),
+        }).then(data),
+      ),
+    );
+    const room = app.rooms.rooms.get("QAWIDGET")!;
+    assert.equal(
+      (room.widgets.entries.get(id)!.blocks[0] as { value: number }).value,
+      3,
+    );
+    assert.equal(room.widgets.entries.get(id)!.revision, 3);
+    const conflict = await request(member, "widget-operate", {
+      id,
+      operationId: crypto.randomUUID(),
+      operation: {
+        kind: "text",
+        blockId: text,
+        value: "Rascunho antigo",
+        revision: 0,
+      },
+    });
+    assert.equal(conflict.ok, false);
+    if (!conflict.ok) assert.equal(conflict.code, "WIDGET_CONFLICT");
+    assert.equal(
+      (room.widgets.entries.get(id)!.blocks[1] as { value: string }).value,
+      "Original",
+    );
+    data(
+      await request(member, "widget-operate", {
+        id,
+        operationId: crypto.randomUUID(),
+        operation: {
+          kind: "text",
+          blockId: text,
+          value: "Texto revisado",
+          revision: 3,
+        },
+      }),
+    );
+    assert.equal(
+      (await request(owner, "widget-structure", { id, revision: 3, content }))
+        .ok,
+      false,
+    );
+    assert.equal(
+      (await request(member, "widget-create", { id, content })).ok,
+      false,
+    );
+    data(await request(owner, "leave"));
+    data(
+      await request(member, "widget-operate", {
+        ...increment,
+        operationId: crypto.randomUUID(),
+      }),
+    );
+    assert.equal(
+      (await request(member, "widget-structure", { id, revision: 5, content }))
+        .ok,
+      false,
+    );
+    assert.equal(room.widgets.entries.size, 1);
+    data(await request(member, "leave"));
+    assert.equal(room.widgets.entries.size, 0);
+    room.touched = 0;
+    app.rooms.clean();
+    assert.equal(app.rooms.rooms.has("QAWIDGET"), false);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("widgets rejeitam campos extras, payloads excessivos, blocos duplicados e excesso por criador", async () => {
+  const app = await server();
+  const socket = await connect(app.url, (await session(app.url)).token);
+  try {
+    data(
+      await request(socket, "join", { name: "Criador", code: "QAWIDGETLIMIT" }),
+    );
+    const block = {
+      id: crypto.randomUUID(),
+      kind: "text",
+      label: "Nota",
+      value: "Texto",
+    };
+    const content = { title: "Notas", blocks: [block] };
+    assert.equal(
+      (
+        await request(socket, "widget-create", {
+          id: crypto.randomUUID(),
+          content,
+          owner: "fake",
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(socket, "widget-create", {
+          id: crypto.randomUUID(),
+          content: { ...content, blocks: [block, block] },
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(socket, "widget-create", {
+          id: crypto.randomUUID(),
+          content: {
+            ...content,
+            blocks: [{ ...block, value: "a".repeat(2001) }],
+          },
+        })
+      ).ok,
+      false,
+    );
+    for (let i = 0; i < 6; i++)
+      data(
+        await request(socket, "widget-create", {
+          id: crypto.randomUUID(),
+          content,
+        }),
+      );
+    const result = await request(socket, "widget-create", {
+      id: crypto.randomUUID(),
+      content,
+    });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.code, "WIDGET_LIMIT");
+  } finally {
+    socket.disconnect();
+    await app.close();
+  }
+});
+
+test("somente espectador autenticado regula seu vídeo main; áudio e outras assinaturas permanecem", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 3; i++) {
+      const socket = await connect(app.url, (await session(app.url)).token);
+      sockets.push(socket);
+      data(
+        await request(socket, "join", {
+          name: `Pessoa ${i}`,
+          code: i === 2 ? "QADEMANDOTHER" : "QADEMAND",
+        }),
+      );
+    }
+    const [owner, viewer, outsider] = sockets;
+    const publication = data(
+      await request<Publication>(owner, "publish", {
+        kind: "screen",
+        key: crypto.randomUUID(),
+        audio: true,
+        muted: false,
+      }),
+    );
+    const subscription = data(
+      await request<Subscription>(viewer, "subscribe", {
+        publicationId: publication.id,
+        tier: "main",
+        nonce: crypto.randomUUID(),
+      }),
+    );
+    const received = new Promise<{ id: string; video: string }>((resolve) =>
+      owner.once("video-demand", resolve),
+    );
+    data(
+      await request(viewer, "demand", {
+        id: subscription.id,
+        video: "off",
+        height: 240,
+      }),
+    );
+    assert.deepEqual(await received, {
+      id: subscription.id,
+      video: "off",
+      height: 240,
+    });
+    const room = app.rooms.rooms.get("QADEMAND")!;
+    assert.equal(room.subscriptions.size, 1);
+    assert.equal(
+      room.subscriptions.get(subscription.id)?.publication.audio,
+      true,
+    );
+    assert.equal(
+      (
+        await request(owner, "demand", {
+          id: subscription.id,
+          video: "off",
+          height: 240,
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(outsider, "demand", {
+          id: subscription.id,
+          video: "focus",
+          height: 1080,
+        })
+      ).ok,
+      false,
+    );
+    const preview = data(
+      await request<Subscription>(viewer, "subscribe", {
+        publicationId: publication.id,
+        tier: "preview",
+        nonce: crypto.randomUUID(),
+      }),
+    );
+    assert.equal(
+      (
+        await request(viewer, "demand", {
+          id: preview.id,
+          video: "focus",
+          height: 2160,
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(viewer, "demand", {
+          id: subscription.id,
+          video: "focus",
+          height: 99999,
+        })
+      ).ok,
+      false,
+    );
+    data(
+      await request(viewer, "demand", {
+        id: subscription.id,
+        video: "focus",
+        height: 1080,
+      }),
+    );
+    assert.equal(room.subscriptions.get(subscription.id)?.id, subscription.id);
+    assert.equal(
+      room.subscriptions.get(subscription.id)?.demand?.video,
+      "focus",
+    );
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});

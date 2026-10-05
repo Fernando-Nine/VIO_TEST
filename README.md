@@ -3,7 +3,9 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Nova implementação **2.6.0** · **AGPLv3** · **Node 24**
+Prévia de desenvolvimento **2.7.0-rc.1** · **AGPLv3** · **Node 24**
+
+Produção permanece na versão 2.6.0. Esta prévia está no ramo `feat/canvas-widgets` e ainda requer aceite manual.
 
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
@@ -46,19 +48,30 @@ Requer `tar`, disponível nas imagens Docker fornecidas e em sistemas recentes.
 `npm start` usa os arquivos compilados. Para produção, configure `.env` com
 `NODE_ENV=production`, segredo e origens HTTPS.
 
-## Interface 2.4.0
+## Canvas e widgets — prévia 2.7
 
-Entrada e sala em carvão, branco suave e azul #2727F5, com Bricolage Grotesque e
-IBM Plex Mono locais. A entrada cabe na janela de desktop; celulares mantêm
-rolagem natural. O fundo geométrico se move suavemente e respeita movimento reduzido.
+Tela grande, transmissões menores e widgets participam do mesmo grid. Use **Layout**
+para escolher a grade ou **Foco + tira**. O botão de foco troca o widget com o
+primeiro espaço; **Foco único** esconde os demais mantendo o áudio conectado.
+Só a opção **Flutuante** destaca uma transmissão sobre o grid. Esconder um widget
+conserva seu lugar; desconectar uma transmissão libera o espaço.
 
-Prévias ao vivo usam cards maiores em 16:9; o vídeo principal ocupa toda a largura,
-inclusive em monitores largos. A sala ocupa a altura disponível, com controles sobre a transmissão. Arraste a alça
-com a contagem de pessoas para mover os cards entre seis encaixes, clique nela para escolher uma
-posição ou use as setas do teclado. Os cards desaparecem após 2 segundos sem
-atividade; o alfinete permite mantê-los visíveis. Mover o mouse, tocar ou usar o
-teclado traz os controles de volta. O foco de teclado e os menus abertos impedem a
-ocultação. A posição se adapta ao redimensionamento e à tela cheia.
+Na tira, os botões avançam um item por vez. Três espaços ficam visíveis no desktop,
+dois em celulares médios e um em telas estreitas. Novos convites entram no fim.
+No grid cheio, um diálogo pergunta antes de alterar a organização.
+
+Notas, placares e cronômetros começam individuais. Compartilhar envia apenas o
+conteúdo para a sala; cada pessoa escolhe onde colocá-lo. Só o criador pode mudar
+sua estrutura ou excluir para todos. As permissões são conferidas pelo servidor.
+O conteúdo compartilhado é temporário. Os widgets individuais ficam neste navegador.
+
+Arraste a alça ou use **Organizar → Espaço** para mover por clique, toque e teclado.
+O menu também ajusta a posição e o tamanho das janelas. Os controles flutuantes
+auxiliares desaparecem após dois segundos sem atividade, preservando foco de teclado.
+Tema escuro, azul #2727F5, fontes locais e movimento reduzido permanecem.
+
+Detalhes: [arquitetura do canvas](docs/CANVAS.md), [validação](docs/VALIDACAO.md)
+e [pendências em linguagem simples](docs/PENDENCIAS.md).
 
 ## O que a interface oferece
 

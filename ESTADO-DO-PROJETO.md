@@ -1,6 +1,12 @@
 # VIO — estado da nova implementação
 
-Versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
+Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.1**, em 05/10/2026, ainda em revisão.
+
+O canvas, a tira linear e os widgets individuais/compartilhados estão implementados nesta prévia. A tela grande pertence ao grid e troca posições com os outros widgets. Foco único preserva as conexões e o áudio. As permissões de estrutura e o estado compartilhado são conferidos pelo servidor.
+
+O aceite visual e de mídia segue pendente: o navegador da bancada bloqueou o endereço local (`ERR_BLOCKED_BY_CLIENT`). Não foi criada outra hospedagem nem promovida esta versão para `main`. Veja `docs/CANVAS.md`, `docs/VALIDACAO.md` e `docs/PENDENCIAS.md`. O instalável/WASAPI e a futura autoridade do dono da sala permanecem em etapas separadas.
+
+Histórico desta base: versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 

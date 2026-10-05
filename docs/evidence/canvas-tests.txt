@@ -1,0 +1,69 @@
+Command: npm test
+Date: 2026-10-05
+Version: 2.7.0-rc.1
+Exit code: 0
+Browser/device validation: pending, local browser navigation blocked
+
+✔ saída padrão não é reaberta a cada vídeo, voz ou som de botão (2.752136ms)
+✔ vídeo removido durante troca não derruba a saída da conversa (0.618292ms)
+✔ desconexão de dispositivo restaura áudio uma vez e elementos futuros usam o padrão (1.008138ms)
+✔ dispositivo salvo invisível não é aplicado; confirmação fica nos ajustes (1.246498ms)
+✔ restauração atrasada nunca substitui uma escolha feita pelo usuário (0.70338ms)
+✔ falha real no destino de um novo vídeo restaura todos os elementos (0.833545ms)
+✔ falha ao voltar ao padrão não informa recuperação inexistente (0.792384ms)
+✔ nova transmissão reserva só espaço vazio; recusar preserva grid e conteúdo (2.587337ms)
+✔ grid cheio não expande sozinho; criar espaço é explícito e permite mais de seis (0.759404ms)
+✔ aceitar flutuante libera convite sem mudar os demais espaços (0.725793ms)
+✔ tela grande participa do grid; focar troca posições e não ativa foco único (0.815659ms)
+✔ tira cresce só no fim, reordena linearmente e devolve o foco à posição de origem (0.523609ms)
+✔ esconder mantém lugar e identidade; restaurar não transforma grid em flutuante (0.33169ms)
+✔ persistência remove publicações e widgets de outra sala, mantém conteúdo individual (0.953446ms)
+✔ layout corrompido e posições fora da tela não tornam o app inacessível (0.694436ms)
+✔ reduzir preset não coloca transmissões sobre o grid sem escolha explícita (0.508516ms)
+✔ convite no fim da tira não ocupa buraco anterior nem desloca outros itens (3.052628ms)
+✔ fim de transmissão durante arraste não cria widget fantasma e foco preserva convite (0.383458ms)
+✔ ping distingue sinalização e tela, latência e conexão interrompida (9.935708ms)
+✔ saída muda voz, tela e elementos futuros; falha reverte a seleção (3.303436ms)
+✔ service worker jamais intercepta navegação, sala, sessão ou socket (17.483608ms)
+✔ changelog preserva o histórico inteiro e a mudança de sistema (11.673135ms)
+✔ arraste encaixa nas seis posições dentro da área útil do vídeo (2.065822ms)
+✔ redimensionamento mantém o painel acessível e limita arraste fora da tela (0.21214ms)
+✔ cores personalizadas preservam HEX, bloqueiam conteúdo livre e mantêm contraste AA (177.361456ms)
+✔ preferências de som migram valores antigos e limitam volumes inválidos (0.270888ms)
+✔ sons de presença ignoram duplicatas, quedas, reconexões e troca de instância (2.445695ms)
+✔ janelas ficam dentro da área útil em desktop, celular e orientação horizontal (5.241857ms)
+✔ posição proporcional sobrevive ao redimensionamento e presets alcançam bordas (1.587351ms)
+✔ tokens assinados rejeitam adulteração e expiração (2.785907ms)
+✔ oito pessoas entram sem teto de seis; aviso e duração pertencem à sala (131.860741ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (65.86059ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (19.793227ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (18.882596ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (21.223487ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (14.694532ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (13.068152ms)
+✔ origem de casca nativa é aceita sem afrouxar a regra da web (25.959036ms)
+{"time":"2026-10-05T10:55:43.610Z","event":"cloudflare_turn_error","status":500}
+✔ Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn (30.889939ms)
+✔ credencial TURN estática: par fixo da config, sem HMAC (9.417647ms)
+✔ várias telas mantêm IDs; encerrar uma preserva as outras; voz é independente (64.102927ms)
+✔ presença na chamada inclui quem só escuta e não publica microfone (8.708239ms)
+✔ trocar identidades não contorna limites de sessão e entrada por IP (118.458271ms)
+✔ cor pertence à própria sessão, sincroniza e permanece na reconexão (24.61747ms)
+✔ alterações de cor têm limite por identidade sem bloquear os outros participantes (20.86343ms)
+✔ widgets compartilhados isolam salas e estrutura, preservam operações concorrentes e rascunhos (28.470704ms)
+✔ widgets rejeitam campos extras, payloads excessivos, blocos duplicados e excesso por criador (12.453621ms)
+✔ somente espectador autenticado regula seu vídeo main; áudio e outras assinaturas permanecem (24.048884ms)
+✔ demanda pausa apenas o sender de vídeo e restaura a mesma faixa após fallback (7.550394ms)
+✔ 240p a 2160p definem a altura enviada e preservam a proporção (0.832744ms)
+✔ fonte menor não é ampliada e mudança de tamanho recalcula a redução (0.137848ms)
+✔ a escolha de 4K não aumenta bitrate, FPS ou escala da miniatura nem da câmera (0.728688ms)
+✔ assistir é explícito; foco mantém a mesma lista, ordem e assinaturas desejadas (1.428462ms)
+✔ trocar pela terceira tela preserva a secundária e fechar promove só a já aberta (0.340233ms)
+ℹ tests 54
+ℹ suites 0
+ℹ pass 54
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1327.737332

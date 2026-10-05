@@ -244,7 +244,7 @@ herdado do projeto que veio antes. A 2.0.0 carrega `systemChange: true` e é a f
 para trás, o histórico descreve um app que por dentro não existe mais. **Não apague essa
 marca** — sem ela o histórico mente por omissão.
 
-Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.6.0.
+Semver: correção = PATCH, feature nova = MINOR. Versão de produção: 2.6.0. Prévia em revisão: 2.7.0-rc.1.
 
 ## Fora de limite
 
@@ -252,8 +252,7 @@ Semver: correção = PATCH, feature nova = MINOR. Versão atual: 2.6.0.
   errada para o VIO (exceção: TURN, que é relay de rede, não de aplicação).
 - Nunca indexar transmissão por id de pessoa. Sempre `publicationId`.
 - Nunca mandar `main` para cartão de participante.
-- Nunca adicionar dependência sem aprovação explícita. São 11 diretas hoje, e isso é um teto,
-  não um ponto de partida.
+- Nunca adicionar dependência sem aprovação explícita. A inclusão de `@dnd-kit/react` 0.5.0 foi aprovada em 05/10/2026 para o canvas; outras dependências continuam exigindo aprovação.
 - Nunca commitar `.env`, segredo de TURN ou token.
 - Preservar o aviso de carga P2P a partir de 6 pessoas, sem impedir entrada: decisão explícita do usuário para a 2.3.0. Não apresentar a remoção do teto como garantia de capacidade de mídia ilimitada.
 
@@ -281,3 +280,11 @@ barato em vez de conexão cheia.
 
 Este repositório não tem hooks do Claude Code. As regras acima são pedido, não portão — ao
 contrário do VIO_2, onde `.claude/hooks/guard.js` as cumpre de verdade.
+
+## Canvas aprovado em 05/10/2026
+
+O estado do layout é individual e versionado em `canvas/model.ts`. O núcleo não conhece tipos de widgets; o registro e o renderer ficam fora dele. O espaço grande faz parte do grid. Focar troca posições; foco único é uma ação separada e preserva todas as assinaturas e áudios. Nunca destacar telas automaticamente ao trocar o foco. Widgets compartilhados replicam apenas conteúdo, nunca geometria.
+
+Cada publicação mantém um host de vídeo e um player de áudio estáveis. Não reparentar hosts nem usar clones de vídeo durante drag. Encodings de vídeo podem pausar por assinante, sem desligar a track da captura e sem tocar no sender de áudio. `replaceTrack(null)` é fallback somente do vídeo daquela assinatura.
+
+O servidor verifica a sessão e a sala de cada ação de widget. Só o criador altera estrutura/exclui; os demais operam o conteúdo. Revisões impedem perda silenciosa de texto. Ao sair o último membro, apagar imediatamente os widgets, mesmo durante o TTL residual da sala. Código de terceiros não é executado nesta versão.

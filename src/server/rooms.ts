@@ -1,6 +1,7 @@
 import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
+import { RoomWidgets } from "./widgets";
 import { defaultColor } from "../shared/colors";
 import {
   Fault,
@@ -29,6 +30,7 @@ interface Room {
   createdAt: number;
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
+  widgets: RoomWidgets;
   touched: number;
 }
 export class Rooms {
@@ -107,6 +109,7 @@ export class Rooms {
       serverTime: Date.now(),
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
+      widgets: room.widgets.list(),
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
       ),
@@ -146,6 +149,7 @@ export class Rooms {
     for (const sub of [...room.subscriptions.values()])
       if (sub.viewer === member.id) this.closeSub(room, sub);
     room.members.delete(member.id);
+    if (!room.members.size) room.widgets.clear();
     this.membership.delete(member.id);
     this.broadcast(room);
   }
@@ -162,6 +166,11 @@ export class Rooms {
   }
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
+      "widget-create": 12,
+      "widget-structure": 30,
+      "widget-delete": 30,
+      "widget-operate": 180,
+      demand: 360,
       join: 12,
       leave: 12,
       call: 30,
@@ -276,6 +285,7 @@ export class Rooms {
           createdAt: Date.now(),
           members: new Map(),
           subscriptions: new Map(),
+          widgets: new RoomWidgets(),
           touched: Date.now(),
         };
         this.rooms.set(code, room);
@@ -306,6 +316,46 @@ export class Rooms {
       return { id: member.id, snapshot: this.snapshot(room) };
     }
     const [room, m] = this.member(socket);
+    if (action.startsWith("widget-")) {
+      let widget;
+      if (action === "widget-create")
+        widget = room.widgets.create(m.id, data.id, data.content);
+      if (action === "widget-structure")
+        widget = room.widgets.structure(
+          m.id,
+          data.id,
+          data.revision,
+          data.content,
+        );
+      if (action === "widget-operate")
+        widget = room.widgets.operate(
+          m.id,
+          data.id,
+          data.operationId,
+          data.operation,
+        );
+      if (action === "widget-delete") room.widgets.remove(m.id, data.id);
+      this.io
+        .to(room.code)
+        .emit("widget-updated", { id: data.id, widget: widget || null });
+      return widget || {};
+    }
+    if (action === "demand") {
+      const sub = room.subscriptions.get(data.id);
+      if (
+        !sub ||
+        sub.viewer !== m.id ||
+        sub.tier !== "main" ||
+        sub.publication.kind !== "screen"
+      )
+        throw new Fault("FORBIDDEN", "Demanda de vídeo não autorizada.");
+      sub.demand = { video: data.video, height: data.height };
+      this.send(room, sub.publication.owner, "video-demand", {
+        id: sub.id,
+        ...sub.demand,
+      });
+      return {};
+    }
     if (action === "color") {
       m.color = data.color;
       this.broadcast(room);
@@ -338,6 +388,7 @@ export class Rooms {
             [m.id, data.kind, data.key].join(":"),
           ),
           owner: m.id,
+          createdAt: Date.now(),
           kind: data.kind,
           key: data.key,
           audio: data.audio,

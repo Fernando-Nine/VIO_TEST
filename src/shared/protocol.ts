@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { widgetSchemas, type SharedWidget } from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
@@ -13,6 +14,14 @@ export const roomCode = z
   .toUpperCase()
   .regex(/^[A-Z0-9]{4,24}$/);
 export const schemas = {
+  ...widgetSchemas,
+  demand: z
+    .object({
+      id: z.string().max(80),
+      video: z.enum(["off", "small", "fit", "focus"]),
+      height: z.number().int().min(120).max(2160),
+    })
+    .strict(),
   join: z
     .object({
       name: z
@@ -86,6 +95,7 @@ export const signalSchema = z
   );
 export type Signal = z.infer<typeof signalSchema>;
 export interface Publication {
+  createdAt?: number;
   id: string;
   owner: string;
   kind: Kind;
@@ -107,6 +117,7 @@ export interface Snapshot {
   createdAt: number;
   serverTime: number;
   participants: Participant[];
+  widgets?: SharedWidget[];
   maxParticipants: null;
   recommendedParticipants: number;
 }
@@ -116,6 +127,11 @@ export interface Subscription {
   viewer: string;
   tier: Tier;
   nonce: string;
+  demand?: VideoDemand;
+}
+export interface VideoDemand {
+  video: "off" | "small" | "fit" | "focus";
+  height: number;
 }
 export type Reply<T = unknown> =
   | { ok: true; data: T }

@@ -1,3 +1,5 @@
+import { CanvasStore } from "../canvas/model";
+import type { SharedWidget } from "../../shared/widgets";
 import { io, type Socket } from "socket.io-client";
 import type {
   Action,
@@ -9,6 +11,7 @@ import type {
   Snapshot,
   Subscription,
   Tier,
+  VideoDemand,
 } from "../../shared/protocol";
 import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
 import { Peers } from "../media/peers";
@@ -47,6 +50,10 @@ export class Controller {
     error: "",
     notice: "",
   };
+  readonly canvas: CanvasStore;
+  watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
+  private desiredVideo = new Map<string, VideoDemand>();
+  private sentVideo = new Map<string, string>();
   config?: RuntimeConfig;
   socket?: Socket;
   readonly captures: Captures;
@@ -112,6 +119,7 @@ export class Controller {
     adapter?: CaptureAdapter,
     private persist = true,
   ) {
+    this.canvas = new CanvasStore(persist);
     this.captures = new Captures(adapter, (kind, ended) => {
       this.bump();
       const generation = this.generation;
@@ -392,6 +400,22 @@ export class Controller {
       socket.on("snapshot", (snapshot: Snapshot) =>
         this.receiveSnapshot(snapshot),
       );
+      socket.on(
+        "widget-updated",
+        (event: { id: string; widget: SharedWidget | null }) => {
+          if (!current() || !this.view.snapshot) return;
+          const widgets = (this.view.snapshot.widgets || []).filter(
+            (w) => w.id !== event.id,
+          );
+          if (event.widget) widgets.push(event.widget);
+          this.view.snapshot = { ...this.view.snapshot, widgets };
+          this.bump();
+        },
+      );
+      socket.on("video-demand", (event: VideoDemand & { id: string }) => {
+        if (current())
+          void this.peers.demand(event.id, event).catch((e) => this.fail(e));
+      });
       socket.on("subscription", (sub: Subscription) => {
         void this.peers.accept(sub).catch((e) => this.fail(e));
       });
@@ -699,8 +723,10 @@ export class Controller {
   screenInfo(id: string) {
     return this.screenCatalog.get(id);
   }
-  watch(id: string, together = false) {
+  watch(id: string, together = false, approved = false) {
     if (!this.screenCatalog.has(id)) return;
+    if (!approved && this.watchRequest && !this.watchRequest(id, together))
+      return;
     if (this.screenLevel(id).volume > 1) this.playback.unlock();
     const next = watchScreen(this.view, id, together);
     const changed = next.watching !== this.view.watching;
@@ -710,6 +736,10 @@ export class Controller {
     if (changed) void this.reconcile();
   }
   watchOnly(id: string) {
+    if (this.watchRequest) {
+      this.watchRequest(id, false, true);
+      return;
+    }
     if (!this.screenCatalog.has(id)) return;
     if (this.screenLevel(id).volume > 1) this.playback.unlock();
     const next = watchOnlyScreen(this.view, id);
@@ -725,6 +755,36 @@ export class Controller {
     this.missingScreens.delete(id);
     this.bump();
     void this.reconcile();
+  }
+  setVideoDemand(publicationId: string, demand: VideoDemand) {
+    const previous = this.desiredVideo.get(publicationId);
+    if (previous?.video === demand.video && previous.height === demand.height)
+      return;
+    this.desiredVideo.set(publicationId, demand);
+    void this.flushVideoDemands();
+  }
+  private async flushVideoDemands() {
+    if (!this.socket?.connected) return;
+    for (const info of this.peers.infos()) {
+      if (info.sending || info.kind !== "screen" || info.tier !== "main")
+        continue;
+      const demand = this.desiredVideo.get(info.publicationId);
+      if (!demand) continue;
+      const key = JSON.stringify(demand);
+      if (this.sentVideo.get(info.id) === key) continue;
+      this.sentVideo.set(info.id, key);
+      try {
+        await this.request("demand", { id: info.id, ...demand });
+      } catch {
+        this.sentVideo.delete(info.id);
+      }
+    }
+  }
+  serverNow() {
+    const s = this.view.snapshot;
+    return s
+      ? s.serverTime + performance.now() - this.snapshotReceivedAt
+      : Date.now();
   }
   roomSeconds() {
     const snapshot = this.view.snapshot;
@@ -746,10 +806,14 @@ export class Controller {
     this.savePreferences();
     void this.reconcile();
   }
-  previews(ids: string[]) {
+  private previewSources = new Map<string, string[]>();
+  previews(ids: string[], source = "default") {
+    if (ids.length) this.previewSources.set(source, ids);
+    else this.previewSources.delete(source);
+    const candidates = [...new Set([...this.previewSources.values()].flat())];
     const next = new Set(
       this.previewsEnabled
-        ? ids
+        ? candidates
             .filter((id) => !this.view.watching.includes(id))
             .slice(0, this.config?.maxPreviews || 2)
         : [],
@@ -846,6 +910,7 @@ export class Controller {
           if (generation !== this.generation) return;
         }
       } while (this.reconcileAgain && this.view.status === "connected");
+      void this.flushVideoDemands();
     } catch (e) {
       if (generation === this.generation && this.view.status === "connected")
         this.fail(e);
@@ -1000,6 +1065,10 @@ export class Controller {
     this.publications.clear();
     this.subscriptions.clear();
     this.screenCatalog.clear();
+    this.desiredVideo.clear();
+    this.sentVideo.clear();
+    this.canvas.resetRoom();
+    this.previewSources.clear();
     this.missingScreens.clear();
     this.missingSince.clear();
     this.visiblePreviews.clear();
