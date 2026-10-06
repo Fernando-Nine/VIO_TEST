@@ -118,6 +118,8 @@ export interface Snapshot {
   serverTime: number;
   participants: Participant[];
   widgets?: SharedWidget[];
+  /** Explicit main screen subscriptions, scoped to members of this room. */
+  screenViewers?: Record<string, string[]>;
   maxParticipants: null;
   recommendedParticipants: number;
 }

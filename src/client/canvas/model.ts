@@ -74,7 +74,7 @@ export function newCanvas(): CanvasState {
     revision: 0,
     preset: "grid-1",
     ratio: 0.7,
-    freeMovement: false,
+    freeMovement: true,
     single: false,
     focusId: null,
     slots: [newSlot()],
@@ -91,6 +91,33 @@ export function newCanvas(): CanvasState {
 }
 export const isStrip = (state: CanvasState) =>
   state.preset.startsWith("strip-");
+/** The large slot is authoritative, including after restoring a saved layout. */
+export function focusedWidgetId(state: CanvasState): string | null {
+  const primary = state.slots[0]?.widgetId;
+  if (
+    primary &&
+    (!state.preset.startsWith("grid-") || state.preset === "grid-3")
+  )
+    return primary;
+  return (
+    (state.widgets.some((w) => w.id === state.focusId)
+      ? state.focusId
+      : null) ||
+    primary ||
+    state.slots.find((s) => s.widgetId)?.widgetId ||
+    state.widgets[0]?.id ||
+    null
+  );
+}
+export const canRemoveSlot = (state: CanvasState, id: string) => {
+  const slot = state.slots.find((s) => s.id === id);
+  return (
+    !!slot &&
+    !slot.widgetId &&
+    !slot.offer &&
+    state.slots.length > (isStrip(state) ? 4 : 1)
+  );
+};
 export function fitted(rect: Placement): Placement {
   const finite = (x: number, fallback: number) =>
     Number.isFinite(x) ? x : fallback;
@@ -144,34 +171,29 @@ export class CanvasStore {
     this.change((s) => {
       s.preset = preset;
       s.single = false;
-      const count = preset.startsWith("grid-")
+      let count = preset.startsWith("grid-")
         ? Number(preset.slice(5))
         : isStrip(s)
           ? Math.max(4, s.slots.length)
           : 4;
+      // A preset must not silently hide an accepted widget or turn it into an overlay.
+      count = Math.max(
+        count,
+        s.slots.reduce(
+          (last, slot, i) => (slot.widgetId || slot.offer ? i + 1 : last),
+          0,
+        ),
+      );
       while (s.slots.length < count) s.slots.push(newSlot());
       if (!isStrip(s)) {
-        for (const slot of s.slots.slice(count)) {
-          if (slot.widgetId)
-            s.floating.push({
-              widgetId: slot.widgetId,
-              rect: fitted({
-                x: 0.6,
-                y: 0.1 + s.floating.length * 0.03,
-                width: 0.36,
-                height: 0.4,
-              }),
-              previousSlot: slot.id,
-              minimized: true,
-              parked: true,
-            });
-          if (slot.offer) s.pending.push(slot.offer);
-        }
         s.slots = s.slots.slice(0, count);
       } else {
         for (const offer of s.pending.splice(0))
           s.slots.push({ ...newSlot(), offer });
       }
+      if (preset.startsWith("grid-"))
+        s.preset = `grid-${Math.min(6, count)}` as Preset;
+      s.focusId = focusedWidgetId(s);
     });
   }
   addSlot() {
@@ -184,6 +206,7 @@ export class CanvasStore {
     return slot.id;
   }
   removeSlot(id: string) {
+    if (!canRemoveSlot(this.value, id)) return;
     this.change((s) => {
       const slot = s.slots.find((t) => t.id === id);
       if (
@@ -201,6 +224,11 @@ export class CanvasStore {
   add(widget: WidgetInstance, target?: string, floating = false) {
     this.change((s) => {
       if (s.widgets.some((w) => w.id === widget.id)) return;
+      if (
+        widget.config.sharedId &&
+        s.widgets.some((w) => w.config.sharedId === widget.config.sharedId)
+      )
+        return;
       s.widgets.push(widget);
       const slot =
         !floating &&
@@ -226,6 +254,23 @@ export class CanvasStore {
     this.change((s) => {
       const index = s.widgets.findIndex((w) => w.id === id);
       if (index >= 0) s.widgets[index] = { ...s.widgets[index], ...patch, id };
+    });
+  }
+  bindShared(id: string, sharedId: string) {
+    // Sharing converts the original host in place. Retries/catalog adds cannot
+    // create a second local host for the same room-scoped widget.
+    for (const w of this.value.widgets)
+      if (w.id !== id && w.config.sharedId === sharedId) this.remove(w.id);
+    this.updateWidget(id, {
+      config: { sharedId },
+      transient: true,
+      state: undefined,
+    });
+  }
+  toggleSingle() {
+    this.change((s) => {
+      s.focusId = focusedWidgetId(s);
+      s.single = !!s.focusId && !s.single;
     });
   }
   remove(id: string) {
@@ -309,17 +354,6 @@ export class CanvasStore {
       if (s.focusId === id) s.single = false;
     });
   }
-  minimize(id: string) {
-    if (!this.value.widgets.some((w) => w.id === id)) return;
-    this.change((s) => {
-      const f = s.floating.find((x) => x.widgetId === id);
-      if (f) f.minimized = !f.minimized;
-      else
-        s.hidden = s.hidden.includes(id)
-          ? s.hidden.filter((value) => value !== id)
-          : [...s.hidden, id];
-    });
-  }
   move(id: string, targetId: string) {
     if (!this.value.widgets.some((w) => w.id === id)) return;
     this.change((s) => {
@@ -344,7 +378,6 @@ export class CanvasStore {
       if (previous && !source)
         s.floating.push({
           widgetId: previous,
-          ...(floating?.parked ? { minimized: true, parked: true } : {}),
           rect: floating?.rect || { x: 0.5, y: 0.1, width: 0.4, height: 0.4 },
         });
     });
@@ -439,7 +472,14 @@ export function restoreCanvas(raw: unknown): CanvasState {
     if (!f || !ids.has(f.widgetId) || placed.has(f.widgetId) || !f.rect)
       continue;
     placed.add(f.widgetId);
-    floating.push({ ...f, rect: fitted(f.rect) });
+    if (f.parked) slots.push({ id: freshKey(), widgetId: f.widgetId });
+    else
+      floating.push({
+        ...f,
+        minimized: false,
+        parked: false,
+        rect: fitted(f.rect),
+      });
   }
   for (const widget of widgets)
     if (!placed.has(widget.id))
@@ -457,12 +497,10 @@ export function restoreCanvas(raw: unknown): CanvasState {
     ),
     single: false,
     focusId: null,
-    freeMovement: s.freeMovement === true,
+    freeMovement: true,
     slots,
     widgets,
-    hidden: Array.isArray(s.hidden)
-      ? [...new Set(s.hidden.filter((id) => ids.has(id)))]
-      : [],
+    hidden: [],
     floating,
     pending: [],
   };

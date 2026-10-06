@@ -61,7 +61,12 @@ export function useCanvasGeometry(state: CanvasState) {
   const [geometry, setGeometry] = useState<{
     bounds: Box;
     slots: Map<string, SlotBox>;
-  }>({ bounds: { x: 0, y: 0, width: 1, height: 1 }, slots: new Map() });
+    strip: Box | null;
+  }>({
+    bounds: { x: 0, y: 0, width: 1, height: 1 },
+    slots: new Map(),
+    strip: null,
+  });
   const measure = useCallback(() => {
     const element = root.current;
     if (!element) return;
@@ -88,7 +93,7 @@ export function useCanvasGeometry(state: CanvasState) {
           intersection.height > 2,
       });
     }
-    setGeometry({ bounds, slots });
+    setGeometry({ bounds, slots, strip: stripBox });
   }, []);
   const register = useCallback((id: string, node: HTMLElement | null) => {
     const previous = elements.current.get(id);

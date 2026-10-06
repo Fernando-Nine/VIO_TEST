@@ -3,7 +3,6 @@ import { AudioLines, Headphones, MicOff, Monitor, Palette } from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { Media, useSpeaking } from "./Media";
-import { ScreenPicker } from "./ScreenPicker";
 import { participantStyle } from "./participant-style";
 
 export function ParticipantCard({
@@ -106,14 +105,35 @@ export function ParticipantCard({
           <span className="participant-sharing">
             <Monitor size={12} /> Compartilhando tela
           </span>
-          <ScreenPicker
-            publication={screen}
-            name={person.name}
-            engine={engine}
-            visible={visible}
-            onVisible={onVisible}
-          />
+          {!engine.view.watching.includes(screen.id) && (
+            <button
+              className="text-button"
+              onClick={() => engine.watch(screen.id, true)}
+            >
+              Assistir
+            </button>
+          )}
         </>
+      )}
+      {person.inCall && !own && (
+        <label className="person-volume">
+          Volume da voz{" "}
+          <output>
+            {Math.round((engine.volumes.get(person.id) ?? 1) * 100)}%
+          </output>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            aria-label={`Volume da voz de ${person.name}`}
+            value={engine.volumes.get(person.id) ?? 1}
+            onChange={(event) => {
+              engine.volumes.set(person.id, +event.target.value);
+              engine.bump();
+            }}
+          />
+        </label>
       )}
     </article>
   );

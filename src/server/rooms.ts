@@ -110,10 +110,23 @@ export class Rooms {
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
       widgets: room.widgets.list(),
+      screenViewers: this.screenViewers(room),
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
       ),
     };
+  }
+  private screenViewers(room: Room): Record<string, string[]> {
+    const viewers: Record<string, string[]> = {};
+    for (const sub of room.subscriptions.values()) {
+      if (sub.tier !== "main" || sub.publication.kind !== "screen") continue;
+      const ids = (viewers[sub.publication.id] ||= []);
+      if (!ids.includes(sub.viewer)) ids.push(sub.viewer);
+    }
+    return viewers;
+  }
+  private broadcastViewers(room: Room) {
+    this.io.to(room.code).emit("screen-viewers", this.screenViewers(room));
   }
   broadcast(room: Room) {
     room.touched = Date.now();
@@ -135,6 +148,8 @@ export class Rooms {
     room.subscriptions.delete(sub.id);
     this.send(room, sub.viewer, "subscription-ended", sub.id);
     this.send(room, sub.publication.owner, "subscription-ended", sub.id);
+    if (sub.tier === "main" && sub.publication.kind === "screen")
+      this.broadcastViewers(room);
   }
   private removePublication(room: Room, p: Publication) {
     for (const sub of [...room.subscriptions.values()])
@@ -444,6 +459,8 @@ export class Rooms {
           nonce: data.nonce,
         };
         room.subscriptions.set(id, sub);
+        if (sub.tier === "main" && p.kind === "screen")
+          this.broadcastViewers(room);
       }
       this.send(room, m.id, "subscription", sub);
       this.send(room, p.owner, "subscription", sub);

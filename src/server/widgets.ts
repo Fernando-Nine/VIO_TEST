@@ -1,6 +1,7 @@
 import { Fault } from "./security";
 import {
   operateWidget,
+  contentKind,
   validContent,
   type SharedWidget,
   type WidgetContent,
@@ -66,6 +67,11 @@ export class RoomWidgets {
     content: WidgetContent,
   ) {
     const current = this.owned(owner, id);
+    if (content.kind && content.kind !== contentKind(current))
+      throw new Fault(
+        "INVALID_REQUEST",
+        "Use um widget separado para outro tipo de conteúdo.",
+      );
     if (current.revision !== revision)
       throw new Fault(
         "WIDGET_CONFLICT",

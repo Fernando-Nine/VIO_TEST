@@ -1290,3 +1290,115 @@ test("somente espectador autenticado regula seu vídeo main; áudio e outras ass
     await app.close();
   }
 });
+
+test("espectadores são por publicação, excluem miniaturas e nunca vazam para outra sala", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 4; i++)
+      sockets.push(await connect(app.url, (await session(app.url)).token));
+    const ids: string[] = [];
+    for (const [i, socket] of sockets.entries())
+      ids.push(
+        data(
+          await request<{ id: string }>(socket, "join", {
+            name: `Pessoa ${i}`,
+            code: i === 3 ? "QAVIEWOTHER" : "QAVIEWERS",
+          }),
+        ).id,
+      );
+    const publish = async (socket: Socket) =>
+      data(
+        await request<Publication>(socket, "publish", {
+          kind: "screen",
+          key: crypto.randomUUID(),
+          audio: true,
+          muted: false,
+        }),
+      );
+    const a = await publish(sockets[0]),
+      b = await publish(sockets[1]);
+    const watch = async (
+      socket: Socket,
+      publicationId: string,
+      tier: "main" | "preview",
+    ) =>
+      data(
+        await request<Subscription>(socket, "subscribe", {
+          publicationId,
+          tier,
+          nonce: crypto.randomUUID(),
+        }),
+      );
+    await watch(sockets[2], a.id, "preview");
+    const joined = new Promise<Record<string, string[]>>((resolve) =>
+      sockets[1].once("screen-viewers", resolve),
+    );
+    const main = await watch(sockets[2], a.id, "main");
+    assert.deepEqual((await joined)[a.id], [ids[2]]);
+    await watch(sockets[0], b.id, "main");
+    const room = app.rooms.rooms.get("QAVIEWERS")!;
+    assert.deepEqual(app.rooms.snapshot(room).screenViewers, {
+      [a.id]: [ids[2]],
+      [b.id]: [ids[0]],
+    });
+    assert.deepEqual(
+      app.rooms.snapshot(app.rooms.rooms.get("QAVIEWOTHER")!).screenViewers,
+      {},
+    );
+    assert.equal(
+      (
+        await request(sockets[3], "subscribe", {
+          publicationId: a.id,
+          tier: "main",
+          nonce: crypto.randomUUID(),
+        })
+      ).ok,
+      false,
+    );
+    data(await request(sockets[2], "unsubscribe", { id: main.id }));
+    assert.equal(app.rooms.snapshot(room).screenViewers![a.id], undefined);
+    data(await request(sockets[1], "unpublish", { publicationId: b.id }));
+    assert.deepEqual(app.rooms.snapshot(room).screenViewers, {});
+  } finally {
+    sockets.forEach((socket) => socket.disconnect());
+    await app.close();
+  }
+});
+
+test("compartilhar é idempotente e somente criador encerra a instância para todos", async () => {
+  const app = await server();
+  const owner = await connect(app.url, (await session(app.url)).token),
+    member = await connect(app.url, (await session(app.url)).token);
+  try {
+    data(await request(owner, "join", { name: "Criador", code: "QACLOSE" }));
+    data(await request(member, "join", { name: "Colega", code: "QACLOSE" }));
+    const id = crypto.randomUUID(),
+      content = {
+        kind: "notes",
+        title: "Notas",
+        blocks: [
+          {
+            id: crypto.randomUUID(),
+            kind: "text",
+            label: "Texto",
+            value: "Não duplicar",
+          },
+        ],
+      };
+    data(await request(owner, "widget-create", { id, content }));
+    data(await request(owner, "widget-create", { id, content }));
+    assert.equal(app.rooms.rooms.get("QACLOSE")!.widgets.entries.size, 1);
+    assert.equal((await request(member, "widget-delete", { id })).ok, false);
+    const closed = new Promise<{ id: string; widget: null }>((resolve) =>
+      member.once("widget-updated", resolve),
+    );
+    data(await request(owner, "widget-delete", { id }));
+    assert.deepEqual(await closed, { id, widget: null });
+    assert.equal(app.rooms.rooms.get("QACLOSE")!.widgets.entries.size, 0);
+  } finally {
+    owner.disconnect();
+    member.disconnect();
+    await app.close();
+  }
+});

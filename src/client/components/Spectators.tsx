@@ -1,6 +1,7 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState, useEffect } from "react";
 import { Eye } from "lucide-react";
 import type { Controller } from "../room/controller";
+import { AnchoredPopover } from "./AnchoredPopover";
 
 export function Spectators({
   engine,
@@ -12,96 +13,72 @@ export function Spectators({
   const [open, setOpen] = useState(false);
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-  const hasPopover =
-    typeof HTMLElement !== "undefined" &&
-    "showPopover" in HTMLElement.prototype;
-  useLayoutEffect(() => {
-    if (!open || !panel.current || !hasPopover) return;
-    const el = panel.current,
-      trigger = button.current;
-    if (!trigger) return;
-    const win = trigger.ownerDocument.defaultView;
-    const position = () => {
-      const rect = trigger.getBoundingClientRect();
-      el.style.left = `${Math.max(8, Math.min((win?.innerWidth || 320) - el.offsetWidth - 8, rect.right - el.offsetWidth))}px`;
-      el.style.top = `${Math.max(8, Math.min(rect.bottom + 5, (win?.innerHeight || 500) - el.offsetHeight - 8))}px`;
-    };
-    el.showPopover();
-    position();
-    win?.addEventListener("resize", position);
-    return () => {
-      if (el.matches(":popover-open")) el.hidePopover();
-      win?.removeEventListener("resize", position);
-    };
-  }, [open, hasPopover]);
+  const delay = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const close = useCallback(() => setOpen(false), []);
+  useEffect(() => () => clearTimeout(delay.current), []);
   const viewers = new Set(
-    engine.peers
-      .infos()
-      .filter(
-        (p) =>
-          p.sending &&
-          p.publicationId === publicationId &&
-          p.tier === "main" &&
-          p.state === "connected",
-      )
-      .map((p) => p.viewer),
+    engine.view.snapshot?.screenViewers?.[publicationId] || [],
   );
   const people =
     engine.view.snapshot?.participants.filter((p) => viewers.has(p.id)) || [];
+  const info = engine.screenInfo(publicationId);
+  const name =
+    info?.publication.owner === engine.view.id
+      ? "sua tela"
+      : `tela de ${info?.name || "participante"}`;
   return (
     <div
       className="spectators"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={(e) => {
-        if (
-          !e.currentTarget.contains(e.currentTarget.ownerDocument.activeElement)
-        )
-          setOpen(false);
-      }}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          e.stopPropagation();
-          setOpen(false);
-          button.current?.focus();
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") {
+          clearTimeout(delay.current);
+          setOpen(true);
         }
+      }}
+      onPointerLeave={() => {
+        delay.current = setTimeout(close, 220);
       }}
     >
       <button
         ref={button}
         className="icon-button"
-        aria-label={`${people.length} espectadores da sua transmissão`}
+        aria-label={`${people.length} espectadores da ${name}`}
         aria-expanded={open}
-        aria-controls={id}
-        onClick={() => setOpen((v) => !v)}
+        aria-controls={open ? id : undefined}
+        onClick={() => {
+          clearTimeout(delay.current);
+          setOpen((v) => !v);
+        }}
       >
         <Eye size={16} />
         <span>{people.length}</span>
       </button>
       {open && (
-        <div
-          ref={panel}
-          popover={hasPopover ? "manual" : undefined}
-          className="spectators-panel"
+        <AnchoredPopover
+          anchor={button}
           id={id}
-          role="group"
-          aria-label="Espectadores"
+          className="spectators-panel"
+          close={close}
         >
-          <strong>Conectados à sua tela</strong>
+          <strong>Assistindo à {name}</strong>
           {people.length ? (
             <ul>
               {people.map((p) => (
-                <li key={p.id}>{p.name}</li>
+                <li key={p.id}>
+                  {p.name}
+                  {p.id === engine.view.id ? " · você" : ""}
+                  {!p.online ? " · reconectando" : ""}
+                </li>
               ))}
             </ul>
           ) : (
             <p>Ninguém assistindo ainda.</p>
           )}
-          <small>Inclui quem mantém o áudio em segundo plano.</small>
-        </div>
+          <small>
+            Inclui áudio em segundo plano e pessoas conectando. Miniaturas não
+            contam.
+          </small>
+        </AnchoredPopover>
       )}
     </div>
   );

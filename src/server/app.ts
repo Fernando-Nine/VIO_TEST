@@ -126,7 +126,7 @@ export async function createApp(config: Config = readConfig(), dev = false) {
       const session = verifyToken(config.secret, socket.handshake.auth?.token);
       const ip = proxyaddr(socket.request, trust);
       if ((counts.get(ip) || 0) >= config.maxSocketsPerIp)
-        throw new Error("Limite de conexões atingido.");
+        throw new Fault("CONNECTION_LIMIT", "Limite de conexões atingido.");
       socket.data = { id: session.id, expires: session.exp, ip };
       next();
     } catch (e) {

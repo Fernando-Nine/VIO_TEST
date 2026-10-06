@@ -17,21 +17,27 @@ import { Accessibility, Feedback } from "@dnd-kit/dom";
 import { Rectangle } from "@dnd-kit/geometry";
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   Columns3,
   LayoutGrid,
   Maximize,
+  Minimize,
   MonitorUp,
   Plus,
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { contentKind } from "../../shared/widgets";
 import { Dialog } from "../components/Dialog";
 import { ScreenAudio } from "../components/ScreenAudio";
 import type { Controller } from "../room/controller";
 import { freshKey } from "../id";
 import {
   fitted,
+  focusedWidgetId,
+  canRemoveSlot,
   isStrip,
   presetNames,
   type Offer,
@@ -57,7 +63,7 @@ const plugins = (
   Accessibility.configure({
     screenReaderInstructions: {
       draggable:
-        "Use espaço para começar a mover, setas para escolher uma posição e espaço para soltar. Escape cancela. O menu Organizar também permite mover sem arrastar.",
+        "Use espaço, setas e espaço para encaixar. Escape cancela. No mouse, arraste livremente ou segure Shift para encaixar. Layout oferece Mover widget sem arrastar.",
     },
     announcements: {
       dragstart: () =>
@@ -85,6 +91,7 @@ interface Props {
   diagnostics: () => void;
   share: () => void;
   fullscreen: () => void;
+  isFullscreen?: boolean;
 }
 
 function CanvasSlot({
@@ -95,6 +102,7 @@ function CanvasSlot({
   accept,
   decline,
   remove,
+  removable,
   disabled,
   hidden,
   restore,
@@ -106,6 +114,7 @@ function CanvasSlot({
   accept: (id: string, destination: "slot" | "float") => void;
   decline: (id: string) => void;
   remove: () => void;
+  removable: boolean;
   disabled: boolean;
   hidden: boolean;
   restore: () => void;
@@ -167,13 +176,15 @@ function CanvasSlot({
               <Plus size={20} />
               <span>Adicionar widget</span>
             </button>
-            <button
-              className="icon-button remove-slot"
-              aria-label={`Remover espaço vazio ${index + 1}`}
-              onClick={remove}
-            >
-              <X size={14} />
-            </button>
+            {removable && (
+              <button
+                className="icon-button remove-slot"
+                aria-label={`Remover espaço vazio ${index + 1}`}
+                onClick={remove}
+              >
+                <X size={14} />
+              </button>
+            )}
           </>
         )
       )}
@@ -200,21 +211,38 @@ export function RoomCanvas(props: Props) {
   } | null>(null);
   const [announcement, announce] = useState("");
   const [roving, setRoving] = useState<string | null>(null);
+  const [snap, setSnap] = useState(false);
+  const shift = useRef(false);
+  const keyboardDrag = useRef(false);
+  const [nearTop, setNearTop] = useState(false);
+  const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const [newInStrip, setNewInStrip] = useState(0);
   const pendingFocus = useRef<string | null>(null);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
   useStripInput(root, strip, stripMode && !state.single);
   const offer = state.pending[0];
+  useEffect(() => {
+    const set = (value: boolean) => {
+      shift.current = value;
+      setSnap(value);
+    };
+    const key = (event: globalThis.KeyboardEvent) => {
+      set(event.shiftKey);
+    };
+    const blur = () => set(false);
+    window.addEventListener("keydown", key);
+    window.addEventListener("keyup", key);
+    window.addEventListener("blur", blur);
+    return () => {
+      window.removeEventListener("keydown", key);
+      window.removeEventListener("keyup", key);
+      window.removeEventListener("blur", blur);
+    };
+  }, []);
   const ordered = [
-    ...state.slots.flatMap((s) =>
-      s.widgetId && !state.hidden.includes(s.widgetId) ? [s.widgetId] : [],
-    ),
-    ...state.floating.filter((f) => !f.minimized).map((f) => f.widgetId),
-  ];
-  const minimizedIds = [
-    ...state.hidden,
-    ...state.floating.filter((f) => f.minimized).map((f) => f.widgetId),
+    ...state.slots.flatMap((s) => (s.widgetId ? [s.widgetId] : [])),
+    ...state.floating.map((f) => f.widgetId),
   ];
   const rovingId = roving && ordered.includes(roving) ? roving : ordered[0];
   const motionKey = `${state.preset}:${state.single}:${state.focusId}:${state.slots.map((s) => `${s.id}:${s.widgetId}`).join("|")}`;
@@ -336,8 +364,6 @@ export function RoomCanvas(props: Props) {
               s.single = true;
             });
         } else {
-          const float = current.floating.find((f) => f.widgetId === widget.id);
-          if (float?.minimized) store.minimize(widget.id);
           store.change((s) => {
             s.single = false;
           });
@@ -399,7 +425,20 @@ export function RoomCanvas(props: Props) {
     }
     setCatalog(null);
   }
-  function remove(widget: WidgetInstance) {
+  async function remove(widget: WidgetInstance) {
+    if (widget.config.sharedId) {
+      const shared = engine.view.snapshot?.widgets?.find(
+        (w) => w.id === widget.config.sharedId,
+      );
+      if (shared?.owner === engine.view.id) {
+        try {
+          await engine.request("widget-delete", { id: shared.id });
+        } catch (error) {
+          engine.fail(error);
+          return;
+        }
+      }
+    }
     if (widget.type === "screen")
       engine.stopWatching(widget.config.publicationId);
     store.remove(widget.id);
@@ -497,10 +536,22 @@ export function RoomCanvas(props: Props) {
     accept,
     decline: (id: string) => store.decline(id),
     remove: () => store.removeSlot(slot.id),
-    disabled: state.freeMovement || state.single,
-    hidden: !!slot.widgetId && state.hidden.includes(slot.widgetId),
-    restore: () => slot.widgetId && store.minimize(slot.widgetId),
+    removable: canRemoveSlot(state, slot.id),
+    disabled: state.single || !(snap || keyboardDrag.current),
+    hidden: false,
+    restore: () => {},
   });
+  useLayoutEffect(() => {
+    if (!highlightedSlot) return;
+    const node = [
+      ...(root.current?.querySelectorAll<HTMLElement>("[data-slot-id]") || []),
+    ].find((n) => n.dataset.slotId === highlightedSlot);
+    node?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    node
+      ?.querySelector<HTMLButtonElement>(".add-widget")
+      ?.focus({ preventScroll: true });
+    setHighlightedSlot(null);
+  }, [highlightedSlot, state.slots, root]);
   const organizedWidget = state.widgets.find((w) => w.id === organizing);
   const currentFloat = state.floating.find((f) => f.widgetId === organizing);
   const visibleSlots =
@@ -511,7 +562,21 @@ export function RoomCanvas(props: Props) {
   });
 
   return (
-    <div className="room-canvas">
+    <div
+      className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop || layoutOpen || catalog ? "show-top-toolbar" : ""}`}
+      onPointerMove={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setNearTop(
+          event.pointerType !== "mouse" || event.clientY - rect.top < 64,
+        );
+      }}
+      onPointerLeave={() => setNearTop(false)}
+    >
+      <div
+        className="canvas-top-edge"
+        aria-hidden="true"
+        onPointerEnter={() => setNearTop(true)}
+      />
       <div className="canvas-toolbar">
         <button className="text-button" onClick={() => setLayoutOpen(true)}>
           <LayoutGrid size={16} />
@@ -519,9 +584,18 @@ export function RoomCanvas(props: Props) {
         </button>
         <button
           className="text-button"
+          aria-label="Adicionar espaço vazio"
           onClick={() => {
-            setCatalog("auto");
-            setCatalogTab("native");
+            const id =
+              state.slots.find((s) => !s.widgetId && !s.offer)?.id ||
+              store.addSlot();
+            setHighlightedSlot(id);
+            store.change((s) => {
+              s.single = false;
+            });
+            announce(
+              "Espaço vazio pronto. Clique em Adicionar widget para escolher o conteúdo.",
+            );
           }}
         >
           <Plus size={16} />
@@ -531,59 +605,38 @@ export function RoomCanvas(props: Props) {
           className="text-button"
           aria-pressed={state.single}
           disabled={!state.widgets.length}
-          onClick={() =>
-            store.change((s) => {
-              s.single = !s.single;
-              s.focusId ||=
-                s.slots.find((t) => t.widgetId)?.widgetId ||
-                s.widgets[0]?.id ||
-                null;
-            })
-          }
+          onClick={() => store.toggleSingle()}
         >
           <Columns3 size={16} />
           <span>{state.single ? "Voltar ao conjunto" : "Foco único"}</span>
         </button>
-        {stripMode && (
-          <div className="strip-controls">
-            <button
-              className="icon-button"
-              onClick={() => scrollStep(-1)}
-              aria-label="Voltar um item da tira"
+        {state.single && (
+          <label className="single-focus-select">
+            <span className="sr-only">Trocar tela em foco único</span>
+            <select
+              aria-label="Trocar tela em foco único"
+              value={focusedWidgetId(state) || ""}
+              onChange={(event) => focus(event.target.value)}
             >
-              <ArrowUp size={15} />
-            </button>
-            <button
-              className="icon-button"
-              onClick={() => scrollStep(1)}
-              aria-label="Avançar um item da tira"
-            >
-              <ArrowDown size={15} />
-            </button>
-            {newInStrip > 0 && (
-              <button
-                className="text-button strip-notice"
-                onClick={() => {
-                  strip.current?.scrollTo({
-                    top: strip.current.scrollHeight,
-                    left: strip.current.scrollWidth,
-                    behavior: "instant",
-                  });
-                  setNewInStrip(0);
-                }}
-              >
-                {newInStrip}{" "}
-                {newInStrip === 1 ? "convite novo" : "convites novos"}
-              </button>
-            )}
-          </div>
+              {state.widgets.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {titleOf(w, engine)}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
         <button
           className="icon-button canvas-fullscreen"
           onClick={props.fullscreen}
-          aria-label="Tela cheia da sala"
+          aria-label={
+            props.isFullscreen
+              ? "Sair da tela cheia da sala"
+              : "Tela cheia da sala"
+          }
+          aria-pressed={!!props.isFullscreen}
         >
-          <Maximize size={16} />
+          {props.isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
         </button>
       </div>
       <DragDropProvider
@@ -592,6 +645,8 @@ export function RoomCanvas(props: Props) {
           const id = String(event.operation.source?.id || "");
           const rect = event.operation.source?.element?.getBoundingClientRect();
           if (!rect) return;
+          keyboardDrag.current =
+            !!event.nativeEvent && "key" in event.nativeEvent;
           const initial = { ...event.operation.position.initial };
           const box = Rectangle.from(rect);
           dragOrigin.current = { box, initial, point: initial };
@@ -612,12 +667,7 @@ export function RoomCanvas(props: Props) {
             y: origin.point.y + (event.by?.y || 0),
           };
           const native = event.nativeEvent;
-          if (
-            native &&
-            "key" in native &&
-            !state.freeMovement &&
-            !state.single
-          ) {
+          if (native && "key" in native && !state.single) {
             const target = adjacentDropSlot(
               { x: origin.point.x - base.left, y: origin.point.y - base.top },
               String(native.key),
@@ -658,13 +708,14 @@ export function RoomCanvas(props: Props) {
               dropSlots,
               geometry.bounds,
             );
-            if (target && !state.freeMovement && !state.single) {
+            if (
+              target &&
+              (shift.current || keyboardDrag.current) &&
+              !state.single
+            ) {
               store.reorder(id, target.id);
               announce("Widget encaixado na posição escolhida.");
-            } else if (
-              state.freeMovement ||
-              state.floating.some((f) => f.widgetId === id)
-            ) {
+            } else if (!state.single && !keyboardDrag.current) {
               const floating = state.floating.find((f) => f.widgetId === id);
               const slot = state.slots.find((s) => s.widgetId === id);
               const box = floating
@@ -691,16 +742,17 @@ export function RoomCanvas(props: Props) {
             }
           }
           dragOrigin.current = null;
+          keyboardDrag.current = false;
           setDrag(null);
           props.interaction(false);
         }}
       >
         <div
-          className={`canvas-viewport ${drag ? "canvas-dragging" : ""}`}
+          className={`canvas-viewport ${drag ? "canvas-dragging" : ""} ${snap || keyboardDrag.current ? "snap-enabled" : ""}`}
           ref={root}
         >
           <div
-            className={`canvas-layout ${state.preset} ${state.single ? "single-focus" : ""}`}
+            className={`canvas-layout ${state.preset} ${stripMode && state.slots.length - 1 > visibleSlots ? "with-strip-navigation" : ""} ${state.single ? "single-focus" : ""}`}
             style={
               {
                 "--focus-ratio": `${state.ratio * 100}%`,
@@ -735,14 +787,64 @@ export function RoomCanvas(props: Props) {
               ))
             )}
           </div>
+          {stripMode &&
+            !state.single &&
+            state.slots.length - 1 > visibleSlots && (
+              <div
+                className="strip-controls"
+                role="group"
+                aria-label="Navegar pela tira"
+                style={{
+                  left: geometry.strip?.x || 8,
+                  width: geometry.strip?.width || "auto",
+                }}
+              >
+                <button
+                  className="icon-button"
+                  onClick={() => scrollStep(-1)}
+                  aria-label="Voltar um item da tira"
+                >
+                  {geometry.bounds.width < 680 ||
+                  ["strip-top", "strip-bottom"].includes(state.preset) ? (
+                    <ArrowLeft size={16} />
+                  ) : (
+                    <ArrowUp size={16} />
+                  )}
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => scrollStep(1)}
+                  aria-label="Avançar um item da tira"
+                >
+                  {geometry.bounds.width < 680 ||
+                  ["strip-top", "strip-bottom"].includes(state.preset) ? (
+                    <ArrowRight size={16} />
+                  ) : (
+                    <ArrowDown size={16} />
+                  )}
+                </button>
+                {newInStrip > 0 && (
+                  <button
+                    className="text-button strip-notice"
+                    onClick={() => {
+                      strip.current?.scrollTo({
+                        top: strip.current.scrollHeight,
+                        left: strip.current.scrollWidth,
+                        behavior: "instant",
+                      });
+                      setNewInStrip(0);
+                    }}
+                  >
+                    {newInStrip}{" "}
+                    {newInStrip === 1 ? "convite novo" : "convites novos"}
+                  </button>
+                )}
+              </div>
+            )}
           {state.widgets.map((widget) => {
             const slot = state.slots.find((s) => s.widgetId === widget.id),
               floating = state.floating.find((f) => f.widgetId === widget.id);
-            const focused = state.single
-              ? state.focusId === widget.id
-              : !state.preset.startsWith("grid-") || state.preset === "grid-3"
-                ? state.slots[0].widgetId === widget.id
-                : state.focusId === widget.id;
+            const focused = focusedWidgetId(state) === widget.id;
             const box =
               state.single && focused
                 ? geometry.bounds
@@ -753,13 +855,9 @@ export function RoomCanvas(props: Props) {
                       widgetRegistry[widget.type]?.minimum,
                     )
                   : slot && geometry.slots.get(slot.id);
-            const visible =
-              !state.hidden.includes(widget.id) &&
-              !floating?.minimized &&
-              (state.single
-                ? focused
-                : !!floating ||
-                  !!(slot && geometry.slots.get(slot.id)?.visible));
+            const visible = state.single
+              ? focused
+              : !!floating || !!(slot && geometry.slots.get(slot.id)?.visible);
             return (
               <WidgetFrame
                 key={widget.id}
@@ -791,42 +889,12 @@ export function RoomCanvas(props: Props) {
                 onFocusHeader={() => setRoving(widget.id)}
                 navigate={navigate}
                 focus={() => focus(widget.id)}
-                options={() => setOrganizing(widget.id)}
-                close={() => remove(widget)}
-                minimize={() => store.minimize(widget.id)}
+                close={() => void remove(widget)}
               />
             );
           })}
         </div>
       </DragDropProvider>
-      {minimizedIds.length > 0 && (
-        <div className="minimized-widgets" aria-label="Widgets escondidos">
-          {minimizedIds.map((id) => {
-            const w = state.widgets.find((w) => w.id === id);
-            return (
-              w && (
-                <button
-                  key={id}
-                  onClick={() => {
-                    if (
-                      state.floating.some((f) => f.widgetId === id && f.parked)
-                    )
-                      setOrganizing(id);
-                    else {
-                      store.minimize(id);
-                      store.change((s) => {
-                        s.single = false;
-                      });
-                    }
-                  }}
-                >
-                  {titleOf(w, engine)} <Plus size={14} />
-                </button>
-              )
-            );
-          })}
-        </div>
-      )}
       <div className="canvas-audio">
         {engine.view.watching.map((id) => {
           const info = engine.screenInfo(id);
@@ -884,66 +952,117 @@ export function RoomCanvas(props: Props) {
       )}
       {layoutOpen && (
         <Dialog title="Organizar seu espaço" close={() => setLayoutOpen(false)}>
-          <p className="field-note">
-            As escolhas mudam apenas seu layout. Ao reduzir os espaços, os
-            widgets excedentes ficam escondidos, com áudio ativo. Escolha onde
-            restaurar pelo botão com o nome deles. No celular, o conjunto de
-            quatro espaços usa uma grade 2 × 2; a tira mostra um ou dois itens
-            por vez.
-          </p>
-          <label>
-            Disposição
-            <select
-              value={state.preset}
-              onChange={(e) => store.preset(e.target.value as Preset)}
-            >
-              {Object.entries(presetNames).map(([id, label]) => (
-                <option value={id} key={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {!state.preset.startsWith("grid-") && (
-            <label>
-              Tamanho do foco <output>{Math.round(state.ratio * 100)}%</output>
-              <input
-                aria-label="Proporção do espaço de foco"
-                type="range"
-                min=".4"
-                max=".8"
-                step=".05"
-                value={state.ratio}
-                onChange={(e) =>
-                  store.change((s) => {
-                    s.ratio = +e.target.value;
-                  })
+          <fieldset className="layout-modes">
+            <legend>1. Modo do layout</legend>
+            <div className="layout-choices">
+              <button
+                className="layout-choice"
+                aria-pressed={!stripMode}
+                onClick={() =>
+                  store.preset(
+                    `grid-${Math.min(6, state.slots.length)}` as Preset,
+                  )
                 }
-              />
-            </label>
-          )}
-          <button className="secondary" onClick={() => store.addSlot()}>
-            <Plus size={16} /> Adicionar espaço vazio
-          </button>
-          <label className="toggle">
-            <span>
-              Movimento livre
-              <small>
-                Desativa o encaixe ao arrastar. O menu de cada widget ainda
-                permite escolher uma posição.
-              </small>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={state.freeMovement}
-              onChange={(e) =>
-                store.change((s) => {
-                  s.freeMovement = e.target.checked;
-                })
-              }
-            />
-          </label>
+              >
+                <LayoutGrid />
+                <strong>Grid automático</strong>
+                <span>Todos os espaços fazem parte da grade.</span>
+              </button>
+              <button
+                className="layout-choice"
+                aria-pressed={stripMode}
+                onClick={() => store.preset("strip-left")}
+              >
+                <Columns3 />
+                <strong>Foco + tira</strong>
+                <span>Um espaço grande e uma tira linear.</span>
+              </button>
+            </div>
+          </fieldset>
+          <fieldset className="layout-details">
+            <legend>2. Organize este modo</legend>
+            {stripMode ? (
+              <div
+                className="layout-directions"
+                role="group"
+                aria-label="Posição do foco"
+              >
+                {(["left", "right", "top", "bottom"] as const).map(
+                  (side, i) => (
+                    <button
+                      key={side}
+                      aria-pressed={state.preset === `strip-${side}`}
+                      onClick={() => store.preset(`strip-${side}`)}
+                    >
+                      {["Esquerda", "Direita", "Em cima", "Embaixo"][i]}
+                    </button>
+                  ),
+                )}
+              </div>
+            ) : (
+              <div
+                className="layout-choices grid-presets"
+                role="group"
+                aria-label="Disposição do grid"
+              >
+                {Object.entries(presetNames)
+                  .filter(([id]) => !id.startsWith("strip-"))
+                  .map(([id, label]) => (
+                    <button
+                      key={id}
+                      aria-pressed={state.preset === id}
+                      onClick={() => store.preset(id as Preset)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {!state.preset.startsWith("grid-") && (
+              <label>
+                Tamanho do foco{" "}
+                <output>{Math.round(state.ratio * 100)}%</output>
+                <input
+                  aria-label="Proporção do espaço de foco"
+                  type="range"
+                  min=".4"
+                  max=".8"
+                  step=".05"
+                  value={state.ratio}
+                  onChange={(e) =>
+                    store.change((s) => {
+                      s.ratio = +e.target.value;
+                    })
+                  }
+                />
+              </label>
+            )}
+            <p className="field-note">
+              O layout preserva os widgets abertos. Espaços vazios podem ser
+              removidos pelo X. Arraste livremente; segure Shift para encaixar.
+            </p>
+          </fieldset>
+          <fieldset>
+            <legend>Mover widget sem arrastar</legend>
+            <p className="field-note">
+              Escolha um widget e depois seu destino. Funciona também no toque e
+              pelo teclado.
+            </p>
+            <div className="slot-destinations">
+              {state.widgets.map((w) => (
+                <button
+                  key={w.id}
+                  className="secondary"
+                  onClick={() => {
+                    setLayoutOpen(false);
+                    setOrganizing(w.id);
+                  }}
+                >
+                  {titleOf(w, engine)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <p className="field-note">
             A partir de seis participantes, o envio direto entre navegadores
             exige mais rede e processamento. A sala não tem limite fixo de
@@ -978,15 +1097,6 @@ export function RoomCanvas(props: Props) {
               </button>
             )}
           </div>
-          <button
-            className="secondary"
-            onClick={() => {
-              store.minimize(organizedWidget.id);
-              setOrganizing(null);
-            }}
-          >
-            Esconder este widget
-          </button>
           <button
             className="secondary"
             onClick={() => {
@@ -1099,6 +1209,7 @@ export function RoomCanvas(props: Props) {
           >
             {[
               ["native", "Do VIO"],
+              ["live", "Ao vivo"],
               ["room", "Da sala"],
               ["community", "Comunidade"],
             ].map(([id, label]) => (
@@ -1114,6 +1225,31 @@ export function RoomCanvas(props: Props) {
           {catalogTab === "native" && (
             <>
               <div className="widget-catalog">
+                {Object.values(widgetRegistry)
+                  .filter((w) => w.id !== "screen")
+                  .map((w) => (
+                    <button
+                      className="catalog-item"
+                      key={w.id}
+                      onClick={() => addWidget(w.id)}
+                    >
+                      <w.icon size={20} aria-hidden="true" />
+                      <strong>{w.title}</strong>
+                      <span>{w.description}</span>
+                    </button>
+                  ))}
+              </div>
+            </>
+          )}
+          {catalogTab === "live" && (
+            <>
+              <div className="widget-catalog live-catalog">
+                {!publications.length && (
+                  <p className="widget-empty">
+                    Ninguém está compartilhando tela. As transmissões aparecerão
+                    aqui quando começarem.
+                  </p>
+                )}
                 {publications.map((p) => (
                   <button
                     className="catalog-item"
@@ -1131,21 +1267,6 @@ export function RoomCanvas(props: Props) {
                     </span>
                   </button>
                 ))}
-              </div>
-              <div className="widget-catalog">
-                {Object.values(widgetRegistry)
-                  .filter((w) => w.id !== "screen")
-                  .map((w) => (
-                    <button
-                      className="catalog-item"
-                      key={w.id}
-                      onClick={() => addWidget(w.id)}
-                    >
-                      <SlidersHorizontal size={19} />
-                      <strong>{w.title}</strong>
-                      <span>{w.description}</span>
-                    </button>
-                  ))}
               </div>
             </>
           )}
@@ -1171,7 +1292,7 @@ export function RoomCanvas(props: Props) {
                           store.add(
                             {
                               id: freshKey(),
-                              type: "custom",
+                              type: contentKind(w),
                               title: w.title,
                               config: { sharedId: w.id },
                               transient: true,

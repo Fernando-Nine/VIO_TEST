@@ -5,6 +5,9 @@ import { freshKey } from "../id";
 import {
   operateWidget,
   timerElapsed,
+  timerDisplay,
+  timerFinished,
+  contentKind,
   widgetContent,
   type SharedWidget,
   type WidgetBlock,
@@ -20,7 +23,9 @@ export function createContent(kind = "custom"): WidgetContent {
       ? {
           id: freshKey(),
           kind: "timer",
-          label: "Pomodoro",
+          label: "Cronômetro",
+          mode: "down",
+          loop: false,
           duration: 1500,
           elapsed: 0,
           startedAt: null,
@@ -29,6 +34,7 @@ export function createContent(kind = "custom"): WidgetContent {
         ? { id: freshKey(), kind: "text", label: "Anotações", value: "" }
         : { id: freshKey(), kind: "score", label: "Pontuação", value: 0 };
   return {
+    kind: kind === "notes" ? "notes" : kind === "timer" ? "timer" : "custom",
     title:
       kind === "notes"
         ? "Notas"
@@ -48,7 +54,7 @@ export function widgetValue(
     );
   const raw = widget.state as Partial<SharedWidget> | undefined;
   const parsed = widgetContent.safeParse(
-    raw && { title: raw.title, blocks: raw.blocks },
+    raw && { kind: raw.kind, title: raw.title, blocks: raw.blocks },
   );
   if (!parsed.success) return undefined;
   return {
@@ -161,11 +167,19 @@ export function CustomWidget({
   const [error, setError] = useState("");
   const shareId = useRef("");
   useEffect(() => {
-    if (!visible) return;
+    if (
+      !visible ||
+      !value?.blocks.some((b) => b.kind === "timer" && b.startedAt !== null)
+    )
+      return;
     setNow(engine.serverNow());
     const timer = setInterval(() => setNow(engine.serverNow()), 250);
     return () => clearInterval(timer);
-  }, [engine, visible]);
+  }, [
+    engine,
+    visible,
+    !!value?.blocks.some((b) => b.kind === "timer" && b.startedAt !== null),
+  ]);
   if (!value)
     return (
       <p className="widget-empty">
@@ -220,7 +234,7 @@ export function CustomWidget({
             className="icon-button"
             aria-label="Compartilhar widget com a sala"
             onClick={() => {
-              shareId.current ||= freshKey();
+              shareId.current ||= widget.id;
               setSharing(true);
             }}
           >
@@ -235,7 +249,7 @@ export function CustomWidget({
               engine.canvas.add(
                 {
                   id: freshKey(),
-                  type: "custom",
+                  type: widget.type,
                   title: value.title,
                   config: {},
                   state: { ...value, revision: 0 },
@@ -312,11 +326,7 @@ export function CustomWidget({
                   className="widget-clock"
                   aria-label="Tempo do cronômetro"
                 >
-                  {clock(
-                    block.duration
-                      ? block.duration - timerElapsed(block, now)
-                      : timerElapsed(block, now),
-                  )}
+                  {clock(timerDisplay(block, now))}
                 </output>
                 <div className="widget-inline-actions">
                   <button
@@ -325,12 +335,19 @@ export function CustomWidget({
                       act({
                         kind: "timer",
                         blockId: block.id,
-                        action: block.startedAt === null ? "start" : "pause",
+                        action:
+                          block.startedAt === null || timerFinished(block, now)
+                            ? "start"
+                            : "pause",
                         revision: value.revision,
                       })
                     }
                   >
-                    {block.startedAt === null ? "Iniciar" : "Pausar"}
+                    {timerFinished(block, now)
+                      ? "Reiniciar"
+                      : block.startedAt === null
+                        ? "Iniciar"
+                        : "Pausar"}
                   </button>
                   <button
                     className="text-button"
@@ -368,6 +385,7 @@ export function CustomWidget({
       {editing && (
         <StructureEditor
           value={value}
+          kind={widget.type}
           shared={shared}
           close={() => setEditing(false)}
           save={async (content, baseRevision) => {
@@ -431,14 +449,15 @@ export function CustomWidget({
               void engine
                 .request<SharedWidget>("widget-create", {
                   id: shareId.current,
-                  content: { title: value.title, blocks: value.blocks },
+                  content: {
+                    kind: value.kind,
+                    title: value.title,
+                    blocks: value.blocks,
+                  },
                 })
                 .then((result) => {
-                  engine.canvas.updateWidget(widget.id, {
-                    config: { sharedId: result.id },
-                    transient: true,
-                    state: undefined,
-                  });
+                  engine.receiveSharedWidget(result);
+                  engine.canvas.bindShared(widget.id, result.id);
                   setSharing(false);
                 })
                 .catch((e) => setError(e.message))
@@ -455,12 +474,14 @@ export function CustomWidget({
 
 function StructureEditor({
   value,
+  kind,
   shared,
   close,
   save,
   remove,
 }: {
   value: SharedWidget;
+  kind: string;
   shared: boolean;
   close: () => void;
   save: (value: WidgetContent, revision: number) => Promise<void>;
@@ -468,7 +489,11 @@ function StructureEditor({
 }) {
   const [baseRevision] = useState(value.revision);
   const [draft, setDraft] = useState<WidgetContent>(() =>
-    structuredClone({ title: value.title, blocks: value.blocks }),
+    structuredClone({
+      kind: value.kind,
+      title: value.title,
+      blocks: value.blocks,
+    }),
   );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -482,7 +507,16 @@ function StructureEditor({
     }));
   }
   return (
-    <Dialog title="Estrutura do widget" close={close}>
+    <Dialog
+      title={
+        kind === "timer"
+          ? "Personalizar cronômetro"
+          : kind === "notes"
+            ? "Personalizar notas"
+            : "Personalizar placar"
+      }
+      close={close}
+    >
       <label>
         Título
         <input
@@ -509,23 +543,71 @@ function StructureEditor({
             />
           </label>
           {block.kind === "timer" && (
-            <label>
-              Duração em minutos · 0 para contar para cima
-              <input
-                type="number"
-                min={0}
-                max={1440}
-                step={1}
-                value={block.duration / 60}
-                onChange={(e) =>
-                  patch(block.id, {
-                    duration: Math.round(Number(e.target.value) * 60),
-                    elapsed: 0,
-                    startedAt: null,
-                  })
-                }
-              />
-            </label>
+            <>
+              <label>
+                Contagem
+                <select
+                  aria-label="Modo de contagem"
+                  value={block.mode || (block.duration ? "down" : "up")}
+                  onChange={(e) =>
+                    patch(block.id, {
+                      mode: e.target.value as "up" | "down",
+                      duration:
+                        e.target.value === "down"
+                          ? block.duration || 1500
+                          : block.duration,
+                      elapsed: 0,
+                      startedAt: null,
+                    })
+                  }
+                >
+                  <option value="down">Regressiva</option>
+                  <option value="up">Progressiva</option>
+                </select>
+              </label>
+              <label>
+                {block.mode === "up"
+                  ? "Meta em minutos · 0 para contar livremente"
+                  : "Duração em minutos"}
+                <input
+                  type="number"
+                  aria-label="Duração ou meta em minutos"
+                  min={block.mode === "up" ? 0 : 1}
+                  max={1440}
+                  step={1}
+                  value={block.duration / 60}
+                  onChange={(e) =>
+                    patch(block.id, {
+                      duration: Math.round(Number(e.target.value) * 60),
+                      loop: Number(e.target.value) > 0 && block.loop,
+                      elapsed: 0,
+                      startedAt: null,
+                    })
+                  }
+                />
+              </label>
+              <label className="toggle">
+                <span>
+                  Repetir ao atingir o final
+                  <small>
+                    Na contagem progressiva, defina uma meta para repetir.
+                  </small>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={!!block.loop}
+                  disabled={!block.duration}
+                  onChange={(e) =>
+                    patch(block.id, {
+                      loop: e.target.checked,
+                      elapsed: 0,
+                      startedAt: null,
+                    })
+                  }
+                />
+              </label>
+            </>
           )}
           <button
             className="text-button"
@@ -541,38 +623,23 @@ function StructureEditor({
           </button>
         </fieldset>
       ))}
-      <div className="widget-inline-actions">
-        {(["score", "text", "timer"] as const).map((kind) => (
-          <button
-            className="secondary"
-            disabled={draft.blocks.length >= 6}
-            key={kind}
-            onClick={() =>
-              setDraft({
-                ...draft,
-                blocks: [
-                  ...draft.blocks,
-                  kind === "score"
-                    ? { id: freshKey(), kind, label: "Jogador", value: 0 }
-                    : kind === "text"
-                      ? { id: freshKey(), kind, label: "Texto", value: "" }
-                      : {
-                          id: freshKey(),
-                          kind,
-                          label: "Cronômetro",
-                          duration: 0,
-                          elapsed: 0,
-                          startedAt: null,
-                        },
-                ],
-              })
-            }
-          >
-            +{" "}
-            {kind === "score" ? "Placar" : kind === "text" ? "Texto" : "Timer"}
-          </button>
-        ))}
-      </div>
+      {kind === "custom" && (
+        <button
+          className="secondary"
+          disabled={draft.blocks.length >= 6}
+          onClick={() =>
+            setDraft({
+              ...draft,
+              blocks: [
+                ...draft.blocks,
+                { id: freshKey(), kind: "score", label: "Jogador", value: 0 },
+              ],
+            })
+          }
+        >
+          + Contador de pontos
+        </button>
+      )}
       {error && <p role="alert">{error}</p>}
       <button
         className="primary"

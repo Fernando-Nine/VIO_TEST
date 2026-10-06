@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { AnchoredPopover } from "./AnchoredPopover";
 import { Clock3, HelpCircle } from "lucide-react";
 import type { Controller } from "../room/controller";
 import { connectionMetric, formatDuration } from "../room/status";
@@ -32,6 +33,9 @@ export function RoomLimit({
   threshold?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  const close = useCallback(() => setOpen(false), []);
   return (
     <span
       className={`limit-help ${count >= threshold ? "capacity-warning" : ""}`}
@@ -41,6 +45,7 @@ export function RoomLimit({
     >
       <button
         type="button"
+        ref={button}
         className="icon-button"
         aria-label={
           count >= threshold
@@ -48,21 +53,25 @@ export function RoomLimit({
             : "Como o número de pessoas afeta a conexão?"
         }
         aria-expanded={open}
-        aria-describedby="room-limit-explanation"
+        aria-describedby={open ? id : undefined}
         onClick={() => setOpen((v) => !v)}
       >
         <HelpCircle size={17} />
       </button>
-      <span
-        id="room-limit-explanation"
-        role="tooltip"
-        className={`limit-tooltip ${open ? "shown" : ""}`}
-      >
-        A sala não bloqueia a entrada pelo número de pessoas. A partir de{" "}
-        {threshold} pessoas, o envio fica mais pesado: a mídia usa conexões
-        diretas entre os navegadores. Cada participante aumenta o uso de rede e
-        o trabalho dos aparelhos. Se travar, reduza a qualidade da tela.
-      </span>
+      {open && (
+        <AnchoredPopover
+          anchor={button}
+          id={id}
+          role="tooltip"
+          className="limit-explanation"
+          close={close}
+        >
+          A sala não bloqueia a entrada pelo número de pessoas. A partir de{" "}
+          {threshold} pessoas, o envio fica mais pesado: a mídia usa conexões
+          diretas entre os navegadores. Cada participante aumenta o uso de rede
+          e o trabalho dos aparelhos. Se travar, reduza a qualidade da tela.
+        </AnchoredPopover>
+      )}
     </span>
   );
 }
@@ -139,6 +148,7 @@ export function ConnectionStatus({
           aria-label="Detalhes da conexão"
         >
           <strong>{metric.quality}</strong>
+          <RoomTimer engine={engine} />
           <p>
             Servidor{" "}
             <b>

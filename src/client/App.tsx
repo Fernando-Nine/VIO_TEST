@@ -14,6 +14,7 @@ import {
   Phone,
   PhoneOff,
   Maximize,
+  Minimize,
   PictureInPicture2,
   Camera,
   CameraOff,
@@ -56,7 +57,7 @@ const RoomCanvas = lazy(() =>
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
-type Panel = "settings" | "people" | "about" | "share" | "history" | null;
+type Panel = "settings" | "color" | "about" | "share" | "history" | null;
 function Brand() {
   return (
     <span className="brand" aria-label="VIO">
@@ -79,52 +80,18 @@ export default function App({ engine }: { engine: Controller }) {
     engine.canvas.getSnapshot,
   );
   const peopleWidget = canvas.widgets.find((w) => w.type === "people");
-  const peopleHidden =
-    !peopleWidget ||
-    canvas.hidden.includes(peopleWidget.id) ||
-    canvas.floating.some(
-      (f) => f.widgetId === peopleWidget.id && f.minimized,
-    ) ||
-    (canvas.single && canvas.focusId !== peopleWidget.id);
-  function togglePeople() {
-    if (!peopleWidget)
+  function showPeople() {
+    if (peopleWidget) engine.canvas.focus(peopleWidget.id);
+    else {
+      const id = freshKey();
+      const slot =
+        canvas.slots.find((s) => !s.widgetId && !s.offer)?.id ||
+        engine.canvas.addSlot();
       engine.canvas.add(
-        {
-          id: freshKey(),
-          type: "people",
-          title: "Pessoas na sala",
-          config: {},
-        },
-        undefined,
-        true,
+        { id, type: "people", title: "Pessoas na sala", config: {} },
+        slot,
       );
-    else if (peopleHidden) {
-      const parked = canvas.floating.find(
-        (f) => f.widgetId === peopleWidget.id && f.parked,
-      );
-      if (parked) {
-        engine.canvas.move(
-          peopleWidget.id,
-          canvas.slots.find((s) => !s.widgetId && !s.offer)?.id ||
-            engine.canvas.addSlot(),
-        );
-        engine.canvas.change((s) => {
-          s.single = false;
-        });
-        wake();
-        return;
-      }
-      if (
-        canvas.hidden.includes(peopleWidget.id) ||
-        canvas.floating.some(
-          (f) => f.widgetId === peopleWidget.id && f.minimized,
-        )
-      )
-        engine.canvas.minimize(peopleWidget.id);
-      engine.canvas.change((s) => {
-        s.single = false;
-      });
-    } else engine.canvas.minimize(peopleWidget.id);
+    }
     wake();
   }
   const [active, setActive] = useState(true);
@@ -157,6 +124,7 @@ export default function App({ engine }: { engine: Controller }) {
   }, [!!view.snapshot, playerHost, pip.close]);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const draggingCards = useRef(false);
+  const pointerKind = useRef("mouse");
   useEffect(() => {
     document
       .querySelector('meta[name="theme-color"]')
@@ -165,17 +133,20 @@ export default function App({ engine }: { engine: Controller }) {
   const wake = useCallback(() => {
     setActive(true);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      if (
-        !draggingCards.current &&
-        !document.querySelector("dialog[open]") &&
-        !document.querySelector(
-          ".widget-host:focus-within, .dock-volume.has-menu",
-        ) &&
-        !document.activeElement?.matches(":focus-visible")
-      )
-        setActive(false);
-    }, 2000);
+    timer.current = setTimeout(
+      () => {
+        if (
+          !draggingCards.current &&
+          !document.querySelector("dialog[open]") &&
+          !document.querySelector(
+            ".widget-host textarea:focus, .widget-host input:focus, .dock-volume.has-menu, .anchored-popover",
+          ) &&
+          !document.activeElement?.matches(":focus-visible")
+        )
+          setActive(false);
+      },
+      pointerKind.current === "touch" ? 4000 : 1000,
+    );
   }, []);
   useEffect(() => {
     wake();
@@ -268,7 +239,6 @@ export default function App({ engine }: { engine: Controller }) {
   return (
     <div
       className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
-      onPointerMove={wake}
       onPointerDown={wake}
       onKeyDown={wake}
       onFocus={wake}
@@ -307,21 +277,12 @@ export default function App({ engine }: { engine: Controller }) {
             <div className="room-navigation">
               <button
                 className="dock-button people-toggle"
-                aria-label={
-                  peopleHidden
-                    ? "Mostrar pessoas e telas"
-                    : "Ocultar pessoas e telas"
-                }
-                aria-expanded={!peopleHidden}
-                title={
-                  peopleHidden
-                    ? "Mostrar pessoas e telas"
-                    : "Ocultar pessoas e telas"
-                }
-                onClick={togglePeople}
+                aria-label="Pessoas na sala"
+                title="Abrir o widget Pessoas na sala"
+                onClick={showPeople}
               >
                 <Users />
-                <span>Pessoas e telas</span>
+                <span>Pessoas</span>
                 {available.length > 0 && (
                   <small
                     className="available-count"
@@ -402,25 +363,7 @@ export default function App({ engine }: { engine: Controller }) {
         />
       ) : (
         <main className="room" id="main-content">
-          <div className="room-heading">
-            <div>
-              <h1>
-                {watching ? "Na mesma cena." : "Sua companhia está aqui."}
-              </h1>
-              <RoomTimer engine={engine} />
-            </div>
-            <div className="room-capacity">
-              <button className="text-button" onClick={() => open("people")}>
-                <Users size={17} />
-                {people.length} {people.length === 1 ? "pessoa" : "pessoas"}
-                <ChevronDown size={14} />
-              </button>
-              <RoomLimit
-                count={people.length}
-                threshold={view.snapshot.recommendedParticipants}
-              />
-            </div>
-          </div>
+          <h1 className="sr-only">Sala VIO</h1>
           <div className="player-layout" ref={playerMount}>
             {pip.detached && (
               <div className="pip-placeholder">
@@ -435,6 +378,12 @@ export default function App({ engine }: { engine: Controller }) {
               <div
                 className={`player ${engine.previewsEnabled ? "live-previews" : ""} ${watching ? "has-video" : ""}`}
                 ref={player}
+                onPointerMove={(event) => {
+                  pointerKind.current = event.pointerType;
+                  wake();
+                }}
+                onPointerLeave={wake}
+                data-idle={!active && !panel && watching}
               >
                 <Suspense
                   fallback={
@@ -447,10 +396,11 @@ export default function App({ engine }: { engine: Controller }) {
                     engine={engine}
                     active={(active && !panel) || !watching}
                     settings={() => open("settings")}
-                    people={() => open("people")}
+                    people={() => open("color")}
                     diagnostics={() => open("about")}
                     share={() => open("share")}
                     fullscreen={() => void fullscreen()}
+                    isFullscreen={full}
                     interaction={(busy) => {
                       draggingCards.current = busy;
                       wake();
@@ -579,8 +529,10 @@ export default function App({ engine }: { engine: Controller }) {
                               disabled={pip.detached}
                               onClick={() => void fullscreen()}
                             >
-                              <Maximize />
-                              <span>Tela cheia</span>
+                              {full ? <Minimize /> : <Maximize />}
+                              <span>
+                                {full ? "Sair da tela cheia" : "Tela cheia"}
+                              </span>
                             </button>
                           )}
                           {pip.supported && (
@@ -662,7 +614,7 @@ export default function App({ engine }: { engine: Controller }) {
           title={
             {
               settings: "Ajustes",
-              people: "Quem está por aqui",
+              color: "Minha cor na sala",
               about: "Sobre a sala",
               share: "Compartilhar sua tela",
               history: "O VIO está crescendo",
@@ -707,53 +659,7 @@ export default function App({ engine }: { engine: Controller }) {
               </button>
             </>
           )}
-          {panel === "people" && (
-            <>
-              <ColorPicker engine={engine} />
-              {people.map((m) => (
-                <div
-                  className="participant-setting"
-                  key={m.id}
-                  style={participantStyle(m.color, engine.participantColors)}
-                >
-                  <div>
-                    <span className="small-avatar">
-                      {m.name.slice(0, 2).toUpperCase()}
-                    </span>
-                    <strong>{m.name}</strong>
-                    {m.id === view.id && <small>você</small>}
-                    <small>{m.online ? "Na sala" : "Reconectando"}</small>
-                  </div>
-                  {m.id !== view.id && (
-                    <label>
-                      Volume da voz{" "}
-                      <output>
-                        {Math.round((engine.volumes.get(m.id) ?? 1) * 100)}%
-                      </output>
-                      <input
-                        aria-label={`Volume de ${m.name}`}
-                        type="range"
-                        min="0"
-                        max="1"
-                        step=".05"
-                        value={engine.volumes.get(m.id) ?? 1}
-                        onChange={(e) => {
-                          engine.volumes.set(m.id, +e.target.value);
-                          engine.bump();
-                        }}
-                      />
-                    </label>
-                  )}
-                </div>
-              ))}
-              <button
-                className="secondary full-width"
-                onClick={() => void copy()}
-              >
-                <Copy size={16} /> Copiar convite
-              </button>
-            </>
-          )}
+          {panel === "color" && <ColorPicker engine={engine} />}
           {panel === "about" && (
             <>
               {view.snapshot ? (

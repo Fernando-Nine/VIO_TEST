@@ -5,7 +5,22 @@ import {
   useState,
   type ComponentType,
 } from "react";
-import { MonitorUp, Settings2, Volume2, VolumeX } from "lucide-react";
+import {
+  MonitorUp,
+  Settings2,
+  Volume2,
+  VolumeX,
+  Users,
+  Headphones,
+  Eye,
+  SlidersHorizontal,
+  Activity,
+  Clock3,
+  NotebookPen,
+  Timer,
+  Blocks,
+  type LucideIcon,
+} from "lucide-react";
 import type { Controller } from "../room/controller";
 import { Media } from "../components/Media";
 import { ParticipantCard } from "../components/ParticipantCard";
@@ -36,6 +51,7 @@ export interface WidgetDefinition {
   canFloat: boolean;
   autoHide?: boolean;
   apiVersion: 1;
+  icon: LucideIcon;
   render: ComponentType<WidgetProps>;
 }
 function ScreenWidget({
@@ -347,16 +363,7 @@ function TimeWidget({ engine, visible }: WidgetProps) {
 function ViewersWidget({ engine }: WidgetProps) {
   const own = engine.publications.get("screen");
   const viewers = new Set(
-    engine.peers
-      .infos()
-      .filter(
-        (p) =>
-          p.sending &&
-          p.publicationId === own?.id &&
-          p.tier === "main" &&
-          p.state === "connected",
-      )
-      .map((p) => p.viewer),
+    engine.view.snapshot?.screenViewers?.[own?.id || ""] || [],
   );
   return (
     <div className="widget-viewers">
@@ -364,7 +371,7 @@ function ViewersWidget({ engine }: WidgetProps) {
         <>
           <p>
             {viewers.size}{" "}
-            {viewers.size === 1 ? "pessoa conectada" : "pessoas conectadas"}
+            {viewers.size === 1 ? "pessoa assistindo" : "pessoas assistindo"}
           </p>
           <ul>
             {engine.view.snapshot?.participants
@@ -478,6 +485,21 @@ const definition = (
   preferred: { width: 340, height: 280 },
   canFloat: true,
   apiVersion: 1,
+  icon: (
+    {
+      screen: MonitorUp,
+      people: Users,
+      call: Headphones,
+      viewers: Eye,
+      mixer: SlidersHorizontal,
+      connection: Activity,
+      time: Clock3,
+      quick: Settings2,
+      notes: NotebookPen,
+      timer: Timer,
+      custom: Blocks,
+    } as Record<string, LucideIcon>
+  )[id],
   render,
   autoHide,
 });
@@ -541,14 +563,14 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
   ),
   timer: definition(
     "timer",
-    "Cronômetro / Pomodoro",
+    "Cronômetro",
     "Contagem livre ou regressiva.",
     CustomWidget,
   ),
   custom: definition(
     "custom",
     "Personalizado",
-    "Monte blocos de placar, texto e cronômetro.",
+    "Um placar com os seus contadores de pontos.",
     CustomWidget,
   ),
 };
@@ -581,9 +603,7 @@ export function HeaderAccessory({
   widget: WidgetInstance;
   engine: Controller;
 }) {
-  return widget.type === "screen" &&
-    engine.screenInfo(widget.config.publicationId)?.publication.owner ===
-      engine.view.id ? (
+  return widget.type === "screen" ? (
     <Spectators engine={engine} publicationId={widget.config.publicationId} />
   ) : null;
 }

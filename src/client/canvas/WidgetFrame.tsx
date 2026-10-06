@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
-import { ArrowLeftRight, Grip, Minus, MoreHorizontal, X } from "lucide-react";
+import { ArrowLeftRight, Grip, X } from "lucide-react";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -33,8 +33,6 @@ interface Props extends WidgetProps {
   navigate: (event: KeyboardEvent) => void;
   focus: () => void;
   close: () => void;
-  options: () => void;
-  minimize: () => void;
   interaction: (busy: boolean) => void;
 }
 const Body = memo(
@@ -77,7 +75,7 @@ export function WidgetFrame(props: Props) {
   } | null>(null);
   const { ref, handleRef } = useDraggable({
     id: widget.id,
-    disabled: !visible,
+    disabled: !visible || engine.canvas.getSnapshot().single,
   });
   const hostRef = useCallback(
     (node: HTMLElement | null) => {
@@ -88,6 +86,7 @@ export function WidgetFrame(props: Props) {
   );
   const title = titleOf(widget, engine);
   const def = widgetRegistry[widget.type];
+  const Icon = def?.icon || Grip;
   useLayoutEffect(() => {
     const last = previous.current;
     previous.current = { box, key: motionKey, visible };
@@ -143,7 +142,7 @@ export function WidgetFrame(props: Props) {
     <section
       ref={hostRef}
       style={style}
-      className={`widget-host ${widget.type === "screen" ? "is-screen" : ""} ${focused ? "is-focused" : ""} ${floating ? "is-floating" : ""} ${def?.autoHide && !props.active && floating ? "widget-idle" : ""} ${moving ? "is-dragging" : ""}`}
+      className={`widget-host ${widget.type === "screen" ? "is-screen" : ""} ${focused ? "is-focused" : ""} ${floating ? "is-floating" : ""} ${widget.type === "screen" && !props.active ? "screen-controls-idle" : ""} ${moving ? "is-dragging" : ""}`}
       data-widget-id={widget.id}
       data-strip-axis={props.stripAxis}
       aria-label={title}
@@ -156,41 +155,24 @@ export function WidgetFrame(props: Props) {
           tabIndex={props.tabIndex}
           onFocus={props.onFocusHeader}
           onKeyDown={props.navigate}
-          aria-label={`Mover ${title}. Use espaço para arrastar ou o menu para escolher uma posição.`}
-          title="Arrastar widget"
+          aria-label={`Mover ${title}. Use espaço para mover pelo teclado. No mouse, segure Shift para encaixar. Layout oferece destinos por botão.`}
+          title="Arrastar livremente · Shift encaixa"
         >
-          <Grip size={15} />
+          <Icon size={15} aria-hidden="true" />
           <span>{title}</span>
         </button>
         <HeaderAccessory widget={widget} engine={engine} />
         <div className="widget-actions">
-          <button
-            className="icon-button widget-focus"
-            onClick={props.focus}
-            aria-label={`Focar ${title}`}
-            title="Trazer para o foco"
-          >
-            <ArrowLeftRight size={16} />
-          </button>
-
-          {
+          {!focused && (
             <button
-              className="icon-button"
-              onClick={props.minimize}
-              aria-label={`Esconder ${title}`}
-              title="Esconder widget"
+              className="icon-button widget-focus"
+              onClick={props.focus}
+              aria-label={`Focar ${title}`}
+              title="Trazer para o foco"
             >
-              <Minus size={15} />
+              <ArrowLeftRight size={16} />
             </button>
-          }
-          <button
-            className="icon-button"
-            onClick={props.options}
-            aria-label={`Organizar ${title}`}
-            title="Organizar widget"
-          >
-            <MoreHorizontal size={16} />
-          </button>
+          )}
           <button
             className="icon-button"
             onClick={props.close}
@@ -222,7 +204,7 @@ export function WidgetFrame(props: Props) {
       >
         <Body
           {...props}
-          visible={visible && !(def?.autoHide && !props.active && floating)}
+          visible={visible}
           height={Math.max(0, box.height - 38)}
         />
       </div>

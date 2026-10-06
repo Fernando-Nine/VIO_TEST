@@ -27,14 +27,51 @@ export const widgetBlock = z.discriminatedUnion("kind", [
       duration: z.number().int().min(0).max(86400),
       elapsed: z.number().min(0).max(604800),
       startedAt: z.number().finite().min(0).max(8640000000000000).nullable(),
+      mode: z.enum(["up", "down"]).optional(),
+      loop: z.boolean().optional(),
     })
     .strict(),
 ]);
 export const widgetContent = z
-  .object({ title: label, blocks: z.array(widgetBlock).min(1).max(6) })
-  .strict();
+  .object({
+    kind: z.enum(["custom", "notes", "timer"]).optional(),
+    title: label,
+    blocks: z.array(widgetBlock).min(1).max(6),
+  })
+  .strict()
+  .refine((content) => {
+    if (
+      content.kind &&
+      !content.blocks.every(
+        (b) =>
+          b.kind ===
+          ({ custom: "score", notes: "text", timer: "timer" } as const)[
+            content.kind!
+          ],
+      )
+    )
+      return false;
+    if (content.kind === "timer" && content.blocks.length !== 1) return false;
+    return content.blocks.every(
+      (b) =>
+        b.kind !== "timer" ||
+        ((!b.loop || b.duration > 0) && (b.mode !== "down" || b.duration > 0)),
+    );
+  });
 export type WidgetBlock = z.infer<typeof widgetBlock>;
 export type WidgetContent = z.infer<typeof widgetContent>;
+export function contentKind(
+  content: WidgetContent,
+): "custom" | "notes" | "timer" {
+  return (
+    content.kind ||
+    (content.blocks.every((b) => b.kind === "text")
+      ? "notes"
+      : content.blocks.every((b) => b.kind === "timer")
+        ? "timer"
+        : "custom")
+  );
+}
 export interface SharedWidget extends WidgetContent {
   id: string;
   owner: string;
@@ -92,14 +129,34 @@ export function timerElapsed(
   block: Extract<WidgetBlock, { kind: "timer" }>,
   now: number,
 ) {
-  const elapsed = Math.min(
-    604800,
+  const elapsed =
     block.elapsed +
-      (block.startedAt === null
-        ? 0
-        : Math.max(0, (now - block.startedAt) / 1000)),
+    (block.startedAt === null
+      ? 0
+      : Math.max(0, (now - block.startedAt) / 1000));
+  return block.duration
+    ? block.loop
+      ? elapsed % block.duration
+      : Math.min(block.duration, elapsed)
+    : Math.min(604800, elapsed);
+}
+export function timerFinished(
+  block: Extract<WidgetBlock, { kind: "timer" }>,
+  now: number,
+) {
+  return (
+    !block.loop &&
+    !!block.duration &&
+    timerElapsed(block, now) >= block.duration
   );
-  return block.duration ? Math.min(block.duration, elapsed) : elapsed;
+}
+export function timerDisplay(
+  block: Extract<WidgetBlock, { kind: "timer" }>,
+  now: number,
+) {
+  return (block.mode || (block.duration ? "down" : "up")) === "down"
+    ? Math.max(0, block.duration - timerElapsed(block, now))
+    : timerElapsed(block, now);
 }
 
 /** Pure operation semantics shared by the local widget and authoritative server. */
@@ -127,7 +184,10 @@ export function operateWidget(
           ? {
               ...block,
               elapsed:
-                operation.action === "reset" ? 0 : timerElapsed(block, now),
+                operation.action === "reset" ||
+                (operation.action === "start" && timerFinished(block, now))
+                  ? 0
+                  : timerElapsed(block, now),
               startedAt: operation.action === "start" ? now : null,
             }
           : block;

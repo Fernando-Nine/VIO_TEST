@@ -16,8 +16,8 @@
 const limpar = (valor: unknown) =>
   typeof valor === "string" ? valor.trim().replace(/\/+$/, "") : "";
 
-export const apiBase = limpar(import.meta.env.VITE_API_BASE);
-export const webBase = limpar(import.meta.env.VITE_WEB_URL);
+export const apiBase = limpar(import.meta.env?.VITE_API_BASE);
+export const webBase = limpar(import.meta.env?.VITE_WEB_URL);
 
 /** Verdadeiro quando a página não é servida pelo próprio servidor do VIO. */
 export const embedded = apiBase !== "";

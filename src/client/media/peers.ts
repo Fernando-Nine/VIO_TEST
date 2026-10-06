@@ -276,8 +276,7 @@ export class Peers {
     });
   }
   private recover(peer: Peer) {
-    if (peer.timer || peer.attempts >= 4 || !this.entries.has(peer.sub.id))
-      return;
+    if (peer.timer || !this.entries.has(peer.sub.id)) return;
     peer.timer = setTimeout(
       () => {
         peer.timer = undefined;
@@ -286,7 +285,7 @@ export class Peers {
           this.recover(peer);
           return;
         }
-        peer.attempts++;
+        peer.attempts = Math.min(5, peer.attempts + 1);
         peer.info.attempts = peer.attempts;
         void this.serial(peer, async () => {
           if (this.ice.expiresAt < Date.now() + 60000)
@@ -304,11 +303,11 @@ export class Peers {
         });
         if (peer.attempts >= 4)
           peer.info.error =
-            "A conexão falhou. Tente reconectar a mídia ou configure TURN para redes restritas.";
-        else this.recover(peer);
+            "A mídia ainda não voltou. Continuamos tentando; redes restritas podem precisar de TURN.";
+        this.recover(peer);
         this.changed();
       },
-      Math.min(2000 * 2 ** peer.attempts, 16000),
+      Math.min(2000 * 2 ** peer.attempts, 30000) * (0.85 + Math.random() * 0.3),
     );
   }
   resume() {

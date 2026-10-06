@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   CanvasStore,
   fitted,
+  focusedWidgetId,
+  canRemoveSlot,
   newCanvas,
   persistentCanvas,
   restoreCanvas,
@@ -147,16 +149,17 @@ test("tira cresce só no fim, reordena linearmente e devolve o foco à posição
   );
   assert.equal(store.getSnapshot().slots[4].offer?.id, "new");
 });
-test("esconder mantém lugar e identidade; restaurar não transforma grid em flutuante", () => {
+test("foco único mantém lugares e identidades e restaura todo o conjunto", () => {
   const store = filled(4);
   const before = store.getSnapshot();
-  store.minimize("video-1");
+  store.toggleSingle();
   assert.deepEqual(store.getSnapshot().slots, before.slots);
-  assert.deepEqual(store.getSnapshot().hidden, ["video-1"]);
-  store.minimize("video-1");
-  assert.equal(store.getSnapshot().hidden.length, 0);
-  assert.equal(store.getSnapshot().floating.length, 0);
+  assert.deepEqual(store.getSnapshot().widgets, before.widgets);
+  store.toggleSingle();
+  assert.deepEqual(store.getSnapshot().slots, before.slots);
+  assert.equal(store.getSnapshot().single, false);
 });
+
 test("persistência remove publicações e widgets de outra sala, mantém conteúdo individual", () => {
   const store = filled(2);
   store.add(
@@ -219,19 +222,60 @@ test("layout corrompido e posições fora da tela não tornam o app inacessível
   );
 });
 
-test("reduzir preset não coloca transmissões sobre o grid sem escolha explícita", () => {
+test("reduzir preset preserva os widgets visíveis, sem esconder nem sobrepor", () => {
   const store = filled(4);
   store.preset("grid-1");
-  assert.equal(store.getSnapshot().slots.length, 1);
-  assert.equal(store.getSnapshot().floating.length, 3);
-  assert.ok(store.getSnapshot().floating.every((f) => f.minimized && f.parked));
+  assert.equal(store.getSnapshot().slots.length, 4);
+  assert.equal(store.getSnapshot().floating.length, 0);
+  assert.equal(store.getSnapshot().hidden.length, 0);
   store.focus("video-2");
   assert.equal(store.getSnapshot().slots[0].widgetId, "video-2");
-  assert.ok(store.getSnapshot().floating.every((f) => f.minimized));
-  assert.deepEqual(
-    new Set(store.getSnapshot().widgets.map((w) => w.id)),
-    new Set(["video-0", "video-1", "video-2", "video-3"]),
-  );
+});
+
+test("foco único usa o espaço grande depois de mudança de preset e foco antigo", () => {
+  const store = filled(4);
+  store.change((s) => {
+    s.focusId = "video-3";
+  });
+  store.preset("strip-right");
+  assert.equal(focusedWidgetId(store.getSnapshot()), "video-0");
+  store.toggleSingle();
+  assert.equal(store.getSnapshot().focusId, "video-0");
+  assert.equal(store.getSnapshot().single, true);
+  store.toggleSingle();
+  store.focus("video-2");
+  store.toggleSingle();
+  assert.equal(store.getSnapshot().focusId, "video-2");
+});
+
+test("fechar espaço vazio na tira só fica disponível acima de quatro espaços", () => {
+  const store = filled(1);
+  store.preset("strip-left");
+  const id = store.getSnapshot().slots[3].id;
+  assert.equal(canRemoveSlot(store.getSnapshot(), id), false);
+  store.removeSlot(id);
+  assert.equal(store.getSnapshot().slots.length, 4);
+  const extra = store.addSlot();
+  assert.equal(canRemoveSlot(store.getSnapshot(), extra), true);
+  store.removeSlot(extra);
+  assert.equal(store.getSnapshot().slots.length, 4);
+});
+
+test("compartilhar converte o host original e catálogo não duplica o sharedId", () => {
+  const store = filled(1);
+  const originalSlot = store.getSnapshot().slots[0].id;
+  store.bindShared("video-0", "room-widget");
+  store.add({
+    id: "duplicate",
+    type: "custom",
+    title: "Outro",
+    config: { sharedId: "room-widget" },
+  });
+  store.bindShared("video-0", "room-widget");
+  assert.equal(store.getSnapshot().widgets.length, 1);
+  assert.equal(store.getSnapshot().slots[0].id, originalSlot);
+  assert.equal(store.getSnapshot().slots[0].widgetId, "video-0");
+  assert.equal(store.getSnapshot().widgets[0].config.sharedId, "room-widget");
 });
 
 test("convite no fim da tira não ocupa buraco anterior nem desloca outros itens", () => {
