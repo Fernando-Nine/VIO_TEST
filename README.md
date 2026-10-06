@@ -7,6 +7,9 @@ Prévia de desenvolvimento **2.7.0-rc.1** · **AGPLv3** · **Node 24**
 
 Produção permanece na versão 2.6.0. Esta prévia está no ramo `feat/canvas-widgets` e ainda requer aceite manual.
 
+Prévia separada no Render: [experimentar o canvas 2.7](https://vio-test-canvas-preview.onrender.com/).
+O plano gratuito pode precisar de um tempo para iniciar após ficar ocioso.
+
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
 **vio-test**, plano Free, região Virginia, uma instância.

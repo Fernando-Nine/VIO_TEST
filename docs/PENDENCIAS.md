@@ -1,31 +1,82 @@
-# O que falta para esta atualização
+# VIO — pendências explicadas
 
-A prévia 2.7.0-rc.1 está no ramo `feat/canvas-widgets` do **VIO_TEST**. O site publicado
-continua na 2.6.0. O trabalho do aplicativo Windows foi mantido separado.
+Atualizado em 06/10/2026. A prévia **2.7.0-rc.1** pode ser experimentada em
+https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no
+[PR #3 do VIO_TEST](https://github.com/Fernando-Nine/VIO_TEST/pull/3).
+O site principal continua na 2.6.0; VIO e VIO_2 não foram alterados.
 
-## Para publicar o novo layout
+## O que já está feito
 
-| Pendência | O que precisa acontecer | Por quê |
+O canvas, os presets, a tira linear, o arraste/encaixe, as janelas destacáveis e os
+widgets individuais com compartilhamento opcional estão implementados. A tela grande
+faz parte do grid. Focar troca posições; foco único esconde os demais widgets.
+O código mantém os players de áudio e as assinaturas ao mudar a organização.
+Somente o criador pode alterar a estrutura de um widget compartilhado.
+
+São **56 testes automatizados aprovados**, além de TypeScript e build. A interface
+publicada foi conferida por botões, arraste e teclado, com duas sessões: troca de
+posições, tira, foco único, notas compartilhadas e redimensionamento de janela.
+Esses ensaios não comprovam que o áudio chega corretamente a aparelhos físicos.
+
+## O que falta antes de substituir o site principal
+
+| Pendência | Em linguagem simples | Como considerar concluída |
 |---|---|---|
-| Conferir a interface | Abrir a prévia em um navegador de teste acessível e conferir desktop/celular | Os testes automáticos não enxergam botões cortados, rolagem ou alvos de toque ruins. O navegador desta bancada bloqueou o endereço local. |
-| Conferir o áudio contínuo | Assistir a várias telas, trocar posições, esconder, usar foco único e voltar | Precisamos ouvir e medir que o áudio continua e que o vídeo volta, sem abrir outra conexão. |
-| Testar aparelhos reais | Usar duas abas, depois PC + celular; testar Chrome/Edge e Firefox, além de Safari quando disponível | Cada navegador trata captura, reprodução, pausa de vídeo e PiP de maneira diferente. |
-| Testar quedas | Derrubar a conexão e reiniciar o servidor durante uma sessão de teste | Confirma retorno da identidade, reconexão de mídia e descarte correto dos widgets temporários. |
-| Publicar e acompanhar | Aprovar o aceite, integrar o ramo e verificar o deploy no Render | Hoje não há prévias automáticas habilitadas no serviço. A versão está preservada para revisão antes da troca do site. |
+| Continuidade de áudio e vídeo | Mudar o layout não pode cortar, duplicar ou reiniciar o som. | Com duas abas e depois PC + celular, assistir a várias telas, trocar foco, esconder, restaurar e parar uma transmissão. Ouvir o resultado e confirmar que as conexões restantes são preservadas. |
+| Economia de recursos | Esconder um vídeo deve reduzir seu custo sem desligar o áudio. | Medir bitrate, FPS e uso de CPU antes/depois, incluindo itens fora da tira, e verificar a retomada. O teste automático atual confirma os comandos, não a economia real. |
+| Celular e acessibilidade | Tudo precisa continuar alcançável em telas pequenas e sem mouse. | Conferir toque, retrato/paisagem, zoom de 200%, teclado, leitor de tela, movimento reduzido e retorno de foco dos menus. Já houve teste de teclado no desktop; o restante ainda precisa de aceite. |
+| Navegadores e dispositivos de som | Captura, saída de áudio, volume e PiP variam entre navegadores. | Repetir os fluxos em Chrome/Edge, Firefox e Safari/iPhone quando disponível. Recursos indisponíveis devem ter alternativa clara; nada pode fingir funcionar. Conferir também a passagem do mouse até o card de volume com mídia ativa. |
+| Quedas e redes diferentes | A sala deve se recuperar sem misturar identidades ou transmissões antigas. | Trocar rapidamente de sala, interromper rede e reiniciar o servidor com mídia ativa. Testar em duas redes e confirmar quando o TURN realmente transporta os dados. |
+| Publicação da versão estável | Depois do aceite, o código da prévia pode substituir a 2.6.0. | Integrar o PR, conferir o deploy principal, entrada em sala e mídia, mantendo o commit anterior disponível para reversão. |
 
-Nenhuma nova hospedagem foi criada, e as configurações/credenciais do Render não
-foram alteradas nesta etapa. Os limites de segurança da sessão e das salas continuam.
+O `CLAUDE.md` do próprio projeto exige duas abas, PC + celular e reinício do servidor
+antes de fechar uma tarefa que altera mídia. Por isso esta entrega permanece como
+**prévia**, mesmo com a suíte automatizada aprovada. Não é necessário comprar outro
+serviço ou criar contas para realizar esse aceite.
 
-## Para etapas futuras
+## O que é necessário para esses testes
 
-| Ideia | Requisito principal |
+Um computador e um celular, fones para evitar realimentação e uma fonte de áudio
+conhecida. Para testar o caminho alternativo de rede, usar duas redes — por exemplo,
+Wi-Fi e dados móveis. O navegador remoto da bancada permite conferir a interface,
+mas não comprova escuta em fones físicos nem captura nativa do Windows.
+
+A prévia usa Render Free e pode demorar a iniciar após ficar ociosa; isso foi observado.
+Tem configuração própria, sem alterar o serviço principal. O laboratório de testes
+não está exposto, e os limites de sessão, origem e autorização continuam ativos.
+
+O ExpressTURN está configurado por variáveis de ambiente, mas configuração não é
+prova de uma conexão via relay. A credencial estática fornecida deve ser tratada
+como solução provisória: para operação duradoura, planejar credenciais temporárias
+e acompanhamento de uso. Nenhum segredo faz parte dos arquivos do projeto.
+
+Widgets compartilhados desaparecem quando a sala esvazia ou o servidor reinicia.
+Os individuais ficam neste navegador. Quem precisar conservar conteúdo compartilhado
+pode criar uma cópia individual antes de sair.
+
+## Depois: aplicativo Windows com WASAPI
+
+Há trabalho separado no ramo nativo, ainda sem compilação e captura aprovadas. A ordem é
+concluir os ajustes de build, integrar o canvas aceito e gerar um instalador de teste.
+Instalar a PWA atual não dá acesso às APIs nativas do Windows.
+
+O aceite precisa acontecer em Windows real: capturar o áudio da aplicação escolhida,
+confirmar que não entram sons de outras aplicações ou da própria chamada, conferir
+sincronia com o vídeo e testar parar/cancelar/fechar. Também devem ser verificados
+suspensão do computador, troca de fones USB/Bluetooth, instalação e desinstalação.
+Atualização automática e assinatura do instalador precisam de uma decisão antes
+da distribuição estável. Não há um instalador WASAPI certificado nesta entrega.
+
+## Ideias futuras, sem bloquear o canvas atual
+
+| Ideia | Requisito que ainda falta |
 |---|---|
-| Dono da sala | O servidor deverá reconhecer a primeira pessoa como dona e verificar cada ação administrativa. Também precisamos definir o que acontece quando ela sai ou perde conexão. |
-| Expulsar e banir | Expulsar a sessão atual pode usar as identidades existentes. Um banimento duradouro precisa de uma identidade mais difícil de trocar do que fechar o navegador e entrar novamente; contas são uma opção a decidir. |
-| Salvar widgets compartilhados para outro dia | Adicionar armazenamento durável e definir quem pode reabrir/editar. Por enquanto, eles somem quando a sala esvazia ou o servidor reinicia. Widgets individuais já ficam no navegador. |
-| Widgets da comunidade | Criar isolamento, permissões revogáveis, verificação de origem/autor, revisão e meios de encerrar código problemático antes de aceitar plugins. O catálogo desta versão não executa terceiros. |
-| Aplicativo Windows com WASAPI | Retomar o ramo nativo, concluir compilação e testar captura de áudio em Windows real. Este trabalho de layout não confirma que o instalador ou o WASAPI estejam prontos. |
+| Dono da sala | O servidor deve reconhecer a primeira pessoa, autorizar cada ação e definir a sucessão quando ela sai ou perde conexão. Não basta esconder botões. |
+| Expulsar e banir | Expulsar pode encerrar a sessão atual. Para um banimento duradouro, é preciso uma identidade mais difícil de trocar do que fechar o navegador; contas são uma opção futura, não uma exigência desta versão. |
+| Guardar widgets para outro dia | Armazenamento durável e regras para reabrir, editar e excluir. Hoje o conteúdo compartilhado é temporário por projeto. |
+| Widgets da comunidade | Isolamento do código, permissões revogáveis, verificação de autor/origem, revisão, cotas e encerramento de widgets problemáticos. O catálogo atual executa apenas widgets internos. |
 
-Essas etapas futuras não são necessárias para experimentar o canvas com widgets
-nativos. Para publicar a atualização atual, a prioridade é concluir os testes visuais
-e de mídia indicados acima.
+Ordem recomendada: aceite de mídia/celular → publicação do canvas → instalável Windows
+com testes WASAPI → administração de salas e extensões.
+
+Os resultados técnicos e o roteiro de ensaio ficam em [VALIDACAO.md](VALIDACAO.md).

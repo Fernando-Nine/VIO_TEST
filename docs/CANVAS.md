@@ -45,6 +45,7 @@ Nenhum sistema de renderização ou servidor de mídia foi substituído.
 |---|---|
 | `canvas/model.ts` | Estado, presets, trocas, reservas, janelas e persistência |
 | `canvas/geometry.ts` | Retângulos, limites e IntersectionObserver dos espaços |
+| `canvas/drag.ts` | Destino sob o ponteiro e próximo espaço por direção do teclado |
 | `canvas/RoomCanvas.tsx` | Admissão de transmissões e coordenação dos controles |
 | `canvas/WidgetFrame.tsx` | Host estável, alça, teclado, resize e animação FLIP |
 | `canvas/widgets.tsx` | Registro dos widgets nativos e adaptação aos espaços |
@@ -105,6 +106,16 @@ altera transform/tamanho, não o pai do vídeo. O feedback de arraste do dnd-kit
 nem move elementos de mídia. Áudio fica em uma coleção separada com as mesmas chaves,
 fora de qualquer conteúdo escondido ou recortado.
 
+Com `feedback="none"`, a integração fornece explicitamente a geometria da operação
+ao dnd-kit 0.5.0. O movimento usa as coordenadas do evento e o encaixe final usa o
+ponto de soltura, inclusive quando um widget grande vai para um espaço pequeno.
+Soltar fora dos espaços conserva a posição no grid; isso não cria uma janela por
+acidente. Espaço inicia/conclui o arraste por teclado, setas escolhem um espaço
+visível na direção indicada e o menu Organizar oferece a mesma operação por botões.
+Referências oficiais consultadas em 05/10/2026:
+[DragDropProvider](https://dndkit.com/react/components/drag-drop-provider/) e
+[detecção de colisões](https://dndkit.com/react/guides/collision-detection/).
+
 O comando `demand` aceita somente vídeo de assinatura `main` de tela e somente do seu
 espectador autenticado. `off` desativa o encoding daquele sender; `replaceTrack(null)`
 é fallback do vídeo se a API não aceitar a pausa. Retomar reconecta a mesma faixa ao
@@ -135,6 +146,11 @@ Incrementos de placar são operações atômicas com ID para deduplicação. Tex
 estrutura usam revisão para rejeitar atualizações antigas. Rascunhos de texto permanecem
 na interface em caso de conflito. Cronômetros usam tempo do servidor, não ticks enviados
 pela rede. Todo texto é renderizado como texto pelo React, sem HTML arbitrário.
+
+Notas individuais são salvas localmente enquanto a pessoa digita; compartilhar
+imediatamente inclui esse conteúdo. Nas notas compartilhadas, o rascunho permanece
+local até Salvar, com revisão para detectar conflito. O campo fica temporariamente
+indisponível durante esse envio, evitando sobrescrever uma edição ainda em andamento.
 
 O conteúdo é descartado imediatamente quando o último membro sai ou quando todos
 expiram após a tolerância de reconexão. O TTL residual do código da sala não conserva

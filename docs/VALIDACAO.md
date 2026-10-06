@@ -1,17 +1,22 @@
 # VIO — validação
 
 
-## Prévia 2.7.0-rc.1 — 05/10/2026
+## Prévia 2.7.0-rc.1 — atualização em 06/10/2026
 
-Ramo isolado `feat/canvas-widgets`, baseado na produção 2.6.0. Ainda não publicado.
+Ramo isolado `feat/canvas-widgets`, baseado na produção 2.6.0, PR #3.
+Publicado somente na [prévia separada](https://vio-test-canvas-preview.onrender.com/).
+O site principal continua na 2.6.0.
 
-**54 testes aprovados**, zero falhas, TypeScript estrito e build de produção concluídos.
-Saída da suíte: `docs/evidence/canvas-tests.txt`. O log `cloudflare_turn_error` com
+**56 testes aprovados**, zero falhas, TypeScript estrito e build de produção concluídos.
+O arquivo `docs/evidence/canvas-tests.txt` preserva a primeira execução, com 54 testes.
+Depois foram acrescentados dois casos de regressão: destino pelo ponteiro e navegação
+direcional por teclado. A suíte de 56 testes passou após essas correções em 05/10/2026.
+O log `cloudflare_turn_error` com
 status 500 é a resposta simulada de um teste de falha, não um erro de produção.
 
-O canvas é carregado apenas ao entrar na sala. Build medido: entrada de 472,69 kB
-(142,67 kB gzip), chunk do canvas de 152,16 kB (48,44 kB gzip), CSS de 89,35 kB
-(19,26 kB gzip), excluindo fontes. Os números são do build local e podem variar após
+O canvas é carregado apenas ao entrar na sala. Build medido após os ajustes compactos:
+entrada de 473,00 kB (142,72 kB gzip), chunk do canvas de 154,05 kB (49,20 kB gzip),
+CSS de 89,67 kB (19,32 kB gzip), excluindo fontes. Os números são do build local e podem variar após
 ajustes; não constituem medição de desempenho em dispositivos.
 A confirmação do usuário autorizou a Parte B, tira linear, adaptação móvel e widgets
 individuais com compartilhamento opcional. A lembrança posterior foi aplicada: a tela
@@ -29,13 +34,41 @@ Auditoria de produção: zero vulnerabilidades reportadas por `npm audit --omit=
 em 05/10/2026. Dependência adicionada: `@dnd-kit/react` 0.5.0 fixada. Auditoria não
 substitui revisão de código ou verificação dos navegadores.
 
-**Bloqueio de validação visual atual:** a tentativa de abrir a bancada local em
-`http://terminal.local:4174/qa-layout` retornou `net::ERR_BLOCKED_BY_CLIENT`.
-Não há capturas de tela ou resultados visuais desta prévia. Não foi usado outro
-mecanismo para contornar esse bloqueio. O serviço Render está sem PR previews; não foi
-criado um serviço adicional nem alterada a produção para testar código não conferido.
-As provas de navegador nas seções antigas pertencem às respectivas versões e não
-certificam esta mudança.
+### Conferência da interface publicada
+
+A bancada local em `http://terminal.local:4174/qa-layout` continuou bloqueada por
+`net::ERR_BLOCKED_BY_CLIENT`. Foi criada uma prévia normal e separada no Render Free,
+sem expor laboratórios, com segredo próprio e as mesmas exigências de segurança.
+A conferência abaixo usou a interface real dessa prévia, sem manipular estado pelo console.
+
+Em 05/10/2026, Chrome da bancada, área de 1363 × 936 px e duas sessões de teste:
+
+- Entrada, presença de duas pessoas e seleção de presets pelos controles visíveis.
+- Troca entre espaço grande e pequeno, foco único e retorno ao conjunto.
+- Arraste de Pessoas do espaço grande para o pequeno e retorno por Espaço/setas/Espaço.
+  A primeira tentativa revelou um encaixe incorreto; a correção foi publicada e retestada.
+- Notas individuais salvas durante a digitação e compartilhadas imediatamente com
+  o texto completo na segunda sessão. O destinatário não recebe edição de estrutura.
+  Um teste anterior de edição simultânea rejeitou a revisão antiga e conservou o rascunho.
+- Nota em espaço largo ocupa a largura útil, após corrigir o grid interno dos blocos.
+- Tira com três espaços de 237,98 px e dois intervalos de 8 px em 730 px de altura.
+  Avançar moveu 246 px, exatamente um item; arrastar reordenou os widgets na tira.
+- Cronômetro destacado pela opção explícita. Redimensionar por teclado aumentou
+  largura e altura em 16 px, preservando a posição dentro do canvas.
+
+As correções acima estão no commit `7e9bd4a`, publicado na prévia em 05/10/2026.
+O plano gratuito mostrou a tela de inicialização após ociosidade e carregou o app
+ao concluir. A consulta de logs de erro da prévia às 23:25 UTC não retornou registros.
+Isso não equivale a monitoramento contínuo nem certifica transporte de mídia.
+
+Os controles compactos do cronômetro receberam menor espaçamento, e o ícone de foco
+foi trocado por setas de troca, para diferenciá-lo do fullscreen global. Build aprovado;
+a conferência visual dessa última alteração será registrada após atualizar a prévia.
+
+**Ainda não comprovado nesta versão:** áudio audível e vídeo entre aparelhos reais,
+retomada e consumo efetivo em segundo plano, toque em celular, outros navegadores,
+leitor de tela/zoom e os controles de volume/PiP com mídia. As provas das versões
+antigas abaixo são históricas e não certificam automaticamente o novo canvas.
 
 ### Roteiro manual antes de promover o ramo
 

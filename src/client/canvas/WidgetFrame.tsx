@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
-import { Grip, Minus, MoreHorizontal, Scan, X } from "lucide-react";
+import { ArrowLeftRight, Grip, Minus, MoreHorizontal, X } from "lucide-react";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -170,7 +170,7 @@ export function WidgetFrame(props: Props) {
             aria-label={`Focar ${title}`}
             title="Trazer para o foco"
           >
-            <Scan size={16} />
+            <ArrowLeftRight size={16} />
           </button>
 
           {

@@ -923,6 +923,27 @@
   .widget-body .field-note {
     font-size: 11px;
   }
+  .widget-body > .custom-widget {
+    padding: 8px;
+    gap: 8px;
+  }
+  .custom-blocks {
+    gap: 8px;
+  }
+  .custom-block {
+    padding-top: 8px;
+  }
+  .widget-clock {
+    font-size: clamp(24px, 10cqw, 38px);
+    margin: 6px 0;
+  }
+  .custom-widget .widget-inline-actions {
+    margin: 6px 0;
+  }
+  .custom-widget .widget-inline-actions > button {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
 }
 @container (min-width: 600px) {
   .custom-blocks {

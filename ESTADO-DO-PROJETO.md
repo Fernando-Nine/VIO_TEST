@@ -4,7 +4,14 @@ Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.1**, em 05/10/2026
 
 O canvas, a tira linear e os widgets individuais/compartilhados estão implementados nesta prévia. A tela grande pertence ao grid e troca posições com os outros widgets. Foco único preserva as conexões e o áudio. As permissões de estrutura e o estado compartilhado são conferidos pelo servidor.
 
-O aceite visual e de mídia segue pendente: o navegador da bancada bloqueou o endereço local (`ERR_BLOCKED_BY_CLIENT`). Não foi criada outra hospedagem nem promovida esta versão para `main`. Veja `docs/CANVAS.md`, `docs/VALIDACAO.md` e `docs/PENDENCIAS.md`. O instalável/WASAPI e a futura autoridade do dono da sala permanecem em etapas separadas.
+Prévia publicada separadamente em 05/10/2026: https://vio-test-canvas-preview.onrender.com/,
+plano gratuito, ramo `feat/canvas-widgets`, PR #3. O site principal e `main` permanecem na 2.6.0.
+Após o bloqueio do endereço local da bancada, a interface foi conferida nessa prévia
+normal por botões, arraste e teclado. Foram corrigidos o destino do arraste, a gravação
+imediata de notas individuais e o aproveitamento da largura das notas. São 56 testes
+aprovados, além de TypeScript e build. Os testes físicos de áudio/vídeo, celular e
+demais navegadores continuam pendentes. Veja `docs/CANVAS.md`, `docs/VALIDACAO.md` e
+`docs/PENDENCIAS.md`. O instalável/WASAPI e o futuro dono da sala seguem separados.
 
 Histórico desta base: versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
@@ -104,8 +111,9 @@ SFU, múltiplas instâncias, contas, gravação, chat textual e cobrança.
 
 Aplicativo Windows instalável com WASAPI. Preparação em `docs/DESKTOP-WASAPI.md`,
 com contrato de integração, ordem de implementação e critérios de teste físico.
-O instalador e a captura WASAPI não fazem parte do executável web 2.6.0 e ainda
-não foram implementados. A PWA atual não recebe acesso nativo por estar instalada.
+O instalador e a captura WASAPI não fazem parte do executável web. Existe trabalho
+em andamento no ramo nativo, mas a compilação, o instalador e a captura em Windows
+real ainda não foram aprovados. A PWA atual não recebe acesso nativo por estar instalada.
 
 ## Preferências entregues na 2.6.0
 
