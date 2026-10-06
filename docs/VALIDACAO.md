@@ -61,9 +61,14 @@ O plano gratuito mostrou a tela de inicialização após ociosidade e carregou o
 ao concluir. A consulta de logs de erro da prévia às 23:25 UTC não retornou registros.
 Isso não equivale a monitoramento contínuo nem certifica transporte de mídia.
 
-Os controles compactos do cronômetro receberam menor espaçamento, e o ícone de foco
-foi trocado por setas de troca, para diferenciá-lo do fullscreen global. Build aprovado;
-a conferência visual dessa última alteração será registrada após atualizar a prévia.
+Em 06/10/2026, o commit `3b8b17e` foi publicado e conferido na interface. Os controles
+compactos do cronômetro cabem sem rolagem: o corpo tem `clientHeight = scrollHeight =
+200 px`; o botão Iniciar tem 36 px de altura e termina 34 px antes da borda inferior.
+Iniciar mudou para Pausar, a contagem avançou e voltou a Iniciar ao pausar em 24:51.
+O ícone de troca de foco está distinto do fullscreen global. Notas foram trazidas
+para o espaço grande; Pessoas permaneceu no espaço menor, junto a cronômetro e tempo
+da sala. Captura: [canvas conferido](evidence/vio-canvas-2026-10-06.jpg).
+Deploy confirmado como `live`: `dep-db28rovavr4c73ad4r70` (05:58:38 UTC).
 
 **Ainda não comprovado nesta versão:** áudio audível e vídeo entre aparelhos reais,
 retomada e consumo efetivo em segundo plano, toque em celular, outros navegadores,
