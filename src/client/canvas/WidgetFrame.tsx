@@ -85,6 +85,12 @@ export function WidgetFrame(props: Props) {
     [ref],
   );
   const title = titleOf(widget, engine);
+  const endsForEveryone =
+    !!widget.config.sharedId &&
+    engine.view.snapshot?.widgets?.some(
+      (shared) =>
+        shared.id === widget.config.sharedId && shared.owner === engine.view.id,
+    );
   const def = widgetRegistry[widget.type];
   const Icon = def?.icon || Grip;
   useLayoutEffect(() => {
@@ -177,14 +183,18 @@ export function WidgetFrame(props: Props) {
             className="icon-button"
             onClick={props.close}
             aria-label={
-              widget.type === "screen"
-                ? `Desconectar ${title}`
-                : `Remover ${title} deste layout`
+              endsForEveryone
+                ? `Encerrar ${title} para todos`
+                : widget.type === "screen"
+                  ? `Desconectar ${title}`
+                  : `Remover ${title} deste layout`
             }
             title={
-              widget.type === "screen"
-                ? "Desconectar transmissão"
-                : "Remover deste layout"
+              endsForEveryone
+                ? "Encerrar para todos na sala"
+                : widget.type === "screen"
+                  ? "Desconectar transmissão"
+                  : "Remover deste layout"
             }
           >
             <X size={15} />

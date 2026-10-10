@@ -1279,6 +1279,17 @@
   flex-direction: column;
   flex: 1;
 }
+.widget-text-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.widget-text-heading .secondary {
+  min-height: 44px;
+  flex-shrink: 0;
+}
 .widget-text textarea {
   flex: 1;
   max-height: none;

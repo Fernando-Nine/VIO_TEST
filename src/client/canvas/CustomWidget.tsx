@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Plus, Minus, Share2, Settings2, Copy, Trash2 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
@@ -79,6 +79,7 @@ function TextBlock({
   revision: number;
   save: (operation: WidgetOperation) => Promise<void>;
 }) {
+  const inputId = useId();
   const [draft, setDraft] = useState(block.value);
   const [base, setBase] = useState(revision);
   const [dirty, setDirty] = useState(false);
@@ -92,42 +93,32 @@ function TextBlock({
   }, [block.value, revision, dirty]);
   return (
     <div className="widget-text">
-      <label>
-        {block.label}
-        <textarea
-          maxLength={2000}
-          value={draft}
-          disabled={busy}
-          onChange={(e) => {
-            if (!dirty) setBase(revision);
-            setDraft(e.target.value);
-            setDirty(true);
-          }}
-        />
-      </label>
-      {dirty && (
-        <button
-          className="secondary"
-          disabled={busy}
-          onClick={() => {
-            setBusy(true);
-            void save({
-              kind: "text",
-              blockId: block.id,
-              value: draft,
-              revision: base,
-            })
-              .then(() => {
-                setDirty(false);
-                setError("");
+      <div className="widget-text-heading">
+        <label htmlFor={inputId}>{block.label}</label>
+        {dirty && (
+          <button
+            className="secondary"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              void save({
+                kind: "text",
+                blockId: block.id,
+                value: draft,
+                revision: base,
               })
-              .catch((e) => setError(e.message))
-              .finally(() => setBusy(false));
-          }}
-        >
-          Salvar texto
-        </button>
-      )}
+                .then(() => {
+                  setDirty(false);
+                  setError("");
+                })
+                .catch((e) => setError(e.message))
+                .finally(() => setBusy(false));
+            }}
+          >
+            Salvar texto
+          </button>
+        )}
+      </div>
       {error && (
         <div role="alert">
           <p>{error}</p>
@@ -146,6 +137,17 @@ function TextBlock({
           </button>
         </div>
       )}
+      <textarea
+        id={inputId}
+        maxLength={2000}
+        value={draft}
+        disabled={busy}
+        onChange={(e) => {
+          if (!dirty) setBase(revision);
+          setDraft(e.target.value);
+          setDirty(true);
+        }}
+      />
     </div>
   );
 }

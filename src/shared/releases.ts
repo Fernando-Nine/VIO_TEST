@@ -7,9 +7,25 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.7.0-rc.2";
+export const version = "2.7.0-rc.3";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-10",
+  title: "Widgets · salvar e encerrar com clareza",
+  sections: [
+    {
+      title: "Correções na validação da rodada C",
+      items: [
+        "Salvar texto fica junto ao título da caixa nas notas compartilhadas, acessível sem sobreposição da barra da chamada em widgets grandes.",
+        "O X do criador informa Encerrar para todos; participantes continuam removendo apenas do próprio layout. O aviso de conclusão também distingue as duas ações.",
+        "Adicionar widgets individuais ou compartilhados leva o foco do teclado ao novo widget; fechar devolve o foco ao espaço liberado.",
+        "Prévia em revisão. As propostas de Notas ampliadas, novos blocos e mesclagem continuam aguardando decisão. O aceite de mídia em aparelhos reais permanece pendente.",
+      ],
+    },
+  ],
+};
+const canvasRevisionRelease: Release = {
+  version: "2.7.0-rc.2",
   date: "2026-10-06",
   title: "Canvas revisado · recuperação e controles",
   sections: [
@@ -248,6 +264,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  canvasRevisionRelease,
   preferencesRelease,
   multiscreenRelease,
   audioFixRelease,

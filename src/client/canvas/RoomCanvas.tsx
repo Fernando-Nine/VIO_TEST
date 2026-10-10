@@ -261,12 +261,16 @@ export function RoomCanvas(props: Props) {
   const publicationsKey = publications.map((p) => p.id).join("|");
   const epoch = useRef(snapshot?.epoch);
 
+  function focusHeader(id: string) {
+    pendingFocus.current = id;
+    setRoving(id);
+  }
   function focus(id: string) {
     const widget = store.getSnapshot().widgets.find((w) => w.id === id);
     store.focus(id);
     if (widget?.type === "screen")
       engine.watch(widget.config.publicationId, false, true);
-    setRoving(id);
+    focusHeader(id);
     announce(`${widget ? titleOf(widget, engine) : "Widget"} está no foco.`);
   }
   function accept(
@@ -403,6 +407,7 @@ export function RoomCanvas(props: Props) {
       store.addSlot();
     store.add(widget, destination);
     setCatalog(null);
+    focusHeader(widget.id);
     announce(`${widget.title} adicionado ao seu layout.`);
   }
   function showPublication(id: string) {
@@ -426,6 +431,10 @@ export function RoomCanvas(props: Props) {
     setCatalog(null);
   }
   async function remove(widget: WidgetInstance) {
+    const slotId = store
+      .getSnapshot()
+      .slots.find((s) => s.widgetId === widget.id)?.id;
+    let endedForEveryone = false;
     if (widget.config.sharedId) {
       const shared = engine.view.snapshot?.widgets?.find(
         (w) => w.id === widget.config.sharedId,
@@ -433,6 +442,7 @@ export function RoomCanvas(props: Props) {
       if (shared?.owner === engine.view.id) {
         try {
           await engine.request("widget-delete", { id: shared.id });
+          endedForEveryone = true;
         } catch (error) {
           engine.fail(error);
           return;
@@ -442,7 +452,12 @@ export function RoomCanvas(props: Props) {
     if (widget.type === "screen")
       engine.stopWatching(widget.config.publicationId);
     store.remove(widget.id);
-    announce(`${titleOf(widget, engine)} removido do seu layout.`);
+    if (slotId) setHighlightedSlot(slotId);
+    announce(
+      endedForEveryone
+        ? `${titleOf(widget, engine)} encerrado para todos na sala.`
+        : `${titleOf(widget, engine)} removido do seu layout.`,
+    );
   }
   function scrollStep(direction: number) {
     const el = strip.current;
@@ -511,9 +526,9 @@ export function RoomCanvas(props: Props) {
       measure();
     }
   }
-  useLayoutEffect(() => {
+  useEffect(() => {
     const id = pendingFocus.current;
-    if (!id) return;
+    if (!id || catalog || organizing || layoutOpen) return;
     const host = [
       ...(root.current?.querySelectorAll<HTMLElement>("[data-widget-id]") ||
         []),
@@ -524,7 +539,7 @@ export function RoomCanvas(props: Props) {
         ?.focus({ preventScroll: true });
       pendingFocus.current = null;
     }
-  }, [geometry, roving, root]);
+  }, [geometry, roving, root, catalog, organizing, layoutOpen]);
   const slotProps = (slot: Slot, index: number) => ({
     slot,
     index,
@@ -1288,10 +1303,11 @@ export function RoomCanvas(props: Props) {
                           (widget) => widget.config.sharedId === w.id,
                         );
                         if (existing) focus(existing.id);
-                        else
+                        else {
+                          const id = freshKey();
                           store.add(
                             {
-                              id: freshKey(),
+                              id,
                               type: contentKind(w),
                               title: w.title,
                               config: { sharedId: w.id },
@@ -1304,6 +1320,8 @@ export function RoomCanvas(props: Props) {
                                   ?.id || store.addSlot()
                               : catalog,
                           );
+                          focusHeader(id);
+                        }
                         setCatalog(null);
                       }}
                     >
