@@ -236,6 +236,24 @@ export default function App({ engine }: { engine: Controller }) {
       engine.fail(e);
     }
   }
+  const notice = (view.error || view.notice) && (
+    <div
+      className={`notice ${view.error ? "error" : ""}`}
+      role={view.error ? "alert" : "status"}
+    >
+      <span>{view.error || view.notice}</span>
+      {view.status === "failed" && (
+        <button onClick={() => void engine.retry()}>Reconectar</button>
+      )}
+      <button
+        className="icon-button"
+        aria-label="Dispensar aviso"
+        onClick={() => engine.dismiss()}
+      >
+        <X size={16} />
+      </button>
+    </div>
+  );
   return (
     <div
       className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
@@ -332,24 +350,7 @@ export default function App({ engine }: { engine: Controller }) {
           </div>
         )}
       </header>
-      {(view.error || view.notice) && (
-        <div
-          className={`notice ${view.error ? "error" : ""}`}
-          role={view.error ? "alert" : "status"}
-        >
-          <span>{view.error || view.notice}</span>
-          {view.status === "failed" && (
-            <button onClick={() => void engine.retry()}>Reconectar</button>
-          )}
-          <button
-            className="icon-button"
-            aria-label="Dispensar aviso"
-            onClick={() => engine.dismiss()}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      {!view.snapshot && !panel && notice}
       {!view.snapshot ? (
         <Landing
           name={name}
@@ -385,6 +386,7 @@ export default function App({ engine }: { engine: Controller }) {
                 onPointerLeave={wake}
                 data-idle={!active && !panel && watching}
               >
+                {!panel && notice}
                 <Suspense
                   fallback={
                     <div className="player-empty" role="status">
@@ -622,6 +624,7 @@ export default function App({ engine }: { engine: Controller }) {
           }
           close={() => open(null)}
         >
+          {notice}
           {panel === "settings" && <Settings engine={engine} />}
           {panel === "share" && (
             <>

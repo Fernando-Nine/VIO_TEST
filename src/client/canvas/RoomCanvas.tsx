@@ -885,6 +885,9 @@ export function RoomCanvas(props: Props) {
                 visible={visible}
                 focused={focused}
                 floating={!!floating && !state.single}
+                floatingOrder={state.floating.findIndex(
+                  (f) => f.widgetId === widget.id,
+                )}
                 active={props.active}
                 stripAxis={
                   stripMode &&

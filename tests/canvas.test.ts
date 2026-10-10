@@ -70,6 +70,23 @@ function filled(count: number) {
   for (let i = 0; i < count; i++) store.add(widget(`video-${i}`));
   return store;
 }
+test("interagir com flutuante o traz à frente sem mover nem recriar widgets", () => {
+  const store = filled(3);
+  store.detach("video-1");
+  store.detach("video-2");
+  const before = store.getSnapshot();
+  store.raise("video-1");
+  const after = store.getSnapshot();
+  assert.deepEqual(after.floating, [before.floating[1], before.floating[0]]);
+  assert.deepEqual(after.widgets, before.widgets);
+  assert.deepEqual(after.slots, before.slots);
+  assert.equal(after.focusId, before.focusId);
+  assert.equal(after.single, before.single);
+  store.raise("video-1");
+  store.raise("video-0");
+  store.raise("absent");
+  assert.equal(store.getSnapshot(), after);
+});
 test("nova transmissão reserva só espaço vazio; recusar preserva grid e conteúdo", () => {
   const store = filled(1);
   store.addSlot();

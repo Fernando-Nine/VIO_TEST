@@ -2,6 +2,16 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.7.0-rc.4] - 2026-10-10
+
+Canvas · avisos visíveis e ordem das janelas
+
+### Correções de sobreposição
+- Avisos acompanham o canvas em tela cheia, abaixo da barra superior e dentro da área visível. Nos Ajustes, aparecem dentro do painel aberto.
+- Janelas flutuantes vêm à frente ao clicar ou receber foco do teclado, preservando posições e instâncias dos widgets.
+- Detalhes de conexão, volume e espectadores abrem acima dos cards, respeitando as bordas da tela e a área disponível com teclado ou zoom.
+- Prévia em revisão; aceite de mídia em aparelhos reais e decisões abertas da rodada C continuam pendentes.
+
 ## [2.7.0-rc.3] - 2026-10-10
 
 Widgets · salvar e encerrar com clareza

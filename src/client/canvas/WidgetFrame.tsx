@@ -24,6 +24,7 @@ interface Props extends WidgetProps {
   bounds: Box;
   clip?: string;
   floating: boolean;
+  floatingOrder: number;
   active: boolean;
   stripAxis?: "x" | "y";
   moving?: { x: number; y: number };
@@ -134,7 +135,13 @@ export function WidgetFrame(props: Props) {
     transform: `translate3d(${box.x + (moving?.x || 0)}px,${box.y + (moving?.y || 0)}px,0)`,
     clipPath: moving || floating || focused ? undefined : props.clip,
     visibility: visible || moving ? "visible" : "hidden",
-    zIndex: moving ? 50 : floating ? 20 : focused ? 3 : 2,
+    zIndex: moving
+      ? 1000
+      : floating
+        ? 10 + props.floatingOrder
+        : focused
+          ? 3
+          : 2,
   } as CSSProperties;
   function resizeTo(width: number, height: number) {
     engine.canvas.detach(widget.id, {
@@ -153,6 +160,8 @@ export function WidgetFrame(props: Props) {
       data-strip-axis={props.stripAxis}
       aria-label={title}
       inert={!visible && !moving ? true : undefined}
+      onPointerDownCapture={() => floating && engine.canvas.raise(widget.id)}
+      onFocusCapture={() => floating && engine.canvas.raise(widget.id)}
     >
       <header className="widget-header">
         <button

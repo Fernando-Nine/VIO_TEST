@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { AnchoredPopover } from "./AnchoredPopover";
 import { Volume2, VolumeX, X } from "lucide-react";
 import type { Controller } from "../room/controller";
 
 export function VolumeControl({ engine }: { engine: Controller }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
   const touch = useRef(false);
   const closing = useRef(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -28,15 +31,15 @@ export function VolumeControl({ engine }: { engine: Controller }) {
   const level = engine.screenLevel(target || "");
   const forcedMute =
     engine.captures.deaf || engine.remoteMute || engine.masterVolume === 0;
-  useEffect(() => {
-    if (!open) return;
+  const leave = () => {
     const doc = root.current?.ownerDocument;
-    const outside = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    doc?.addEventListener("pointerdown", outside);
-    return () => doc?.removeEventListener("pointerdown", outside);
-  }, [open]);
+    const focused = doc?.activeElement;
+    if (
+      !root.current?.contains(focused || null) &&
+      !doc?.getElementById(panelId)?.contains(focused || null)
+    )
+      closeTimer.current = setTimeout(() => setOpen(false), 220);
+  };
   return (
     <div
       ref={root}
@@ -52,14 +55,20 @@ export function VolumeControl({ engine }: { engine: Controller }) {
           e.pointerType === "mouse" &&
           !root.current?.contains(root.current.ownerDocument.activeElement)
         )
-          closeTimer.current = setTimeout(() => setOpen(false), 220);
+          leave();
       }}
       onFocus={() => {
         cancelClose();
         if (!closing.current) setOpen(true);
       }}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+        if (
+          !e.currentTarget.contains(e.relatedTarget) &&
+          !root.current?.ownerDocument
+            .getElementById(panelId)
+            ?.contains(e.relatedTarget as Node | null)
+        )
+          setOpen(false);
       }}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -69,11 +78,12 @@ export function VolumeControl({ engine }: { engine: Controller }) {
       }}
     >
       <button
+        ref={button}
         className="dock-button volume-trigger"
         aria-label="Volume das telas"
         title="Volume das telas · clique para silenciar a tela em foco"
         aria-expanded={open}
-        aria-controls="screen-volume-panel"
+        aria-controls={open ? panelId : undefined}
         onPointerDown={(e) => {
           touch.current = e.pointerType === "touch";
         }}
@@ -88,11 +98,18 @@ export function VolumeControl({ engine }: { engine: Controller }) {
         <span>Volume</span>
       </button>
       {open && (
-        <div
+        <AnchoredPopover
+          anchor={button}
           className="volume-popover"
-          id="screen-volume-panel"
-          role="group"
-          aria-label="Volume das telas assistidas"
+          id={panelId}
+          label="Volume das telas assistidas"
+          side="above"
+          close={() => {
+            cancelClose();
+            setOpen(false);
+          }}
+          onPointerEnter={cancelClose}
+          onPointerLeave={leave}
         >
           <div className="volume-scroll">
             <header>
@@ -161,7 +178,7 @@ export function VolumeControl({ engine }: { engine: Controller }) {
               <small className="field-note">Ajuste fino ativo · até 300%</small>
             )}
           </div>
-        </div>
+        </AnchoredPopover>
       )}
     </div>
   );

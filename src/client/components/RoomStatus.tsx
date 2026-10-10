@@ -85,8 +85,26 @@ export function ConnectionStatus({
 }) {
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const open = pinned || hovered || focused;
+  const button = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const keepHover = () => {
+    clearTimeout(hoverTimer.current);
+    setHovered(true);
+  };
+  const leaveHover = () => {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHovered(false), 220);
+  };
+  const close = useCallback(() => {
+    clearTimeout(hoverTimer.current);
+    setPinned(false);
+    setHovered(false);
+  }, []);
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
+  const open = pinned || hovered;
   const view = engine.view;
   const screens =
     view.snapshot?.participants
@@ -110,29 +128,34 @@ export function ConnectionStatus({
     <div
       className="connection-wrap"
       onPointerEnter={(e) => {
-        if (e.pointerType === "mouse") setHovered(true);
+        if (e.pointerType === "mouse") keepHover();
       }}
-      onPointerLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      onPointerLeave={leaveHover}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
+        if (
+          !e.currentTarget.contains(e.relatedTarget) &&
+          !button.current?.ownerDocument
+            .getElementById(panelId)
+            ?.contains(e.relatedTarget as Node | null)
+        )
+          close();
       }}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
-          setPinned(false);
-          setHovered(false);
-          setFocused(false);
+          e.stopPropagation();
+          close();
+          button.current?.focus({ preventScroll: true });
         }
       }}
     >
       <button
+        ref={button}
         className={`connection latency-${metric.tone}`}
         aria-expanded={open}
-        aria-controls="connection-details"
+        aria-controls={open ? panelId : undefined}
         aria-label={`${metric.source}: ${metric.label}. ${metric.quality}. Ver detalhes da conexão`}
         onClick={() => {
           setPinned((v) => !v);
-          setFocused(false);
           setHovered(false);
         }}
       >
@@ -141,11 +164,14 @@ export function ConnectionStatus({
         <span className="ping-source">{metric.source}</span>
       </button>
       {open && (
-        <div
+        <AnchoredPopover
+          anchor={button}
           className="connection-popover"
-          id="connection-details"
-          role="group"
-          aria-label="Detalhes da conexão"
+          id={panelId}
+          label="Detalhes da conexão"
+          close={close}
+          onPointerEnter={keepHover}
+          onPointerLeave={leaveHover}
         >
           <strong>{metric.quality}</strong>
           <RoomTimer engine={engine} />
@@ -188,13 +214,13 @@ export function ConnectionStatus({
           <button
             className="text-button"
             onClick={() => {
-              setPinned(false);
+              close();
               diagnostics();
             }}
           >
             Abrir diagnóstico
           </button>
-        </div>
+        </AnchoredPopover>
       )}
     </div>
   );

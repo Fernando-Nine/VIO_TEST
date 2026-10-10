@@ -354,6 +354,14 @@ export class CanvasStore {
       if (s.focusId === id) s.single = false;
     });
   }
+  raise(id: string) {
+    const index = this.value.floating.findIndex((f) => f.widgetId === id);
+    if (index < 0 || index === this.value.floating.length - 1) return;
+    this.change((s) => {
+      const [window] = s.floating.splice(index, 1);
+      s.floating.push(window);
+    });
+  }
   move(id: string, targetId: string) {
     if (!this.value.widgets.some((w) => w.id === id)) return;
     this.change((s) => {

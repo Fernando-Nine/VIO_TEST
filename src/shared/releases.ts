@@ -7,9 +7,25 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.7.0-rc.3";
+export const version = "2.7.0-rc.4";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-10",
+  title: "Canvas · avisos visíveis e ordem das janelas",
+  sections: [
+    {
+      title: "Correções de sobreposição",
+      items: [
+        "Avisos acompanham o canvas em tela cheia, abaixo da barra superior e dentro da área visível. Nos Ajustes, aparecem dentro do painel aberto.",
+        "Janelas flutuantes vêm à frente ao clicar ou receber foco do teclado, preservando posições e instâncias dos widgets.",
+        "Detalhes de conexão, volume e espectadores abrem acima dos cards, respeitando as bordas da tela e a área disponível com teclado ou zoom.",
+        "Prévia em revisão; aceite de mídia em aparelhos reais e decisões abertas da rodada C continuam pendentes.",
+      ],
+    },
+  ],
+};
+const canvasInteractionRelease: Release = {
+  version: "2.7.0-rc.3",
   date: "2026-10-10",
   title: "Widgets · salvar e encerrar com clareza",
   sections: [
@@ -264,6 +280,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  canvasInteractionRelease,
   canvasRevisionRelease,
   preferencesRelease,
   multiscreenRelease,
