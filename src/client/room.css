@@ -374,13 +374,18 @@ input[type="checkbox"] {
 }
 .player > .notice {
   position: absolute;
-  top: calc(58px + env(safe-area-inset-top, 0px));
+  top: calc(
+    var(--canvas-toolbar-height, 50px) + 8px + env(safe-area-inset-top, 0px)
+  );
   left: 50%;
   transform: translateX(-50%);
   width: min(600px, calc(100% - 24px));
   margin: 0;
   z-index: 80;
-  max-height: min(35dvh, calc(100% - 80px));
+  max-height: min(
+    35dvh,
+    calc(100% - var(--canvas-toolbar-height, 50px) - 24px)
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
   align-items: flex-start;

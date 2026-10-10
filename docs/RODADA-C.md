@@ -1,7 +1,7 @@
 # VIO — rodada C: ajustes e decisões abertas
 
 Base inspecionada: `257f679`, ramo `feat/canvas-widgets`, VIO_TEST. Data: 06/10/2026.
-Prévia candidata: **2.7.0-rc.2**. Produção não é o alvo desta rodada.
+Continuação em 10/10/2026: prévia candidata **2.7.0-rc.4**. Produção não é o alvo desta rodada.
 O anexo Texto colado(1).txt substitui os requisitos anteriores onde houver conflito.
 
 ## Triagem e entregas
@@ -69,6 +69,24 @@ biblioteca de arraste nem no WebRTC. Não foi feita migração silenciosa nesta 
 
 - [MDN — grid-column/span](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column).
 - [WCAG 2.2 — alternativas ao arraste](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html): oferecer operação por clique/toque além do teclado.
+
+## Correções da continuação — 10/10/2026
+
+- **rc.3:** Salvar texto junto ao título, acima da barra da chamada; rótulo do X
+  distingue encerramento para todos; foco do teclado no widget adicionado e retorno
+  ao espaço vazio ao fechar.
+- **rc.4:** avisos eram irmãos do player e desapareciam no fullscreen. Agora ficam
+  dentro do player, com largura/altura limitadas, afastamento pela altura real da
+  barra (inclusive foco único) e camada acima do canvas. Em Ajustes
+  e outros painéis do aplicativo, aparecem no próprio painel.
+- Flutuantes compartilhavam um z-index fixo, fazendo a ordem depender da montagem.
+  A ordem passa a seguir interação por ponteiro/foco, sem reordenar a árvore de widgets,
+  trocar posições ou recriar players.
+- Conexão e volume usam o mesmo popover do canvas: camada superior, posição limitada
+  à viewport visível, inversão perto das bordas e atualização em resize/scroll.
+  Menus ligados a widgets que deixam de estar visíveis fecham; Escape devolve o foco.
+- Quatro regressões adicionais cobrem ordem dos flutuantes e limites do popover,
+  incluindo viewport deslocada por teclado/zoom. Nenhuma dependência foi acrescentada.
 
 ## Propostas que precisam de decisão
 
@@ -142,13 +160,14 @@ Pergunta: aprova alça exclusiva, confirmação ao ocupar vizinhos, preset local
 
 ## Validação desta rodada
 
-- 64 testes automatizados: regressão de foco/slots/identidade; temporizadores; segurança e
+- 68 testes automatizados: regressão de foco/slots/identidade; temporizadores; segurança e
   espectadores por publicação; reentrada após erro; mais de oito tentativas; restart real
   de sinalização; cancelamento ao sair. O teste de recuperação usa o Controller real e
   Socket.IO real, com tempos de transporte reduzidos e uma resposta de join rejeitada.
 - TypeScript estrito e build concluídos. Sem dependência nova.
 - O navegador remoto bloqueou a bancada localhost (`ERR_BLOCKED_BY_CLIENT`).
-  Essa limitação não prova falha do aplicativo. Validação visual será feita na prévia.
+  Essa limitação não prova falha do aplicativo. A continuação usou a prévia publicada;
+  resultados e limites em `VALIDACAO.md`.
 - Testes de sender são sintéticos. Medição de CPU/banda, escuta real, PC + celular,
   TURN entre redes e recuperação com capturas físicas precisam de ensaio desta versão.
 - O usuário informou que a maioria das pendências anteriores foi aceita; isso é registrado

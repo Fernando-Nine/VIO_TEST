@@ -3,7 +3,7 @@
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  
-Prévia de desenvolvimento **2.7.0-rc.1** · **AGPLv3** · **Node 24**
+Prévia de desenvolvimento **2.7.0-rc.4** · **AGPLv3** · **Node 24**
 
 Produção permanece na versão 2.6.0. Esta prévia está no ramo `feat/canvas-widgets` e ainda requer aceite manual.
 

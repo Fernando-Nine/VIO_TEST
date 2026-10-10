@@ -218,6 +218,24 @@ export function RoomCanvas(props: Props) {
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const [newInStrip, setNewInStrip] = useState(0);
   const pendingFocus = useRef<string | null>(null);
+  const toolbar = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const bar = toolbar.current;
+    const player = bar?.closest<HTMLElement>(".player");
+    if (!bar || !player) return;
+    const measureToolbar = () =>
+      player.style.setProperty(
+        "--canvas-toolbar-height",
+        `${bar.offsetHeight}px`,
+      );
+    const observer = new ResizeObserver(measureToolbar);
+    observer.observe(bar);
+    measureToolbar();
+    return () => {
+      observer.disconnect();
+      player.style.removeProperty("--canvas-toolbar-height");
+    };
+  }, []);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
   useStripInput(root, strip, stripMode && !state.single);
@@ -592,7 +610,7 @@ export function RoomCanvas(props: Props) {
         aria-hidden="true"
         onPointerEnter={() => setNearTop(true)}
       />
-      <div className="canvas-toolbar">
+      <div className="canvas-toolbar" ref={toolbar}>
         <button className="text-button" onClick={() => setLayoutOpen(true)}>
           <LayoutGrid size={16} />
           <span>Layout</span>

@@ -1,17 +1,22 @@
 # VIO — estado da nova implementação
 
-Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.1**, em 05/10/2026, ainda em revisão.
+Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.4**, em 10/10/2026, ainda em revisão.
 
-O canvas, a tira linear e os widgets individuais/compartilhados estão implementados nesta prévia. A tela grande pertence ao grid e troca posições com os outros widgets. Foco único preserva as conexões e o áudio. As permissões de estrutura e o estado compartilhado são conferidos pelo servidor.
+O canvas, a tira e os widgets individuais/compartilhados estão implementados. A rodada C
+corrigiu recuperação automática, foco único, encerramento de widgets, compartilhamento
+sem duplicação e controles redundantes. Esta continuação também corrige o botão de
+salvar notas sob a barra, retorno de foco, avisos fora da tela e camadas dos flutuantes
+ou popovers. As mudanças preservam a identidade dos widgets e o caminho de mídia.
 
-Prévia publicada separadamente em 05/10/2026: https://vio-test-canvas-preview.onrender.com/,
-plano gratuito, ramo `feat/canvas-widgets`, PR #3. O site principal e `main` permanecem na 2.6.0.
-Após o bloqueio do endereço local da bancada, a interface foi conferida nessa prévia
-normal por botões, arraste e teclado. Foram corrigidos o destino do arraste, a gravação
-imediata de notas individuais e o aproveitamento da largura das notas. São 56 testes
-aprovados, além de TypeScript e build. Os testes físicos de áudio/vídeo, celular e
-demais navegadores continuam pendentes. Veja `docs/CANVAS.md`, `docs/VALIDACAO.md` e
-`docs/PENDENCIAS.md`. O instalável/WASAPI e o futuro dono da sala seguem separados.
+Prévia: https://vio-test-canvas-preview.onrender.com/, ramo `feat/canvas-widgets`, PR #3.
+**68 testes aprovados**, TypeScript e build de produção em 10/10/2026. O teste de
+reconexão usa sinalização real e reinício local; não substitui captura/escuta em
+aparelhos. Os resultados visuais estão em `docs/VALIDACAO.md`.
+
+Notas ampliadas (C24), blocos novos do Personalizado (C25) e mesclagem (C26) continuam
+como propostas em `docs/RODADA-C.md`. A prévia depende do aceite de mídia, celular e
+navegadores antes da integração à produção. Consulte `docs/PENDENCIAS.md`.
+O instalável/WASAPI e o futuro dono da sala seguem separados.
 
 Histórico desta base: versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.

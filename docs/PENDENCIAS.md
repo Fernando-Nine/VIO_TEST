@@ -1,6 +1,6 @@
 # VIO — pendências explicadas
 
-Atualizado em 06/10/2026. A prévia **2.7.0-rc.1** pode ser experimentada em
+Atualizado em 10/10/2026. A prévia **2.7.0-rc.4** pode ser experimentada em
 https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no
 [PR #3 do VIO_TEST](https://github.com/Fernando-Nine/VIO_TEST/pull/3).
 O site principal continua na 2.6.0; VIO e VIO_2 não foram alterados.
@@ -13,10 +13,30 @@ faz parte do grid. Focar troca posições; foco único esconde os demais widgets
 O código mantém os players de áudio e as assinaturas ao mudar a organização.
 Somente o criador pode alterar a estrutura de um widget compartilhado.
 
-São **56 testes automatizados aprovados**, além de TypeScript e build. A interface
+São **68 testes automatizados aprovados**, além de TypeScript e build. A interface
 publicada foi conferida por botões, arraste e teclado, com duas sessões: troca de
 posições, tira, foco único, notas compartilhadas e redimensionamento de janela.
 Esses ensaios não comprovam que o áudio chega corretamente a aparelhos físicos.
+
+## Continuação da rodada C
+
+Foram corrigidos recuperação automática, foco único com o widget principal correto,
+exclusão pelo criador versus fechamento local e controles repetidos. Nesta continuação,
+Salvar texto subiu para o cabeçalho da nota, o foco do teclado acompanha inclusão e
+fechamento, e os avisos passam a pertencer ao canvas que entra em tela cheia. Os
+popovers escapam do recorte dos cards e respeitam as bordas; clicar ou focar um
+flutuante o traz à frente sem trocar sua posição.
+
+As propostas continuam abertas, sem bloquear os consertos:
+
+| Decisão | Proposta registrada |
+|---|---|
+| C24 · Notas | Até seis caixas com envio explícito de cópia à sala; alternativa: aba Conversa temporária. |
+| C25 · Personalizado | Lista de tarefas e votação; conversão segura dos blocos legados de texto/tempo. |
+| C26 · Mesclagem | Alça exclusiva, confirmação ao ocupar vizinhos e presets locais; somente no grid. |
+
+Detalhes e perguntas em [RODADA-C.md](RODADA-C.md). Não foi introduzido chat,
+mesclagem, armazenamento permanente ou infraestrutura nova nesta revisão.
 
 ## O que falta antes de substituir o site principal
 

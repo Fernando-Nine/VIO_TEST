@@ -1,5 +1,52 @@
 # VIO — validação
 
+## Continuação da rodada C — 2.7.0-rc.4 — 10/10/2026
+
+Ramo `feat/canvas-widgets`, PR #3. A prévia publicada identificou a versão
+**2.7.0-rc.4**. A produção 2.6.0 não foi alterada.
+
+**68 testes passaram**, sem falhas; TypeScript estrito e build concluídos.
+Logs: `docs/evidence/rc4-tests.txt` e `docs/evidence/rc4-build.txt`.
+O log de erro Cloudflare/TURN pertence ao teste de falha simulada.
+Os quatro novos casos cobrem ordem de flutuantes sem mudança de identidade/posição
+ou foco e posicionamento de popovers nas bordas, viewport estreita e área visível
+deslocada por teclado/zoom. Nenhuma dependência nova.
+
+### Ensaios da interface publicada
+
+Na rc.2, duas sessões independentes confirmaram edição/salvamento de notas,
+fechamento somente local pelo participante e encerramento para ambos pelo criador.
+Foco + tira preservou o mínimo de espaços e Foco único exibiu o widget principal.
+Essa revisão encontrou o botão Salvar texto sob a barra inferior; a rc.3 o moveu
+para junto do título e explicitou o rótulo de encerramento para todos.
+
+Na rc.4, os controles reais da prévia confirmaram:
+
+- Inclusão de Notas devolve o foco ao cabeçalho do widget.
+- Dois flutuantes sobrepostos alternam entre camadas 10/11 ao clicar em Pessoas e
+  editar Notas. Mantêm seus ids e a ordem da árvore de widgets.
+- Compartilhar converte a nota original; o X informa Encerrar Notas para todos.
+  Editar e clicar em Salvar texto conclui o salvamento, sem intercepção pela barra.
+- Detalhes de conexão usa a camada nativa de popover e recebe o clique acima do
+  canvas; ficou entre x=740–1050 e y=60–330 na viewport 1363×936. Escape a partir
+  de um controle interno fecha e devolve o foco sem reabrir.
+- Foco único e tela cheia mantêm o widget escolhido. A ajuda de Pessoas permaneceu
+  na área visível (x=8–318, y=92–259), enquanto a barra superior recolheu para
+  y=-66. A altura variável dessa barra motivou o afastamento medido dos avisos.
+
+Captura do foco único com a barra recolhida e ajuda visível:
+`docs/evidence/vio-rc4-focus-popover-2026-10-10.jpg`.
+
+Os avisos gerais passaram de irmãos do player para filhos dele, com área limitada
+à tela; nos painéis do aplicativo aparecem dentro do diálogo. Não se considera
+captura/escuta física validada: o seletor de compartilhamento da bancada ficou
+pendente e foi encerrado por recarga, sem conceder acesso nem produzir mídia.
+Ainda faltam queda com mídia ativa, aviso durante teclado móvel, volume com telas
+remotas, PC + celular, leitores de tela e demais navegadores. O ensaio automatizado
+de sinalização inclui reinício real do servidor, mas não certifica mídia física.
+
+Propostas C24, C25 e C26 continuam em `RODADA-C.md`. Roteiro de aceite e requisitos
+em `PENDENCIAS.md`. Os registros abaixo são históricos; não certificam a rc.4.
 
 ## Prévia 2.7.0-rc.1 — atualização em 06/10/2026
 
