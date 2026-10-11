@@ -8,8 +8,38 @@ Os novos testes verificam a roda da tira e o modificador, cópias de notas com c
 e isolamento por sala, autoria, criador e ping medido por Socket.IO.
 Requisitos, diagnósticos e decisões abertas: [RODADA-D.md](RODADA-D.md).
 
-Mídia em aparelhos reais, trackpad/toque, acessibilidade assistiva e diferentes
-navegadores continuam pendentes. Os registros abaixo são das revisões anteriores.
+### Prévia publicada — conferência visual em 11/10/2026
+
+Versão rc.5 confirmada na interface, correspondente ao commit `1838367`.
+Ensaio no Chromium do navegador remoto, viewport 1363 × 936, com duas sessões
+Socket.IO em abas do mesmo perfil (portanto, preferências locais podem ser comuns).
+Ações feitas pelos controles reais; leitura de DOM somente para observar geometria.
+
+- Entrada nova mostrou foco + tira com quatro espaços, sem widget Pessoas automático.
+- Menu Layout mostrou os títulos novos, sem seção de mover; Foco único ficou sem seletor.
+- Notas aceitou seis caixas pela estrutura. Salvar e enviar produziram confirmação.
+- A segunda sessão recebeu texto com remetente e horário, adicionou uma cópia e a
+  editou; o original da primeira sessão permaneceu intacto.
+- Pessoas abriu painel sem criar widget. Contagem de duas pessoas, cores, uma coroa
+  no criador e pings individuais de 77/74 ms apareceram no ensaio.
+- Em Foco único + fullscreen, o botão perdeu foco e a barra recolheu sem novo clique
+  ou movimento: top -49 px, bottom 0, opacity 0. Entrada do ponteiro em y=2 abriu;
+  y=80 não abriu; saída para y=180 recolheu. O movimento foi fornecido por entrada
+  nativa de roda posicionada, sem cliques nem manipulação de estado por script.
+- Tira vertical e foco medidos entre y=122 e y=897, ambos com 775 px. A camada das
+  setas teve exatamente os mesmos limites da tira e não reservou espaço abaixo.
+- Roda sobre o corpo da nota rolou seus 81 px internos com tira em 0. Roda sobre o
+  cabeçalho avançou a tira a 261 px e alinhou o próximo slot a y=121,98, junto da
+  borda y=122. O snap CSS voltou a `y mandatory` ao final. Isso confirma o percurso
+  sobre card e a prioridade interna; não mede cadência/inércia de trackpad físico.
+
+Evidência: `docs/evidence/vio-round-d-people-2026-10-11.jpg`.
+As duas sessões de teste saíram da sala ao terminar. A inspeção de erros registrou
+mensagens da extensão do navegador; elas não foram tratadas como erros do VIO.
+
+Mídia em aparelhos reais, passagem do mouse no volume com transmissão ativa,
+trackpad/toque, arraste físico com soltura do modificador, acessibilidade assistiva
+e diferentes navegadores continuam pendentes. Os registros abaixo são históricos.
 
 
 ## Continuação da rodada C — 2.7.0-rc.4 — 10/10/2026

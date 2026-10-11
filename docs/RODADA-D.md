@@ -35,7 +35,7 @@ O criador é a primeira pessoa da vida atual da sala. A coroa é informativa, se
 Fase 1: suíte completa executada uma vez (71 casos). Uma expectativa antiga de um slot precisou acompanhar o novo padrão de quatro; os 20 testes afetados passaram no reteste direcionado. TypeScript aprovado.
 Fase 2: suíte completa executada uma vez, **74 testes aprovados**. Inclui isolamento de notas entre salas, payload estrito, autoria, idempotência, cotas, persistência na reentrada, limpeza ao esvaziar, criador e ping com servidor/Socket.IO reais. Build e TypeScript conferidos; sem dependências novas.
 
-Ensaio visual e limites complementares ficam em VALIDACAO.md. Mídia física, toque/trackpad real, aparelhos móveis e leitores de tela continuam no roteiro de aceite; testes de estado não certificam esses dispositivos.
+Ensaio visual concluído na rc.5 em 11/10/2026: duas sessões confirmaram cópias independentes e painel Pessoas; fullscreen recolheu automaticamente e respondeu à zona de 4 px; tira preservou rolagem interna e alinhamento. Evidência e limites complementares ficam em VALIDACAO.md. Mídia física, toque/trackpad real, aparelhos móveis e leitores de tela continuam no roteiro de aceite; testes de estado não certificam esses dispositivos.
 
 ## D14 — módulos propostos (nenhum implementado)
 

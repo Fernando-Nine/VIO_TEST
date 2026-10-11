@@ -11,7 +11,8 @@ ou popovers. As mudanças preservam a identidade dos widgets e o caminho de míd
 Prévia: https://vio-test-canvas-preview.onrender.com/, ramo `feat/canvas-widgets`, PR #3.
 **74 testes aprovados**, TypeScript e build de produção em 10/10/2026. O teste de
 reconexão usa sinalização real e reinício local; não substitui captura/escuta em
-aparelhos. Os resultados visuais estão em `docs/VALIDACAO.md`.
+aparelhos. Prévia rc.5 conferida em 11/10/2026: cópias independentes, Pessoas com criador/ping,
+barra automática e alinhamento da tira. Os resultados visuais estão em `docs/VALIDACAO.md`.
 
 A rodada D implementa D1–D13, incluindo Notas ampliadas e envio de cópias (C24),
 barra de fullscreen, roda unificada da tira, controles simplificados e painel Pessoas.

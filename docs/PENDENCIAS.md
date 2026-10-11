@@ -1,6 +1,6 @@
 # VIO — pendências explicadas
 
-Atualizado em 10/10/2026. A prévia **2.7.0-rc.5** pode ser experimentada em
+Atualizado em 11/10/2026. A prévia **2.7.0-rc.5** pode ser experimentada em
 https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no
 [PR #3 do VIO_TEST](https://github.com/Fernando-Nine/VIO_TEST/pull/3).
 O site principal continua na 2.6.0; VIO e VIO_2 não foram alterados.
@@ -32,6 +32,9 @@ flutuante o traz à frente sem trocar sua posição.
 D1–D13 implementados: controles simplificados, comportamento da barra em fullscreen,
 roda da tira unificada, setas sobrepostas, encaixe sincronizado, tira como padrão,
 Notas com até seis caixas e envio de cópias, e painel Pessoas com detalhes.
+Na prévia, duas sessões confirmaram cópias independentes e ping/coroa. Também foram
+conferidos recolhimento automático, gatilho de topo e alinhamento/rolagem interna
+da tira. Evidência e limites em [VALIDACAO.md](VALIDACAO.md).
 
 Restam duas escolhas de produto:
 
