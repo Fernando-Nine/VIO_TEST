@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  Blocks,
   Columns3,
   LayoutGrid,
   Maximize,
@@ -206,6 +207,7 @@ export function RoomCanvas(props: Props) {
   const { geometry, root, strip, register, measure } = useCanvasGeometry(state);
   const [catalog, setCatalog] = useState<string | null>(null);
   const [catalogTab, setCatalogTab] = useState("native");
+  const [communityNotice, setCommunityNotice] = useState(false);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -221,6 +223,7 @@ export function RoomCanvas(props: Props) {
   const shift = useRef(false);
   const keyboardDrag = useRef(false);
   const [nearTop, setNearTop] = useState(false);
+  const [fullscreenIntro, setFullscreenIntro] = useState(false);
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const [newInStrip, setNewInStrip] = useState(0);
   const pendingFocus = useRef<string | null>(null);
@@ -242,8 +245,9 @@ export function RoomCanvas(props: Props) {
       player.style.removeProperty("--canvas-toolbar-height");
     };
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     setNearTop(false);
+    setFullscreenIntro(!!props.isFullscreen);
     if (
       props.isFullscreen &&
       toolbar.current?.contains(toolbar.current.ownerDocument.activeElement)
@@ -251,6 +255,9 @@ export function RoomCanvas(props: Props) {
       (
         toolbar.current.ownerDocument.activeElement as HTMLElement | null
       )?.blur();
+    if (!props.isFullscreen) return;
+    const timer = setTimeout(() => setFullscreenIntro(false), 1000);
+    return () => clearTimeout(timer);
   }, [props.isFullscreen]);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
@@ -615,7 +622,7 @@ export function RoomCanvas(props: Props) {
 
   return (
     <div
-      className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop ? "show-top-toolbar" : ""}`}
+      className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop || fullscreenIntro ? "show-top-toolbar" : ""}`}
       onPointerMove={(event) => {
         if (event.pointerType === "mouse")
           setNearTop(
@@ -1175,7 +1182,7 @@ export function RoomCanvas(props: Props) {
             <>
               <div className="widget-catalog">
                 {Object.values(widgetRegistry)
-                  .filter((w) => w.id !== "screen")
+                  .filter((w) => w.id !== "screen" && w.id !== "custom")
                   .map((w) => (
                     <button
                       className="catalog-item"
@@ -1340,11 +1347,21 @@ export function RoomCanvas(props: Props) {
             </>
           )}
           {catalogTab === "community" && (
-            <p>
-              O catálogo da comunidade ainda não está disponível. Esta versão
-              usa somente widgets internos do VIO, sem executar código de
-              terceiros.
-            </p>
+            <>
+              <button
+                className="catalog-item"
+                onClick={() => setCommunityNotice(true)}
+              >
+                <Blocks size={20} aria-hidden="true" />
+                <strong>Widget personalizado</strong>
+              </button>
+              {communityNotice && (
+                <p role="status">
+                  Widgets personalizados serão criados pela comunidade. Esta
+                  área vai crescer.
+                </p>
+              )}
+            </>
           )}
         </Dialog>
       )}

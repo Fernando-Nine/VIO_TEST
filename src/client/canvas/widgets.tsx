@@ -576,7 +576,7 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
 };
 export function createWidget(type: string): WidgetInstance {
   const def = widgetRegistry[type];
-  if (!def) throw new Error("Widget indisponível.");
+  if (!def || type === "custom") throw new Error("Widget indisponível.");
   return {
     id: freshKey(),
     type,

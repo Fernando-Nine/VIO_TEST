@@ -1164,16 +1164,24 @@
 }
 .strip-controls .icon-button {
   pointer-events: auto;
-  width: 32px;
-  min-height: 32px;
-  background: #171e32cc;
-  border: 1px solid #69769c;
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
   opacity: 0.65;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    opacity 120ms ease;
 }
 .strip-controls .icon-button:hover,
 .strip-controls .icon-button:focus-visible {
   opacity: 1;
   background: #343f65;
+  border-color: #69769c;
 }
 .strip-controls .strip-notice {
   position: absolute;

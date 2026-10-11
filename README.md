@@ -1,5 +1,7 @@
 # VIO
 
+> Rodada E: candidata 2.7.0 preparada; liberação e Fase 2 pendentes da seleção do workspace Render. Estado e propostas em [docs/RODADA-E.md](docs/RODADA-E.md).
+
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
 **by NerdQuest Studios · fundado por Nine**  

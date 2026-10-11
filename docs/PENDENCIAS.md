@@ -1,5 +1,7 @@
 # VIO — pendências explicadas
 
+> Rodada E: candidata 2.7.0 preparada; liberação e Fase 2 pendentes da seleção do workspace Render. Estado e propostas em [RODADA-E.md](RODADA-E.md).
+
 Atualizado em 11/10/2026. A prévia **2.7.0-rc.5** pode ser experimentada em
 https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no
 [PR #3 do VIO_TEST](https://github.com/Fernando-Nine/VIO_TEST/pull/3).

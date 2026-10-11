@@ -7,9 +7,24 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.7.0-rc.5";
+export const version = "2.7.0";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-11",
+  title: "Canvas · ajustes finais da rodada E",
+  sections: [
+    {
+      title: "Controles e catálogo",
+      items: [
+        "Setas da tira sem fundo permanente, com círculo no hover/foco e área de clique de pelo menos 40 px, preservando posição e alinhamento.",
+        "Personalizado deixa de ser criável no catálogo. A entrada da comunidade apresenta somente um aviso, sem conteúdo simulado.",
+        "Ao entrar em tela cheia, a barra aparece por um segundo e depois recolhe automaticamente. O gatilho no topo e o foco de teclado continuam disponíveis.",
+      ],
+    },
+  ],
+};
+const roundDRelease: Release = {
+  version: "2.7.0-rc.5",
   date: "2026-10-10",
   title: "Rodada D · tira, notas e pessoas",
   sections: [
@@ -303,6 +318,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  roundDRelease,
   canvasLayersRelease,
   canvasInteractionRelease,
   canvasRevisionRelease,
