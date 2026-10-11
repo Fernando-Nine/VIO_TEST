@@ -1402,3 +1402,89 @@ test("compartilhar é idempotente e somente criador encerra a instância para to
     await app.close();
   }
 });
+
+test("rodada D: cópias isoladas por sala, criador e ping medido no servidor", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 3; i++) {
+      const socket = await connect(app.url, (await session(app.url)).token);
+      socket.on("presence-probe", (ack: () => void) => ack());
+      sockets.push(socket);
+    }
+    const input = {
+      id: crypto.randomUUID(),
+      label: "Roteiro",
+      value: "Cópia original",
+    };
+    assert.equal((await request(sockets[2], "note-send", input)).ok, false);
+    const a = data(
+      await request<{ id: string; snapshot: Snapshot }>(sockets[0], "join", {
+        name: "Ana",
+        code: "RODADAD",
+      }),
+    );
+    const b = data(
+      await request<{ id: string; snapshot: Snapshot }>(sockets[1], "join", {
+        name: "Bia",
+        code: "RODADAD",
+      }),
+    );
+    const c = data(
+      await request<{ id: string; snapshot: Snapshot }>(sockets[2], "join", {
+        name: "Caio",
+        code: "OUTRAD",
+      }),
+    );
+    assert.equal(b.snapshot.creatorId, a.id);
+    assert.equal(c.snapshot.creatorId, c.id);
+    const copy = data(await request(sockets[0], "note-send", input));
+    assert.equal(copy.senderId, a.id);
+    assert.equal((await request(sockets[1], "note-send", input)).ok, false);
+    assert.equal(
+      (await request(sockets[0], "note-send", { ...input, senderId: b.id })).ok,
+      false,
+    );
+    const restored = data(
+      await request<{ snapshot: Snapshot }>(sockets[1], "join", {
+        name: "Bia",
+        code: "RODADAD",
+      }),
+    );
+    assert.equal(restored.snapshot.noteCopies?.[0].value, input.value);
+    const other = data(
+      await request<{ snapshot: Snapshot }>(sockets[2], "join", {
+        name: "Caio",
+        code: "OUTRAD",
+      }),
+    );
+    assert.deepEqual(other.snapshot.noteCopies, []);
+    const measured = new Promise<{ id: string; pingMs: number }>((resolve) =>
+      sockets[1].once("participant-ping", resolve),
+    );
+    await request(sockets[0], "ping");
+    const ping = await measured;
+    assert.equal(ping.id, a.id);
+    assert.ok(Number.isInteger(ping.pingMs) && ping.pingMs >= 0);
+    await request(sockets[0], "leave");
+    const remaining = data(
+      await request<{ snapshot: Snapshot }>(sockets[1], "join", {
+        name: "Bia",
+        code: "RODADAD",
+      }),
+    );
+    assert.equal(remaining.snapshot.creatorId, a.id);
+    await request(sockets[1], "leave");
+    const empty = data(
+      await request<{ snapshot: Snapshot }>(sockets[1], "join", {
+        name: "Bia",
+        code: "RODADAD",
+      }),
+    );
+    assert.deepEqual(empty.snapshot.noteCopies, []);
+    assert.equal(empty.snapshot.creatorId, b.id);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});

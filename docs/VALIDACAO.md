@@ -1,5 +1,17 @@
 # VIO — validação
 
+## Rodada D — 2.7.0-rc.5
+
+74 testes passaram ao fim da Fase 2; Fase 1 teve suíte completa e reteste direcionado
+para a expectativa do novo layout inicial. TypeScript e build aprovados.
+Os novos testes verificam a roda da tira e o modificador, cópias de notas com cotas
+e isolamento por sala, autoria, criador e ping medido por Socket.IO.
+Requisitos, diagnósticos e decisões abertas: [RODADA-D.md](RODADA-D.md).
+
+Mídia em aparelhos reais, trackpad/toque, acessibilidade assistiva e diferentes
+navegadores continuam pendentes. Os registros abaixo são das revisões anteriores.
+
+
 ## Continuação da rodada C — 2.7.0-rc.4 — 10/10/2026
 
 Ramo `feat/canvas-widgets`, PR #3. A prévia publicada identificou a versão

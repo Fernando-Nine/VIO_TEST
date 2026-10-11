@@ -7,9 +7,32 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.7.0-rc.4";
+export const version = "2.7.0-rc.5";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-10",
+  title: "Rodada D · tira, notas e pessoas",
+  sections: [
+    {
+      title: "Canvas e controles",
+      items: [
+        "A tira é o layout inicial. Setas sobrepostas preservam o alinhamento; a roda usa o mesmo percurso sobre cards, espaços e barra, com avanço suave isolado e movimento contínuo nas sequências.",
+        "Tela cheia começa com a barra recolhida, abre só na borda superior e respeita foco visível de teclado. Volume fecha ao sair após 600 ms, sem botão extra.",
+        "Menu Layout simplificado, foco único sem seletor e dica do modificador configurado durante arraste. O encaixe acompanha o estado atual da tecla.",
+      ],
+    },
+    {
+      title: "Notas e pessoas",
+      items: [
+        "Notas aceitam até seis caixas tituladas, com copiar, salvar e enviar cópia à sala. Cópias identificam remetente e horário; cada pessoa escolhe adicioná-las ao próprio layout, separadas da edição conjunta.",
+        "O botão Pessoas abre os detalhes da sala com contagem, cores, chamada, compartilhamento, criador e ping individual medido pelo servidor. O widget essencial entra somente pelo catálogo.",
+        "Módulos novos do Personalizado e mesclagem de slots aguardam escolha. Prévia em revisão; testes físicos de mídia permanecem pendentes.",
+      ],
+    },
+  ],
+};
+const canvasLayersRelease: Release = {
+  version: "2.7.0-rc.4",
   date: "2026-10-10",
   title: "Canvas · avisos visíveis e ordem das janelas",
   sections: [
@@ -280,6 +303,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  canvasLayersRelease,
   canvasInteractionRelease,
   canvasRevisionRelease,
   preferencesRelease,

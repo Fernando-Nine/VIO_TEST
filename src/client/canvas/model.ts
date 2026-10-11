@@ -63,28 +63,17 @@ export interface CanvasState {
 }
 export const newSlot = (): Slot => ({ id: freshKey() });
 export function newCanvas(): CanvasState {
-  const people: WidgetInstance = {
-    id: freshKey(),
-    type: "people",
-    title: "Pessoas na sala",
-    config: {},
-  };
   return {
     schemaVersion: 1,
     revision: 0,
-    preset: "grid-1",
+    preset: "strip-left",
     ratio: 0.7,
     freeMovement: true,
     single: false,
     focusId: null,
-    slots: [newSlot()],
-    widgets: [people],
-    floating: [
-      {
-        widgetId: people.id,
-        rect: { x: 0.7, y: 0.04, width: 0.29, height: 0.45 },
-      },
-    ],
+    slots: Array.from({ length: 4 }, newSlot),
+    widgets: [],
+    floating: [],
     pending: [],
     hidden: [],
   };

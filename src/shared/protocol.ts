@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { widgetSchemas, type SharedWidget } from "./widgets";
+import { widgetSchemas, type SharedWidget, type NoteCopy } from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
@@ -110,6 +110,8 @@ export interface Participant {
   online: boolean;
   inCall: boolean;
   publications: Publication[];
+  /** Server-measured signaling round trip, not media latency. */
+  pingMs?: number;
 }
 export interface Snapshot {
   epoch: string;
@@ -118,6 +120,8 @@ export interface Snapshot {
   serverTime: number;
   participants: Participant[];
   widgets?: SharedWidget[];
+  noteCopies?: NoteCopy[];
+  creatorId?: string;
   /** Explicit main screen subscriptions, scoped to members of this room. */
   screenViewers?: Record<string, string[]>;
   maxParticipants: null;

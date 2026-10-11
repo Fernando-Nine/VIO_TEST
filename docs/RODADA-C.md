@@ -1,5 +1,7 @@
 # VIO — rodada C: ajustes e decisões abertas
 
+> Atualização: C24 foi aprovado e implementado na rodada D. C25/C26 e suas propostas abaixo são históricos; decisões atuais estão em [RODADA-D.md](RODADA-D.md).
+
 Base inspecionada: `257f679`, ramo `feat/canvas-widgets`, VIO_TEST. Data: 06/10/2026.
 Continuação em 10/10/2026: prévia candidata **2.7.0-rc.4**. Produção não é o alvo desta rodada.
 O anexo Texto colado(1).txt substitui os requisitos anteriores onde houver conflito.

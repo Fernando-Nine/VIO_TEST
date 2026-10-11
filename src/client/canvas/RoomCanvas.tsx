@@ -1,3 +1,4 @@
+import { canvasShortcuts, snapPressed } from "./shortcuts";
 import {
   useCallback,
   useEffect,
@@ -25,6 +26,7 @@ import {
   Maximize,
   Minimize,
   MonitorUp,
+  NotebookPen,
   Plus,
   SlidersHorizontal,
   X,
@@ -62,8 +64,7 @@ const plugins = (
   Feedback.configure({ feedback: "none", dropAnimation: null }),
   Accessibility.configure({
     screenReaderInstructions: {
-      draggable:
-        "Use espaço, setas e espaço para encaixar. Escape cancela. No mouse, arraste livremente ou segure Shift para encaixar. Layout oferece Mover widget sem arrastar.",
+      draggable: `Use espaço, setas e espaço para encaixar. Escape cancela. No mouse, arraste livremente ou segure ${canvasShortcuts.snap.label} para encaixar.`,
     },
     announcements: {
       dragstart: () =>
@@ -106,6 +107,7 @@ function CanvasSlot({
   disabled,
   hidden,
   restore,
+  dragging,
 }: {
   slot: Slot;
   index: number;
@@ -118,6 +120,7 @@ function CanvasSlot({
   disabled: boolean;
   hidden: boolean;
   restore: () => void;
+  dragging: boolean;
 }) {
   const { ref, isDropTarget } = useDroppable({
     id: slot.id,
@@ -133,7 +136,7 @@ function CanvasSlot({
   return (
     <div
       ref={nodeRef}
-      className={`canvas-slot ${isDropTarget ? "is-drop-target" : ""}`}
+      className={`canvas-slot ${isDropTarget && !disabled ? "is-drop-target" : ""}`}
       data-slot-id={slot.id}
       aria-label={`Espaço ${index + 1}`}
     >
@@ -174,7 +177,11 @@ function CanvasSlot({
           <>
             <button className="add-widget" onClick={add}>
               <Plus size={20} />
-              <span>Adicionar widget</span>
+              <span>
+                {dragging
+                  ? `Pressione ${canvasShortcuts.snap.label} para encaixar o widget`
+                  : "Adicionar widget"}
+              </span>
             </button>
             {removable && (
               <button
@@ -199,7 +206,6 @@ export function RoomCanvas(props: Props) {
   const { geometry, root, strip, register, measure } = useCanvasGeometry(state);
   const [catalog, setCatalog] = useState<string | null>(null);
   const [catalogTab, setCatalogTab] = useState("native");
-  const [organizing, setOrganizing] = useState<string | null>(null);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -236,6 +242,16 @@ export function RoomCanvas(props: Props) {
       player.style.removeProperty("--canvas-toolbar-height");
     };
   }, []);
+  useEffect(() => {
+    setNearTop(false);
+    if (
+      props.isFullscreen &&
+      toolbar.current?.contains(toolbar.current.ownerDocument.activeElement)
+    )
+      (
+        toolbar.current.ownerDocument.activeElement as HTMLElement | null
+      )?.blur();
+  }, [props.isFullscreen]);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
   useStripInput(root, strip, stripMode && !state.single);
@@ -245,17 +261,21 @@ export function RoomCanvas(props: Props) {
       shift.current = value;
       setSnap(value);
     };
-    const key = (event: globalThis.KeyboardEvent) => {
-      set(event.shiftKey);
+    const key = (event: globalThis.KeyboardEvent | PointerEvent) => {
+      set(snapPressed(event));
     };
     const blur = () => set(false);
     window.addEventListener("keydown", key);
     window.addEventListener("keyup", key);
     window.addEventListener("blur", blur);
+    window.addEventListener("pointermove", key, true);
+    document.addEventListener("visibilitychange", blur);
     return () => {
       window.removeEventListener("keydown", key);
       window.removeEventListener("keyup", key);
       window.removeEventListener("blur", blur);
+      window.removeEventListener("pointermove", key, true);
+      document.removeEventListener("visibilitychange", blur);
     };
   }, []);
   const ordered = [
@@ -546,7 +566,7 @@ export function RoomCanvas(props: Props) {
   }
   useEffect(() => {
     const id = pendingFocus.current;
-    if (!id || catalog || organizing || layoutOpen) return;
+    if (!id || catalog || layoutOpen) return;
     const host = [
       ...(root.current?.querySelectorAll<HTMLElement>("[data-widget-id]") ||
         []),
@@ -557,7 +577,7 @@ export function RoomCanvas(props: Props) {
         ?.focus({ preventScroll: true });
       pendingFocus.current = null;
     }
-  }, [geometry, roving, root, catalog, organizing, layoutOpen]);
+  }, [geometry, roving, root, catalog, layoutOpen]);
   const slotProps = (slot: Slot, index: number) => ({
     slot,
     index,
@@ -573,6 +593,7 @@ export function RoomCanvas(props: Props) {
     disabled: state.single || !(snap || keyboardDrag.current),
     hidden: false,
     restore: () => {},
+    dragging: !!drag && !keyboardDrag.current,
   });
   useLayoutEffect(() => {
     if (!highlightedSlot) return;
@@ -585,8 +606,6 @@ export function RoomCanvas(props: Props) {
       ?.focus({ preventScroll: true });
     setHighlightedSlot(null);
   }, [highlightedSlot, state.slots, root]);
-  const organizedWidget = state.widgets.find((w) => w.id === organizing);
-  const currentFloat = state.floating.find((f) => f.widgetId === organizing);
   const visibleSlots =
     geometry.bounds.width < 380 ? 1 : geometry.bounds.width < 680 ? 2 : 3;
   const dropSlots = state.slots.flatMap((slot) => {
@@ -596,21 +615,58 @@ export function RoomCanvas(props: Props) {
 
   return (
     <div
-      className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop || layoutOpen || catalog ? "show-top-toolbar" : ""}`}
+      className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop ? "show-top-toolbar" : ""}`}
       onPointerMove={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        setNearTop(
-          event.pointerType !== "mouse" || event.clientY - rect.top < 64,
-        );
+        if (event.pointerType === "mouse")
+          setNearTop(
+            event.clientY - event.currentTarget.getBoundingClientRect().top <=
+              4 || !!(event.target as HTMLElement).closest(".canvas-toolbar"),
+          );
+      }}
+      onPointerDownCapture={(event) => {
+        if (
+          event.currentTarget.ownerDocument.defaultView?.matchMedia(
+            "(hover: none)",
+          ).matches &&
+          !(event.target as HTMLElement).closest(
+            ".canvas-toolbar, .canvas-top-edge",
+          )
+        )
+          setNearTop(false);
       }}
       onPointerLeave={() => setNearTop(false)}
     >
       <div
         className="canvas-top-edge"
         aria-hidden="true"
-        onPointerEnter={() => setNearTop(true)}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") setNearTop(true);
+        }}
+        onPointerDown={(event) => {
+          if (
+            event.currentTarget.ownerDocument.defaultView?.matchMedia(
+              "(hover: none)",
+            ).matches
+          )
+            setNearTop(true);
+        }}
       />
-      <div className="canvas-toolbar" ref={toolbar}>
+      <div
+        className="canvas-toolbar"
+        ref={toolbar}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") setNearTop(true);
+        }}
+        onPointerLeave={(event) => {
+          if (
+            event.pointerType === "mouse" &&
+            !(event.relatedTarget as HTMLElement | null)?.closest?.(
+              ".canvas-top-edge",
+            )
+          )
+            setNearTop(false);
+        }}
+      >
         <button className="text-button" onClick={() => setLayoutOpen(true)}>
           <LayoutGrid size={16} />
           <span>Layout</span>
@@ -643,21 +699,18 @@ export function RoomCanvas(props: Props) {
           <Columns3 size={16} />
           <span>{state.single ? "Voltar ao conjunto" : "Foco único"}</span>
         </button>
-        {state.single && (
-          <label className="single-focus-select">
-            <span className="sr-only">Trocar tela em foco único</span>
-            <select
-              aria-label="Trocar tela em foco único"
-              value={focusedWidgetId(state) || ""}
-              onChange={(event) => focus(event.target.value)}
-            >
-              {state.widgets.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {titleOf(w, engine)}
-                </option>
-              ))}
-            </select>
-          </label>
+        {!!snapshot?.noteCopies?.length && (
+          <button
+            className="text-button"
+            aria-label={`Notas recebidas (${snapshot.noteCopies.length})`}
+            onClick={() => {
+              setCatalog("auto");
+              setCatalogTab("room");
+            }}
+          >
+            <NotebookPen size={16} />
+            <span>Notas recebidas ({snapshot.noteCopies.length})</span>
+          </button>
         )}
         <button
           className="icon-button canvas-fullscreen"
@@ -700,6 +753,10 @@ export function RoomCanvas(props: Props) {
             y: origin.point.y + (event.by?.y || 0),
           };
           const native = event.nativeEvent;
+          if (native && "shiftKey" in native) {
+            shift.current = snapPressed(native);
+            setSnap(shift.current);
+          }
           if (native && "key" in native && !state.single) {
             const target = adjacentDropSlot(
               { x: origin.point.x - base.left, y: origin.point.y - base.top },
@@ -732,6 +789,8 @@ export function RoomCanvas(props: Props) {
           const base = root.current?.getBoundingClientRect();
           if (!event.canceled && id && origin && base) {
             const native = event.nativeEvent;
+            if (native && "shiftKey" in native)
+              shift.current = snapPressed(native);
             const point =
               native && "clientX" in native && "clientY" in native
                 ? { x: Number(native.clientX), y: Number(native.clientY) }
@@ -776,6 +835,8 @@ export function RoomCanvas(props: Props) {
           }
           dragOrigin.current = null;
           keyboardDrag.current = false;
+          shift.current = false;
+          setSnap(false);
           setDrag(null);
           props.interaction(false);
         }}
@@ -785,7 +846,7 @@ export function RoomCanvas(props: Props) {
           ref={root}
         >
           <div
-            className={`canvas-layout ${state.preset} ${stripMode && state.slots.length - 1 > visibleSlots ? "with-strip-navigation" : ""} ${state.single ? "single-focus" : ""}`}
+            className={`canvas-layout ${state.preset} ${state.single ? "single-focus" : ""}`}
             style={
               {
                 "--focus-ratio": `${state.ratio * 100}%`,
@@ -824,10 +885,12 @@ export function RoomCanvas(props: Props) {
             !state.single &&
             state.slots.length - 1 > visibleSlots && (
               <div
-                className="strip-controls"
+                className={`strip-controls ${geometry.bounds.width < 680 || ["strip-top", "strip-bottom"].includes(state.preset) ? "is-horizontal" : "is-vertical"}`}
                 role="group"
                 aria-label="Navegar pela tira"
                 style={{
+                  top: geometry.strip?.y || 8,
+                  height: geometry.strip?.height || "auto",
                   left: geometry.strip?.x || 8,
                   width: geometry.strip?.width || "auto",
                 }}
@@ -989,7 +1052,7 @@ export function RoomCanvas(props: Props) {
       {layoutOpen && (
         <Dialog title="Organizar seu espaço" close={() => setLayoutOpen(false)}>
           <fieldset className="layout-modes">
-            <legend>1. Modo do layout</legend>
+            <legend>Modo layout</legend>
             <div className="layout-choices">
               <button
                 className="layout-choice"
@@ -1016,7 +1079,7 @@ export function RoomCanvas(props: Props) {
             </div>
           </fieldset>
           <fieldset className="layout-details">
-            <legend>2. Organize este modo</legend>
+            <legend>Organize seu Layout</legend>
             {stripMode ? (
               <div
                 className="layout-directions"
@@ -1075,165 +1138,15 @@ export function RoomCanvas(props: Props) {
             )}
             <p className="field-note">
               O layout preserva os widgets abertos. Espaços vazios podem ser
-              removidos pelo X. Arraste livremente; segure Shift para encaixar.
+              removidos pelo X. Arraste livremente; segure{" "}
+              {canvasShortcuts.snap.label} para encaixar.
             </p>
-          </fieldset>
-          <fieldset>
-            <legend>Mover widget sem arrastar</legend>
-            <p className="field-note">
-              Escolha um widget e depois seu destino. Funciona também no toque e
-              pelo teclado.
-            </p>
-            <div className="slot-destinations">
-              {state.widgets.map((w) => (
-                <button
-                  key={w.id}
-                  className="secondary"
-                  onClick={() => {
-                    setLayoutOpen(false);
-                    setOrganizing(w.id);
-                  }}
-                >
-                  {titleOf(w, engine)}
-                </button>
-              ))}
-            </div>
           </fieldset>
           <p className="field-note">
             A partir de seis participantes, o envio direto entre navegadores
             exige mais rede e processamento. A sala não tem limite fixo de
             pessoas.
           </p>
-        </Dialog>
-      )}
-      {organizedWidget && (
-        <Dialog
-          title={`Organizar ${titleOf(organizedWidget, engine)}`}
-          close={() => setOrganizing(null)}
-        >
-          <div className="widget-dialog-actions">
-            <button
-              className="primary"
-              onClick={() => {
-                focus(organizedWidget.id);
-                setOrganizing(null);
-              }}
-            >
-              Trazer para o foco
-            </button>
-            {widgetRegistry[organizedWidget.type]?.canFloat && (
-              <button
-                className="secondary"
-                onClick={() => {
-                  store.detach(organizedWidget.id);
-                  setOrganizing(null);
-                }}
-              >
-                Usar janela flutuante
-              </button>
-            )}
-          </div>
-          <button
-            className="secondary"
-            onClick={() => {
-              const slot = store.addSlot();
-              store.move(organizedWidget.id, slot);
-              setOrganizing(null);
-            }}
-          >
-            Criar um espaço e encaixar
-          </button>
-          <p>
-            Escolha um espaço. Se estiver ocupado, os dois widgets trocam de
-            lugar.
-          </p>
-          <div className="slot-destinations">
-            {state.slots.map((slot, i) => (
-              <button
-                className="secondary"
-                disabled={!!slot.offer || slot.widgetId === organizedWidget.id}
-                key={slot.id}
-                onClick={() => {
-                  store.move(organizedWidget.id, slot.id);
-                  setOrganizing(null);
-                }}
-              >
-                Espaço {i + 1}
-                {slot.widgetId
-                  ? ` · ${titleOf(state.widgets.find((w) => w.id === slot.widgetId)!, engine)}`
-                  : " · vazio"}
-              </button>
-            ))}
-          </div>
-          {currentFloat && (
-            <fieldset>
-              <legend>Posição da janela</legend>
-              <label>
-                Horizontal
-                <input
-                  type="range"
-                  min={0}
-                  max={1 - currentFloat.rect.width}
-                  step=".01"
-                  value={currentFloat.rect.x}
-                  onChange={(e) =>
-                    store.detach(organizedWidget.id, {
-                      ...currentFloat.rect,
-                      x: +e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Vertical
-                <input
-                  type="range"
-                  min={0}
-                  max={1 - currentFloat.rect.height}
-                  step=".01"
-                  value={currentFloat.rect.y}
-                  onChange={(e) =>
-                    store.detach(organizedWidget.id, {
-                      ...currentFloat.rect,
-                      y: +e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Largura
-                <input
-                  type="range"
-                  min=".2"
-                  max="1"
-                  step=".05"
-                  value={currentFloat.rect.width}
-                  onChange={(e) =>
-                    store.detach(organizedWidget.id, {
-                      ...currentFloat.rect,
-                      width: +e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Altura
-                <input
-                  type="range"
-                  min=".2"
-                  max="1"
-                  step=".05"
-                  value={currentFloat.rect.height}
-                  onChange={(e) =>
-                    store.detach(organizedWidget.id, {
-                      ...currentFloat.rect,
-                      height: +e.target.value,
-                    })
-                  }
-                />
-              </label>
-            </fieldset>
-          )}
         </Dialog>
       )}
       {catalog && (
@@ -1355,6 +1268,70 @@ export function RoomCanvas(props: Props) {
                     </button>
                   ))}
                 </div>
+              )}
+              {!!snapshot?.noteCopies?.length && (
+                <section aria-label="Notas recebidas">
+                  <h3>Notas recebidas</h3>
+                  <div className="widget-catalog">
+                    {snapshot.noteCopies.map((note) => (
+                      <article className="received-note" key={note.id}>
+                        <strong>{note.label}</strong>
+                        <small>
+                          {note.senderName} ·{" "}
+                          {new Date(note.sentAt).toLocaleString("pt-BR")}
+                        </small>
+                        <p className="plain-note">
+                          {note.value || "Texto vazio."}
+                        </p>
+                        <button
+                          className="secondary"
+                          onClick={() => {
+                            const id = freshKey();
+                            const destination =
+                              state.slots.find(
+                                (slot) =>
+                                  slot.id === catalog &&
+                                  !slot.widgetId &&
+                                  !slot.offer,
+                              )?.id ||
+                              state.slots.find(
+                                (slot) => !slot.widgetId && !slot.offer,
+                              )?.id ||
+                              store.addSlot();
+                            store.add(
+                              {
+                                id,
+                                type: "notes",
+                                title: note.label,
+                                config: {
+                                  noteSender: note.senderName,
+                                  noteSentAt: String(note.sentAt),
+                                },
+                                state: {
+                                  kind: "notes",
+                                  title: note.label,
+                                  blocks: [
+                                    {
+                                      id: freshKey(),
+                                      kind: "text",
+                                      label: note.label,
+                                      value: note.value,
+                                    },
+                                  ],
+                                },
+                              },
+                              destination,
+                            );
+                            setCatalog(null);
+                            focusHeader(id);
+                          }}
+                        >
+                          Adicionar cópia ao meu layout
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
               )}
               <p className="field-note">
                 Adicionar não muda a organização de outras pessoas. O criador

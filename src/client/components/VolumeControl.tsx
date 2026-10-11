@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AnchoredPopover } from "./AnchoredPopover";
-import { Volume2, VolumeX, X } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import type { Controller } from "../room/controller";
 
 export function VolumeControl({ engine }: { engine: Controller }) {
@@ -32,13 +32,8 @@ export function VolumeControl({ engine }: { engine: Controller }) {
   const forcedMute =
     engine.captures.deaf || engine.remoteMute || engine.masterVolume === 0;
   const leave = () => {
-    const doc = root.current?.ownerDocument;
-    const focused = doc?.activeElement;
-    if (
-      !root.current?.contains(focused || null) &&
-      !doc?.getElementById(panelId)?.contains(focused || null)
-    )
-      closeTimer.current = setTimeout(() => setOpen(false), 220);
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), 600);
   };
   return (
     <div
@@ -51,15 +46,15 @@ export function VolumeControl({ engine }: { engine: Controller }) {
         }
       }}
       onPointerLeave={(e) => {
-        if (
-          e.pointerType === "mouse" &&
-          !root.current?.contains(root.current.ownerDocument.activeElement)
-        )
-          leave();
+        if (e.pointerType === "mouse") leave();
       }}
       onFocus={() => {
         cancelClose();
-        if (!closing.current) setOpen(true);
+        if (
+          !closing.current &&
+          root.current?.ownerDocument.activeElement?.matches(":focus-visible")
+        )
+          setOpen(true);
       }}
       onBlur={(e) => {
         if (
@@ -114,13 +109,6 @@ export function VolumeControl({ engine }: { engine: Controller }) {
           <div className="volume-scroll">
             <header>
               <strong>Áudio das telas</strong>
-              <button
-                className="icon-button"
-                aria-label="Fechar volume"
-                onClick={dismiss}
-              >
-                <X size={15} />
-              </button>
             </header>
             {!ids.length && (
               <p className="field-note">

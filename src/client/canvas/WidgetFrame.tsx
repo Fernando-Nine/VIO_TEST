@@ -1,3 +1,4 @@
+import { canvasShortcuts } from "./shortcuts";
 import {
   memo,
   useCallback,
@@ -170,8 +171,8 @@ export function WidgetFrame(props: Props) {
           tabIndex={props.tabIndex}
           onFocus={props.onFocusHeader}
           onKeyDown={props.navigate}
-          aria-label={`Mover ${title}. Use espaço para mover pelo teclado. No mouse, segure Shift para encaixar. Layout oferece destinos por botão.`}
-          title="Arrastar livremente · Shift encaixa"
+          aria-label={`Mover ${title}. Use espaço para mover pelo teclado. No mouse, segure ${canvasShortcuts.snap.label} para encaixar.`}
+          title={`Arrastar livremente · ${canvasShortcuts.snap.label} encaixa`}
         >
           <Icon size={15} aria-hidden="true" />
           <span>{title}</span>

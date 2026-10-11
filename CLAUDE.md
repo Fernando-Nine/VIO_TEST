@@ -244,7 +244,7 @@ herdado do projeto que veio antes. A 2.0.0 carrega `systemChange: true` e é a f
 para trás, o histórico descreve um app que por dentro não existe mais. **Não apague essa
 marca** — sem ela o histórico mente por omissão.
 
-Semver: correção = PATCH, feature nova = MINOR. Versão de produção: 2.6.0. Prévia em revisão: 2.7.0-rc.4.
+Semver: correção = PATCH, feature nova = MINOR. Versão de produção: 2.6.0. Prévia em revisão: 2.7.0-rc.5.
 
 ## Fora de limite
 

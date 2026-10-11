@@ -1,6 +1,6 @@
 # VIO — pendências explicadas
 
-Atualizado em 10/10/2026. A prévia **2.7.0-rc.4** pode ser experimentada em
+Atualizado em 10/10/2026. A prévia **2.7.0-rc.5** pode ser experimentada em
 https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no
 [PR #3 do VIO_TEST](https://github.com/Fernando-Nine/VIO_TEST/pull/3).
 O site principal continua na 2.6.0; VIO e VIO_2 não foram alterados.
@@ -13,7 +13,7 @@ faz parte do grid. Focar troca posições; foco único esconde os demais widgets
 O código mantém os players de áudio e as assinaturas ao mudar a organização.
 Somente o criador pode alterar a estrutura de um widget compartilhado.
 
-São **68 testes automatizados aprovados**, além de TypeScript e build. A interface
+São **74 testes automatizados aprovados**, além de TypeScript e build. A interface
 publicada foi conferida por botões, arraste e teclado, com duas sessões: troca de
 posições, tira, foco único, notas compartilhadas e redimensionamento de janela.
 Esses ensaios não comprovam que o áudio chega corretamente a aparelhos físicos.
@@ -27,16 +27,21 @@ fechamento, e os avisos passam a pertencer ao canvas que entra em tela cheia. Os
 popovers escapam do recorte dos cards e respeitam as bordas; clicar ou focar um
 flutuante o traz à frente sem trocar sua posição.
 
-As propostas continuam abertas, sem bloquear os consertos:
+## Rodada D
 
-| Decisão | Proposta registrada |
+D1–D13 implementados: controles simplificados, comportamento da barra em fullscreen,
+roda da tira unificada, setas sobrepostas, encaixe sincronizado, tira como padrão,
+Notas com até seis caixas e envio de cópias, e painel Pessoas com detalhes.
+
+Restam duas escolhas de produto:
+
+| Decisão | Situação |
 |---|---|
-| C24 · Notas | Até seis caixas com envio explícito de cópia à sala; alternativa: aba Conversa temporária. |
-| C25 · Personalizado | Lista de tarefas e votação; conversão segura dos blocos legados de texto/tempo. |
-| C26 · Mesclagem | Alça exclusiva, confirmação ao ocupar vizinhos e presets locais; somente no grid. |
+| D14 · Personalizado | Escolher os módulos editáveis propostos em RODADA-D.md. Nenhum módulo novo foi implementado. |
+| D15 · Mesclagem | Escolher seleção de vizinhos pelo Layout ou ação Juntar ao próximo. A proposta agora inclui a tira e não usa alça de canto. |
 
-Detalhes e perguntas em [RODADA-C.md](RODADA-C.md). Não foi introduzido chat,
-mesclagem, armazenamento permanente ou infraestrutura nova nesta revisão.
+C24 foi aprovado e implementado em D12. As propostas antigas de C25/C26 foram
+substituídas por D14/D15. Detalhes e limites: [RODADA-D.md](RODADA-D.md).
 
 ## O que falta antes de substituir o site principal
 

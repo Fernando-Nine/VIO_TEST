@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Plus, Minus, Share2, Settings2, Copy, Trash2 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
+import { NoteActions } from "./NoteActions";
 import {
   operateWidget,
   timerElapsed,
@@ -74,10 +75,12 @@ function TextBlock({
   block,
   revision,
   save,
+  engine,
 }: {
   block: Extract<WidgetBlock, { kind: "text" }>;
   revision: number;
   save: (operation: WidgetOperation) => Promise<void>;
+  engine: Controller;
 }) {
   const inputId = useId();
   const [draft, setDraft] = useState(block.value);
@@ -119,6 +122,7 @@ function TextBlock({
           </button>
         )}
       </div>
+      <NoteActions engine={engine} label={block.label} value={draft} />
       {error && (
         <div role="alert">
           <p>{error}</p>
@@ -234,7 +238,11 @@ export function CustomWidget({
         {!shared && (
           <button
             className="icon-button"
-            aria-label="Compartilhar widget com a sala"
+            aria-label={
+              widget.type === "notes"
+                ? "Compartilhar notas para editar juntos"
+                : "Compartilhar widget com a sala"
+            }
             onClick={() => {
               shareId.current ||= widget.id;
               setSharing(true);
@@ -266,6 +274,13 @@ export function CustomWidget({
         )}
       </div>
       <div className="custom-blocks">
+        {widget.config.noteSender && (
+          <p className="note-origin">
+            Cópia de {widget.config.noteSender} ·{" "}
+            {new Date(Number(widget.config.noteSentAt)).toLocaleString("pt-BR")}
+            . Alterações são individuais.
+          </p>
+        )}
         {value.blocks.map((block) => (
           <section className="custom-block" key={block.id}>
             {block.kind === "score" && (
@@ -297,12 +312,26 @@ export function CustomWidget({
             {block.kind === "text" &&
               (shared ? (
                 <TextBlock
+                  engine={engine}
                   block={block}
                   revision={value.revision}
                   save={operate}
                 />
               ) : (
                 <div className="widget-text">
+                  <NoteActions
+                    engine={engine}
+                    label={block.label}
+                    value={block.value}
+                    save={() =>
+                      operate({
+                        kind: "text",
+                        blockId: block.id,
+                        value: block.value,
+                        revision: value.revision,
+                      })
+                    }
+                  />
                   <label>
                     {block.label}
                     <textarea
@@ -428,7 +457,11 @@ export function CustomWidget({
       )}
       {sharing && (
         <Dialog
-          title="Compartilhar este widget?"
+          title={
+            widget.type === "notes"
+              ? "Compartilhar notas para editar juntos?"
+              : "Compartilhar este widget?"
+          }
           close={() => setSharing(false)}
         >
           <p>
@@ -640,6 +673,28 @@ function StructureEditor({
           }
         >
           + Contador de pontos
+        </button>
+      )}
+      {kind === "notes" && (
+        <button
+          className="secondary"
+          disabled={draft.blocks.length >= 6}
+          onClick={() =>
+            setDraft({
+              ...draft,
+              blocks: [
+                ...draft.blocks,
+                {
+                  id: freshKey(),
+                  kind: "text",
+                  label: `Caixa ${draft.blocks.length + 1}`,
+                  value: "",
+                },
+              ],
+            })
+          }
+        >
+          + Caixa de texto
         </button>
       )}
       {error && <p role="alert">{error}</p>}

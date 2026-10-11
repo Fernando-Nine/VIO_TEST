@@ -367,12 +367,12 @@
   border-radius: 10px;
   overflow: hidden;
 }
-.canvas-slot.is-drop-target {
+.snap-enabled .canvas-slot.is-drop-target {
   background: #2727f529;
   outline: 2px solid #9fa8ff;
   outline-offset: -3px;
 }
-.canvas-dragging .canvas-slot.is-drop-target::after {
+.canvas-dragging.snap-enabled .canvas-slot.is-drop-target::after {
   content: "Soltar aqui";
   position: absolute;
   inset: 0;
@@ -1151,22 +1151,35 @@
 }
 .canvas-viewport > .strip-controls {
   position: absolute;
-  bottom: 2px;
   z-index: 35;
   margin: 0;
   display: flex;
-  justify-content: center;
-  gap: 6px;
-  min-height: 44px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px;
+  pointer-events: none;
+}
+.strip-controls.is-vertical {
+  flex-direction: column;
 }
 .strip-controls .icon-button {
-  width: 40px;
-  min-height: 40px;
-  background: #202942;
-  border: 1px solid #56648d;
+  pointer-events: auto;
+  width: 32px;
+  min-height: 32px;
+  background: #171e32cc;
+  border: 1px solid #69769c;
+  opacity: 0.65;
 }
-.canvas-layout.with-strip-navigation {
-  bottom: 50px;
+.strip-controls .icon-button:hover,
+.strip-controls .icon-button:focus-visible {
+  opacity: 1;
+  background: #343f65;
+}
+.strip-controls .strip-notice {
+  position: absolute;
+  top: 44px;
+  right: 4px;
+  pointer-events: auto;
 }
 .canvas-toolbar {
   position: relative;
@@ -1178,24 +1191,13 @@
 .canvas-toolbar > .text-button {
   flex-shrink: 0;
 }
-.single-focus-select {
-  min-width: 0;
-  margin: 0;
-  flex: 1;
-}
-.single-focus-select select {
-  padding: 4px;
-  min-height: 32px;
-  font-size: 12px;
-  width: 100%;
-}
 .canvas-top-edge {
   display: none;
 }
 .is-fullscreen .canvas-top-edge {
   display: block;
   position: absolute;
-  height: 18px;
+  height: 4px;
   top: 0;
   left: 0;
   right: 0;
@@ -1210,11 +1212,12 @@
   opacity: 0;
   pointer-events: none;
   transition:
-    transform 150ms ease,
-    opacity 150ms ease;
+    transform 350ms ease,
+    opacity 350ms ease;
 }
 .is-fullscreen.show-top-toolbar .canvas-toolbar,
-.is-fullscreen .canvas-toolbar:focus-within {
+.is-fullscreen .canvas-toolbar:has(:focus-visible) {
+  transition-duration: 150ms;
   transform: none;
   opacity: 1;
   pointer-events: auto;
@@ -1361,4 +1364,70 @@
   .widget-live {
     transition: none;
   }
+}
+
+/* Round D: received notes and the detailed people panel. */
+.note-actions .widget-inline-actions {
+  flex-wrap: wrap;
+}
+.note-actions {
+  display: grid;
+  gap: 6px;
+}
+.note-origin {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: #bfc9df;
+}
+.received-note {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #525b80;
+  border-radius: 10px;
+}
+.received-note .plain-note {
+  max-height: 150px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.people-panel-list {
+  display: grid;
+  gap: 10px;
+}
+.people-toggle {
+  position: relative;
+}
+.people-count {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 3px;
+  border-radius: 50%;
+  background: #bdc7ff;
+  color: #11182d;
+  font-size: 10px;
+}
+.room-creator {
+  margin-left: 6px;
+  color: #ffce65;
+}
+.participant-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.person-color-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #abb6d8;
+  border-radius: 50%;
 }

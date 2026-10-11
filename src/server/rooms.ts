@@ -2,6 +2,7 @@ import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
+import { RoomNotes } from "./notes";
 import { defaultColor } from "../shared/colors";
 import {
   Fault,
@@ -31,6 +32,8 @@ interface Room {
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
   widgets: RoomWidgets;
+  notes: RoomNotes;
+  creatorId: string;
   touched: number;
 }
 export class Rooms {
@@ -110,6 +113,8 @@ export class Rooms {
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
       widgets: room.widgets.list(),
+      noteCopies: room.notes.list(),
+      creatorId: room.creatorId,
       screenViewers: this.screenViewers(room),
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
@@ -164,7 +169,10 @@ export class Rooms {
     for (const sub of [...room.subscriptions.values()])
       if (sub.viewer === member.id) this.closeSub(room, sub);
     room.members.delete(member.id);
-    if (!room.members.size) room.widgets.clear();
+    if (!room.members.size) {
+      room.widgets.clear();
+      room.notes.clear();
+    }
     this.membership.delete(member.id);
     this.broadcast(room);
   }
@@ -181,6 +189,7 @@ export class Rooms {
   }
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
+      "note-send": 12,
       "widget-create": 12,
       "widget-structure": 30,
       "widget-delete": 30,
@@ -265,12 +274,31 @@ export class Rooms {
       }
     });
   }
+  private probePing(socket: Socket) {
+    const code = this.membership.get(socket.data.id);
+    if (!code || socket.data.pingPending) return;
+    socket.data.pingPending = true;
+    const start = performance.now();
+    socket.timeout(3000).emit("presence-probe", (error: Error | null) => {
+      socket.data.pingPending = false;
+      const room = this.rooms.get(code);
+      const member = room?.members.get(socket.data.id);
+      if (error || !member?.online || member.socketId !== socket.id) return;
+      member.pingMs = Math.max(0, Math.round(performance.now() - start));
+      this.io
+        .to(code)
+        .emit("participant-ping", { id: member.id, pingMs: member.pingMs });
+    });
+  }
   private async command(
     socket: Socket,
     action: Action,
     data: any,
   ): Promise<unknown> {
-    if (action === "ping") return { serverTime: Date.now() };
+    if (action === "ping") {
+      this.probePing(socket);
+      return { serverTime: Date.now() };
+    }
     if (action === "renew") {
       const result = issueToken(
         this.config.secret,
@@ -301,10 +329,13 @@ export class Rooms {
           members: new Map(),
           subscriptions: new Map(),
           widgets: new RoomWidgets(),
+          notes: new RoomNotes(),
+          creatorId: socket.data.id,
           touched: Date.now(),
         };
         this.rooms.set(code, room);
       }
+      if (!room.members.size) room.creatorId = socket.data.id;
       let member = room.members.get(socket.data.id);
       if (member?.socketId && member.socketId !== socket.id)
         throw new Fault(
@@ -331,6 +362,11 @@ export class Rooms {
       return { id: member.id, snapshot: this.snapshot(room) };
     }
     const [room, m] = this.member(socket);
+    if (action === "note-send") {
+      const note = room.notes.send(m.id, m.name, data);
+      this.broadcast(room);
+      return note;
+    }
     if (action.startsWith("widget-")) {
       let widget;
       if (action === "widget-create")

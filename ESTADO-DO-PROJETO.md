@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.4**, em 10/10/2026, ainda em revisão.
+Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.5**, em 10/10/2026, ainda em revisão.
 
 O canvas, a tira e os widgets individuais/compartilhados estão implementados. A rodada C
 corrigiu recuperação automática, foco único, encerramento de widgets, compartilhamento
@@ -9,13 +9,15 @@ salvar notas sob a barra, retorno de foco, avisos fora da tela e camadas dos flu
 ou popovers. As mudanças preservam a identidade dos widgets e o caminho de mídia.
 
 Prévia: https://vio-test-canvas-preview.onrender.com/, ramo `feat/canvas-widgets`, PR #3.
-**68 testes aprovados**, TypeScript e build de produção em 10/10/2026. O teste de
+**74 testes aprovados**, TypeScript e build de produção em 10/10/2026. O teste de
 reconexão usa sinalização real e reinício local; não substitui captura/escuta em
 aparelhos. Os resultados visuais estão em `docs/VALIDACAO.md`.
 
-Notas ampliadas (C24), blocos novos do Personalizado (C25) e mesclagem (C26) continuam
-como propostas em `docs/RODADA-C.md`. A prévia depende do aceite de mídia, celular e
-navegadores antes da integração à produção. Consulte `docs/PENDENCIAS.md`.
+A rodada D implementa D1–D13, incluindo Notas ampliadas e envio de cópias (C24),
+barra de fullscreen, roda unificada da tira, controles simplificados e painel Pessoas.
+D14 (módulos) e D15 (mesclar slots vizinhos, inclusive na tira) aguardam escolha em
+`docs/RODADA-D.md`. A prévia depende do aceite de mídia, celular e navegadores
+antes da integração à produção. Consulte `docs/PENDENCIAS.md`.
 O instalável/WASAPI e o futuro dono da sala seguem separados.
 
 Histórico desta base: versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base

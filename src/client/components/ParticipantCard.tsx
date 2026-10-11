@@ -1,5 +1,12 @@
 import { useCallback } from "react";
-import { AudioLines, Headphones, MicOff, Monitor, Palette } from "lucide-react";
+import {
+  AudioLines,
+  Headphones,
+  MicOff,
+  Monitor,
+  Palette,
+  Crown,
+} from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { Media, useSpeaking } from "./Media";
@@ -11,12 +18,14 @@ export function ParticipantCard({
   visible,
   onVisible,
   onEditColor,
+  detailed = false,
 }: {
   person: Participant;
   engine: Controller;
   visible: boolean;
   onVisible: (id: string, visible: boolean) => void;
   onEditColor: () => void;
+  detailed?: boolean;
 }) {
   const own = person.id === engine.view.id;
   const voice = person.publications.find((p) => p.kind === "voice");
@@ -69,6 +78,14 @@ export function ParticipantCard({
         <div>
           <strong title={person.name}>
             {person.name}
+            {detailed && engine.view.snapshot?.creatorId === person.id && (
+              <Crown
+                size={15}
+                role="img"
+                aria-label="Criador da sala"
+                className="room-creator"
+              />
+            )}
             {own && <small> · você</small>}
           </strong>
           <span className="participant-status">
@@ -114,6 +131,25 @@ export function ParticipantCard({
             </button>
           )}
         </>
+      )}
+      {detailed && (
+        <div className="participant-detail">
+          <span>
+            <i
+              className="person-color-swatch"
+              style={{ backgroundColor: person.color }}
+            />{" "}
+            Cor: {person.color}
+          </span>
+          <span>
+            Ping:{" "}
+            {!person.online
+              ? "desconectado"
+              : person.pingMs === undefined
+                ? "aguardando"
+                : `${person.pingMs} ms`}
+          </span>
+        </div>
       )}
       {person.inCall && !own && (
         <label className="person-volume">

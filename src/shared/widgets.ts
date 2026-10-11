@@ -78,6 +78,18 @@ export interface SharedWidget extends WidgetContent {
   revision: number;
   createdAt: number;
 }
+export const noteCopyInput = z
+  .object({
+    id: identifier,
+    label,
+    value: z.string().max(2000),
+  })
+  .strict();
+export interface NoteCopy extends z.infer<typeof noteCopyInput> {
+  senderId: string;
+  senderName: string;
+  sentAt: number;
+}
 export const widgetOperation = z.discriminatedUnion("kind", [
   z
     .object({
@@ -105,6 +117,7 @@ export const widgetOperation = z.discriminatedUnion("kind", [
 ]);
 export type WidgetOperation = z.infer<typeof widgetOperation>;
 export const widgetSchemas = {
+  "note-send": noteCopyInput,
   "widget-create": z
     .object({ id: identifier, content: widgetContent })
     .strict(),

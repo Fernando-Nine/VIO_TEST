@@ -431,6 +431,21 @@ export class Controller {
         },
       );
       this.socket = socket;
+      socket.on("presence-probe", (ack: () => void) => {
+        if (current() && typeof ack === "function") ack();
+      });
+      socket.on("participant-ping", (event: { id: string; pingMs: number }) => {
+        if (!current() || !this.view.snapshot) return;
+        this.view.snapshot = {
+          ...this.view.snapshot,
+          participants: this.view.snapshot.participants.map((person) =>
+            person.id === event.id
+              ? { ...person, pingMs: event.pingMs }
+              : person,
+          ),
+        };
+        this.bump();
+      });
       socket.on("connect", () => void this.rejoin());
       socket.on("disconnect", (reason) => {
         if (!current() || !this.intent) return;

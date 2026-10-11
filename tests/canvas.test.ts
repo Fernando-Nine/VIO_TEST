@@ -65,6 +65,8 @@ function filled(count: number) {
   store.change((s) => {
     s.widgets = [];
     s.floating = [];
+    s.preset = "grid-1";
+    s.slots = s.slots.slice(0, 1);
   });
   for (let i = 1; i < count; i++) store.addSlot();
   for (let i = 0; i < count; i++) store.add(widget(`video-${i}`));
@@ -216,7 +218,7 @@ test("layout corrompido e posições fora da tela não tornam o app inacessível
   assert.equal(restoreCanvas({ schemaVersion: 9 }).schemaVersion, 1);
   const raw = newCanvas();
   raw.slots.push({ ...raw.slots[0] });
-  assert.equal(restoreCanvas(raw).slots.length, 1);
+  assert.equal(restoreCanvas(raw).slots.length, 4);
   for (const rect of [
     { x: Infinity, y: NaN, width: -4, height: Infinity },
     { x: 3, y: -1, width: 0.8, height: 0.9 },

@@ -45,10 +45,9 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
-import { Spectators } from "./components/Spectators";
 import { VolumeControl } from "./components/VolumeControl";
 import { usePictureInPicture } from "./media/picture-in-picture";
-import { freshKey } from "./id";
+import { PeoplePanel } from "./components/PeoplePanel";
 const RoomCanvas = lazy(() =>
   import("./canvas/RoomCanvas").then((module) => ({
     default: module.RoomCanvas,
@@ -57,7 +56,14 @@ const RoomCanvas = lazy(() =>
 import { Landing } from "./components/Landing";
 import { releases, version } from "../shared/releases";
 import { invite } from "./endpoint";
-type Panel = "settings" | "color" | "about" | "share" | "history" | null;
+type Panel =
+  | "people"
+  | "settings"
+  | "color"
+  | "about"
+  | "share"
+  | "history"
+  | null;
 function Brand() {
   return (
     <span className="brand" aria-label="VIO">
@@ -75,24 +81,8 @@ export default function App({ engine }: { engine: Controller }) {
   );
   const [audio, setAudio] = useState(true);
   const [copied, setCopied] = useState(false);
-  const canvas = useSyncExternalStore(
-    engine.canvas.subscribe,
-    engine.canvas.getSnapshot,
-  );
-  const peopleWidget = canvas.widgets.find((w) => w.type === "people");
   function showPeople() {
-    if (peopleWidget) engine.canvas.focus(peopleWidget.id);
-    else {
-      const id = freshKey();
-      const slot =
-        canvas.slots.find((s) => !s.widgetId && !s.offer)?.id ||
-        engine.canvas.addSlot();
-      engine.canvas.add(
-        { id, type: "people", title: "Pessoas na sala", config: {} },
-        slot,
-      );
-    }
-    wake();
+    open("people");
   }
   const [active, setActive] = useState(true);
   const [full, setFull] = useState(false);
@@ -221,9 +211,13 @@ export default function App({ engine }: { engine: Controller }) {
   async function fullscreen() {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
-      else if (player.current?.requestFullscreen && document.fullscreenEnabled)
+      else if (
+        player.current?.requestFullscreen &&
+        document.fullscreenEnabled
+      ) {
+        (document.activeElement as HTMLElement | null)?.blur();
         await player.current.requestFullscreen();
-      else {
+      } else {
         const el = player.current?.querySelector(
           ".is-focused video",
         ) as HTMLVideoElement & {
@@ -296,19 +290,17 @@ export default function App({ engine }: { engine: Controller }) {
               <button
                 className="dock-button people-toggle"
                 aria-label="Pessoas na sala"
-                title="Abrir o widget Pessoas na sala"
+                title="Ver pessoas na sala"
                 onClick={showPeople}
               >
                 <Users />
                 <span>Pessoas</span>
-                {available.length > 0 && (
-                  <small
-                    className="available-count"
-                    aria-label={`${available.length} transmissões disponíveis`}
-                  >
-                    {available.length}
-                  </small>
-                )}
+                <small
+                  className="people-count"
+                  aria-label={`${view.snapshot.participants.length} pessoas na sala`}
+                >
+                  {view.snapshot.participants.length}
+                </small>
               </button>
               <button
                 className="dock-button"
@@ -512,12 +504,6 @@ export default function App({ engine }: { engine: Controller }) {
                         )}
                         <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
                       </button>
-                      {engine.publications.get("screen") && (
-                        <Spectators
-                          engine={engine}
-                          publicationId={engine.publications.get("screen")!.id}
-                        />
-                      )}
                       {(watching || pip.interactive) && (
                         <div className="dock-group playback-controls">
                           {watching && <VolumeControl engine={engine} />}
@@ -615,6 +601,7 @@ export default function App({ engine }: { engine: Controller }) {
         <Dialog
           title={
             {
+              people: "Pessoas na sala",
               settings: "Ajustes",
               color: "Minha cor na sala",
               about: "Sobre a sala",
@@ -625,6 +612,9 @@ export default function App({ engine }: { engine: Controller }) {
           close={() => open(null)}
         >
           {notice}
+          {panel === "people" && (
+            <PeoplePanel engine={engine} editColor={() => open("color")} />
+          )}
           {panel === "settings" && <Settings engine={engine} />}
           {panel === "share" && (
             <>
