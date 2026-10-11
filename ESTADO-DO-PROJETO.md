@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-> Rodada E: candidata 2.7.0 preparada; liberação e Fase 2 pendentes da seleção do workspace Render. Estado e propostas em [docs/RODADA-E.md](docs/RODADA-E.md).
+> Estado atual: candidata **2.7.1**, liberação em andamento. VIO/main será a produção; VIO_TEST/main e vio-test recebem as prévias seguintes. Fase 2 permanece exclusiva do vio-test. [Decisões e validação](docs/RODADA-E.md). As referências a rc.5/2.6.0 abaixo são históricas e foram superadas pela rodada E.
 
 Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.5**, em 10/10/2026, ainda em revisão.
 

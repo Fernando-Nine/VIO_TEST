@@ -2,19 +2,12 @@
 
 ## Estado em 11/10/2026
 
-Fase 1 preparada como candidata 2.7.0, ainda não publicada nos serviços.
-E1/E2/E11 implementados. Os três testes existentes da roda passaram; verificação
-direcionada de criação recusou Personalizado e preservou Notas/Cronômetro e o
-renderer de widgets antigos. TypeScript e build concluídos, sem suíte completa.
-O aceite visual da nova versão ainda não foi executado. Antes da publicação,
-conferir setas nos dois eixos, aviso da comunidade sem criação e introdução de
-fullscreen por 1 s seguida do comportamento D6. Se qualquer aceite falhar,
-parar e reportar antes de publicar, conforme pedido.
-
-Bloqueio externo: o conector Render responde “no workspace selected” e exige
-confirmação do usuário antes de selecionar. A listagem retornou somente
-“My Workspace”, id `tea-da4g8bs9v7es7383udfg`. Nenhum workspace foi selecionado.
-Nenhuma atualização foi feita no VIO principal, vio-test ou canvas-preview.
+A base 2.7.0 foi integrada pelo usuário ao main do VIO_TEST (PR #4).
+A continuação 2.7.1 inclui convite inicial no foco, remoção do aviso flutuante,
+catálogo VIO/Telas/Sala/Comunidade e explicação centralizada da Comunidade.
+Os 22 testes direcionados de canvas/tira passaram; TypeScript e build concluídos.
+Aceite visual e publicação do VIO principal em andamento. O acesso ao workspace
+Render está resolvido. Não há mudança no vio2 nem no canvas-preview.
 
 ## Fase 1
 
@@ -96,3 +89,33 @@ Se estiver cheio, permanece nas notificações e em Pessoas → Assistir; não e
 - Convidados podem pedir para compartilhar — ligado; desligado impede novos pedidos, preservando widgets já aprovados; criador e administradores alteram.
 - Convidados podem enviar mensagens — ligado; desligado torna os chats somente leitura para convidados; criador e administradores alteram.
 - Administradores podem encerrar widgets de outros — ligado; desligado limita encerramento ao criador e a quem compartilhou; somente criador altera.
+
+## Complemento de 11/10/2026 — prioridade de liberação
+
+O usuário autorizou substituir integralmente o código antigo de Fernando-Nine/VIO
+pelo novo, sem analisar o código antigo. Preservar o histórico por commit normal,
+sem force push. Criar serviço VIO no Render ligado ao repositório VIO. No workspace
+confirmado pelo prosseguimento da publicação, não existe serviço ligado a VIO;
+existem vio-test, vio-test-canvas-preview e vio2. O usuário integrou a candidata
+2.7.0 ao main do VIO_TEST pelo PR #4 (commit 6027961).
+
+Ajustes incluídos antes da liberação: retirar indicador flutuante “convites novos”;
+primeiro convite de tela no foco vazio e seguintes na tira, sem substituir conteúdo;
+convite com tipografia maior; catálogo VIO/Telas/Sala/Comunidade com respiro;
+Comunidade → Widget personalizado abre diálogo centralizado com X e explicação.
+
+Dados — especificação ampliada, ainda sem implementação: campo de comandos
+inspirado na sintaxe v1 do Rollem (https://rollem.rocks/docs/v1-syntax), com guia
+recolhido em português para dados, modificadores, parênteses, repetições, manter/
+descartar, explosões, Fate e comparações. Não usar eval nem executar código: parser
+limitado, cotas de dados/repetições/explosões. Cada resultado e entrada do
+mini-histórico recebe id/nome do participante autenticado, expressão e horário
+atribuídos pela autoridade da sala, nunca pelo autor declarado no cliente.
+
+E12 — acrescentar switches de convidados: compartilhar tela ligado; falar na chamada
+ligado; ligar câmera desligado. Criador e administradores podem alterar essas
+permissões operacionais; autoridade valida publicação e comandos de mídia.
+Uma tentativa negada deve explicar em português qual permissão está desativada,
+sem solicitar captura nem fingir sucesso. Exemplo: “A câmera está desativada para
+convidados nesta sala. Peça autorização ao criador ou a um administrador.”
+A interface E12 e o módulo Dados continuam aguardando a etapa de aprovação prevista.

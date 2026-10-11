@@ -283,19 +283,26 @@ export class CanvasStore {
     )
       return;
     this.change((s) => {
+      const focus = s.slots[0];
+      const firstScreen =
+        !s.widgets.some((widget) => widget.type === "screen") &&
+        !s.slots.some((slot) => slot.offer) &&
+        !s.pending.length;
       const slot = isStrip(s)
-        ? s.slots
-            .slice(
-              Math.max(
-                1,
-                s.slots.reduce(
-                  (last, slot, index) =>
-                    slot.widgetId || slot.offer ? index : last,
-                  0,
-                ) + 1,
-              ),
-            )
-            .find((t) => !t.widgetId && !t.offer)
+        ? firstScreen && focus && !focus.widgetId && !focus.offer
+          ? focus
+          : s.slots
+              .slice(
+                Math.max(
+                  1,
+                  s.slots.reduce(
+                    (last, slot, index) =>
+                      slot.widgetId || slot.offer ? index : last,
+                    0,
+                  ) + 1,
+                ),
+              )
+              .find((t) => !t.widgetId && !t.offer)
         : s.slots.find((t) => !t.widgetId && !t.offer);
       if (slot && !reopen) slot.offer = offer;
       else if (isStrip(s) && !reopen) s.slots.push({ ...newSlot(), offer });

@@ -4,10 +4,12 @@ export function Dialog({
   title,
   close,
   children,
+  centered = false,
 }: {
   title: string;
   close: () => void;
   children: ReactNode;
+  centered?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -23,7 +25,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      className="sheet"
+      className={`sheet${centered ? " sheet-centered" : ""}`}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();

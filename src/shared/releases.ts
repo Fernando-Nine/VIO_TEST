@@ -7,9 +7,24 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.7.0";
+export const version = "2.7.1";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-11",
+  title: "Convites no foco e catálogo mais claro",
+  sections: [
+    {
+      title: "Interface",
+      items: [
+        "A primeira transmissão oferece o foco vazio; as seguintes seguem para a tira, preservando widgets existentes. Aviso flutuante de novos convites removido.",
+        "Convite Assistir com texto maior e espaçamento adaptado. Abas VIO, Telas, Sala e Comunidade com mais respiro nos cards.",
+        "Widget personalizado abre explicação Em breve em diálogo centralizado com botão de fechar, sem criar conteúdo.",
+      ],
+    },
+  ],
+};
+const roundEPhaseOneRelease: Release = {
+  version: "2.7.0",
   date: "2026-10-11",
   title: "Canvas · ajustes finais da rodada E",
   sections: [
@@ -318,6 +333,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  roundEPhaseOneRelease,
   roundDRelease,
   canvasLayersRelease,
   canvasInteractionRelease,

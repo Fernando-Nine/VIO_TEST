@@ -2,6 +2,15 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.7.1] - 2026-10-11
+
+Convites no foco e catálogo mais claro
+
+### Interface
+- A primeira transmissão oferece o foco vazio; as seguintes seguem para a tira, preservando widgets existentes. Aviso flutuante de novos convites removido.
+- Convite Assistir com texto maior e espaçamento adaptado. Abas VIO, Telas, Sala e Comunidade com mais respiro nos cards.
+- Widget personalizado abre explicação Em breve em diálogo centralizado com botão de fechar, sem criar conteúdo.
+
 ## [2.7.0] - 2026-10-11
 
 Canvas · ajustes finais da rodada E

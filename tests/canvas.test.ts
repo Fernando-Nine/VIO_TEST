@@ -307,6 +307,39 @@ test("convite no fim da tira não ocupa buraco anterior nem desloca outros itens
   assert.equal(store.getSnapshot().slots[4].offer?.id, "new");
 });
 
+test("primeira transmissão ocupa o foco vazio; seguintes entram na tira nos quatro sentidos", () => {
+  for (const preset of [
+    "strip-left",
+    "strip-right",
+    "strip-top",
+    "strip-bottom",
+  ] as const) {
+    const store = new CanvasStore();
+    store.preset(preset);
+    store.offer({ id: "first", title: "Primeira" });
+    store.offer({ id: "second", title: "Segunda" });
+    assert.equal(store.getSnapshot().slots[0].offer?.id, "first");
+    assert.equal(store.getSnapshot().slots[1].offer?.id, "second");
+    assert.equal(
+      store.getSnapshot().widgets.length,
+      0,
+      "convite não aceita nem assina sozinho",
+    );
+  }
+});
+
+test("primeira transmissão não substitui widget que já ocupa o foco", () => {
+  const store = new CanvasStore();
+  const focus = store.getSnapshot().slots[0].id;
+  store.add(
+    { id: "my-timer", type: "timer", title: "Cronômetro", config: {} },
+    focus,
+  );
+  store.offer({ id: "first", title: "Primeira" });
+  assert.equal(store.getSnapshot().slots[0].widgetId, "my-timer");
+  assert.equal(store.getSnapshot().slots[1].offer?.id, "first");
+});
+
 test("fim de transmissão durante arraste não cria widget fantasma e foco preserva convite", () => {
   const store = filled(2);
   const slot = store.getSnapshot().slots[0].id;

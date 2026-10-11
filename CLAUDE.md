@@ -6,9 +6,10 @@ e repassa sinalização WebRTC. A mídia viaja peer-to-peer.
 
 by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24
 
-> Implementação nova, escrita do zero. Não compartilha código nem histórico com os
-> repositórios `VIO` e `VIO_2`, que seguem existindo em paralelo. Antes de trazer qualquer
-> coisa de lá, leia "Relação com o VIO_2", no fim deste arquivo.
+> Implementação nova. Em 11/10/2026 o usuário autorizou substituir VIO/main por
+> esta base, preservando o histórico, e publicar o serviço VIO no Render.
+> VIO_TEST/main é o ambiente de prévia; a Fase 2 da rodada E só vai à produção
+> após novo aval. VIO_2 e vio-test-canvas-preview permanecem fora do escopo.
 
 ## O que o VIO NÃO é
 

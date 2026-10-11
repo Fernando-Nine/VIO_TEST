@@ -359,6 +359,7 @@
   color: #bdc3ff !important;
 }
 .canvas-slot {
+  container-type: inline-size;
   min-width: 0;
   min-height: 0;
   position: relative;
@@ -770,23 +771,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   text-align: center;
   height: 100%;
-  padding: 14px 8px;
-  gap: 8px;
+  padding: 20px 12px;
+  gap: 12px;
   overflow: auto;
+  scrollbar-width: thin;
 }
 .screen-offer strong {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: clamp(16px, 4cqi, 26px);
 }
 .screen-offer p {
   margin: 0;
-  font-size: 12px;
+  font-size: clamp(14px, 2.5cqi, 18px);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
   color: #c0c9e4;
 }
 .screen-offer > div {
@@ -796,9 +800,9 @@
   justify-content: center;
 }
 .screen-offer button {
-  min-height: 34px;
-  padding: 6px 9px;
-  font-size: 12px;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 14px;
 }
 .offer-dismiss {
   position: absolute;
@@ -821,20 +825,21 @@
 }
 .widget-catalog {
   display: grid;
-  gap: 8px;
+  gap: 14px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 12px 0;
+  margin: 20px 0;
 }
 .catalog-item {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 12px;
   color: #f0f2ff;
   background: #141a2b;
   border: 1px solid #58648d;
   border-radius: 10px;
-  padding: 14px;
+  padding: 18px;
+  line-height: 1.5;
   text-align: left;
 }
 .catalog-item:hover {
@@ -852,6 +857,7 @@
 .catalog-tabs {
   display: flex;
   gap: 6px;
+  margin-bottom: 20px;
 }
 .catalog-tabs button {
   flex: 1;
@@ -1389,11 +1395,28 @@
 }
 .received-note {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
-  padding: 14px;
+  padding: 18px;
+  line-height: 1.5;
   border: 1px solid #525b80;
   border-radius: 10px;
+}
+.sheet.sheet-centered {
+  inset: 0;
+  margin: auto;
+  width: min(480px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100dvh - 32px);
+  border-radius: 18px;
+}
+.sheet-centered .sheet-content {
+  max-height: calc(100dvh - 32px);
+  border-radius: 18px;
+}
+.sheet-centered .sheet-body p {
+  margin: 0;
+  line-height: 1.65;
 }
 .received-note .plain-note {
   max-height: 150px;

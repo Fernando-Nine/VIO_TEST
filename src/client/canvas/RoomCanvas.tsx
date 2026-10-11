@@ -225,7 +225,6 @@ export function RoomCanvas(props: Props) {
   const [nearTop, setNearTop] = useState(false);
   const [fullscreenIntro, setFullscreenIntro] = useState(false);
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
-  const [newInStrip, setNewInStrip] = useState(0);
   const pendingFocus = useRef<string | null>(null);
   const toolbar = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -368,13 +367,11 @@ export function RoomCanvas(props: Props) {
         store.add(screenWidget(id));
       }
     }
-    let added = 0;
     for (const publication of publications) {
       if (seen.current.has(publication.id)) continue;
       seen.current.add(publication.id);
       if (!publication.own && !engine.view.watching.includes(publication.id)) {
         store.offer(publication);
-        added++;
       }
     }
     const live = new Set(publications.map((p) => p.id));
@@ -390,7 +387,6 @@ export function RoomCanvas(props: Props) {
         !snapshot?.widgets?.some((w) => w.id === widget.config.sharedId)
       )
         store.remove(widget.id);
-    if (added && isStrip(latest)) setNewInStrip((n) => n + added);
   }, [
     publicationsKey,
     watchingKey,
@@ -926,22 +922,6 @@ export function RoomCanvas(props: Props) {
                     <ArrowDown size={16} />
                   )}
                 </button>
-                {newInStrip > 0 && (
-                  <button
-                    className="text-button strip-notice"
-                    onClick={() => {
-                      strip.current?.scrollTo({
-                        top: strip.current.scrollHeight,
-                        left: strip.current.scrollWidth,
-                        behavior: "instant",
-                      });
-                      setNewInStrip(0);
-                    }}
-                  >
-                    {newInStrip}{" "}
-                    {newInStrip === 1 ? "convite novo" : "convites novos"}
-                  </button>
-                )}
               </div>
             )}
           {state.widgets.map((widget) => {
@@ -1164,9 +1144,9 @@ export function RoomCanvas(props: Props) {
             aria-label="Origem dos widgets"
           >
             {[
-              ["native", "Do VIO"],
-              ["live", "Ao vivo"],
-              ["room", "Da sala"],
+              ["native", "VIO"],
+              ["live", "Telas"],
+              ["room", "Sala"],
               ["community", "Comunidade"],
             ].map(([id, label]) => (
               <button
@@ -1355,14 +1335,20 @@ export function RoomCanvas(props: Props) {
                 <Blocks size={20} aria-hidden="true" />
                 <strong>Widget personalizado</strong>
               </button>
-              {communityNotice && (
-                <p role="status">
-                  Widgets personalizados serão criados pela comunidade. Esta
-                  área vai crescer.
-                </p>
-              )}
             </>
           )}
+        </Dialog>
+      )}
+      {catalog && communityNotice && (
+        <Dialog
+          title="Widgets personalizados"
+          centered
+          close={() => setCommunityNotice(false)}
+        >
+          <p>
+            Em breve, você poderá encontrar widgets criados pela comunidade.
+            Esta área vai crescer com novos widgets para a sua sala.
+          </p>
         </Dialog>
       )}
     </div>

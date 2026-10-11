@@ -1,6 +1,6 @@
 # VIO
 
-> Rodada E: candidata 2.7.0 preparada; liberação e Fase 2 pendentes da seleção do workspace Render. Estado e propostas em [docs/RODADA-E.md](docs/RODADA-E.md).
+> Estado atual: candidata **2.7.1**, liberação em andamento. VIO/main será a produção; VIO_TEST/main e vio-test recebem as prévias seguintes. Fase 2 permanece exclusiva do vio-test. [Decisões e validação](docs/RODADA-E.md). As referências a rc.5/2.6.0 abaixo são históricas e foram superadas pela rodada E.
 
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
@@ -15,7 +15,7 @@ O plano gratuito pode precisar de um tempo para iniciar após ficar ocioso.
 Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
 Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
 **vio-test**, plano Free, região Virginia, uma instância.
-Os repositórios **VIO** e **VIO_2** não fazem parte desta entrega e não devem ser alterados.
+O usuário autorizou substituir o código de **VIO** pela base atual, preservando o histórico. **VIO_2** permanece fora do escopo.
 
 Este projeto foi criado do zero. Somente o CHANGELOG.md de Fernando-Nine/VIO_2 foi
 importado integralmente. O código anterior não foi importado. A versão 2.0.0 marca
