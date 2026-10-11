@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { widgetSchemas, type SharedWidget, type NoteCopy } from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
@@ -13,6 +14,14 @@ export const roomCode = z
   .toUpperCase()
   .regex(/^[A-Z0-9]{4,24}$/);
 export const schemas = {
+  ...widgetSchemas,
+  demand: z
+    .object({
+      id: z.string().max(80),
+      video: z.enum(["off", "small", "fit", "focus"]),
+      height: z.number().int().min(120).max(2160),
+    })
+    .strict(),
   join: z
     .object({
       name: z
@@ -86,6 +95,7 @@ export const signalSchema = z
   );
 export type Signal = z.infer<typeof signalSchema>;
 export interface Publication {
+  createdAt?: number;
   id: string;
   owner: string;
   kind: Kind;
@@ -100,6 +110,8 @@ export interface Participant {
   online: boolean;
   inCall: boolean;
   publications: Publication[];
+  /** Server-measured signaling round trip, not media latency. */
+  pingMs?: number;
 }
 export interface Snapshot {
   epoch: string;
@@ -107,6 +119,11 @@ export interface Snapshot {
   createdAt: number;
   serverTime: number;
   participants: Participant[];
+  widgets?: SharedWidget[];
+  noteCopies?: NoteCopy[];
+  creatorId?: string;
+  /** Explicit main screen subscriptions, scoped to members of this room. */
+  screenViewers?: Record<string, string[]>;
   maxParticipants: null;
   recommendedParticipants: number;
 }
@@ -116,6 +133,11 @@ export interface Subscription {
   viewer: string;
   tier: Tier;
   nonce: string;
+  demand?: VideoDemand;
+}
+export interface VideoDemand {
+  video: "off" | "small" | "fit" | "focus";
+  height: number;
 }
 export type Reply<T = unknown> =
   | { ok: true; data: T }

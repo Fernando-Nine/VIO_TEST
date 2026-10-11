@@ -1,6 +1,29 @@
 # VIO — estado da nova implementação
 
-Versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
+> Rodada E: candidata 2.7.0 preparada; liberação e Fase 2 pendentes da seleção do workspace Render. Estado e propostas em [docs/RODADA-E.md](docs/RODADA-E.md).
+
+Produção: **2.6.0**. Ramo `feat/canvas-widgets`: **2.7.0-rc.5**, em 10/10/2026, ainda em revisão.
+
+O canvas, a tira e os widgets individuais/compartilhados estão implementados. A rodada C
+corrigiu recuperação automática, foco único, encerramento de widgets, compartilhamento
+sem duplicação e controles redundantes. Esta continuação também corrige o botão de
+salvar notas sob a barra, retorno de foco, avisos fora da tela e camadas dos flutuantes
+ou popovers. As mudanças preservam a identidade dos widgets e o caminho de mídia.
+
+Prévia: https://vio-test-canvas-preview.onrender.com/, ramo `feat/canvas-widgets`, PR #3.
+**74 testes aprovados**, TypeScript e build de produção em 10/10/2026. O teste de
+reconexão usa sinalização real e reinício local; não substitui captura/escuta em
+aparelhos. Prévia rc.5 conferida em 11/10/2026: cópias independentes, Pessoas com criador/ping,
+barra automática e alinhamento da tira. Os resultados visuais estão em `docs/VALIDACAO.md`.
+
+A rodada D implementa D1–D13, incluindo Notas ampliadas e envio de cópias (C24),
+barra de fullscreen, roda unificada da tira, controles simplificados e painel Pessoas.
+D14 (módulos) e D15 (mesclar slots vizinhos, inclusive na tira) aguardam escolha em
+`docs/RODADA-D.md`. A prévia depende do aceite de mídia, celular e navegadores
+antes da integração à produção. Consulte `docs/PENDENCIAS.md`.
+O instalável/WASAPI e o futuro dono da sala seguem separados.
+
+Histórico desta base: versão **2.6.0**, em 27/09/2026. Sistema reescrito do zero; o protótipo desta base
 foi chamado de 0.1.0. A numeração passa a continuar após a versão histórica 1.9.0.
 Somente o CHANGELOG.md do VIO_2 foi lido e importado, preservado integralmente.
 
@@ -98,8 +121,9 @@ SFU, múltiplas instâncias, contas, gravação, chat textual e cobrança.
 
 Aplicativo Windows instalável com WASAPI. Preparação em `docs/DESKTOP-WASAPI.md`,
 com contrato de integração, ordem de implementação e critérios de teste físico.
-O instalador e a captura WASAPI não fazem parte do executável web 2.6.0 e ainda
-não foram implementados. A PWA atual não recebe acesso nativo por estar instalada.
+O instalador e a captura WASAPI não fazem parte do executável web. Existe trabalho
+em andamento no ramo nativo, mas a compilação, o instalador e a captura em Windows
+real ainda não foram aprovados. A PWA atual não recebe acesso nativo por estar instalada.
 
 ## Preferências entregues na 2.6.0
 

@@ -1,6 +1,8 @@
 import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
+import { RoomWidgets } from "./widgets";
+import { RoomNotes } from "./notes";
 import { defaultColor } from "../shared/colors";
 import {
   Fault,
@@ -29,6 +31,9 @@ interface Room {
   createdAt: number;
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
+  widgets: RoomWidgets;
+  notes: RoomNotes;
+  creatorId: string;
   touched: number;
 }
 export class Rooms {
@@ -107,10 +112,26 @@ export class Rooms {
       serverTime: Date.now(),
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
+      widgets: room.widgets.list(),
+      noteCopies: room.notes.list(),
+      creatorId: room.creatorId,
+      screenViewers: this.screenViewers(room),
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
       ),
     };
+  }
+  private screenViewers(room: Room): Record<string, string[]> {
+    const viewers: Record<string, string[]> = {};
+    for (const sub of room.subscriptions.values()) {
+      if (sub.tier !== "main" || sub.publication.kind !== "screen") continue;
+      const ids = (viewers[sub.publication.id] ||= []);
+      if (!ids.includes(sub.viewer)) ids.push(sub.viewer);
+    }
+    return viewers;
+  }
+  private broadcastViewers(room: Room) {
+    this.io.to(room.code).emit("screen-viewers", this.screenViewers(room));
   }
   broadcast(room: Room) {
     room.touched = Date.now();
@@ -132,6 +153,8 @@ export class Rooms {
     room.subscriptions.delete(sub.id);
     this.send(room, sub.viewer, "subscription-ended", sub.id);
     this.send(room, sub.publication.owner, "subscription-ended", sub.id);
+    if (sub.tier === "main" && sub.publication.kind === "screen")
+      this.broadcastViewers(room);
   }
   private removePublication(room: Room, p: Publication) {
     for (const sub of [...room.subscriptions.values()])
@@ -146,6 +169,10 @@ export class Rooms {
     for (const sub of [...room.subscriptions.values()])
       if (sub.viewer === member.id) this.closeSub(room, sub);
     room.members.delete(member.id);
+    if (!room.members.size) {
+      room.widgets.clear();
+      room.notes.clear();
+    }
     this.membership.delete(member.id);
     this.broadcast(room);
   }
@@ -162,6 +189,12 @@ export class Rooms {
   }
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
+      "note-send": 12,
+      "widget-create": 12,
+      "widget-structure": 30,
+      "widget-delete": 30,
+      "widget-operate": 180,
+      demand: 360,
       join: 12,
       leave: 12,
       call: 30,
@@ -241,12 +274,31 @@ export class Rooms {
       }
     });
   }
+  private probePing(socket: Socket) {
+    const code = this.membership.get(socket.data.id);
+    if (!code || socket.data.pingPending) return;
+    socket.data.pingPending = true;
+    const start = performance.now();
+    socket.timeout(3000).emit("presence-probe", (error: Error | null) => {
+      socket.data.pingPending = false;
+      const room = this.rooms.get(code);
+      const member = room?.members.get(socket.data.id);
+      if (error || !member?.online || member.socketId !== socket.id) return;
+      member.pingMs = Math.max(0, Math.round(performance.now() - start));
+      this.io
+        .to(code)
+        .emit("participant-ping", { id: member.id, pingMs: member.pingMs });
+    });
+  }
   private async command(
     socket: Socket,
     action: Action,
     data: any,
   ): Promise<unknown> {
-    if (action === "ping") return { serverTime: Date.now() };
+    if (action === "ping") {
+      this.probePing(socket);
+      return { serverTime: Date.now() };
+    }
     if (action === "renew") {
       const result = issueToken(
         this.config.secret,
@@ -276,10 +328,14 @@ export class Rooms {
           createdAt: Date.now(),
           members: new Map(),
           subscriptions: new Map(),
+          widgets: new RoomWidgets(),
+          notes: new RoomNotes(),
+          creatorId: socket.data.id,
           touched: Date.now(),
         };
         this.rooms.set(code, room);
       }
+      if (!room.members.size) room.creatorId = socket.data.id;
       let member = room.members.get(socket.data.id);
       if (member?.socketId && member.socketId !== socket.id)
         throw new Fault(
@@ -306,6 +362,51 @@ export class Rooms {
       return { id: member.id, snapshot: this.snapshot(room) };
     }
     const [room, m] = this.member(socket);
+    if (action === "note-send") {
+      const note = room.notes.send(m.id, m.name, data);
+      this.broadcast(room);
+      return note;
+    }
+    if (action.startsWith("widget-")) {
+      let widget;
+      if (action === "widget-create")
+        widget = room.widgets.create(m.id, data.id, data.content);
+      if (action === "widget-structure")
+        widget = room.widgets.structure(
+          m.id,
+          data.id,
+          data.revision,
+          data.content,
+        );
+      if (action === "widget-operate")
+        widget = room.widgets.operate(
+          m.id,
+          data.id,
+          data.operationId,
+          data.operation,
+        );
+      if (action === "widget-delete") room.widgets.remove(m.id, data.id);
+      this.io
+        .to(room.code)
+        .emit("widget-updated", { id: data.id, widget: widget || null });
+      return widget || {};
+    }
+    if (action === "demand") {
+      const sub = room.subscriptions.get(data.id);
+      if (
+        !sub ||
+        sub.viewer !== m.id ||
+        sub.tier !== "main" ||
+        sub.publication.kind !== "screen"
+      )
+        throw new Fault("FORBIDDEN", "Demanda de vídeo não autorizada.");
+      sub.demand = { video: data.video, height: data.height };
+      this.send(room, sub.publication.owner, "video-demand", {
+        id: sub.id,
+        ...sub.demand,
+      });
+      return {};
+    }
     if (action === "color") {
       m.color = data.color;
       this.broadcast(room);
@@ -338,6 +439,7 @@ export class Rooms {
             [m.id, data.kind, data.key].join(":"),
           ),
           owner: m.id,
+          createdAt: Date.now(),
           kind: data.kind,
           key: data.key,
           audio: data.audio,
@@ -393,6 +495,8 @@ export class Rooms {
           nonce: data.nonce,
         };
         room.subscriptions.set(id, sub);
+        if (sub.tier === "main" && p.kind === "screen")
+          this.broadcastViewers(room);
       }
       this.send(room, m.id, "subscription", sub);
       this.send(room, p.owner, "subscription", sub);

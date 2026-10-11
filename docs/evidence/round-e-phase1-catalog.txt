@@ -1,0 +1,5 @@
+Verificação Node/tsx em 11/10/2026:
+PASS: createWidget(custom) recusa a criação com Widget indisponível.
+PASS: createWidget(timer) e createWidget(notes) preservados.
+PASS: widgetRegistry.custom.render preservado para instâncias antigas.
+Não equivale a aceite visual da interface.

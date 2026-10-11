@@ -1,0 +1,108 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> vio@2.7.0-rc.4 test
+> node --import tsx --test tests/*.test.ts
+
+✔ saída padrão não é reaberta a cada vídeo, voz ou som de botão (2.683849ms)
+✔ vídeo removido durante troca não derruba a saída da conversa (1.009797ms)
+✔ desconexão de dispositivo restaura áudio uma vez e elementos futuros usam o padrão (4.253995ms)
+✔ dispositivo salvo invisível não é aplicado; confirmação fica nos ajustes (0.567037ms)
+✔ restauração atrasada nunca substitui uma escolha feita pelo usuário (0.352062ms)
+✔ falha real no destino de um novo vídeo restaura todos os elementos (1.103089ms)
+✔ falha ao voltar ao padrão não informa recuperação inexistente (0.499806ms)
+✔ arraste usa posição final do ponteiro e não a área do widget grande (1.107766ms)
+✔ arraste por teclado avança uma posição visível, incluindo o foco grande (0.256809ms)
+✔ interagir com flutuante o traz à frente sem mover nem recriar widgets (2.149622ms)
+✔ nova transmissão reserva só espaço vazio; recusar preserva grid e conteúdo (0.431402ms)
+✔ grid cheio não expande sozinho; criar espaço é explícito e permite mais de seis (0.964509ms)
+✔ aceitar flutuante libera convite sem mudar os demais espaços (0.276318ms)
+✔ tela grande participa do grid; focar troca posições e não ativa foco único (1.471625ms)
+✔ tira cresce só no fim, reordena linearmente e devolve o foco à posição de origem (0.968344ms)
+✔ foco único mantém lugares e identidades e restaura todo o conjunto (1.819832ms)
+✔ persistência remove publicações e widgets de outra sala, mantém conteúdo individual (0.845058ms)
+✖ layout corrompido e posições fora da tela não tornam o app inacessível (6.849429ms)
+✔ reduzir preset preserva os widgets visíveis, sem esconder nem sobrepor (0.507127ms)
+✔ foco único usa o espaço grande depois de mudança de preset e foco antigo (0.391262ms)
+✔ fechar espaço vazio na tira só fica disponível acima de quatro espaços (0.347455ms)
+✔ compartilhar converte o host original e catálogo não duplica o sharedId (0.297941ms)
+✔ convite no fim da tira não ocupa buraco anterior nem desloca outros itens (0.511624ms)
+✔ fim de transmissão durante arraste não cria widget fantasma e foco preserva convite (0.246863ms)
+✔ ping distingue sinalização e tela, latência e conexão interrompida (1.650306ms)
+✔ saída muda voz, tela e elementos futuros; falha reverte a seleção (2.742668ms)
+✔ service worker jamais intercepta navegação, sala, sessão ou socket (19.568937ms)
+✔ changelog preserva o histórico inteiro e a mudança de sistema (11.929052ms)
+✔ arraste encaixa nas seis posições dentro da área útil do vídeo (1.926654ms)
+✔ redimensionamento mantém o painel acessível e limita arraste fora da tela (0.215776ms)
+✔ popover inverte perto das bordas superior e inferior (1.899122ms)
+✔ popover permanece visível com teclado ou zoom deslocando a viewport (0.181104ms)
+✔ popover alto ou viewport estreita mantêm a origem e o fechamento acessíveis (0.148976ms)
+✔ cores personalizadas preservam HEX, bloqueiam conteúdo livre e mantêm contraste AA (77.679078ms)
+✔ preferências de som migram valores antigos e limitam volumes inválidos (0.312433ms)
+✔ sons de presença ignoram duplicatas, quedas, reconexões e troca de instância (0.982195ms)
+✔ recuperação automática supera oito tentativas, reentra após restart e cancela ao sair (2860.606303ms)
+✔ janelas ficam dentro da área útil em desktop, celular e orientação horizontal (7.972718ms)
+✔ posição proporcional sobrevive ao redimensionamento e presets alcançam bordas (2.038202ms)
+✔ tokens assinados rejeitam adulteração e expiração (1.966394ms)
+✔ oito pessoas entram sem teto de seis; aviso e duração pertencem à sala (99.933747ms)
+✔ três sessões, nomes iguais, publicações simultâneas e assinatura seletiva (23.964776ms)
+✔ isolamento entre salas, falsa identidade e ação de terceiros são recusados (11.60324ms)
+✔ origem indevida, token adulterado e conexão simultânea com a mesma sessão (11.496388ms)
+✔ validação de nomes, payloads, rate limit e cabeçalhos de segurança (13.827153ms)
+✔ reentrada após reinício real do servidor preserva identidade e IDs de publicação (11.246219ms)
+✔ credenciais TURN temporárias e configuração de produção fechada (5.728554ms)
+✔ origem de casca nativa é aceita sem afrouxar a regra da web (14.163212ms)
+{"time":"2026-10-11T01:01:40.264Z","event":"cloudflare_turn_error","status":500}
+✔ Cloudflare Realtime: TURN por segundo caminho, mutuamente exclusivo do coturn (13.675293ms)
+✔ credencial TURN estática: par fixo da config, sem HMAC (5.409933ms)
+✔ várias telas mantêm IDs; encerrar uma preserva as outras; voz é independente (39.325077ms)
+✔ presença na chamada inclui quem só escuta e não publica microfone (6.079976ms)
+✔ trocar identidades não contorna limites de sessão e entrada por IP (80.256436ms)
+✔ cor pertence à própria sessão, sincroniza e permanece na reconexão (16.24485ms)
+✔ alterações de cor têm limite por identidade sem bloquear os outros participantes (13.725369ms)
+✔ widgets compartilhados isolam salas e estrutura, preservam operações concorrentes e rascunhos (17.854694ms)
+✔ widgets rejeitam campos extras, payloads excessivos, blocos duplicados e excesso por criador (9.186394ms)
+✔ somente espectador autenticado regula seu vídeo main; áudio e outras assinaturas permanecem (13.730327ms)
+✔ espectadores são por publicação, excluem miniaturas e nunca vazam para outra sala (16.950542ms)
+✔ compartilhar é idempotente e somente criador encerra a instância para todos (9.503644ms)
+✔ roda isolada avança um card; sequência acompanha deltas e para no alinhamento mais próximo (1.264152ms)
+✔ roda normaliza pixels, linhas e páginas nos dois eixos (0.256909ms)
+✔ encaixe lê o modificador atual e o padrão oferece foco mais três slots (0.770235ms)
+✔ demanda pausa apenas o sender de vídeo e restaura a mesma faixa após fallback (2.220128ms)
+✔ 240p a 2160p definem a altura enviada e preservam a proporção (1.190951ms)
+✔ fonte menor não é ampliada e mudança de tamanho recalcula a redução (0.169376ms)
+✔ a escolha de 4K não aumenta bitrate, FPS ou escala da miniatura nem da câmera (0.769344ms)
+✔ assistir é explícito; foco mantém a mesma lista, ordem e assinaturas desejadas (1.490664ms)
+✔ trocar pela terceira tela preserva a secundária e fechar promove só a já aberta (0.207885ms)
+✔ cronômetro repete pelo relógio compartilhado sem eventos ou timers de fundo (1.125422ms)
+✔ widgets dedicados recusam tipos misturados e loop sem duração (2.178364ms)
+ℹ tests 71
+ℹ suites 0
+ℹ pass 70
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3570.818902
+
+✖ failing tests:
+
+test at tests/canvas.test.ts:1:6236
+✖ layout corrompido e posições fora da tela não tornam o app inacessível (6.849429ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  4 !== 1
+  
+      at TestContext.<anonymous> (/workspace/scratch/15b9cf80c296/vio-test/tests/canvas.test.ts:221:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 4,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,28 @@
+✔ arraste usa posição final do ponteiro e não a área do widget grande (1.263832ms)
+✔ arraste por teclado avança uma posição visível, incluindo o foco grande (0.265351ms)
+✔ interagir com flutuante o traz à frente sem mover nem recriar widgets (1.875367ms)
+✔ nova transmissão reserva só espaço vazio; recusar preserva grid e conteúdo (0.431302ms)
+✔ grid cheio não expande sozinho; criar espaço é explícito e permite mais de seis (0.48883ms)
+✔ aceitar flutuante libera convite sem mudar os demais espaços (0.260995ms)
+✔ tela grande participa do grid; focar troca posições e não ativa foco único (0.631285ms)
+✔ tira cresce só no fim, reordena linearmente e devolve o foco à posição de origem (0.469219ms)
+✔ foco único mantém lugares e identidades e restaura todo o conjunto (0.366474ms)
+✔ persistência remove publicações e widgets de outra sala, mantém conteúdo individual (0.749003ms)
+✔ layout corrompido e posições fora da tela não tornam o app inacessível (0.29721ms)
+✔ reduzir preset preserva os widgets visíveis, sem esconder nem sobrepor (0.320444ms)
+✔ foco único usa o espaço grande depois de mudança de preset e foco antigo (1.202169ms)
+✔ fechar espaço vazio na tira só fica disponível acima de quatro espaços (0.382459ms)
+✔ compartilhar converte o host original e catálogo não duplica o sharedId (0.237058ms)
+✔ convite no fim da tira não ocupa buraco anterior nem desloca outros itens (0.355268ms)
+✔ fim de transmissão durante arraste não cria widget fantasma e foco preserva convite (0.224669ms)
+✔ roda isolada avança um card; sequência acompanha deltas e para no alinhamento mais próximo (0.74027ms)
+✔ roda normaliza pixels, linhas e páginas nos dois eixos (0.150928ms)
+✔ encaixe lê o modificador atual e o padrão oferece foco mais três slots (0.510692ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 227.765472

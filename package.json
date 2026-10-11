@@ -1,6 +1,6 @@
 {
   "name": "vio",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
@@ -17,6 +17,7 @@
     "audit:production": "npm audit --omit=dev"
   },
   "dependencies": {
+    "@dnd-kit/react": "0.5.0",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.2.0",
     "express": "^5.1.0",

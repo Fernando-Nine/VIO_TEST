@@ -66,6 +66,7 @@ export function WatchLab() {
       rooms[0].joinCall();
       await rooms[0].microphone();
       const viewer = rooms[5];
+      viewer.canvas.preset("strip-left");
       const originalStream = viewer.peers.stream.bind(viewer.peers);
       viewer.peers.stream = (id, tier = "main") => {
         const owner = rooms.find((room) =>
@@ -113,7 +114,7 @@ export function WatchLab() {
     baseline.current.forEach((b) => b.remove());
     baseline.current = [
       ...document.querySelectorAll<HTMLMediaElement>(
-        ".watched-screen video, .watched-screen audio",
+        ".widget-host.is-screen video, .canvas-audio audio",
       ),
     ].map((video) => {
       const b: Baseline = {
@@ -145,7 +146,7 @@ export function WatchLab() {
   function verify() {
     const current = [
       ...document.querySelectorAll<HTMLMediaElement>(
-        ".watched-screen video, .watched-screen audio",
+        ".widget-host.is-screen video, .canvas-audio audio",
       ),
     ];
     const subscriptions = engine!.peers

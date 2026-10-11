@@ -2,6 +2,76 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.7.0] - 2026-10-11
+
+Canvas · ajustes finais da rodada E
+
+### Controles e catálogo
+- Setas da tira sem fundo permanente, com círculo no hover/foco e área de clique de pelo menos 40 px, preservando posição e alinhamento.
+- Personalizado deixa de ser criável no catálogo. A entrada da comunidade apresenta somente um aviso, sem conteúdo simulado.
+- Ao entrar em tela cheia, a barra aparece por um segundo e depois recolhe automaticamente. O gatilho no topo e o foco de teclado continuam disponíveis.
+
+## [2.7.0-rc.5] - 2026-10-10
+
+Rodada D · tira, notas e pessoas
+
+### Canvas e controles
+- A tira é o layout inicial. Setas sobrepostas preservam o alinhamento; a roda usa o mesmo percurso sobre cards, espaços e barra, com avanço suave isolado e movimento contínuo nas sequências.
+- Tela cheia começa com a barra recolhida, abre só na borda superior e respeita foco visível de teclado. Volume fecha ao sair após 600 ms, sem botão extra.
+- Menu Layout simplificado, foco único sem seletor e dica do modificador configurado durante arraste. O encaixe acompanha o estado atual da tecla.
+
+### Notas e pessoas
+- Notas aceitam até seis caixas tituladas, com copiar, salvar e enviar cópia à sala. Cópias identificam remetente e horário; cada pessoa escolhe adicioná-las ao próprio layout, separadas da edição conjunta.
+- O botão Pessoas abre os detalhes da sala com contagem, cores, chamada, compartilhamento, criador e ping individual medido pelo servidor. O widget essencial entra somente pelo catálogo.
+- Módulos novos do Personalizado e mesclagem de slots aguardam escolha. Prévia em revisão; testes físicos de mídia permanecem pendentes.
+
+## [2.7.0-rc.4] - 2026-10-10
+
+Canvas · avisos visíveis e ordem das janelas
+
+### Correções de sobreposição
+- Avisos acompanham o canvas em tela cheia, abaixo da barra superior e dentro da área visível. Nos Ajustes, aparecem dentro do painel aberto.
+- Janelas flutuantes vêm à frente ao clicar ou receber foco do teclado, preservando posições e instâncias dos widgets.
+- Detalhes de conexão, volume e espectadores abrem acima dos cards, respeitando as bordas da tela e a área disponível com teclado ou zoom.
+- Prévia em revisão; aceite de mídia em aparelhos reais e decisões abertas da rodada C continuam pendentes.
+
+## [2.7.0-rc.3] - 2026-10-10
+
+Widgets · salvar e encerrar com clareza
+
+### Correções na validação da rodada C
+- Salvar texto fica junto ao título da caixa nas notas compartilhadas, acessível sem sobreposição da barra da chamada em widgets grandes.
+- O X do criador informa Encerrar para todos; participantes continuam removendo apenas do próprio layout. O aviso de conclusão também distingue as duas ações.
+- Adicionar widgets individuais ou compartilhados leva o foco do teclado ao novo widget; fechar devolve o foco ao espaço liberado.
+- Prévia em revisão. As propostas de Notas ampliadas, novos blocos e mesclagem continuam aguardando decisão. O aceite de mídia em aparelhos reais permanece pendente.
+
+## [2.7.0-rc.2] - 2026-10-06
+
+Canvas revisado · recuperação e controles
+
+### Ajustes da rodada C
+- Reconexão automática com espera progressiva; retoma após quedas longas e reentrada malsucedida, preservando capturas. ICE restart continua tentando as conexões de mídia que falham.
+- Foco único usa o espaço principal correto. Foram removidos Esconder e o menu redundante dos widgets; arraste é livre, com Shift para encaixar. Layout oferece destinos por botão e teclado.
+- Layout com seleção visual de modo e detalhes; adicionar espaço cria uma posição vazia. Pessoas fica num único widget e o tempo da sala está no detalhe do ping.
+- Ícones próprios, popovers sem recorte, botão de sair da tela cheia, controles com inatividade curta e setas junto da tira. O olho mostra os espectadores de cada publicação.
+- Compartilhar converte a instância original. O criador encerra o widget para a sala; os demais removem só da própria visão. Cronômetro tem contagem progressiva, regressiva e repetição.
+- Notas ampliadas, novos blocos do Personalizado e mesclagem de células estão em proposta, aguardando decisão; não fazem parte desta prévia.
+
+### Canvas e foco
+- A tela grande participa do grid. Presets de um a seis espaços, layouts com foco e tira linear; espaços extras são criados por escolha explícita, sem teto de seis pessoas.
+- Widgets podem ser movidos e encaixados; foco único mantém os demais em segundo plano. Janelas flutuantes têm posição e tamanho ajustáveis. Trocar o foco reorganiza o grid; foco único mantém as outras transmissões conectadas com áudio em segundo plano.
+- Novas telas pedem confirmação. No grid cheio, você escolhe entre janela flutuante e novo espaço. Na tira, novos convites entram no fim sem deslocar a posição atual.
+- A tira avança um item por vez, com três espaços visíveis no desktop e menos no celular. Pedidos de qualidade acompanham tamanho e visibilidade do vídeo, sem alterar a captura das outras pessoas.
+
+### Widgets e controles
+- Catálogo com transmissões, prévia própria, pessoas, chamada, espectadores, mixer, conexão, duração, ajustes rápidos, notas, cronômetro e blocos personalizados. A aba Comunidade explica o que ainda será implementado.
+- Notas, placares e cronômetros são individuais por padrão. Compartilhar é opcional: todos operam o conteúdo, mas só o criador altera a estrutura ou exclui para a sala. Rascunhos conflitantes não sobrescrevem alterações silenciosamente.
+- Controles separados em Chamada e Compartilhamento, volume com ponte de hover e fechamento adiado, bordas uniformes, indicador ao vivo suave e olho de espectadores. Botões de tela cheia foram removidos das janelas individuais.
+- Dados compartilhados são temporários e apagados quando a sala esvazia ou o servidor reinicia. Layout e widgets individuais ficam no navegador.
+
+### Estado da prévia
+- Versão em revisão. Os testes automatizados não substituem o aceite visual, de acessibilidade e de mídia em aparelhos reais; consulte a documentação de validação antes de publicar.
+
 ## [2.6.0] - 2026-09-27
 
 Seu som, sua cor

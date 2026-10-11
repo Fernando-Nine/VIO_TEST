@@ -1,5 +1,190 @@
 # VIO — validação
 
+## Rodada D — 2.7.0-rc.5
+
+74 testes passaram ao fim da Fase 2; Fase 1 teve suíte completa e reteste direcionado
+para a expectativa do novo layout inicial. TypeScript e build aprovados.
+Os novos testes verificam a roda da tira e o modificador, cópias de notas com cotas
+e isolamento por sala, autoria, criador e ping medido por Socket.IO.
+Requisitos, diagnósticos e decisões abertas: [RODADA-D.md](RODADA-D.md).
+
+### Prévia publicada — conferência visual em 11/10/2026
+
+Versão rc.5 confirmada na interface, correspondente ao commit `1838367`.
+Ensaio no Chromium do navegador remoto, viewport 1363 × 936, com duas sessões
+Socket.IO em abas do mesmo perfil (portanto, preferências locais podem ser comuns).
+Ações feitas pelos controles reais; leitura de DOM somente para observar geometria.
+
+- Entrada nova mostrou foco + tira com quatro espaços, sem widget Pessoas automático.
+- Menu Layout mostrou os títulos novos, sem seção de mover; Foco único ficou sem seletor.
+- Notas aceitou seis caixas pela estrutura. Salvar e enviar produziram confirmação.
+- A segunda sessão recebeu texto com remetente e horário, adicionou uma cópia e a
+  editou; o original da primeira sessão permaneceu intacto.
+- Pessoas abriu painel sem criar widget. Contagem de duas pessoas, cores, uma coroa
+  no criador e pings individuais de 77/74 ms apareceram no ensaio.
+- Em Foco único + fullscreen, o botão perdeu foco e a barra recolheu sem novo clique
+  ou movimento: top -49 px, bottom 0, opacity 0. Entrada do ponteiro em y=2 abriu;
+  y=80 não abriu; saída para y=180 recolheu. O movimento foi fornecido por entrada
+  nativa de roda posicionada, sem cliques nem manipulação de estado por script.
+- Tira vertical e foco medidos entre y=122 e y=897, ambos com 775 px. A camada das
+  setas teve exatamente os mesmos limites da tira e não reservou espaço abaixo.
+- Roda sobre o corpo da nota rolou seus 81 px internos com tira em 0. Roda sobre o
+  cabeçalho avançou a tira a 261 px e alinhou o próximo slot a y=121,98, junto da
+  borda y=122. O snap CSS voltou a `y mandatory` ao final. Isso confirma o percurso
+  sobre card e a prioridade interna; não mede cadência/inércia de trackpad físico.
+
+Evidência: `docs/evidence/vio-round-d-people-2026-10-11.jpg`.
+As duas sessões de teste saíram da sala ao terminar. A inspeção de erros registrou
+mensagens da extensão do navegador; elas não foram tratadas como erros do VIO.
+
+Mídia em aparelhos reais, passagem do mouse no volume com transmissão ativa,
+trackpad/toque, arraste físico com soltura do modificador, acessibilidade assistiva
+e diferentes navegadores continuam pendentes. Os registros abaixo são históricos.
+
+
+## Continuação da rodada C — 2.7.0-rc.4 — 10/10/2026
+
+Ramo `feat/canvas-widgets`, PR #3. A prévia publicada identificou a versão
+**2.7.0-rc.4**. A produção 2.6.0 não foi alterada.
+
+**68 testes passaram**, sem falhas; TypeScript estrito e build concluídos.
+Logs: `docs/evidence/rc4-tests.txt` e `docs/evidence/rc4-build.txt`.
+O log de erro Cloudflare/TURN pertence ao teste de falha simulada.
+Os quatro novos casos cobrem ordem de flutuantes sem mudança de identidade/posição
+ou foco e posicionamento de popovers nas bordas, viewport estreita e área visível
+deslocada por teclado/zoom. Nenhuma dependência nova.
+
+### Ensaios da interface publicada
+
+Na rc.2, duas sessões independentes confirmaram edição/salvamento de notas,
+fechamento somente local pelo participante e encerramento para ambos pelo criador.
+Foco + tira preservou o mínimo de espaços e Foco único exibiu o widget principal.
+Essa revisão encontrou o botão Salvar texto sob a barra inferior; a rc.3 o moveu
+para junto do título e explicitou o rótulo de encerramento para todos.
+
+Na rc.4, os controles reais da prévia confirmaram:
+
+- Inclusão de Notas devolve o foco ao cabeçalho do widget.
+- Dois flutuantes sobrepostos alternam entre camadas 10/11 ao clicar em Pessoas e
+  editar Notas. Mantêm seus ids e a ordem da árvore de widgets.
+- Compartilhar converte a nota original; o X informa Encerrar Notas para todos.
+  Editar e clicar em Salvar texto conclui o salvamento, sem intercepção pela barra.
+- Detalhes de conexão usa a camada nativa de popover e recebe o clique acima do
+  canvas; ficou entre x=740–1050 e y=60–330 na viewport 1363×936. Escape a partir
+  de um controle interno fecha e devolve o foco sem reabrir.
+- Foco único e tela cheia mantêm o widget escolhido. A ajuda de Pessoas permaneceu
+  na área visível (x=8–318, y=92–259), enquanto a barra superior recolheu para
+  y=-66. A altura variável dessa barra motivou o afastamento medido dos avisos.
+
+Captura do foco único com a barra recolhida e ajuda visível:
+`docs/evidence/vio-rc4-focus-popover-2026-10-10.jpg`.
+
+Os avisos gerais passaram de irmãos do player para filhos dele, com área limitada
+à tela; nos painéis do aplicativo aparecem dentro do diálogo. Não se considera
+captura/escuta física validada: o seletor de compartilhamento da bancada ficou
+pendente e foi encerrado por recarga, sem conceder acesso nem produzir mídia.
+Ainda faltam queda com mídia ativa, aviso durante teclado móvel, volume com telas
+remotas, PC + celular, leitores de tela e demais navegadores. O ensaio automatizado
+de sinalização inclui reinício real do servidor, mas não certifica mídia física.
+
+Propostas C24, C25 e C26 continuam em `RODADA-C.md`. Roteiro de aceite e requisitos
+em `PENDENCIAS.md`. Os registros abaixo são históricos; não certificam a rc.4.
+
+## Prévia 2.7.0-rc.1 — atualização em 06/10/2026
+
+Ramo isolado `feat/canvas-widgets`, baseado na produção 2.6.0, PR #3.
+Publicado somente na [prévia separada](https://vio-test-canvas-preview.onrender.com/).
+O site principal continua na 2.6.0.
+
+**56 testes aprovados**, zero falhas, TypeScript estrito e build de produção concluídos.
+O arquivo `docs/evidence/canvas-tests.txt` preserva a primeira execução, com 54 testes.
+Depois foram acrescentados dois casos de regressão: destino pelo ponteiro e navegação
+direcional por teclado. A suíte de 56 testes passou após essas correções em 05/10/2026.
+O log `cloudflare_turn_error` com
+status 500 é a resposta simulada de um teste de falha, não um erro de produção.
+
+O canvas é carregado apenas ao entrar na sala. Build medido após os ajustes compactos:
+entrada de 473,00 kB (142,72 kB gzip), chunk do canvas de 154,05 kB (49,20 kB gzip),
+CSS de 89,67 kB (19,32 kB gzip), excluindo fontes. Os números são do build local e podem variar após
+ajustes; não constituem medição de desempenho em dispositivos.
+A confirmação do usuário autorizou a Parte B, tira linear, adaptação móvel e widgets
+individuais com compartilhamento opcional. A lembrança posterior foi aplicada: a tela
+grande integra o grid; foco não cria sobreposição nem ativa foco único implicitamente.
+
+Automação: testes de layout, serialização, aceite/recusa, mais de seis espaços,
+esconder/restaurar, foco, reordenação, redução de presets e fim da tira. Servidor real
+com múltiplas sessões: isolamento entre salas, autoria de estrutura/exclusão, operações
+concorrentes, deduplicação, conflitos de revisão, cotas e limpeza quando a sala esvazia.
+Comando `demand` restrito ao espectador de `main`; mock do sender confirma pausa/retomada
+do vídeo sem tocar na faixa de captura ou no sender de áudio. Esse mock não comprova
+transporte WebRTC. Reinício de servidor e demais regressões permanecem na suíte existente.
+
+Auditoria de produção: zero vulnerabilidades reportadas por `npm audit --omit=dev`
+em 05/10/2026. Dependência adicionada: `@dnd-kit/react` 0.5.0 fixada. Auditoria não
+substitui revisão de código ou verificação dos navegadores.
+
+### Conferência da interface publicada
+
+A bancada local em `http://terminal.local:4174/qa-layout` continuou bloqueada por
+`net::ERR_BLOCKED_BY_CLIENT`. Foi criada uma prévia normal e separada no Render Free,
+sem expor laboratórios, com segredo próprio e as mesmas exigências de segurança.
+A conferência abaixo usou a interface real dessa prévia, sem manipular estado pelo console.
+
+Em 05/10/2026, Chrome da bancada, área de 1363 × 936 px e duas sessões de teste:
+
+- Entrada, presença de duas pessoas e seleção de presets pelos controles visíveis.
+- Troca entre espaço grande e pequeno, foco único e retorno ao conjunto.
+- Arraste de Pessoas do espaço grande para o pequeno e retorno por Espaço/setas/Espaço.
+  A primeira tentativa revelou um encaixe incorreto; a correção foi publicada e retestada.
+- Notas individuais salvas durante a digitação e compartilhadas imediatamente com
+  o texto completo na segunda sessão. O destinatário não recebe edição de estrutura.
+  Um teste anterior de edição simultânea rejeitou a revisão antiga e conservou o rascunho.
+- Nota em espaço largo ocupa a largura útil, após corrigir o grid interno dos blocos.
+- Tira com três espaços de 237,98 px e dois intervalos de 8 px em 730 px de altura.
+  Avançar moveu 246 px, exatamente um item; arrastar reordenou os widgets na tira.
+- Cronômetro destacado pela opção explícita. Redimensionar por teclado aumentou
+  largura e altura em 16 px, preservando a posição dentro do canvas.
+
+As correções acima estão no commit `7e9bd4a`, publicado na prévia em 05/10/2026.
+O plano gratuito mostrou a tela de inicialização após ociosidade e carregou o app
+ao concluir. A consulta de logs de erro da prévia às 23:25 UTC não retornou registros.
+Isso não equivale a monitoramento contínuo nem certifica transporte de mídia.
+
+Em 06/10/2026, o commit `3b8b17e` foi publicado e conferido na interface. Os controles
+compactos do cronômetro cabem sem rolagem: o corpo tem `clientHeight = scrollHeight =
+200 px`; o botão Iniciar tem 36 px de altura e termina 34 px antes da borda inferior.
+Iniciar mudou para Pausar, a contagem avançou e voltou a Iniciar ao pausar em 24:51.
+O ícone de troca de foco está distinto do fullscreen global. Notas foram trazidas
+para o espaço grande; Pessoas permaneceu no espaço menor, junto a cronômetro e tempo
+da sala. Captura: [canvas conferido](evidence/vio-canvas-2026-10-06.jpg).
+Deploy confirmado como `live`: `dep-db28rovavr4c73ad4r70` (05:58:38 UTC).
+
+**Ainda não comprovado nesta versão:** áudio audível e vídeo entre aparelhos reais,
+retomada e consumo efetivo em segundo plano, toque em celular, outros navegadores,
+leitor de tela/zoom e os controles de volume/PiP com mídia. As provas das versões
+antigas abaixo são históricas e não certificam automaticamente o novo canvas.
+
+### Roteiro manual antes de promover o ramo
+
+1. Execute `ENABLE_TEST_LAB=1 npm run test:media` em ambiente de desenvolvimento,
+   com origem/porta coerentes. Abra `/qa-layout` para interface e `/qa-watch` para
+   renderização sintética com sinalização real. Este último tem cinco publicadores e
+   botões Registrar antes da troca / Verificar continuidade, atualizados para o canvas.
+2. Em `/qa-watch`, escolha um preset, aceite telas pelos controles visíveis e registre.
+   Arraste widgets, troque o grande com itens da tira, use Organizar por teclado,
+   destaque/redimensione, esconda/restaure, mude de preset e use foco único. Compare
+   elementos, streams, IDs de assinatura e comandos. Os players de áudio devem continuar.
+3. Confira desktop, 320/375/390 px, paisagem, zoom de 200%, teclado e movimento reduzido.
+   Verifique alinhamento de três itens, passo unitário, scroll sobre vídeos, toque,
+   foco fora da tira e retorno do foco de modais. A rolagem de um widget longo tem prioridade.
+4. Cruze a ponte do volume com o mouse; abra por toque e teclado; Escape deve fechar
+   e devolver foco. Confira borda, olho de espectadores e controles no PiP quando suportado.
+5. Com duas sessões, compartilhe notas/placar/timer, edite simultaneamente, recarregue,
+   saia como criador e encerre a sala. Estrutura não pode ser alterada por terceiros;
+   rascunhos conflitantes precisam permanecer e o estado deve ser apagado ao esvaziar.
+6. Repita captura, áudio e retorno do vídeo com duas abas e PC + celular reais. Teste
+   servidor reiniciado e rede interrompida. Confirme bytes/bitrate/FPS efetivos de slots
+   fora da tira ou em segundo plano. O laboratório sintético não substitui esse ensaio.
 
 ## Atualização 2.6.0 — 27/09/2026
 

@@ -20,6 +20,13 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
   }
   return (
     <>
+      <fieldset>
+        <legend>Organização dos widgets</legend>
+        <p className="field-note">
+          Arraste livremente. Segure Shift para encaixar no grid. No toque ou
+          sem arrastar, use Layout → Mover widget.
+        </p>
+      </fieldset>
       <fieldset className="application-volume">
         <legend>
           <Volume2 size={17} /> Volume do aplicativo

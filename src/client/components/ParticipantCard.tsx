@@ -1,9 +1,15 @@
 import { useCallback } from "react";
-import { AudioLines, Headphones, MicOff, Monitor, Palette } from "lucide-react";
+import {
+  AudioLines,
+  Headphones,
+  MicOff,
+  Monitor,
+  Palette,
+  Crown,
+} from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { Media, useSpeaking } from "./Media";
-import { ScreenPicker } from "./ScreenPicker";
 import { participantStyle } from "./participant-style";
 
 export function ParticipantCard({
@@ -12,12 +18,14 @@ export function ParticipantCard({
   visible,
   onVisible,
   onEditColor,
+  detailed = false,
 }: {
   person: Participant;
   engine: Controller;
   visible: boolean;
   onVisible: (id: string, visible: boolean) => void;
   onEditColor: () => void;
+  detailed?: boolean;
 }) {
   const own = person.id === engine.view.id;
   const voice = person.publications.find((p) => p.kind === "voice");
@@ -31,7 +39,7 @@ export function ParticipantCard({
   const level = useCallback(() => engine.captures.voiceLevel, [engine]);
   const speaking = useSpeaking(
     stream,
-    !!voice?.muted || !voice || !person.online,
+    !visible || !!voice?.muted || !voice || !person.online,
     own ? level : undefined,
   );
   const cameraStream = camera
@@ -70,6 +78,14 @@ export function ParticipantCard({
         <div>
           <strong title={person.name}>
             {person.name}
+            {detailed && engine.view.snapshot?.creatorId === person.id && (
+              <Crown
+                size={15}
+                role="img"
+                aria-label="Criador da sala"
+                className="room-creator"
+              />
+            )}
             {own && <small> · você</small>}
           </strong>
           <span className="participant-status">
@@ -106,14 +122,54 @@ export function ParticipantCard({
           <span className="participant-sharing">
             <Monitor size={12} /> Compartilhando tela
           </span>
-          <ScreenPicker
-            publication={screen}
-            name={person.name}
-            engine={engine}
-            visible={visible}
-            onVisible={onVisible}
-          />
+          {!engine.view.watching.includes(screen.id) && (
+            <button
+              className="text-button"
+              onClick={() => engine.watch(screen.id, true)}
+            >
+              Assistir
+            </button>
+          )}
         </>
+      )}
+      {detailed && (
+        <div className="participant-detail">
+          <span>
+            <i
+              className="person-color-swatch"
+              style={{ backgroundColor: person.color }}
+            />{" "}
+            Cor: {person.color}
+          </span>
+          <span>
+            Ping:{" "}
+            {!person.online
+              ? "desconectado"
+              : person.pingMs === undefined
+                ? "aguardando"
+                : `${person.pingMs} ms`}
+          </span>
+        </div>
+      )}
+      {person.inCall && !own && (
+        <label className="person-volume">
+          Volume da voz{" "}
+          <output>
+            {Math.round((engine.volumes.get(person.id) ?? 1) * 100)}%
+          </output>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step=".05"
+            aria-label={`Volume da voz de ${person.name}`}
+            value={engine.volumes.get(person.id) ?? 1}
+            onChange={(event) => {
+              engine.volumes.set(person.id, +event.target.value);
+              engine.bump();
+            }}
+          />
+        </label>
       )}
     </article>
   );

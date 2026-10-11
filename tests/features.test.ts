@@ -158,7 +158,12 @@ test("changelog preserva o histórico inteiro e a mudança de sistema", async ()
     versions,
   );
   assert.equal(historic.length, 16);
-  assert.equal(version, "2.6.0");
+  assert.equal(
+    version,
+    JSON.parse(await readFile("package.json", "utf8")).version,
+  );
+  assert.equal(releases[0].version, version);
+  assert.ok(releases.some((release) => release.version === "2.6.0"));
   assert.equal(
     releases.find((release) => release.version === "2.0.0")?.systemChange,
     true,

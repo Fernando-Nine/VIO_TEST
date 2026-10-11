@@ -1,3 +1,5 @@
+import { CanvasStore } from "../canvas/model";
+import type { SharedWidget } from "../../shared/widgets";
 import { io, type Socket } from "socket.io-client";
 import type {
   Action,
@@ -9,6 +11,7 @@ import type {
   Snapshot,
   Subscription,
   Tier,
+  VideoDemand,
 } from "../../shared/protocol";
 import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
 import { Peers } from "../media/peers";
@@ -25,6 +28,11 @@ import { api, socketOrigin, invite, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
 import { ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
+import {
+  recoveryDelay,
+  recoveryCode,
+  permanentRecoveryError,
+} from "./recovery";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -47,6 +55,10 @@ export class Controller {
     error: "",
     notice: "",
   };
+  readonly canvas: CanvasStore;
+  watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
+  private desiredVideo = new Map<string, VideoDemand>();
+  private sentVideo = new Map<string, string>();
   config?: RuntimeConfig;
   socket?: Socket;
   readonly captures: Captures;
@@ -75,6 +87,9 @@ export class Controller {
   private ticker?: ReturnType<typeof setInterval>;
   private iceTimer?: ReturnType<typeof setTimeout>;
   private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private recoveryAttempt = 0;
+  private sessionRefresh?: Promise<void>;
+  private removeNetworkListeners?: () => void;
   private captureQueue = Promise.resolve();
   private reconciling?: number;
   private reconcileAgain = false;
@@ -111,7 +126,9 @@ export class Controller {
   constructor(
     adapter?: CaptureAdapter,
     private persist = true,
+    private connectSocket: typeof io = io,
   ) {
+    this.canvas = new CanvasStore(persist);
     this.captures = new Captures(adapter, (kind, ended) => {
       this.bump();
       const generation = this.generation;
@@ -246,6 +263,21 @@ export class Controller {
     this.updateCueVolume();
     return this.cues.play(cue);
   }
+  receiveSharedWidget(widget: SharedWidget) {
+    if (!this.view.snapshot) return;
+    const existing = this.view.snapshot.widgets?.find(
+      (w) => w.id === widget.id,
+    );
+    if (existing && existing.revision > widget.revision) return;
+    this.view.snapshot = {
+      ...this.view.snapshot,
+      widgets: [
+        ...(this.view.snapshot.widgets || []).filter((w) => w.id !== widget.id),
+        widget,
+      ],
+    };
+    this.bump();
+  }
   async setColor(value: string) {
     const color = normalizeColor(value);
     if (!color) throw new Error("Use uma cor HEX válida, como #2727F5.");
@@ -298,7 +330,8 @@ export class Controller {
   }
   request<T = unknown>(action: Action, data: unknown = {}): Promise<T> {
     const socket = this.socket,
-      generation = this.generation;
+      generation = this.generation,
+      actor = this.view.id;
     return new Promise((resolve, reject) => {
       if (!socket?.connected) {
         reject(
@@ -312,7 +345,11 @@ export class Controller {
           "command",
           { action, data },
           (error: Error | null, reply: Reply<T>) => {
-            if (generation !== this.generation || socket !== this.socket) {
+            if (
+              generation !== this.generation ||
+              socket !== this.socket ||
+              actor !== this.view.id
+            ) {
               reject(new DOMException("Room changed", "AbortError"));
               return;
             }
@@ -321,13 +358,18 @@ export class Controller {
                 new Error("A sala demorou a responder. Tente reconectar."),
               );
             else if (!reply?.ok)
-              reject(new Error(reply?.message || "Pedido recusado."));
+              reject(
+                Object.assign(new Error(reply?.message || "Pedido recusado."), {
+                  code: reply && !reply.ok ? reply.code : undefined,
+                }),
+              );
             else resolve(reply.data);
           },
         );
     });
   }
-  async enter(name: string, code?: string) {
+  async enter(name: string, code?: string, recovering = false) {
+    const previousAttempts = recovering ? this.recoveryAttempt : 0;
     if (this.disposed) return;
     if (this.intent || this.socket) void this.leave();
     const generation = ++this.generation;
@@ -341,6 +383,32 @@ export class Controller {
       code: code?.trim().toUpperCase() || undefined,
       color: this.roomColor,
     };
+    this.recoveryAttempt = previousAttempts;
+    if (typeof window !== "undefined") {
+      const online = () => {
+        if (!current()) return;
+        if (this.view.status !== "connected")
+          this.scheduleRecovery(undefined, true);
+        else this.peers.resume();
+      };
+      const offline = () => {
+        if (!current()) return;
+        this.view.notice =
+          "A rede parece indisponível. Vamos reconectar automaticamente.";
+        this.bump();
+      };
+      const visible = () => {
+        if (document.visibilityState === "visible") online();
+      };
+      window.addEventListener("online", online);
+      window.addEventListener("offline", offline);
+      document.addEventListener("visibilitychange", visible);
+      this.removeNetworkListeners = () => {
+        window.removeEventListener("online", online);
+        window.removeEventListener("offline", offline);
+        document.removeEventListener("visibilitychange", visible);
+      };
+    }
     try {
       await this.initialize();
       if (!current()) return;
@@ -349,24 +417,41 @@ export class Controller {
       this.view.id = session.id;
       this.socket?.removeAllListeners();
       this.socket?.disconnect();
-      const socket = io(this.config!.signalingUrl || socketOrigin(), {
-        path: this.config!.socketPath,
-        transports: ["websocket"],
-        auth: { token: session.token },
-        autoConnect: false,
-        reconnectionAttempts: 8,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 10000,
-        randomizationFactor: 0.4,
-      });
+      const socket = this.connectSocket(
+        this.config!.signalingUrl || socketOrigin(),
+        {
+          path: this.config!.socketPath,
+          transports: ["websocket"],
+          auth: { token: session.token },
+          autoConnect: false,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 30000,
+          randomizationFactor: 0.4,
+        },
+      );
       this.socket = socket;
+      socket.on("presence-probe", (ack: () => void) => {
+        if (current() && typeof ack === "function") ack();
+      });
+      socket.on("participant-ping", (event: { id: string; pingMs: number }) => {
+        if (!current() || !this.view.snapshot) return;
+        this.view.snapshot = {
+          ...this.view.snapshot,
+          participants: this.view.snapshot.participants.map((person) =>
+            person.id === event.id
+              ? { ...person, pingMs: event.pingMs }
+              : person,
+          ),
+        };
+        this.bump();
+      });
       socket.on("connect", () => void this.rejoin());
       socket.on("disconnect", (reason) => {
-        if (!this.intent) return;
+        if (!current() || !this.intent) return;
         this.view.status = "reconnecting";
         this.bump();
-        if (reason === "io server disconnect")
-          this.reconnectTimer = setTimeout(() => socket.connect(), 1500);
+        if (reason === "io server disconnect") this.scheduleRecovery();
       });
       socket.on("server-restarting", () => {
         this.view.status = "reconnecting";
@@ -375,23 +460,48 @@ export class Controller {
         this.bump();
       });
       socket.on("connect_error", (error: Error) => {
+        if (!current()) return;
         if (error.message === "SESSION_EXPIRED") {
-          void this.newSession().catch((e) => this.fail(e));
+          this.scheduleRecovery(
+            Object.assign(error, { code: "SESSION_EXPIRED" }),
+          );
           return;
         }
         this.view.status = "reconnecting";
         this.view.error =
-          "Não foi possível conectar à sala. Verifique a conexão e tente novamente.";
+          "A conexão caiu. Tentando voltar à sala automaticamente…";
+        if (!socket.active)
+          this.scheduleRecovery(Object.assign(error, { code: error.message }));
         this.bump();
       });
       socket.io.on("reconnect_failed", () => {
         if (!current()) return;
-        this.view.status = "failed";
-        this.bump();
+        this.scheduleRecovery();
       });
       socket.on("snapshot", (snapshot: Snapshot) =>
         this.receiveSnapshot(snapshot),
       );
+      socket.on("screen-viewers", (screenViewers: Record<string, string[]>) => {
+        if (!current() || !this.view.snapshot) return;
+        this.view.snapshot = { ...this.view.snapshot, screenViewers };
+        this.bump();
+      });
+      socket.on(
+        "widget-updated",
+        (event: { id: string; widget: SharedWidget | null }) => {
+          if (!current() || !this.view.snapshot) return;
+          const widgets = (this.view.snapshot.widgets || []).filter(
+            (w) => w.id !== event.id,
+          );
+          if (event.widget) widgets.push(event.widget);
+          this.view.snapshot = { ...this.view.snapshot, widgets };
+          this.bump();
+        },
+      );
+      socket.on("video-demand", (event: VideoDemand & { id: string }) => {
+        if (current())
+          void this.peers.demand(event.id, event).catch((e) => this.fail(e));
+      });
       socket.on("subscription", (sub: Subscription) => {
         void this.peers.accept(sub).catch((e) => this.fail(e));
       });
@@ -416,32 +526,77 @@ export class Controller {
       this.ticker = setInterval(() => void this.heartbeat(), 10000);
     } catch (e) {
       if (!current()) return;
-      this.view.status = "failed";
-      this.fail(e);
+      this.scheduleRecovery(e);
     }
   }
+  private scheduleRecovery(error?: unknown, soon = false) {
+    if (!this.intent || this.disposed || this.reconnectTimer) return;
+    if (permanentRecoveryError(error)) {
+      this.view.status = "failed";
+      this.fail(error);
+      return;
+    }
+    const generation = this.generation;
+    this.view.status = "reconnecting";
+    this.view.error = "";
+    this.view.notice =
+      "Reconectando automaticamente. Suas capturas continuam abertas.";
+    this.bump();
+    const delay = ["RATE_LIMIT", "CONNECTION_LIMIT"].includes(
+      recoveryCode(error) || "",
+    )
+      ? 60000
+      : recoveryDelay(soon ? 0 : this.recoveryAttempt++);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      if (generation !== this.generation || !this.intent || this.disposed)
+        return;
+      void this.retry(recoveryCode(error) === "SESSION_EXPIRED");
+    }, delay);
+  }
   private async newSession() {
-    if (!this.intent) return;
-    const intent = this.intent;
-    const entered = this.roomEntered;
-    await this.leave(false);
-    this.roomEntered = entered;
-    this.roomColor = intent.color || defaultColor;
-    await this.enter(intent.name, intent.code);
+    if (!this.intent || !this.socket) return;
+    if (this.sessionRefresh) return this.sessionRefresh;
+    const generation = this.generation,
+      socket = this.socket;
+    const pending = (async () => {
+      const session = await this.getSession(true);
+      if (generation !== this.generation || socket !== this.socket) return;
+      this.joinAttempt++;
+      // An expired identity cannot authorize its old subscriptions. Captures,
+      // mute/device preferences and room intent survive this identity renewal.
+      this.peers.closeAll();
+      this.publications.clear();
+      this.subscriptions.clear();
+      this.sentVideo.clear();
+      this.view.id = session.id;
+      socket.auth = { token: session.token };
+      socket.disconnect().connect();
+    })();
+    this.sessionRefresh = pending;
+    try {
+      await pending;
+    } finally {
+      if (this.sessionRefresh === pending) this.sessionRefresh = undefined;
+    }
   }
   async retry(newSession = false) {
     if (!this.intent) return;
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
     try {
       if (newSession) await this.newSession();
       else if (this.socket?.connected) await this.rejoin();
       else if (this.socket) this.socket.connect();
-      else await this.enter(this.intent.name, this.intent.code);
+      else await this.enter(this.intent.name, this.intent.code, true);
     } catch (e) {
-      this.fail(e);
+      this.scheduleRecovery(e);
     }
   }
   private async rejoin() {
     if (!this.intent) return;
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
     const generation = this.generation,
       attempt = ++this.joinAttempt,
       socket = this.socket;
@@ -470,13 +625,17 @@ export class Controller {
       await this.refreshIce();
       if (!current()) return;
       if (this.inCall) await this.request("call", { active: true });
-      for (const kind of this.captures.sources.keys()) {
+      for (const kind of new Set([
+        ...this.captures.sources.keys(),
+        ...this.publications.keys(),
+      ])) {
         if (!current()) return;
         await this.syncCapture(kind);
       }
       await this.reconcile();
       if (!current()) return;
       this.peers.resume();
+      this.recoveryAttempt = 0;
       this.bump();
       // So reescreve a barra de enderecos quando ela existe de verdade. Dentro
       // de uma casca nativa nao ha barra, e o "link" seria do esquema da casca.
@@ -486,8 +645,7 @@ export class Controller {
       }
     } catch (e) {
       if (!current()) return;
-      this.view.status = "failed";
-      this.fail(e);
+      this.scheduleRecovery(e);
     }
   }
   private receiveSnapshot(snapshot: Snapshot, announce = true) {
@@ -630,7 +788,12 @@ export class Controller {
       await this.reconcile();
       this.bump();
     } catch (e) {
-      this.fail(e);
+      if (
+        recoveryCode(e) === "SESSION_EXPIRED" ||
+        recoveryCode(e) === "NOT_JOINED"
+      )
+        this.scheduleRecovery(e);
+      else this.fail(e);
     }
   }
   screenLevel(id: string) {
@@ -699,8 +862,10 @@ export class Controller {
   screenInfo(id: string) {
     return this.screenCatalog.get(id);
   }
-  watch(id: string, together = false) {
+  watch(id: string, together = false, approved = false) {
     if (!this.screenCatalog.has(id)) return;
+    if (!approved && this.watchRequest && !this.watchRequest(id, together))
+      return;
     if (this.screenLevel(id).volume > 1) this.playback.unlock();
     const next = watchScreen(this.view, id, together);
     const changed = next.watching !== this.view.watching;
@@ -710,6 +875,10 @@ export class Controller {
     if (changed) void this.reconcile();
   }
   watchOnly(id: string) {
+    if (this.watchRequest) {
+      this.watchRequest(id, false, true);
+      return;
+    }
     if (!this.screenCatalog.has(id)) return;
     if (this.screenLevel(id).volume > 1) this.playback.unlock();
     const next = watchOnlyScreen(this.view, id);
@@ -725,6 +894,36 @@ export class Controller {
     this.missingScreens.delete(id);
     this.bump();
     void this.reconcile();
+  }
+  setVideoDemand(publicationId: string, demand: VideoDemand) {
+    const previous = this.desiredVideo.get(publicationId);
+    if (previous?.video === demand.video && previous.height === demand.height)
+      return;
+    this.desiredVideo.set(publicationId, demand);
+    void this.flushVideoDemands();
+  }
+  private async flushVideoDemands() {
+    if (!this.socket?.connected) return;
+    for (const info of this.peers.infos()) {
+      if (info.sending || info.kind !== "screen" || info.tier !== "main")
+        continue;
+      const demand = this.desiredVideo.get(info.publicationId);
+      if (!demand) continue;
+      const key = JSON.stringify(demand);
+      if (this.sentVideo.get(info.id) === key) continue;
+      this.sentVideo.set(info.id, key);
+      try {
+        await this.request("demand", { id: info.id, ...demand });
+      } catch {
+        this.sentVideo.delete(info.id);
+      }
+    }
+  }
+  serverNow() {
+    const s = this.view.snapshot;
+    return s
+      ? s.serverTime + performance.now() - this.snapshotReceivedAt
+      : Date.now();
   }
   roomSeconds() {
     const snapshot = this.view.snapshot;
@@ -746,10 +945,14 @@ export class Controller {
     this.savePreferences();
     void this.reconcile();
   }
-  previews(ids: string[]) {
+  private previewSources = new Map<string, string[]>();
+  previews(ids: string[], source = "default") {
+    if (ids.length) this.previewSources.set(source, ids);
+    else this.previewSources.delete(source);
+    const candidates = [...new Set([...this.previewSources.values()].flat())];
     const next = new Set(
       this.previewsEnabled
-        ? ids
+        ? candidates
             .filter((id) => !this.view.watching.includes(id))
             .slice(0, this.config?.maxPreviews || 2)
         : [],
@@ -846,6 +1049,7 @@ export class Controller {
           if (generation !== this.generation) return;
         }
       } while (this.reconcileAgain && this.view.status === "connected");
+      void this.flushVideoDemands();
     } catch (e) {
       if (generation === this.generation && this.view.status === "connected")
         this.fail(e);
@@ -967,6 +1171,10 @@ export class Controller {
     clearInterval(this.ticker);
     clearTimeout(this.iceTimer);
     clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
+    this.removeNetworkListeners?.();
+    this.removeNetworkListeners = undefined;
+    this.sessionRefresh = undefined;
     const socket = this.socket;
     this.socket = undefined;
     socket?.removeAllListeners();
@@ -1000,6 +1208,10 @@ export class Controller {
     this.publications.clear();
     this.subscriptions.clear();
     this.screenCatalog.clear();
+    this.desiredVideo.clear();
+    this.sentVideo.clear();
+    this.canvas.resetRoom();
+    this.previewSources.clear();
     this.missingScreens.clear();
     this.missingSince.clear();
     this.visiblePreviews.clear();

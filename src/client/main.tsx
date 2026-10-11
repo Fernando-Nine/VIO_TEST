@@ -10,6 +10,7 @@ import "./room.css";
 import "./finish.css";
 import "./multiscreen.css";
 import "./preferences.css";
+import "./workspace.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
 const engine = new Controller();
