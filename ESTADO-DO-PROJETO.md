@@ -1,6 +1,6 @@
 # VIO — estado da nova implementação
 
-> Estado atual em 11/10/2026: **VIO principal 2.7.1 publicado e verificado** em https://vio-g71x.onrender.com/. Código novo em Fernando-Nine/VIO (196ba88), sem force push. **2.8.0-rc.1 é candidata exclusiva do vio-test**: Chat, papéis, notificações, mescla da tira e automático centralizado. E8, E10 e interface E12 aguardam aprovação. Referências antigas abaixo são histórico; prevalece docs/RODADA-E.md.
+> Estado atual em 12/10/2026: **VIO principal 2.7.1 publicado e verificado** em https://vio-g71x.onrender.com/. Código novo em Fernando-Nine/VIO (196ba88), sem force push. **2.8.0-rc.1 publicada exclusivamente no vio-test**: Chat, papéis, notificações, mescla da tira e automático centralizado. E8, E10 e interface E12 aguardam aprovação. Referências antigas abaixo são histórico; prevalece docs/RODADA-E.md.
 
 ## Histórico anterior à rodada E
 

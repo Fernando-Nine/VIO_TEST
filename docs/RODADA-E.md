@@ -1,6 +1,6 @@
 # Rodada E consolidada
 
-## Estado em 11/10/2026
+## Estado em 12/10/2026
 
 **Liberação concluída:** VIO 2.7.1 em https://vio-g71x.onrender.com/,
 serviço Render `vio` (`srv-db5mqljrjlhs739k2bf0`), plano Free/Virginia.
@@ -9,11 +9,17 @@ Fernando-Nine/VIO recebeu a nova base por commit normal `196ba88`, filho do
 versão 2.7.1, criação/saída de sala conferidas, sem erros nos logs consultados.
 O vio-test recebeu a mesma base em `72974f0`. VIO_2 e canvas-preview intactos.
 
-**Fase 2:** candidata 2.8.0-rc.1, destinada só a VIO_TEST/main e vio-test.
+**Fase 2:** 2.8.0-rc.1 publicada só em VIO_TEST/main e vio-test (30128a1).
 E3/E4/E5/E7/E6/E9 implementados; build e TypeScript passaram. 27 testes direcionados
 (canvas, rolagem, spans, histórico, contraste) e 5 cenários de servidor passaram.
-Os testes antigos de Notas foram ajustados ao cancelamento de E3. Aceite visual
-da Fase 2 pendente da publicação da candidata; não publicar a Fase 2 em produção.
+Os testes antigos de Notas foram ajustados ao cancelamento de E3. Deploy live e
+/healthz 200. Duas sessões confirmaram autoria, texto escapado, histórico, abrir
+chat por notificação, permissões de convidado e promoção a administrador. Canvas
+está desabilitado e Notas saiu do catálogo. Grid de cinco: três + dois centralizados.
+Aceite encontrou correções localizadas: manter foco ao enviar por Enter, declarar
+a cor do texto no parágrafo e impedir que a animação global desloque a junção
+durante o clique. Correções passam por nova conferência visual antes do fechamento.
+Não publicar a Fase 2 em produção.
 
 Chat mantém somente as últimas 100 mensagens de cada chat em memória, também
 entregues a quem chega depois. Texto #F1F2FA: contraste mínimo medido 13,11:1
@@ -137,3 +143,11 @@ Uma tentativa negada deve explicar em português qual permissão está desativad
 sem solicitar captura nem fingir sucesso. Exemplo: “A câmera está desativada para
 convidados nesta sala. Peça autorização ao criador ou a um administrador.”
 A interface E12 e o módulo Dados continuam aguardando a etapa de aprovação prevista.
+
+## Endereço do VIO — 12/10/2026
+
+O Render atribuiu `vio-g71x.onrender.com` ao serviço `vio`. Preferência autorizada:
+`vio.onrender.com`, ou `vio-quest.onrender.com` se o primeiro estiver indisponível.
+O conector atual não expõe edição do nome/subdomínio e o painel pede login.
+Ainda não houve alteração nem confirmação de disponibilidade dos nomes.
+Não criar serviço duplicado nem apagar o serviço estável para tentar nomes.

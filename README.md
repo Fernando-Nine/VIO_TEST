@@ -5,7 +5,7 @@ Uma sala para compartilhar tela, conversar e assistir com amigos.
 **by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24**
 
 - Produção: [VIO 2.7.1](https://vio-g71x.onrender.com/), repositório Fernando-Nine/VIO, serviço Render `vio`.
-- Prévia: [vio-test](https://vio-test.onrender.com/), repositório Fernando-Nine/VIO_TEST, ramo main. Esta base é a candidata 2.8.0-rc.1 da Fase 2.
+- Prévia: [vio-test](https://vio-test.onrender.com/), repositório Fernando-Nine/VIO_TEST, ramo main. Prévia publicada: 2.8.0-rc.1 da Fase 2.
 - A Fase 2 não vai ao VIO principal sem aval. Não atualizar vio-test-canvas-preview nem VIO_2.
 
 O código antigo de VIO foi substituído pela implementação atual em 11/10/2026,

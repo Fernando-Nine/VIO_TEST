@@ -288,4 +288,4 @@ O estado do layout é individual e versionado em `canvas/model.ts`. O núcleo n�
 
 Cada publicação mantém um host de vídeo e um player de áudio estáveis. Não reparentar hosts nem usar clones de vídeo durante drag. Encodings de vídeo podem pausar por assinante, sem desligar a track da captura e sem tocar no sender de áudio. `replaceTrack(null)` é fallback somente do vídeo daquela assinatura.
 
-O servidor verifica a sessão e a sala de cada ação de widget. Só o criador altera estrutura/exclui; os demais operam o conteúdo. Revisões impedem perda silenciosa de texto. Ao sair o último membro, apagar imediatamente os widgets, mesmo durante o TTL residual da sala. Código de terceiros não é executado nesta versão.
+O servidor verifica a sessão e a sala de cada ação de widget. Na prévia da rodada E, criador e administradores editam públicos; convidados precisam de permissão. Encerram quem compartilhou, criador e administradores; demais fecham só localmente. Revisões impedem perda silenciosa de texto. Ao sair o último membro, apagar imediatamente os widgets, mesmo durante o TTL residual da sala. Código de terceiros não é executado nesta versão.

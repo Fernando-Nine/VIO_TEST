@@ -92,7 +92,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           );
         })}
       </div>
-      {error && (
+      {error && !editing && (
         <p className="error-text" role="alert">
           {error}
         </p>
@@ -130,7 +130,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           maxLength={2000}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          disabled={busy}
+          readOnly={busy}
         />
         <button
           className="icon-button"
@@ -170,6 +170,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
             </label>
             <button className="primary">Salvar</button>
           </form>
+          {error && <p className="error-text" role="alert">{error}</p>}
           {manages && (
             <p className="field-note">
               As permissões de edição ficam em Pessoas na sala.

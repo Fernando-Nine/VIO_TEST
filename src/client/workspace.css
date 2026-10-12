@@ -1532,6 +1532,7 @@
   font-size: 12px;
 }
 .chat-message p {
+  color: #f1f2fa;
   margin: 3px 0;
   font-size: 14px;
   line-height: 1.45;
@@ -1691,7 +1692,7 @@
 }
 .merge-slot {
   position: absolute;
-  transform: translate(-50%, -50%);
+  translate: -50% -50%;
   width: 32px;
   height: 32px;
   min-height: 32px;
