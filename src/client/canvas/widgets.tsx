@@ -16,7 +16,8 @@ import {
   SlidersHorizontal,
   Activity,
   Clock3,
-  NotebookPen,
+  MessageCircle,
+  PencilRuler,
   Timer,
   Blocks,
   type LucideIcon,
@@ -28,6 +29,7 @@ import { Spectators } from "../components/Spectators";
 import { RoomLimit } from "../components/RoomStatus";
 import { screenResolutions } from "../../shared/protocol";
 import { CustomWidget, createContent, widgetValue } from "./CustomWidget";
+import { ChatWidget } from "./ChatWidget";
 import { freshKey } from "../id";
 import type { WidgetInstance } from "./model";
 
@@ -495,7 +497,8 @@ const definition = (
       connection: Activity,
       time: Clock3,
       quick: Settings2,
-      notes: NotebookPen,
+      chat: MessageCircle,
+      canvas: PencilRuler,
       timer: Timer,
       custom: Blocks,
     } as Record<string, LucideIcon>
@@ -555,12 +558,13 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     QuickWidget,
     true,
   ),
-  notes: definition(
-    "notes",
-    "Notas",
-    "Texto individual, com opção de compartilhar.",
-    CustomWidget,
+  chat: definition(
+    "chat",
+    "Chat",
+    "Conversa pública da sala em tempo real.",
+    ChatWidget,
   ),
+  canvas: definition("canvas", "Canvas", "Em breve", () => null),
   timer: definition(
     "timer",
     "Cronômetro",
@@ -576,7 +580,8 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
 };
 export function createWidget(type: string): WidgetInstance {
   const def = widgetRegistry[type];
-  if (!def || type === "custom") throw new Error("Widget indisponível.");
+  if (!def || ["custom", "notes", "canvas", "chat"].includes(type))
+    throw new Error("Widget indisponível.");
   return {
     id: freshKey(),
     type,
@@ -592,7 +597,7 @@ export function titleOf(widget: WidgetInstance, engine: Controller) {
     const info = engine.screenInfo(widget.config.publicationId);
     return `${info?.name || "Participante"}${info?.publication.owner === engine.view.id ? " · minha prévia" : ""}`;
   }
-  if (["custom", "notes", "timer"].includes(widget.type))
+  if (["custom", "notes", "timer", "chat"].includes(widget.type))
     return widgetValue(widget, engine)?.title || widget.title;
   return widget.title;
 }

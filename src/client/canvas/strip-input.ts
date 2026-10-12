@@ -7,6 +7,23 @@ import {
 } from "./strip-wheel";
 import { useEffect, type RefObject } from "react";
 
+export function stripStops(scroller: HTMLElement) {
+  const style = scroller.ownerDocument.defaultView!.getComputedStyle(scroller);
+  const x = style.gridAutoFlow === "column";
+  const gap = parseFloat(x ? style.columnGap : style.rowGap) || 0;
+  const nodes = [...scroller.querySelectorAll<HTMLElement>(".canvas-slot")];
+  const offset = (node: HTMLElement) => (x ? node.offsetLeft : node.offsetTop);
+  const first = nodes[0] ? offset(nodes[0]) : 0;
+  return nodes.flatMap((node) => {
+    const units = Math.max(1, Number(node.dataset.span) || 1);
+    const step = ((x ? node.offsetWidth : node.offsetHeight) + gap) / units;
+    return Array.from(
+      { length: units },
+      (_, i) => offset(node) - first + i * step,
+    );
+  });
+}
+
 /** The stable media layer is a sibling of the scroller, so forward gestures
  * from strip hosts without stealing scroll from a widget's own long content. */
 export function useStripInput(
@@ -48,9 +65,6 @@ export function useStripInput(
       win.getComputedStyle(scroller).gridAutoFlow === "column";
     const metrics = () => {
       const x = horizontal();
-      const nodes = [...scroller.querySelectorAll<HTMLElement>(".canvas-slot")];
-      const offset = (node: HTMLElement) =>
-        x ? node.offsetLeft : node.offsetTop;
       return {
         x,
         position: x ? scroller.scrollLeft : scroller.scrollTop,
@@ -60,9 +74,7 @@ export function useStripInput(
             ? scroller.scrollWidth - scroller.clientWidth
             : scroller.scrollHeight - scroller.clientHeight,
         ),
-        stops: nodes.map(
-          (node) => offset(node) - (nodes[0] ? offset(nodes[0]) : 0),
-        ),
+        stops: stripStops(scroller),
       };
     };
     const write = (position: number) =>

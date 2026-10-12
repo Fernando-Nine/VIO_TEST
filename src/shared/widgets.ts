@@ -34,20 +34,27 @@ export const widgetBlock = z.discriminatedUnion("kind", [
 ]);
 export const widgetContent = z
   .object({
-    kind: z.enum(["custom", "notes", "timer"]).optional(),
+    kind: z.enum(["custom", "notes", "timer", "chat"]).optional(),
     title: label,
-    blocks: z.array(widgetBlock).min(1).max(6),
+    blocks: z.array(widgetBlock).max(6),
   })
   .strict()
   .refine((content) => {
+    if (content.kind === "chat") return content.blocks.length === 0;
+    if (!content.blocks.length) return false;
     if (
       content.kind &&
       !content.blocks.every(
         (b) =>
           b.kind ===
-          ({ custom: "score", notes: "text", timer: "timer" } as const)[
-            content.kind!
-          ],
+          (
+            {
+              custom: "score",
+              notes: "text",
+              timer: "timer",
+              chat: "text",
+            } as const
+          )[content.kind!],
       )
     )
       return false;
@@ -62,7 +69,7 @@ export type WidgetBlock = z.infer<typeof widgetBlock>;
 export type WidgetContent = z.infer<typeof widgetContent>;
 export function contentKind(
   content: WidgetContent,
-): "custom" | "notes" | "timer" {
+): "custom" | "notes" | "timer" | "chat" {
   return (
     content.kind ||
     (content.blocks.every((b) => b.kind === "text")
@@ -72,7 +79,32 @@ export function contentKind(
         : "custom")
   );
 }
+export interface ChatMessage {
+  id: string;
+  authorId: string;
+  authorName: string;
+  color: string;
+  avatarUrl?: string;
+  text: string;
+  sentAt: number;
+}
+export interface ShareRequest {
+  id: string;
+  owner: string;
+  ownerName: string;
+  content: WidgetContent;
+  status: "pending" | "approved" | "denied";
+  createdAt: number;
+}
+export interface RoomNotice {
+  id: string;
+  text: string;
+  createdAt: number;
+}
 export interface SharedWidget extends WidgetContent {
+  messages?: ChatMessage[];
+  guestEditors?: string[];
+  allGuestsEdit?: boolean;
   id: string;
   owner: string;
   revision: number;
@@ -117,7 +149,23 @@ export const widgetOperation = z.discriminatedUnion("kind", [
 ]);
 export type WidgetOperation = z.infer<typeof widgetOperation>;
 export const widgetSchemas = {
-  "note-send": noteCopyInput,
+  "chat-send": z
+    .object({
+      id: identifier,
+      messageId: identifier,
+      text: z.string().trim().min(1).max(2000),
+    })
+    .strict(),
+  "widget-review": z.object({ id: identifier, approve: z.boolean() }).strict(),
+  "widget-permission": z
+    .object({
+      id: identifier,
+      participantId: identifier.optional(),
+      allGuests: z.boolean().optional(),
+      allowed: z.boolean(),
+    })
+    .strict()
+    .refine((x) => Boolean(x.participantId) !== (x.allGuests === true)),
   "widget-create": z
     .object({ id: identifier, content: widgetContent })
     .strict(),

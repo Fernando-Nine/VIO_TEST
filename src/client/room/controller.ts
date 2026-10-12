@@ -56,6 +56,11 @@ export class Controller {
     notice: "",
   };
   readonly canvas: CanvasStore;
+  readonly chatRead = new Map<string, number>();
+  markChatRead(id: string, time: number) {
+    if ((this.chatRead.get(id) || 0) >= time) return;
+    this.chatRead.set(id, time); this.bump();
+  }
   watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
   private desiredVideo = new Map<string, VideoDemand>();
   private sentVideo = new Map<string, string>();

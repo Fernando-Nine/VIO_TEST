@@ -1,26 +1,18 @@
 # VIO
 
-> Estado atual: candidata **2.7.1**, liberação em andamento. VIO/main será a produção; VIO_TEST/main e vio-test recebem as prévias seguintes. Fase 2 permanece exclusiva do vio-test. [Decisões e validação](docs/RODADA-E.md). As referências a rc.5/2.6.0 abaixo são históricas e foram superadas pela rodada E.
-
 Uma sala para compartilhar tela, conversar e assistir com amigos.
 
-**by NerdQuest Studios · fundado por Nine**  
-Prévia de desenvolvimento **2.7.0-rc.5** · **AGPLv3** · **Node 24**
+**by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24**
 
-Produção permanece na versão 2.6.0. Esta prévia está no ramo `feat/canvas-widgets` e ainda requer aceite manual.
+- Produção: [VIO 2.7.1](https://vio-g71x.onrender.com/), repositório Fernando-Nine/VIO, serviço Render `vio`.
+- Prévia: [vio-test](https://vio-test.onrender.com/), repositório Fernando-Nine/VIO_TEST, ramo main. Esta base é a candidata 2.8.0-rc.1 da Fase 2.
+- A Fase 2 não vai ao VIO principal sem aval. Não atualizar vio-test-canvas-preview nem VIO_2.
 
-Prévia separada no Render: [experimentar o canvas 2.7](https://vio-test-canvas-preview.onrender.com/).
-O plano gratuito pode precisar de um tempo para iniciar após ficar ocioso.
-
-Publicado em 16/09/2026: [abrir VIO TEST](https://vio-test.onrender.com/).
-Repositório privado **Fernando-Nine/VIO_TEST**, criado pelo usuário, e serviço Render
-**vio-test**, plano Free, região Virginia, uma instância.
-O usuário autorizou substituir o código de **VIO** pela base atual, preservando o histórico. **VIO_2** permanece fora do escopo.
-
-Este projeto foi criado do zero. Somente o CHANGELOG.md de Fernando-Nine/VIO_2 foi
-importado integralmente. O código anterior não foi importado. A versão 2.0.0 marca
-a mudança de sistema e continua a numeração após a 1.9.0. Consulte [o estado da entrega](ESTADO-DO-PROJETO.md) e
-[a matriz de validação](docs/VALIDACAO.md) antes de colocar o serviço em uso.
+O código antigo de VIO foi substituído pela implementação atual em 11/10/2026,
+preservando o histórico, sem force push (commit 196ba88). A versão 2.7.1 passou
+pelo aceite direcionado e pelo health check do Render; criação de sala conferida.
+A prévia acrescenta Chat, papéis, notificações e mesclagem da tira. Estado,
+limites e decisões abertas: [Rodada E](docs/RODADA-E.md).
 
 ## Executar
 

@@ -16,7 +16,7 @@ by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24
 Decisão explícita de escopo, não limitação temporária:
 
 - Sem contas, senhas ou banco de dados. A sala nasce quando alguém entra e some quando esvazia.
-- Sem gravação, sem chat de texto, sem SFU / servidor de mídia.
+- Sem gravação, sem SFU / servidor de mídia. Chat de texto em memória foi aprovado na rodada E; Fase 2 só no vio-test.
 - Por pedido explícito do usuário na 2.3.0, salas não têm teto de participantes. A partir de 6 pessoas, avisar do custo da malha P2P; `MAX_PARTICIPANTS` foi aposentada.
 - A arquitetura continua P2P; não apresentar ausência de teto como garantia de capacidade.
 

@@ -2,6 +2,17 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.8.0-rc.1] - 2026-10-11
+
+Prévia · Chat, papéis e espaços mesclados
+
+### Somente no vio-test
+- Notas e cópias recebidas dão lugar ao Chat público, com histórico temporário, autoria e notificações. Canvas aparece apenas como Em breve.
+- Criador e administradores gerenciam widgets públicos. Convidados pedem aprovação para compartilhar e recebem permissões de edição por pessoa ou por widget.
+- Pessoas permite promover, revogar e transferir a posse. Saída do criador promove o administrador mais antigo, ou o convidado mais antigo.
+- Notificações reúnem telas, widgets, mensagens e pedidos na barra sem abrir a barra recolhida automaticamente.
+- Espaços vazios da tira podem ser mesclados até três posições e divididos novamente. O automático centraliza a última linha. Grid personalizado continua aguardando aprovação.
+
 ## [2.7.1] - 2026-10-11
 
 Convites no foco e catálogo mais claro

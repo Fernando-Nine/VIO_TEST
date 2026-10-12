@@ -15,6 +15,7 @@ import {
   type WidgetContent,
   type WidgetOperation,
 } from "../../shared/widgets";
+import { canEditPublic, canManageRoom } from "../../shared/permissions";
 import type { Controller } from "../room/controller";
 import type { WidgetInstance } from "./model";
 
@@ -193,8 +194,13 @@ export function CustomWidget({
       </p>
     );
   const shared = !!widget.config.sharedId;
-  const owner = !shared || value.owner === engine.view.id;
+  const owner =
+    !shared || canEditPublic(engine.view.snapshot, engine.view.id, value);
   async function operate(operation: WidgetOperation) {
+    if (!owner)
+      throw new Error(
+        "Você não tem permissão para editar este widget público. Peça ao criador ou a um administrador.",
+      );
     if (shared)
       await engine.request("widget-operate", {
         id: value!.id,
@@ -446,7 +452,9 @@ export function CustomWidget({
             }
           }}
           remove={
-            shared
+            shared &&
+            (value.owner === engine.view.id ||
+              canManageRoom(engine.view.snapshot, engine.view.id))
               ? async () => {
                   await engine.request("widget-delete", { id: value.id });
                   engine.canvas.remove(widget.id);
@@ -465,9 +473,8 @@ export function CustomWidget({
           close={() => setSharing(false)}
         >
           <p>
-            O conteúdo ficará visível para todos nesta sala. Todos poderão usar
-            os blocos; só você poderá mudar a estrutura ou excluir o widget
-            compartilhado.
+            O conteúdo ficará disponível na sala. Convidados precisam de
+            aprovação para compartilhar. A edição pública exige permissão.
           </p>
           <p className="field-note">
             A sala guarda esses dados temporariamente. Eles desaparecem quando a
@@ -482,15 +489,28 @@ export function CustomWidget({
               setBusy(true);
               setError("");
               void engine
-                .request<SharedWidget>("widget-create", {
-                  id: shareId.current,
-                  content: {
-                    kind: value.kind,
-                    title: value.title,
-                    blocks: value.blocks,
+                .request<SharedWidget | { id: string; pending: true }>(
+                  "widget-create",
+                  {
+                    id: shareId.current,
+                    content: {
+                      kind: value.kind,
+                      title: value.title,
+                      blocks: value.blocks,
+                    },
                   },
-                })
+                )
                 .then((result) => {
+                  if ("pending" in result) {
+                    engine.canvas.updateWidget(widget.id, {
+                      config: { ...widget.config, pendingShareId: result.id },
+                    });
+                    setSharing(false);
+                    setError(
+                      "Pedido enviado ao criador e aos administradores.",
+                    );
+                    return;
+                  }
                   engine.receiveSharedWidget(result);
                   engine.canvas.bindShared(widget.id, result.id);
                   setSharing(false);

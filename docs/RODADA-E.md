@@ -2,12 +2,30 @@
 
 ## Estado em 11/10/2026
 
-A base 2.7.0 foi integrada pelo usuário ao main do VIO_TEST (PR #4).
-A continuação 2.7.1 inclui convite inicial no foco, remoção do aviso flutuante,
-catálogo VIO/Telas/Sala/Comunidade e explicação centralizada da Comunidade.
-Os 22 testes direcionados de canvas/tira passaram; TypeScript e build concluídos.
-Aceite visual e publicação do VIO principal em andamento. O acesso ao workspace
-Render está resolvido. Não há mudança no vio2 nem no canvas-preview.
+**Liberação concluída:** VIO 2.7.1 em https://vio-g71x.onrender.com/,
+serviço Render `vio` (`srv-db5mqljrjlhs739k2bf0`), plano Free/Virginia.
+Fernando-Nine/VIO recebeu a nova base por commit normal `196ba88`, filho do
+último commit antigo; nenhum force push. Deploy live, `/healthz` HTTP 200 com
+versão 2.7.1, criação/saída de sala conferidas, sem erros nos logs consultados.
+O vio-test recebeu a mesma base em `72974f0`. VIO_2 e canvas-preview intactos.
+
+**Fase 2:** candidata 2.8.0-rc.1, destinada só a VIO_TEST/main e vio-test.
+E3/E4/E5/E7/E6/E9 implementados; build e TypeScript passaram. 27 testes direcionados
+(canvas, rolagem, spans, histórico, contraste) e 5 cenários de servidor passaram.
+Os testes antigos de Notas foram ajustados ao cancelamento de E3. Aceite visual
+da Fase 2 pendente da publicação da candidata; não publicar a Fase 2 em produção.
+
+Chat mantém somente as últimas 100 mensagens de cada chat em memória, também
+entregues a quem chega depois. Texto #F1F2FA: contraste mínimo medido 13,11:1
+contra as cinco superfícies escuras existentes (mínimo exigido 4,5:1).
+Papéis, edição e aprovação são verificados no servidor; pedidos só aparecem no
+snapshot do autor e dos responsáveis. E12 continua sem interface.
+
+E9: persistência v2 migra v1 e guarda spans e identidades dos espaços mesclados.
+A tira conta cada posição para roda/setas/snap, com até três posições vazias por
+mescla; foco excluído. O modelo de união retangular suporta 2×2 + vizinhos e
+rejeita lacunas/sobreposição. A interface bidimensional depende do grid E10,
+ainda não aprovado. No automático não há mesclas; última linha centralizada.
 
 ## Fase 1
 
@@ -18,7 +36,7 @@ Render está resolvido. Não há mudança no vio2 nem no canvas-preview.
 - E11: indicação da barra por 1 s ao entrar em fullscreen; timer limpo na saída e
   reentrada. Foco do botão removido; depois valem zona de 4 px e foco de teclado.
 
-## Liberação autorizada, pendente de execução
+## Regras de liberação (executadas para a Fase 1)
 
 Depois do aceite direcionado: publicar a mesma versão no Render do VIO principal,
 no GitHub Fernando-Nine/VIO (sem force push) e no vio-test. Inspecionar primeiro

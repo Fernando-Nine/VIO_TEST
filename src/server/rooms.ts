@@ -2,7 +2,7 @@ import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
-import { RoomNotes } from "./notes";
+import type { ShareRequest, RoomNotice, SharedWidget } from "../shared/widgets";
 import { defaultColor } from "../shared/colors";
 import {
   Fault,
@@ -32,7 +32,8 @@ interface Room {
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
   widgets: RoomWidgets;
-  notes: RoomNotes;
+  shareRequests: Map<string, ShareRequest>;
+  notices: RoomNotice[];
   creatorId: string;
   touched: number;
 }
@@ -104,7 +105,7 @@ export class Rooms {
     this.cloudflareIce = result;
     return result;
   }
-  snapshot(room: Room): Snapshot {
+  snapshot(room: Room, viewerId?: string): Snapshot {
     return {
       epoch: this.epoch,
       code: room.code,
@@ -113,7 +114,13 @@ export class Rooms {
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
       widgets: room.widgets.list(),
-      noteCopies: room.notes.list(),
+      shareRequests: [...room.shareRequests.values()].filter(
+        (r) =>
+          r.owner === viewerId ||
+          viewerId === room.creatorId ||
+          room.members.get(viewerId || "")?.role === "admin",
+      ),
+      notices: room.notices,
       creatorId: room.creatorId,
       screenViewers: this.screenViewers(room),
       participants: [...room.members.values()].map(
@@ -135,7 +142,11 @@ export class Rooms {
   }
   broadcast(room: Room) {
     room.touched = Date.now();
-    this.io.to(room.code).emit("snapshot", this.snapshot(room));
+    for (const member of room.members.values())
+      if (member.socketId)
+        this.io
+          .to(member.socketId)
+          .emit("snapshot", this.snapshot(room, member.id));
   }
   private member(socket: Socket): [Room, Member] {
     const code = this.membership.get(socket.data.id);
@@ -171,8 +182,25 @@ export class Rooms {
     room.members.delete(member.id);
     if (!room.members.size) {
       room.widgets.clear();
-      room.notes.clear();
+      room.shareRequests.clear();
+      room.notices = [];
     }
+    if (room.creatorId === member.id && room.members.size) {
+      const next =
+        [...room.members.values()].find((m) => m.role === "admin") ||
+        room.members.values().next().value!;
+      room.creatorId = next.id;
+      next.role = "creator";
+      room.notices.push({
+        id: randomUUID(),
+        text: `${next.name} agora é o criador da sala.`,
+        createdAt: Date.now(),
+      });
+      room.notices = room.notices.slice(-30);
+    }
+    for (const [id, request] of room.shareRequests)
+      if (request.owner === member.id && request.status === "pending")
+        room.shareRequests.delete(id);
     this.membership.delete(member.id);
     this.broadcast(room);
   }
@@ -189,7 +217,10 @@ export class Rooms {
   }
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
-      "note-send": 12,
+      role: 20,
+      "chat-send": 45,
+      "widget-review": 30,
+      "widget-permission": 30,
       "widget-create": 12,
       "widget-structure": 30,
       "widget-delete": 30,
@@ -329,7 +360,8 @@ export class Rooms {
           members: new Map(),
           subscriptions: new Map(),
           widgets: new RoomWidgets(),
-          notes: new RoomNotes(),
+          shareRequests: new Map(),
+          notices: [],
           creatorId: socket.data.id,
           touched: Date.now(),
         };
@@ -345,6 +377,10 @@ export class Rooms {
       member = {
         id: socket.data.id,
         name: data.name,
+        role:
+          room.creatorId === socket.data.id
+            ? "creator"
+            : member?.role || "guest",
         color: member?.color || data.color || defaultColor,
         online: true,
         inCall: member?.inCall || false,
@@ -359,33 +395,150 @@ export class Rooms {
       for (const sub of room.subscriptions.values())
         if (sub.viewer === member.id || sub.publication.owner === member.id)
           socket.emit("subscription", sub);
-      return { id: member.id, snapshot: this.snapshot(room) };
+      return { id: member.id, snapshot: this.snapshot(room, member.id) };
     }
     const [room, m] = this.member(socket);
-    if (action === "note-send") {
-      const note = room.notes.send(m.id, m.name, data);
+    const manages = m.id === room.creatorId || m.role === "admin";
+    const deny = () => {
+      throw new Fault(
+        "FORBIDDEN",
+        "Esta ação exige permissão do criador ou de um administrador da sala.",
+      );
+    };
+    const editable = (widget: SharedWidget | undefined) =>
+      !!widget &&
+      (manages || widget.allGuestsEdit || widget.guestEditors?.includes(m.id));
+    if (action === "role") {
+      if (m.id !== room.creatorId) deny();
+      const target = room.members.get(data.participantId);
+      if (!target || target.id === m.id)
+        throw new Fault("INVALID_REQUEST", "Escolha outra pessoa da sala.");
+      if (data.action === "transfer") {
+        m.role = "admin";
+        target.role = "creator";
+        room.creatorId = target.id;
+        room.notices.push({
+          id: randomUUID(),
+          text: `${target.name} agora é o criador da sala.`,
+          createdAt: Date.now(),
+        });
+        room.notices = room.notices.slice(-30);
+      } else target.role = data.action === "promote" ? "admin" : "guest";
       this.broadcast(room);
-      return note;
+      return {};
+    }
+    if (action === "chat-send") {
+      const widget = room.widgets.message(data.id, {
+        id: data.messageId,
+        authorId: m.id,
+        authorName: m.name,
+        color: m.color,
+        avatarUrl: m.avatarUrl,
+        text: data.text,
+        sentAt: Date.now(),
+      });
+      this.io.to(room.code).emit("widget-updated", { id: data.id, widget });
+      return widget;
     }
     if (action.startsWith("widget-")) {
       let widget;
-      if (action === "widget-create")
+      const current = room.widgets.entries.get(data.id);
+      if (action === "widget-create") {
+        if (
+          data.content.kind === "notes" ||
+          (!data.content.kind &&
+            data.content.blocks.every(
+              (b: { kind: string }) => b.kind === "text",
+            ))
+        )
+          throw new Fault(
+            "INVALID_REQUEST",
+            "Notas foram substituídas pelo Chat.",
+          );
+        if (data.content.kind === "chat" && !manages) deny();
+        if (!manages) {
+          if (current) {
+            if (current.owner !== m.id) deny();
+            return current;
+          }
+          const previous = room.shareRequests.get(data.id);
+          if (previous && previous.owner !== m.id) deny();
+          if (!previous || previous.status !== "pending") {
+            if (
+              room.shareRequests.size >= 128 ||
+              [...room.shareRequests.values()].filter(
+                (r) => r.owner === m.id && r.status === "pending",
+              ).length >= 6
+            )
+              throw new Fault(
+                "WIDGET_LIMIT",
+                "Aguarde a resposta aos pedidos anteriores.",
+              );
+            room.shareRequests.set(data.id, {
+              id: data.id,
+              owner: m.id,
+              ownerName: m.name,
+              content: data.content,
+              status: "pending",
+              createdAt: Date.now(),
+            });
+          }
+          this.broadcast(room);
+          return { id: data.id, pending: true };
+        }
         widget = room.widgets.create(m.id, data.id, data.content);
-      if (action === "widget-structure")
+      }
+      if (action === "widget-review") {
+        if (!manages) deny();
+        const request = room.shareRequests.get(data.id);
+        if (!request || request.status !== "pending")
+          throw new Fault("NOT_FOUND", "Este pedido já foi respondido.");
+        if (data.approve) {
+          if (!room.members.has(request.owner))
+            throw new Fault("NOT_FOUND", "A pessoa já saiu da sala.");
+          widget = room.widgets.create(
+            request.owner,
+            request.id,
+            request.content,
+          );
+        }
+        request.status = data.approve ? "approved" : "denied";
+        this.broadcast(room);
+        return widget || {};
+      }
+      if (action === "widget-permission") {
+        if (!manages) deny();
+        if (data.participantId && !room.members.has(data.participantId))
+          throw new Fault("NOT_FOUND", "Pessoa indisponível.");
+        widget = room.widgets.permission(
+          data.id,
+          data.participantId,
+          data.allowed,
+        );
+      }
+      if (action === "widget-structure") {
+        if (!editable(current)) deny();
         widget = room.widgets.structure(
           m.id,
           data.id,
           data.revision,
           data.content,
+          true,
         );
-      if (action === "widget-operate")
+      }
+      if (action === "widget-operate") {
+        if (!editable(current)) deny();
         widget = room.widgets.operate(
           m.id,
           data.id,
           data.operationId,
           data.operation,
         );
-      if (action === "widget-delete") room.widgets.remove(m.id, data.id);
+      }
+      if (action === "widget-delete") {
+        if (!manages && current?.owner !== m.id) deny();
+        room.widgets.remove(m.id, data.id, true);
+      }
       this.io
         .to(room.code)
         .emit("widget-updated", { id: data.id, widget: widget || null });

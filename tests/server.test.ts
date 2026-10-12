@@ -1028,6 +1028,13 @@ test("widgets compartilhados isolam salas e estrutura, preservam operações con
       ).ok,
       false,
     );
+    data(
+      await request(owner, "widget-permission", {
+        id,
+        allGuests: true,
+        allowed: true,
+      }),
+    );
     const operationId = crypto.randomUUID();
     const increment = {
       id,
@@ -1049,7 +1056,7 @@ test("widgets compartilhados isolam salas e estrutura, preservam operações con
       (room.widgets.entries.get(id)!.blocks[0] as { value: number }).value,
       3,
     );
-    assert.equal(room.widgets.entries.get(id)!.revision, 3);
+    assert.equal(room.widgets.entries.get(id)!.revision, 4);
     const conflict = await request(member, "widget-operate", {
       id,
       operationId: crypto.randomUUID(),
@@ -1074,12 +1081,12 @@ test("widgets compartilhados isolam salas e estrutura, preservam operações con
           kind: "text",
           blockId: text,
           value: "Texto revisado",
-          revision: 3,
+          revision: 4,
         },
       }),
     );
     assert.equal(
-      (await request(owner, "widget-structure", { id, revision: 3, content }))
+      (await request(owner, "widget-structure", { id, revision: 4, content }))
         .ok,
       false,
     );
@@ -1095,9 +1102,9 @@ test("widgets compartilhados isolam salas e estrutura, preservam operações con
       }),
     );
     assert.equal(
-      (await request(member, "widget-structure", { id, revision: 5, content }))
+      (await request(member, "widget-structure", { id, revision: 6, content }))
         .ok,
-      false,
+      true,
     );
     assert.equal(room.widgets.entries.size, 1);
     data(await request(member, "leave"));
@@ -1124,7 +1131,13 @@ test("widgets rejeitam campos extras, payloads excessivos, blocos duplicados e e
       label: "Nota",
       value: "Texto",
     };
-    const content = { title: "Notas", blocks: [block] };
+    const content = {
+      title: "Módulo legado",
+      blocks: [
+        block,
+        { id: crypto.randomUUID(), kind: "score", label: "Pontos", value: 0 },
+      ],
+    };
     assert.equal(
       (
         await request(socket, "widget-create", {
@@ -1375,14 +1388,14 @@ test("compartilhar é idempotente e somente criador encerra a instância para to
     data(await request(member, "join", { name: "Colega", code: "QACLOSE" }));
     const id = crypto.randomUUID(),
       content = {
-        kind: "notes",
-        title: "Notas",
+        kind: "custom",
+        title: "Placar",
         blocks: [
           {
             id: crypto.randomUUID(),
-            kind: "text",
-            label: "Texto",
-            value: "Não duplicar",
+            kind: "score",
+            label: "Pontos",
+            value: 0,
           },
         ],
       };
@@ -1403,7 +1416,7 @@ test("compartilhar é idempotente e somente criador encerra a instância para to
   }
 });
 
-test("rodada D: cópias isoladas por sala, criador e ping medido no servidor", async () => {
+test("rodada E: Notas canceladas, sucessão e ping medido no servidor", async () => {
   const app = await server();
   const sockets: Socket[] = [];
   try {
@@ -1438,27 +1451,9 @@ test("rodada D: cópias isoladas por sala, criador e ping medido no servidor", a
     );
     assert.equal(b.snapshot.creatorId, a.id);
     assert.equal(c.snapshot.creatorId, c.id);
-    const copy = data(await request(sockets[0], "note-send", input));
-    assert.equal(copy.senderId, a.id);
-    assert.equal((await request(sockets[1], "note-send", input)).ok, false);
-    assert.equal(
-      (await request(sockets[0], "note-send", { ...input, senderId: b.id })).ok,
-      false,
-    );
-    const restored = data(
-      await request<{ snapshot: Snapshot }>(sockets[1], "join", {
-        name: "Bia",
-        code: "RODADAD",
-      }),
-    );
-    assert.equal(restored.snapshot.noteCopies?.[0].value, input.value);
-    const other = data(
-      await request<{ snapshot: Snapshot }>(sockets[2], "join", {
-        name: "Caio",
-        code: "OUTRAD",
-      }),
-    );
-    assert.deepEqual(other.snapshot.noteCopies, []);
+    assert.equal((await request(sockets[0], "note-send", input)).ok, false);
+    assert.equal("noteCopies" in b.snapshot, false);
+    assert.equal("noteCopies" in c.snapshot, false);
     const measured = new Promise<{ id: string; pingMs: number }>((resolve) =>
       sockets[1].once("participant-ping", resolve),
     );
@@ -1473,7 +1468,7 @@ test("rodada D: cópias isoladas por sala, criador e ping medido no servidor", a
         code: "RODADAD",
       }),
     );
-    assert.equal(remaining.snapshot.creatorId, a.id);
+    assert.equal(remaining.snapshot.creatorId, b.id);
     await request(sockets[1], "leave");
     const empty = data(
       await request<{ snapshot: Snapshot }>(sockets[1], "join", {
@@ -1481,8 +1476,247 @@ test("rodada D: cópias isoladas por sala, criador e ping medido no servidor", a
         code: "RODADAD",
       }),
     );
-    assert.deepEqual(empty.snapshot.noteCopies, []);
+    assert.equal("noteCopies" in empty.snapshot, false);
     assert.equal(empty.snapshot.creatorId, b.id);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("rodada E: chat autenticado, permissões, pedidos e sucessão por administrador mais antigo", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    const people: { id: string; snapshot: Snapshot }[] = [];
+    for (let i = 0; i < 5; i++) {
+      const socket = await connect(app.url, (await session(app.url)).token);
+      sockets.push(socket);
+      people.push(
+        data(
+          await request(socket, "join", {
+            name: `Pessoa ${i}`,
+            code: i === 4 ? "OUTRAE" : "RODADAE",
+          }),
+        ),
+      );
+    }
+    const [creator, guest, admin, admin2, outsider] = sockets;
+    const id = crypto.randomUUID();
+    const chat = { kind: "chat", title: "Conversa", blocks: [] };
+    assert.equal(
+      (await request(guest, "widget-create", { id, content: chat })).ok,
+      false,
+    );
+    data(
+      await request(creator, "role", {
+        participantId: people[3].id,
+        action: "promote",
+      }),
+    );
+    data(
+      await request(creator, "role", {
+        participantId: people[2].id,
+        action: "promote",
+      }),
+    );
+    assert.equal(
+      (
+        await request(admin, "role", {
+          participantId: people[1].id,
+          action: "promote",
+        })
+      ).ok,
+      false,
+    );
+    data(await request(admin, "widget-create", { id, content: chat }));
+    const messageId = crypto.randomUUID();
+    const sent = data(
+      await request(guest, "chat-send", {
+        id,
+        messageId,
+        text: "<img src=x onerror=alert(1)>",
+      }),
+    );
+    assert.equal(sent.messages[0].authorId, people[1].id);
+    assert.equal(sent.messages[0].authorName, "Pessoa 1");
+    assert.equal(sent.messages[0].text, "<img src=x onerror=alert(1)>");
+    const retry = data(
+      await request(guest, "chat-send", {
+        id,
+        messageId,
+        text: "<img src=x onerror=alert(1)>",
+      }),
+    );
+    assert.equal(retry.messages.length, 1);
+    assert.equal(
+      (
+        await request(guest, "chat-send", {
+          id,
+          messageId: crypto.randomUUID(),
+          text: "muito rápido",
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(outsider, "chat-send", {
+          id,
+          messageId: crypto.randomUUID(),
+          text: "invasor",
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(creator, "chat-send", {
+          id,
+          messageId: crypto.randomUUID(),
+          text: "a".repeat(2001),
+        })
+      ).ok,
+      false,
+    );
+    assert.equal(
+      (
+        await request(creator, "chat-send", {
+          id,
+          messageId: crypto.randomUUID(),
+          text: "x",
+          authorId: people[1].id,
+        })
+      ).ok,
+      false,
+    );
+    const memberChat = data(
+      await request(guest, "join", { name: "Pessoa 1", code: "RODADAE" }),
+    ).snapshot.widgets[0];
+    assert.equal(memberChat.messages.length, 1);
+    assert.equal(
+      (
+        await request(guest, "widget-structure", {
+          id,
+          revision: 1,
+          content: { ...chat, title: "Negado" },
+        })
+      ).ok,
+      false,
+    );
+    data(
+      await request(admin, "widget-permission", {
+        id,
+        participantId: people[1].id,
+        allowed: true,
+      }),
+    );
+    data(
+      await request(guest, "widget-structure", {
+        id,
+        revision: 2,
+        content: { ...chat, title: "Autorizado" },
+      }),
+    );
+    assert.equal(
+      (
+        await request(guest, "widget-permission", {
+          id,
+          allGuests: true,
+          allowed: true,
+        })
+      ).ok,
+      false,
+    );
+    data(
+      await request(admin, "widget-permission", {
+        id,
+        participantId: people[1].id,
+        allowed: false,
+      }),
+    );
+    assert.equal(
+      (
+        await request(guest, "widget-structure", {
+          id,
+          revision: 4,
+          content: chat,
+        })
+      ).ok,
+      false,
+    );
+    const timerId = crypto.randomUUID();
+    const timer = {
+      kind: "timer",
+      title: "Tempo",
+      blocks: [
+        {
+          id: crypto.randomUUID(),
+          kind: "timer",
+          label: "Tempo",
+          duration: 0,
+          elapsed: 0,
+          startedAt: null,
+        },
+      ],
+    };
+    assert.equal(
+      data(
+        await request(guest, "widget-create", { id: timerId, content: timer }),
+      ).pending,
+      true,
+    );
+    assert.equal(
+      app.rooms.rooms.get("RODADAE")!.widgets.entries.has(timerId),
+      false,
+    );
+    assert.equal(
+      (await request(guest, "widget-review", { id: timerId, approve: true }))
+        .ok,
+      false,
+    );
+    const otherGuestSnapshot = app.rooms.snapshot(
+      app.rooms.rooms.get("RODADAE")!,
+      people[4].id,
+    );
+    assert.deepEqual(otherGuestSnapshot.shareRequests, []);
+    data(await request(admin, "widget-review", { id: timerId, approve: true }));
+    assert.equal(
+      app.rooms.rooms.get("RODADAE")!.widgets.entries.get(timerId)?.owner,
+      people[1].id,
+    );
+    assert.equal(
+      (
+        await request(guest, "widget-operate", {
+          id: timerId,
+          operationId: crypto.randomUUID(),
+          operation: {
+            kind: "timer",
+            blockId: timer.blocks[0].id,
+            action: "start",
+            revision: 0,
+          },
+        })
+      ).ok,
+      false,
+    );
+    data(await request(guest, "widget-delete", { id: timerId }));
+    assert.equal((await request(guest, "widget-delete", { id })).ok, false);
+    data(await request(creator, "leave"));
+    assert.equal(app.rooms.rooms.get("RODADAE")!.creatorId, people[2].id);
+    assert.match(
+      app.rooms.rooms.get("RODADAE")!.notices.at(-1)!.text,
+      /Pessoa 2/,
+    );
+    data(
+      await request(admin, "role", {
+        participantId: people[1].id,
+        action: "transfer",
+      }),
+    );
+    assert.equal(app.rooms.rooms.get("RODADAE")!.creatorId, people[1].id);
+    data(await request(admin2, "widget-delete", { id }));
+    assert.equal(app.rooms.rooms.get("RODADAE")!.widgets.entries.size, 0);
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();

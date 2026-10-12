@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { Controller } from "../room/controller";
-import { freshKey } from "../id";
 
 export function NoteActions({
   engine,
@@ -17,7 +16,7 @@ export function NoteActions({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const sending = useRef(false);
-  const operation = useRef({ key: "", id: "" });
+
   useEffect(() => {
     setStatus("");
     setError("");
@@ -64,26 +63,6 @@ export function NoteActions({
             Salvar texto
           </button>
         )}
-        <button
-          className="text-button"
-          disabled={busy}
-          onClick={() => {
-            const key = JSON.stringify([label, value]);
-            if (operation.current.key !== key)
-              operation.current = { key, id: freshKey() };
-            void run(
-              () =>
-                engine.request("note-send", {
-                  id: operation.current.id,
-                  label,
-                  value,
-                }),
-              "Cópia enviada. Ela aparece em Notas recebidas na sala.",
-            );
-          }}
-        >
-          Enviar cópia para a sala
-        </button>
       </div>
       {status && <small role="status">{status}</small>}
       {error && <small role="alert">{error}</small>}

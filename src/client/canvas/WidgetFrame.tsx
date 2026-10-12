@@ -1,3 +1,4 @@
+import { canManageRoom } from "../../shared/permissions";
 import { canvasShortcuts } from "./shortcuts";
 import {
   memo,
@@ -91,7 +92,9 @@ export function WidgetFrame(props: Props) {
     !!widget.config.sharedId &&
     engine.view.snapshot?.widgets?.some(
       (shared) =>
-        shared.id === widget.config.sharedId && shared.owner === engine.view.id,
+        shared.id === widget.config.sharedId &&
+        (shared.owner === engine.view.id ||
+          canManageRoom(engine.view.snapshot, engine.view.id)),
     );
   const def = widgetRegistry[widget.type];
   const Icon = def?.icon || Grip;

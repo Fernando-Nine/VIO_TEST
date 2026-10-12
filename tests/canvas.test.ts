@@ -184,8 +184,8 @@ test("persistência remove publicações e widgets de outra sala, mantém conte�
   store.add(
     {
       id: "local",
-      type: "notes",
-      title: "Notas",
+      type: "timer",
+      title: "Tempo",
       config: {},
       state: { title: "rascunho" },
     },
@@ -215,7 +215,7 @@ test("persistência remove publicações e widgets de outra sala, mantém conte�
   assert.equal(restored.floating.length, 1);
 });
 test("layout corrompido e posições fora da tela não tornam o app inacessível", () => {
-  assert.equal(restoreCanvas({ schemaVersion: 9 }).schemaVersion, 1);
+  assert.equal(restoreCanvas({ schemaVersion: 9 }).schemaVersion, 2);
   const raw = newCanvas();
   raw.slots.push({ ...raw.slots[0] });
   assert.equal(restoreCanvas(raw).slots.length, 4);
@@ -354,4 +354,66 @@ test("fim de transmissão durante arraste não cria widget fantasma e foco prese
   assert.equal(store.getSnapshot().slots[0].widgetId, "video-1");
   assert.equal(store.getSnapshot().slots[1].offer?.id, "incoming");
   assert.equal(store.getSnapshot().widgets.length, 1);
+});
+
+test("rodada E: mescla só vazios contíguos da tira, preserva posições e divide sem perder identidade", () => {
+  const store = new CanvasStore();
+  const original = store.getSnapshot().slots.map((s) => s.id);
+  store.mergeSlots(original[0], original[1]);
+  assert.equal(store.getSnapshot().slots.length, 4);
+  store.mergeSlots(original[1], original[2]);
+  assert.equal(store.getSnapshot().slots.length, 3);
+  assert.deepEqual(store.getSnapshot().slots[1].span, { rows: 2, columns: 1 });
+  store.mergeSlots(original[1], original[3]);
+  assert.equal(store.getSnapshot().slots.length, 2);
+  assert.deepEqual(store.getSnapshot().slots[1].span, { rows: 3, columns: 1 });
+  const saved = restoreCanvas(persistentCanvas(store.getSnapshot()));
+  assert.deepEqual(saved.slots[1].span, { rows: 3, columns: 1 });
+  store.add(
+    { id: "timer-span", type: "timer", title: "Tempo", config: {} },
+    original[1],
+  );
+  store.splitSlot(original[1]);
+  assert.equal(store.getSnapshot().slots.length, 2);
+  store.remove("timer-span");
+  store.splitSlot(original[1]);
+  assert.deepEqual(
+    store.getSnapshot().slots.map((s) => s.id),
+    original,
+  );
+  store.preset("grid-4");
+  store.mergeSlots(original[1], original[2]);
+  assert.equal(store.getSnapshot().slots.length, 4);
+});
+
+test("rodada E: trocar orientação preserva spans, voltar ao automático divide mantendo widget", () => {
+  const store = new CanvasStore();
+  const ids = store.getSnapshot().slots.map((s) => s.id);
+  store.mergeSlots(ids[1], ids[2]);
+  store.add({ id: "span", type: "timer", title: "Tempo", config: {} }, ids[1]);
+  store.preset("strip-top");
+  assert.equal(store.getSnapshot().slots.length, 3);
+  assert.deepEqual(store.getSnapshot().slots[1].span, { rows: 2, columns: 1 });
+  store.preset("grid-4");
+  assert.equal(store.getSnapshot().slots.length, 4);
+  assert.equal(store.getSnapshot().slots[1].widgetId, "span");
+  assert.ok(store.getSnapshot().slots.every((s) => !s.span));
+});
+
+test("rodada E: migração remove Notas canceladas e mantém cronômetro individual", () => {
+  const state = newCanvas();
+  state.widgets = [
+    { id: "old-note", type: "notes", title: "Notas", config: {} },
+    { id: "timer", type: "timer", title: "Tempo", config: {} },
+  ];
+  state.slots[0].widgetId = "old-note";
+  state.slots[1].widgetId = "timer";
+  const restored = restoreCanvas({ ...state, schemaVersion: 1 });
+  assert.deepEqual(
+    restored.widgets.map((w) => w.id),
+    ["timer"],
+  );
+  assert.equal(restored.slots[0].widgetId, undefined);
+  assert.equal(restored.slots[1].widgetId, "timer");
+  assert.equal(restored.schemaVersion, 2);
 });

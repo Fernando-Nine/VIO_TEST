@@ -141,7 +141,7 @@ export function useCanvasGeometry(state: CanvasState) {
     };
   }, [measure]);
   const signature = state.slots
-    .map((s) => `${s.id}:${s.widgetId || ""}:${s.offer?.id || ""}`)
+    .map((s) => `${s.id}:${s.widgetId || ""}:${s.offer?.id || ""}:${s.span?.rows || 1}:${s.span?.columns || 1}`)
     .join("|");
   useLayoutEffect(measure, [
     measure,

@@ -6,15 +6,18 @@ import {
   type SharedWidget,
   type WidgetContent,
   type WidgetOperation,
+  type ChatMessage,
 } from "../shared/widgets";
 
 /** Room-scoped ephemeral state. Only Rooms supplies the authenticated actor. */
 export class RoomWidgets {
   readonly entries = new Map<string, SharedWidget>();
   private operations = new Map<string, number>();
+  private lastMessages = new Map<string, number>();
   clear() {
     this.entries.clear();
     this.operations.clear();
+    this.lastMessages.clear();
   }
   list() {
     return [...this.entries.values()];
@@ -49,11 +52,11 @@ export class RoomWidgets {
     this.entries.set(id, widget);
     return widget;
   }
-  private owned(owner: string, id: string) {
+  private owned(owner: string, id: string, authorized = false) {
     const widget = this.entries.get(id);
     if (!widget)
       throw new Fault("NOT_FOUND", "Este widget não está mais disponível.");
-    if (widget.owner !== owner)
+    if (!authorized && widget.owner !== owner)
       throw new Fault(
         "FORBIDDEN",
         "Somente o criador pode alterar a estrutura ou excluir este widget.",
@@ -65,8 +68,9 @@ export class RoomWidgets {
     id: string,
     revision: number,
     content: WidgetContent,
+    authorized = false,
   ) {
-    const current = this.owned(owner, id);
+    const current = this.owned(owner, id, authorized);
     if (content.kind && content.kind !== contentKind(current))
       throw new Fault(
         "INVALID_REQUEST",
@@ -86,9 +90,55 @@ export class RoomWidgets {
     this.entries.set(id, next);
     return next;
   }
-  remove(owner: string, id: string) {
-    this.owned(owner, id);
+  remove(owner: string, id: string, authorized = false) {
+    this.owned(owner, id, authorized);
     this.entries.delete(id);
+  }
+  message(id: string, message: ChatMessage) {
+    const current = this.entries.get(id);
+    if (!current || current.kind !== "chat")
+      throw new Fault("NOT_FOUND", "Este chat não está disponível.");
+    const messages = current.messages || [];
+    if (
+      messages.some(
+        (m) => m.id === message.id && m.authorId === message.authorId,
+      )
+    )
+      return current;
+    const key = message.authorId;
+    if (message.sentAt - (this.lastMessages.get(key) || 0) < 700)
+      throw new Fault(
+        "RATE_LIMIT",
+        "Espere um instante antes de enviar outra mensagem.",
+      );
+    this.lastMessages.set(key, message.sentAt);
+    const next = {
+      ...current,
+      revision: current.revision + 1,
+      messages: [...messages, message].slice(-100),
+    };
+    this.entries.set(id, next);
+    return next;
+  }
+  permission(id: string, participantId: string | undefined, allowed: boolean) {
+    const current = this.entries.get(id);
+    if (!current) throw new Fault("NOT_FOUND", "Widget indisponível.");
+    const next = participantId
+      ? {
+          ...current,
+          guestEditors: [
+            ...new Set([
+              ...(current.guestEditors || []).filter(
+                (id) => id !== participantId,
+              ),
+              ...(allowed ? [participantId] : []),
+            ]),
+          ],
+        }
+      : { ...current, allGuestsEdit: allowed };
+    next.revision++;
+    this.entries.set(id, next);
+    return next;
   }
   operate(
     actor: string,

@@ -1,6 +1,9 @@
 # VIO — pendências explicadas
 
-> Estado atual: candidata **2.7.1**, liberação em andamento. VIO/main será a produção; VIO_TEST/main e vio-test recebem as prévias seguintes. Fase 2 permanece exclusiva do vio-test. [Decisões e validação](RODADA-E.md). As referências a rc.5/2.6.0 abaixo são históricas e foram superadas pela rodada E.
+> Estado atual em 11/10/2026: **VIO principal 2.7.1 publicado e verificado** em https://vio-g71x.onrender.com/. Código novo em Fernando-Nine/VIO (196ba88), sem force push. **2.8.0-rc.1 é candidata exclusiva do vio-test**: Chat, papéis, notificações, mescla da tira e automático centralizado. E8, E10 e interface E12 aguardam aprovação. Referências antigas abaixo são histórico; prevalece docs/RODADA-E.md.
+
+## Histórico anterior à rodada E
+
 
 Atualizado em 11/10/2026. A prévia **2.7.0-rc.5** pode ser experimentada em
 https://vio-test-canvas-preview.onrender.com/. O trabalho está preservado no

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { widgetSchemas, type SharedWidget, type NoteCopy } from "./widgets";
+import {
+  widgetSchemas,
+  type SharedWidget,
+  type ShareRequest,
+  type RoomNotice,
+} from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
@@ -32,6 +37,12 @@ export const schemas = {
         .regex(/^[^\p{Cc}\p{Cf}]+$/u),
       code: roomCode.optional(),
       color: participantColor.optional(),
+    })
+    .strict(),
+  role: z
+    .object({
+      participantId: uuid,
+      action: z.enum(["promote", "revoke", "transfer"]),
     })
     .strict(),
   leave: z.object({}).strict(),
@@ -112,6 +123,8 @@ export interface Participant {
   publications: Publication[];
   /** Server-measured signaling round trip, not media latency. */
   pingMs?: number;
+  role?: "creator" | "admin" | "guest";
+  avatarUrl?: string;
 }
 export interface Snapshot {
   epoch: string;
@@ -120,7 +133,8 @@ export interface Snapshot {
   serverTime: number;
   participants: Participant[];
   widgets?: SharedWidget[];
-  noteCopies?: NoteCopy[];
+  shareRequests?: ShareRequest[];
+  notices?: RoomNotice[];
   creatorId?: string;
   /** Explicit main screen subscriptions, scoped to members of this room. */
   screenViewers?: Record<string, string[]>;

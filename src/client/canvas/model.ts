@@ -1,3 +1,4 @@
+import { rectangularUnion } from "./slot-spans";
 import { freshKey } from "../id";
 
 export const presetNames = {
@@ -33,6 +34,8 @@ export interface Slot {
   id: string;
   widgetId?: string;
   offer?: Offer;
+  span?: { rows: number; columns: number };
+  mergedIds?: string[];
 }
 export interface Placement {
   x: number;
@@ -48,7 +51,7 @@ export interface Floating {
   parked?: boolean;
 }
 export interface CanvasState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   revision: number;
   preset: Preset;
   ratio: number;
@@ -64,7 +67,7 @@ export interface CanvasState {
 export const newSlot = (): Slot => ({ id: freshKey() });
 export function newCanvas(): CanvasState {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     revision: 0,
     preset: "strip-left",
     ratio: 0.7,
@@ -78,6 +81,8 @@ export function newCanvas(): CanvasState {
     hidden: [],
   };
 }
+export const slotUnits = (slot: Slot) =>
+  (slot.span?.rows || 1) * (slot.span?.columns || 1);
 export const isStrip = (state: CanvasState) =>
   state.preset.startsWith("strip-");
 /** The large slot is authoritative, including after restoring a saved layout. */
@@ -104,7 +109,9 @@ export const canRemoveSlot = (state: CanvasState, id: string) => {
     !!slot &&
     !slot.widgetId &&
     !slot.offer &&
-    state.slots.length > (isStrip(state) ? 4 : 1)
+    (isStrip(state)
+      ? state.slots.reduce((n, s) => n + slotUnits(s), 0) - slotUnits(slot) >= 4
+      : state.slots.length > 1)
   );
 };
 export function fitted(rect: Placement): Placement {
@@ -128,7 +135,9 @@ export class CanvasStore {
     this.value = newCanvas();
     if (persist)
       try {
-        const raw = localStorage.getItem("vio:canvas:v1");
+        const raw =
+          localStorage.getItem("vio:canvas:v2") ||
+          localStorage.getItem("vio:canvas:v1");
         if (raw && raw.length < 150000)
           this.value = restoreCanvas(JSON.parse(raw));
       } catch {
@@ -148,7 +157,7 @@ export class CanvasStore {
     if (this.persist)
       try {
         localStorage.setItem(
-          "vio:canvas:v1",
+          "vio:canvas:v2",
           JSON.stringify(persistentCanvas(next)),
         );
       } catch {
@@ -158,12 +167,23 @@ export class CanvasStore {
   }
   preset(preset: Preset) {
     this.change((s) => {
+      // Leaving the strip restores its component cells without discarding content.
+      if (!preset.startsWith("strip-"))
+        s.slots = s.slots.flatMap((slot) => [
+          { ...slot, span: undefined, mergedIds: undefined },
+          ...Array.from({ length: slotUnits(slot) - 1 }, (_, i) => ({
+            id: slot.mergedIds?.[i] || freshKey(),
+          })),
+        ]);
       s.preset = preset;
       s.single = false;
       let count = preset.startsWith("grid-")
         ? Number(preset.slice(5))
         : isStrip(s)
-          ? Math.max(4, s.slots.length)
+          ? Math.max(
+              4,
+              s.slots.reduce((n, slot) => n + slotUnits(slot), 0),
+            )
           : 4;
       // A preset must not silently hide an accepted widget or turn it into an overlay.
       count = Math.max(
@@ -173,7 +193,12 @@ export class CanvasStore {
           0,
         ),
       );
-      while (s.slots.length < count) s.slots.push(newSlot());
+      while (
+        (isStrip(s)
+          ? s.slots.reduce((n, slot) => n + slotUnits(slot), 0)
+          : s.slots.length) < count
+      )
+        s.slots.push(newSlot());
       if (!isStrip(s)) {
         s.slots = s.slots.slice(0, count);
       } else {
@@ -183,6 +208,53 @@ export class CanvasStore {
       if (preset.startsWith("grid-"))
         s.preset = `grid-${Math.min(6, count)}` as Preset;
       s.focusId = focusedWidgetId(s);
+    });
+  }
+  mergeSlots(firstId: string, secondId: string) {
+    this.change((s) => {
+      if (!isStrip(s)) return;
+      const index = s.slots.findIndex((slot) => slot.id === firstId);
+      const first = s.slots[index],
+        second = s.slots[index + 1];
+      if (
+        index < 1 ||
+        !second ||
+        second.id !== secondId ||
+        first.widgetId ||
+        first.offer ||
+        second.widgetId ||
+        second.offer
+      )
+        return;
+      const a = slotUnits(first),
+        b = slotUnits(second);
+      const rectangle = rectangularUnion([
+        { row: 0, column: 0, rows: a, columns: 1 },
+        { row: a, column: 0, rows: b, columns: 1 },
+      ]);
+      if (!rectangle || a + b > 3) return;
+      first.span = { rows: rectangle.rows, columns: rectangle.columns };
+      first.mergedIds = [
+        ...(first.mergedIds || []),
+        second.id,
+        ...(second.mergedIds || []),
+      ];
+      s.slots.splice(index + 1, 1);
+    });
+  }
+  splitSlot(id: string) {
+    this.change((s) => {
+      const index = s.slots.findIndex((slot) => slot.id === id),
+        slot = s.slots[index];
+      if (!slot || slot.widgetId || slot.offer || slotUnits(slot) === 1) return;
+      s.slots.splice(
+        index,
+        1,
+        { id: slot.id },
+        ...Array.from({ length: slotUnits(slot) - 1 }, (_, i) => ({
+          id: slot.mergedIds?.[i] || freshKey(),
+        })),
+      );
     });
   }
   addSlot() {
@@ -428,6 +500,7 @@ export function persistentCanvas(value: CanvasState): CanvasState {
     pending: [],
     slots: value.slots.map((s) => ({
       id: s.id,
+      ...(s.span ? { span: s.span, mergedIds: s.mergedIds } : {}),
       ...(s.widgetId && ids.has(s.widgetId) ? { widgetId: s.widgetId } : {}),
     })),
     floating: value.floating.filter((f) => ids.has(f.widgetId)),
@@ -437,7 +510,7 @@ export function restoreCanvas(raw: unknown): CanvasState {
   if (!raw || typeof raw !== "object") return newCanvas();
   const s = raw as CanvasState;
   if (
-    s.schemaVersion !== 1 ||
+    ![1, 2].includes(s.schemaVersion) ||
     !Object.hasOwn(presetNames, s.preset) ||
     !Array.isArray(s.slots) ||
     !s.slots.length ||
@@ -452,6 +525,7 @@ export function restoreCanvas(raw: unknown): CanvasState {
       w &&
       typeof w.id === "string" &&
       typeof w.type === "string" &&
+      w.type !== "notes" &&
       typeof w.title === "string" &&
       w.config &&
       typeof w.config === "object" &&
@@ -464,11 +538,36 @@ export function restoreCanvas(raw: unknown): CanvasState {
   const ids = new Set(widgets.map((w) => w.id));
   const slots = s.slots.map((t) => {
     const id = typeof t?.id === "string" ? t.id : freshKey();
+    const units =
+      t?.span &&
+      Number.isSafeInteger(t.span.rows) &&
+      Number.isSafeInteger(t.span.columns) &&
+      t.span.rows > 0 &&
+      t.span.columns > 0
+        ? t.span.rows * t.span.columns
+        : 1;
+    const span =
+      s.preset.startsWith("strip-") &&
+      t !== s.slots[0] &&
+      units > 1 &&
+      units <= 3
+        ? {
+            span: { rows: units, columns: 1 },
+            mergedIds: Array.from({ length: units - 1 }, (_, i) => {
+              const id = t.mergedIds?.[i];
+              return typeof id === "string" &&
+                !s.slots.some((slot) => slot.id === id) &&
+                t.mergedIds?.indexOf(id) === i
+                ? id
+                : freshKey();
+            }),
+          }
+        : {};
     if (t?.widgetId && ids.has(t.widgetId) && !placed.has(t.widgetId)) {
       placed.add(t.widgetId);
-      return { id, widgetId: t.widgetId };
+      return { id, ...span, widgetId: t.widgetId };
     }
-    return { id };
+    return { id, ...span };
   });
   if (new Set(slots.map((t) => t.id)).size !== slots.length) return newCanvas();
   const floating: Floating[] = [];
@@ -492,7 +591,7 @@ export function restoreCanvas(raw: unknown): CanvasState {
         rect: { x: 0.5, y: 0.1, width: 0.4, height: 0.4 },
       });
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     revision: 0,
     preset: s.preset,
     ratio: Math.max(
