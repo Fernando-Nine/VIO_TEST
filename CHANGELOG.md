@@ -2,6 +2,16 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.8.0-rc.2] - 2026-10-12
+
+Prévia · Novos widgets da sessão
+
+### Somente no vio-test
+- Votação, Dados, Sorteador e Tarefas + agenda: uso individual ou compartilhado, edição por permissão e modo compacto.
+- Dados com comandos, guia em português e mini-histórico atribuído a quem rolou. Sorteio com pesos e retirada opcional de resultados.
+- Votação com opções, duração e um voto por pessoa. Agenda com responsáveis, etapas e tempo compartilhado.
+- Chat mostra o horário ao lado do nome, acima do texto da mensagem.
+
 ## [2.8.0-rc.1] - 2026-10-11
 
 Prévia · Chat, papéis e espaços mesclados

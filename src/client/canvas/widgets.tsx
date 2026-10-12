@@ -20,6 +20,7 @@ import {
   PencilRuler,
   Timer,
   Blocks,
+  Dice5, Vote, Shuffle, ListTodo,
   type LucideIcon,
 } from "lucide-react";
 import type { Controller } from "../room/controller";
@@ -30,6 +31,8 @@ import { RoomLimit } from "../components/RoomStatus";
 import { screenResolutions } from "../../shared/protocol";
 import { CustomWidget, createContent, widgetValue } from "./CustomWidget";
 import { ChatWidget } from "./ChatWidget";
+import { ModuleWidget, createModule, moduleValue } from "./ModuleWidget";
+import { isModule } from "../../shared/room-modules";
 import { freshKey } from "../id";
 import type { WidgetInstance } from "./model";
 
@@ -501,6 +504,7 @@ const definition = (
       canvas: PencilRuler,
       timer: Timer,
       custom: Blocks,
+      poll: Vote, dice: Dice5, random: Shuffle, tasks: ListTodo,
     } as Record<string, LucideIcon>
   )[id],
   render,
@@ -565,6 +569,10 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     ChatWidget,
   ),
   canvas: definition("canvas", "Canvas", "Em breve", () => null),
+  poll: definition("poll", "Votação", "Pergunta, opções e prazo para decidir em conjunto.", ModuleWidget),
+  dice: definition("dice", "Dados", "Comandos, resultados e histórico com autoria.", ModuleWidget),
+  random: definition("random", "Sorteador", "Opções com pesos e retirada de sorteados.", ModuleWidget),
+  tasks: definition("tasks", "Tarefas + agenda", "Etapas, responsáveis e tempo da sessão.", ModuleWidget),
   timer: definition(
     "timer",
     "Cronômetro",
@@ -587,12 +595,14 @@ export function createWidget(type: string): WidgetInstance {
     type,
     title: def.title,
     config: {},
+    ...(isModule(type) ? {state:createModule(type)} : {}),
     ...(["notes", "timer", "custom"].includes(type)
       ? { state: createContent(type) }
       : {}),
   };
 }
 export function titleOf(widget: WidgetInstance, engine: Controller) {
+  if (isModule(widget.type)) return moduleValue(widget,engine)?.title || widget.title;
   if (widget.type === "screen") {
     const info = engine.screenInfo(widget.config.publicationId);
     return `${info?.name || "Participante"}${info?.publication.owner === engine.view.id ? " · minha prévia" : ""}`;

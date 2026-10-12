@@ -1,37 +1,39 @@
 # Rodada E consolidada
 
-## Estado em 12/10/2026
+## Estado em 12/10/2026 — continuação
 
-**Liberação concluída:** VIO 2.7.1 em https://vio-g71x.onrender.com/,
-serviço Render `vio` (`srv-db5mqljrjlhs739k2bf0`), plano Free/Virginia.
-Fernando-Nine/VIO recebeu a nova base por commit normal `196ba88`, filho do
-último commit antigo; nenhum force push. Deploy live, `/healthz` HTTP 200 com
-versão 2.7.1, criação/saída de sala conferidas, sem erros nos logs consultados.
-O vio-test recebeu a mesma base em `72974f0`. VIO_2 e canvas-preview intactos.
+**VIO principal 2.7.1:** recriado após exclusão do serviço anterior pelo usuário.
+Endereço exato https://vio-quest.onrender.com, serviço `srv-db6ksjom7kps73ba8s5g`,
+Free/Virginia, Fernando-Nine/VIO/main `196ba88`. Deploy live e /healthz HTTP 200;
+sem erros nos logs consultados. Novo segredo de sessão gerado no servidor.
+Nenhuma funcionalidade da Fase 2 foi promovida para produção.
 
-**Fase 2:** 2.8.0-rc.1 publicada só em VIO_TEST/main e vio-test (30128a1).
-E3/E4/E5/E7/E6/E9 implementados; build e TypeScript passaram. 27 testes direcionados
-(canvas, rolagem, spans, histórico, contraste) e 5 cenários de servidor passaram.
-Os testes antigos de Notas foram ajustados ao cancelamento de E3. Deploy live e
-/healthz 200. Duas sessões confirmaram autoria, texto escapado, histórico, abrir
-chat por notificação, permissões de convidado e promoção a administrador. Canvas
-está desabilitado e Notas saiu do catálogo. Grid de cinco: três + dois centralizados.
-Aceite encontrou correções localizadas: manter foco ao enviar por Enter, declarar
-a cor do texto no parágrafo e impedir que a animação global desloque a junção
-durante o clique. Correções passam por nova conferência visual antes do fechamento.
-Não publicar a Fase 2 em produção.
+**vio-test:** 2.8.0-rc.1 publicada em `56b0f21`. Chat entre duas sessões,
+histórico para quem chega, texto escapado, promoção de administrador e notificações
+conferidos. Cinco slots formam 3 + 2 centralizados. Mesclagem e divisão conferidas;
+o clique foi corrigido separando a centralização da animação global dos botões.
+Enter preserva foco no campo. Texto do chat #F1F2FA confirmado no navegador:
+contraste mínimo 13,11:1 nas cinco superfícies existentes.
 
-Chat mantém somente as últimas 100 mensagens de cada chat em memória, também
-entregues a quem chega depois. Texto #F1F2FA: contraste mínimo medido 13,11:1
-contra as cinco superfícies escuras existentes (mínimo exigido 4,5:1).
-Papéis, edição e aprovação são verificados no servidor; pedidos só aparecem no
-snapshot do autor e dos responsáveis. E12 continua sem interface.
+**Nova candidata 2.8.0-rc.2:** pedido de novos widgets em 12/10 autoriza implementar
+E8 no vio-test: Votação, Dados, Sorteador e Tarefas + agenda. Configurações editáveis,
+instâncias individuais e compartilhamento com aprovação E7. Votos, sorteios e
+rolagens são participação; edição/configuração, tarefas e agenda obedecem às
+permissões. Rolagens/sorteios têm autoria, horário e resultado gerados no servidor.
+Guia discreto em português e parser próprio sem eval: operações, repetições,
+manter/descartar, explosões, Fate, comparações e Burning Wheel. Sintaxes c/aro/daro/
+taro não implementadas e explicitamente informadas no guia. Até 100 dados por grupo,
+20 repetições, 500 resultados por comando e histórico de 20 comandos.
+Chat: horário ao lado do nome; mensagens agrupadas mantêm horário acima do texto.
 
-E9: persistência v2 migra v1 e guarda spans e identidades dos espaços mesclados.
-A tira conta cada posição para roda/setas/snap, com até três posições vazias por
-mescla; foco excluído. O modelo de união retangular suporta 2×2 + vizinhos e
-rejeita lacunas/sobreposição. A interface bidimensional depende do grid E10,
-ainda não aprovado. No automático não há mesclas; última linha centralizada.
+Verificação direcionada: sete cenários de parser/estado mais três cenários reais
+Socket.IO (chat/permissões/regressão e novos módulos) passaram. Build e TypeScript
+passaram. Validação visual da nova candidata será registrada após publicação.
+Não foi executada suíte completa, nem validação de mídia em aparelhos físicos.
+
+E9: persistência v2 migra v1, guarda spans e identidades dos slots mesclados.
+Tira conta N posições para roda/setas/snap; foco não mescla. União retangular suporta
+2×2 e vizinhos; interface bidimensional depende de E10, ainda não aprovado.
 
 ## Fase 1
 
@@ -79,11 +81,11 @@ grid. Na tira, foco excluído e até três posições contíguas. Automático n�
 última linha centralizada (cinco = três + dois).
 E10: implementação aguarda aprovação dos limites abaixo.
 
-Não implementar nesta rodada: módulos E8, Canvas funcional, navegador da comunidade,
+Não implementar nesta rodada: Canvas funcional, navegador da comunidade,
 interface E12, upload, banco ou contas. Novos widgets precisam de modo compacto na tira.
 Testar somente alterações; não executar suíte completa.
 
-## E8 — especificação para aprovação (nenhum módulo implementado)
+## E8 — especificação aprovada para implementação em 12/10/2026
 
 Regra comum: públicos são adicionados/editados por criador e administradores;
 convidados alteram só com permissão E7. Individuais são criados/editados pelo próprio usuário.
@@ -142,12 +144,10 @@ permissões operacionais; autoridade valida publicação e comandos de mídia.
 Uma tentativa negada deve explicar em português qual permissão está desativada,
 sem solicitar captura nem fingir sucesso. Exemplo: “A câmera está desativada para
 convidados nesta sala. Peça autorização ao criador ou a um administrador.”
-A interface E12 e o módulo Dados continuam aguardando a etapa de aprovação prevista.
+A interface E12 continua aguardando aprovação. Dados foi autorizado na continuação de 12/10.
 
-## Endereço do VIO — 12/10/2026
+## Endereço do VIO — resolvido em 12/10/2026
 
-O Render atribuiu `vio-g71x.onrender.com` ao serviço `vio`. Preferência autorizada:
-`vio.onrender.com`, ou `vio-quest.onrender.com` se o primeiro estiver indisponível.
-O conector atual não expõe edição do nome/subdomínio e o painel pede login.
-Ainda não houve alteração nem confirmação de disponibilidade dos nomes.
-Não criar serviço duplicado nem apagar o serviço estável para tentar nomes.
+O usuário excluiu o serviço antigo. O novo serviço foi criado com a alternativa
+autorizada `vio-quest`, e o Render retornou exatamente `vio-quest.onrender.com`.
+Não foi necessário login no navegador. VIO_TEST, VIO_2 e canvas-preview não foram recriados.

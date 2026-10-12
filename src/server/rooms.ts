@@ -219,6 +219,7 @@ export class Rooms {
     const rates: Record<Action, number> = {
       role: 20,
       "chat-send": 45,
+      "module-interact": 60,
       "widget-review": 30,
       "widget-permission": 30,
       "widget-create": 12,
@@ -426,6 +427,13 @@ export class Rooms {
       } else target.role = data.action === "promote" ? "admin" : "guest";
       this.broadcast(room);
       return {};
+    }
+    if (action === "module-interact") {
+      const current=room.widgets.entries.get(data.id);
+      if (["reset","task","session","poll-control"].includes(data.operation.kind) && !editable(current)) deny();
+      const widget=room.widgets.interact({id:m.id,name:m.name},data.id,data.operationId,data.operation);
+      this.io.to(room.code).emit("widget-updated",{id:data.id,widget});
+      return widget;
     }
     if (action === "chat-send") {
       const widget = room.widgets.message(data.id, {

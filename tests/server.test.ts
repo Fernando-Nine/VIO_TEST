@@ -5,6 +5,8 @@ import { io, type Socket } from "socket.io-client";
 import { createApp } from "../src/server/app";
 import { readConfig } from "../src/server/config";
 import { verifyToken, issueToken } from "../src/server/security";
+import { defaultModule } from "../src/shared/room-modules";
+import type { SharedWidget } from "../src/shared/widgets";
 import type {
   Reply,
   Snapshot,
@@ -1721,4 +1723,55 @@ test("rodada E: chat autenticado, permissões, pedidos e sucessão por administr
     sockets.forEach((s) => s.disconnect());
     await app.close();
   }
+});
+
+test("novos widgets: participação, autoria, idempotência e edição autorizadas no servidor", async () => {
+  const app=await server(), sockets:Socket[]=[];
+  try {
+    const sessions=await Promise.all([session(app.url),session(app.url),session(app.url)]);
+    for(const s of sessions) sockets.push(await connect(app.url,s.token));
+    data(await request(sockets[0],"join",{code:"MODULEQA",name:"Criador"}));
+    data(await request(sockets[1],"join",{code:"MODULEQA",name:"Convidado"}));
+    data(await request(sockets[2],"join",{code:"OUTSIDER",name:"Fora"}));
+    const pollId=crypto.randomUUID(), poll=defaultModule("poll",()=>crypto.randomUUID());
+    if(poll.kind!=="poll")assert.fail();
+    const content={kind:"poll",title:"Decisão",blocks:[],module:poll};
+    const pending=data(await request(sockets[1],"widget-create",{id:pollId,content}));
+    assert.equal(pending.pending,true);
+    data(await request(sockets[0],"widget-review",{id:pollId,approve:true}));
+    const interact=(socket:Socket,id:string,operation:unknown,operationId=crypto.randomUUID())=>request<SharedWidget>(socket,"module-interact",{id,operation,operationId});
+    assert.equal((await interact(sockets[1],pollId,{kind:"poll-control",action:"start",revision:0})).ok,false);
+    data(await interact(sockets[0],pollId,{kind:"poll-control",action:"start",revision:0}));
+    const voted=data(await interact(sockets[1],pollId,{kind:"vote",optionId:poll.options[0].id}));
+    assert.equal(voted.moduleState?.votes?.[sessions[1].id],poll.options[0].id);
+    assert.equal((await interact(sockets[2],pollId,{kind:"vote",optionId:poll.options[0].id})).ok,false);
+    assert.equal((await request(sockets[1],"widget-structure",{id:pollId,revision:voted.revision,content})).ok,false);
+    data(await request(sockets[0],"widget-permission",{id:pollId,participantId:sessions[1].id,allowed:true}));
+    const snap=data(await request(sockets[0],"join",{code:"MODULEQA",name:"Criador"})).snapshot as Snapshot;
+    const current=snap.widgets!.find(w=>w.id===pollId)!;
+    const edited=data(await request<SharedWidget>(sockets[1],"widget-structure",{id:pollId,revision:current.revision,content:{...content,module:{...poll,question:"Nova pergunta"}}}));
+    assert.deepEqual(edited.moduleState,{});
+    const diceId=crypto.randomUUID();
+    data(await request(sockets[0],"widget-create",{id:diceId,content:{kind:"dice",title:"Dados",blocks:[],module:defaultModule("dice",()=>crypto.randomUUID())}}));
+    const operationId=crypto.randomUUID(), operation={kind:"roll",expression:"2d6+3"};
+    const rolled=data(await interact(sockets[1],diceId,operation,operationId));
+    const repeated=data(await interact(sockets[1],diceId,operation,operationId));
+    assert.deepEqual(repeated.moduleState,rolled.moduleState);
+    assert.equal(rolled.moduleState?.history?.length,1);
+    assert.equal(rolled.moduleState?.history?.[0].authorId,sessions[1].id);
+    assert.equal(rolled.moduleState?.history?.[0].authorName,"Convidado");
+    assert.ok(Number(rolled.moduleState?.history?.[0].label)>=5);
+    assert.ok(Number(rolled.moduleState?.history?.[0].label)<=15);
+    assert.equal((await interact(sockets[1],diceId,{...operation,authorId:sessions[0].id})).ok,false);
+    assert.equal((await interact(sockets[1],diceId,operation)).ok,false);
+    assert.equal((await interact(sockets[1],diceId,{kind:"reset",revision:rolled.revision})).ok,false);
+    assert.equal((await interact(sockets[2],diceId,operation)).ok,false);
+    const taskId=crypto.randomUUID(),tasks=defaultModule("tasks",()=>crypto.randomUUID());
+    if(tasks.kind!=="tasks")assert.fail();
+    data(await request(sockets[0],"widget-create",{id:taskId,content:{kind:"tasks",title:"Sessão",blocks:[],module:tasks}}));
+    assert.equal((await interact(sockets[1],taskId,{kind:"task",itemId:tasks.items[0].id,done:true,revision:0})).ok,false);
+    const done=data(await interact(sockets[0],taskId,{kind:"task",itemId:tasks.items[0].id,done:true,revision:0}));
+    assert.ok(done.moduleState?.done?.[tasks.items[0].id]);
+    assert.equal((await interact(sockets[0],taskId,{kind:"session",action:"start",revision:0})).ok,false);
+  } finally {sockets.forEach(s=>s.disconnect());await app.close();}
 });

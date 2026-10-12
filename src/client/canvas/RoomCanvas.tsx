@@ -57,6 +57,8 @@ import { useStripInput, stripStops } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
+import { createModule } from "./ModuleWidget";
+import { isModule, type ModuleKind } from "../../shared/room-modules";
 
 const plugins = (
   defaults: Parameters<
@@ -229,6 +231,7 @@ export function RoomCanvas(props: Props) {
   const [catalog, setCatalog] = useState<string | null>(null);
   const [catalogTab, setCatalogTab] = useState("native");
   const [communityNotice, setCommunityNotice] = useState(false);
+  const [moduleChoice, setModuleChoice] = useState<ModuleKind | null>(null);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -486,12 +489,13 @@ export function RoomCanvas(props: Props) {
     focusHeader(id);
     setCatalog(null);
   }
-  async function addWidget(type: string) {
-    if (type === "chat") {
+  async function addWidget(type: string, scope?: "room" | "individual") {
+    if (isModule(type) && !scope) {setModuleChoice(type); return;}
+    if (type === "chat" || (isModule(type) && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
           id: freshKey(),
-          content: { kind: "chat", title: "Chat", blocks: [] },
+          content: isModule(type) ? createModule(type) : { kind: "chat", title: "Chat", blocks: [] },
         });
         engine.receiveSharedWidget(widget);
         openShared(widget);
@@ -501,7 +505,7 @@ export function RoomCanvas(props: Props) {
       return;
     }
     const existing =
-      !["custom", "notes", "timer"].includes(type) &&
+      !["custom", "notes", "timer"].includes(type) && !isModule(type) &&
       store.getSnapshot().widgets.find((w) => w.type === type);
     if (existing) {
       focus(existing.id);
@@ -1392,6 +1396,15 @@ export function RoomCanvas(props: Props) {
           )}
         </Dialog>
       )}
+      {catalog && moduleChoice && <Dialog title={widgetRegistry[moduleChoice].title} centered close={()=>setModuleChoice(null)}>
+        <p>Escolha onde usar este widget.</p>
+        <div className="module-scope">
+          <button className="primary" disabled={!canManageRoom(snapshot,engine.view.id)} onClick={()=>{const type=moduleChoice;setModuleChoice(null);void addWidget(type,"room");}}>Adicionar à sala</button>
+          <button className="secondary" onClick={()=>{const type=moduleChoice;setModuleChoice(null);void addWidget(type,"individual");}}>Só para mim</button>
+        </div>
+        {!canManageRoom(snapshot,engine.view.id) && <p className="field-note">Só o criador e administradores adicionam diretamente à sala. Você pode criar um individual e pedir para compartilhar.</p>}
+        <p className="field-note">Na sala, cada pessoa recebe um convite para adicionar ao próprio layout.</p>
+      </Dialog>}
       {catalog && communityNotice && (
         <Dialog
           title="Widgets personalizados"

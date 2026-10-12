@@ -1,4 +1,6 @@
 import { Fault } from "./security";
+import { randomInt } from "node:crypto";
+import { applyModuleAction, type ModuleActor, type ModuleAction } from "../shared/room-modules";
 import {
   operateWidget,
   contentKind,
@@ -86,7 +88,9 @@ export class RoomWidgets {
         "INVALID_REQUEST",
         "Cada bloco precisa de uma identidade única.",
       );
-    const next = { ...current, ...content, revision: current.revision + 1 };
+    const next = { ...current, ...content, revision: current.revision + 1,
+      ...(content.module && JSON.stringify(content.module) !== JSON.stringify(current.module) ? {moduleState:{}} : {}),
+    };
     this.entries.set(id, next);
     return next;
   }
@@ -139,6 +143,22 @@ export class RoomWidgets {
     next.revision++;
     this.entries.set(id, next);
     return next;
+  }
+  interact(actor:ModuleActor,id:string,operationId:string,operation:ModuleAction) {
+    const current=this.entries.get(id);
+    if(!current?.module) throw new Fault("NOT_FOUND","Widget indisponível.");
+    const key=`${actor.id}:${id}:${operationId}`;
+    if(this.operations.has(key)) return current;
+    const now=Date.now(), throttle=`module:${actor.id}`;
+    if((operation.kind==="roll" || operation.kind==="draw") && now-(this.lastMessages.get(throttle)||0)<700) throw new Fault("RATE_LIMIT","Espere um instante antes de tentar novamente.");
+    try {
+      const moduleState=applyModuleAction(current.module,current.moduleState||{},operation,actor,operationId,current.revision,now,randomInt);
+      const next={...current,moduleState,revision:current.revision+1};
+      this.entries.set(id,next); this.operations.set(key,now);
+      if(operation.kind==="roll" || operation.kind==="draw") this.lastMessages.set(throttle,now);
+      while(this.operations.size>4096) this.operations.delete(this.operations.keys().next().value!);
+      return next;
+    } catch(e) { throw new Fault("INVALID_REQUEST",e instanceof Error ? e.message : "Não foi possível concluir."); }
   }
   operate(
     actor: string,

@@ -79,14 +79,19 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
                 />
               )}
               <div>
-                {!grouped && <strong>{message.authorName}</strong>}
+                <div className="chat-message-heading">
+                  {!grouped && <strong>{message.authorName}</strong>}
+                  <time
+                    dateTime={new Date(message.sentAt).toISOString()}
+                    aria-label={`Enviada às ${new Date(message.sentAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+                  >
+                    {new Date(message.sentAt).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </time>
+                </div>
                 <p>{message.text}</p>
-                <time dateTime={new Date(message.sentAt).toISOString()}>
-                  {new Date(message.sentAt).toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </time>
               </div>
             </div>
           );
@@ -170,7 +175,11 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
             </label>
             <button className="primary">Salvar</button>
           </form>
-          {error && <p className="error-text" role="alert">{error}</p>}
+          {error && (
+            <p className="error-text" role="alert">
+              {error}
+            </p>
+          )}
           {manages && (
             <p className="field-note">
               As permissões de edição ficam em Pessoas na sala.

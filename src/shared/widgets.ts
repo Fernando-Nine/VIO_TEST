@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { moduleConfig, moduleAction, isModule, validModule, type ModuleState } from "./room-modules";
 
 const identifier = z.string().uuid();
 const label = z.string().trim().min(1).max(64);
@@ -34,12 +35,15 @@ export const widgetBlock = z.discriminatedUnion("kind", [
 ]);
 export const widgetContent = z
   .object({
-    kind: z.enum(["custom", "notes", "timer", "chat"]).optional(),
+    kind: z.enum(["custom", "notes", "timer", "chat", "poll", "dice", "random", "tasks"]).optional(),
     title: label,
     blocks: z.array(widgetBlock).max(6),
+    module: moduleConfig.optional(),
   })
   .strict()
   .refine((content) => {
+    if (isModule(content.kind)) return content.blocks.length === 0 && content.module?.kind === content.kind && validModule(content.module);
+    if (content.module) return false;
     if (content.kind === "chat") return content.blocks.length === 0;
     if (!content.blocks.length) return false;
     if (
@@ -54,7 +58,7 @@ export const widgetContent = z
               timer: "timer",
               chat: "text",
             } as const
-          )[content.kind!],
+          )[content.kind as "custom" | "notes" | "timer" | "chat"],
       )
     )
       return false;
@@ -69,7 +73,7 @@ export type WidgetBlock = z.infer<typeof widgetBlock>;
 export type WidgetContent = z.infer<typeof widgetContent>;
 export function contentKind(
   content: WidgetContent,
-): "custom" | "notes" | "timer" | "chat" {
+): NonNullable<WidgetContent["kind"]> {
   return (
     content.kind ||
     (content.blocks.every((b) => b.kind === "text")
@@ -102,6 +106,7 @@ export interface RoomNotice {
   createdAt: number;
 }
 export interface SharedWidget extends WidgetContent {
+  moduleState?: ModuleState;
   messages?: ChatMessage[];
   guestEditors?: string[];
   allGuestsEdit?: boolean;
@@ -149,6 +154,7 @@ export const widgetOperation = z.discriminatedUnion("kind", [
 ]);
 export type WidgetOperation = z.infer<typeof widgetOperation>;
 export const widgetSchemas = {
+  "module-interact": z.object({id:identifier,operationId:identifier,operation:moduleAction}).strict(),
   "chat-send": z
     .object({
       id: identifier,

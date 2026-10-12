@@ -7,9 +7,20 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.8.0-rc.1";
+export const version = "2.8.0-rc.2";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-12",
+  title: "Prévia · Novos widgets da sessão",
+  sections: [{title: "Somente no vio-test", items: [
+    "Votação, Dados, Sorteador e Tarefas + agenda: uso individual ou compartilhado, edição por permissão e modo compacto.",
+    "Dados com comandos, guia em português e mini-histórico atribuído a quem rolou. Sorteio com pesos e retirada opcional de resultados.",
+    "Votação com opções, duração e um voto por pessoa. Agenda com responsáveis, etapas e tempo compartilhado.",
+    "Chat mostra o horário ao lado do nome, acima do texto da mensagem.",
+  ]}],
+};
+const phaseTwoInitialRelease: Release = {
+  version: "2.8.0-rc.1",
   date: "2026-10-11",
   title: "Prévia · Chat, papéis e espaços mesclados",
   sections: [
@@ -350,6 +361,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  phaseTwoInitialRelease,
   followupRelease,
   roundEPhaseOneRelease,
   roundDRelease,
