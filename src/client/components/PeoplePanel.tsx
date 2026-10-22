@@ -1,6 +1,17 @@
 import { useState } from "react";
+import {
+  Crown,
+  KeyRound,
+  MoreHorizontal,
+  Palette,
+  ShieldCheck,
+  ShieldOff,
+} from "lucide-react";
 import { canManageRoom } from "../../shared/permissions";
+import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
+import { ContextMenu, type MenuItem } from "./ContextMenu";
+import { Dialog } from "./Dialog";
 import { ParticipantCard } from "./ParticipantCard";
 import { RoomLimit } from "./RoomStatus";
 
@@ -14,8 +25,17 @@ export function PeoplePanel({
   const members = engine.view.snapshot?.participants || [];
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [menu, setMenu] = useState<{
+    person: Participant;
+    at: { x: number; y: number };
+    origin: Element;
+  } | null>(null);
+  const [permissionsOf, setPermissionsOf] = useState<string | null>(null);
+  const [transferTo, setTransferTo] = useState<Participant | null>(null);
   const snapshot = engine.view.snapshot;
   const manages = canManageRoom(snapshot, engine.view.id);
+  const creator = snapshot?.creatorId === engine.view.id;
+  const widgets = snapshot?.widgets || [];
   async function run(
     action: Parameters<Controller["request"]>[0],
     data: unknown,
@@ -34,108 +54,110 @@ export function PeoplePanel({
       setBusy(false);
     }
   }
+  function actions(person: Participant): MenuItem[] {
+    if (person.id === engine.view.id)
+      return [{ label: "Minha cor", icon: Palette, run: editColor }];
+    const items: MenuItem[] = [];
+    if (creator)
+      items.push(
+        person.role === "admin"
+          ? {
+              label: "Revogar administrador",
+              icon: ShieldOff,
+              run: () =>
+                void run("role", {
+                  participantId: person.id,
+                  action: "revoke",
+                }),
+            }
+          : {
+              label: "Tornar administrador",
+              icon: ShieldCheck,
+              run: () =>
+                void run("role", {
+                  participantId: person.id,
+                  action: "promote",
+                }),
+            },
+      );
+    if (manages && person.role === "guest" && widgets.length)
+      items.push({
+        label: "Permissões de edição",
+        icon: KeyRound,
+        run: () => setPermissionsOf(person.id),
+      });
+    if (creator)
+      items.push({
+        label: "Transferir posse da sala",
+        icon: Crown,
+        danger: true,
+        run: () => setTransferTo(person),
+      });
+    return items;
+  }
+  const permissionsPerson = members.find((p) => p.id === permissionsOf);
   return (
     <>
-      <div className="widget-people-summary">
-        <span>
-          {members.length} {members.length === 1 ? "pessoa" : "pessoas"}
-        </span>
-        <RoomLimit count={members.length} />
-        <button className="text-button" onClick={editColor}>
-          Minha cor
-        </button>
-      </div>
-      <p className="field-note">
-        O ping mede a conexão de cada pessoa com o servidor. A coroa identifica
-        o criador atual da sala.
-      </p>
-      <div className="people-panel-list">
-        {members.map((person) => (
-          <section className="person-management" key={person.id}>
-            <ParticipantCard
-              person={person}
-              engine={engine}
-              visible
-              detailed
-              onVisible={() => {}}
-              onEditColor={editColor}
-            />
-            <small>
-              {person.role === "creator"
-                ? "Criador"
-                : person.role === "admin"
-                  ? "Administrador"
-                  : "Convidado"}
-            </small>
-            {snapshot?.creatorId === engine.view.id &&
-              person.id !== engine.view.id && (
-                <details>
-                  <summary>Gerenciar {person.name}</summary>
-                  <div className="notification-actions">
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void run("role", {
-                          participantId: person.id,
-                          action:
-                            person.role === "admin" ? "revoke" : "promote",
-                        })
-                      }
-                    >
-                      {person.role === "admin"
-                        ? "Revogar administrador"
-                        : "Tornar administrador"}
-                    </button>
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void run("role", {
-                          participantId: person.id,
-                          action: "transfer",
-                        })
-                      }
-                    >
-                      Transferir posse
-                    </button>
-                  </div>
-                </details>
+      {members.length >= 6 && (
+        <div className="widget-people-summary">
+          <span>{members.length} pessoas</span>
+          <RoomLimit count={members.length} />
+        </div>
+      )}
+      <ul className="people-panel-list">
+        {members.map((person) => {
+          const items = actions(person);
+          const open = (at: { x: number; y: number }, origin: Element) =>
+            setMenu({ person, at, origin });
+          return (
+            <li
+              className="person-row"
+              key={person.id}
+              onContextMenu={(event) => {
+                if (!items.length || busy) return;
+                event.preventDefault();
+                const box = event.currentTarget.getBoundingClientRect();
+                open(
+                  event.clientX || event.clientY
+                    ? { x: event.clientX, y: event.clientY }
+                    : { x: box.left + 12, y: box.top + 12 },
+                  event.currentTarget,
+                );
+              }}
+            >
+              <ParticipantCard
+                person={person}
+                engine={engine}
+                visible
+                detailed
+                onVisible={() => {}}
+                onEditColor={editColor}
+              />
+              {items.length > 0 && (
+                <button
+                  className="icon-button person-more"
+                  aria-label={`Ações de ${person.name}`}
+                  aria-haspopup="menu"
+                  disabled={busy}
+                  onClick={(event) => {
+                    const box = event.currentTarget.getBoundingClientRect();
+                    open(
+                      { x: box.right - 190, y: box.bottom + 4 },
+                      event.currentTarget,
+                    );
+                  }}
+                >
+                  <MoreHorizontal size={17} />
+                </button>
               )}
-            {manages &&
-              person.role === "guest" &&
-              !!snapshot?.widgets?.length && (
-                <details>
-                  <summary>Permissões de edição de {person.name}</summary>
-                  {snapshot.widgets.map((w) => (
-                    <label className="widget-permission" key={w.id}>
-                      <input
-                        type="checkbox"
-                        disabled={busy || w.allGuestsEdit}
-                        checked={
-                          !!w.allGuestsEdit ||
-                          !!w.guestEditors?.includes(person.id)
-                        }
-                        onChange={(e) =>
-                          void run("widget-permission", {
-                            id: w.id,
-                            participantId: person.id,
-                            allowed: e.target.checked,
-                          })
-                        }
-                      />
-                      {w.title}
-                    </label>
-                  ))}
-                </details>
-              )}
-          </section>
-        ))}
-      </div>
-      {manages && !!snapshot?.widgets?.length && (
+            </li>
+          );
+        })}
+      </ul>
+      {manages && !!widgets.length && (
         <details className="public-permissions">
           <summary>Edição por todos os convidados</summary>
-          {snapshot.widgets.map((w) => (
+          {widgets.map((w) => (
             <label className="widget-permission" key={w.id}>
               <input
                 type="checkbox"
@@ -155,6 +177,68 @@ export function PeoplePanel({
         </details>
       )}
       {error && <p role="alert">{error}</p>}
+      {menu && (
+        <ContextMenu
+          at={menu.at}
+          origin={menu.origin}
+          items={actions(menu.person)}
+          label={`Ações de ${menu.person.name}`}
+          close={() => setMenu(null)}
+        />
+      )}
+      {permissionsPerson && (
+        <Dialog
+          title={`Edição por ${permissionsPerson.name}`}
+          centered
+          close={() => setPermissionsOf(null)}
+        >
+          {widgets.map((w) => (
+            <label className="widget-permission" key={w.id}>
+              <input
+                type="checkbox"
+                disabled={busy || w.allGuestsEdit}
+                checked={
+                  !!w.allGuestsEdit ||
+                  !!w.guestEditors?.includes(permissionsPerson.id)
+                }
+                onChange={(e) =>
+                  void run("widget-permission", {
+                    id: w.id,
+                    participantId: permissionsPerson.id,
+                    allowed: e.target.checked,
+                  })
+                }
+              />
+              {w.title}
+            </label>
+          ))}
+        </Dialog>
+      )}
+      {transferTo && (
+        <Dialog
+          title={`Transferir a sala para ${transferTo.name}?`}
+          centered
+          close={() => setTransferTo(null)}
+        >
+          <p>Você deixa de ser o criador e passa a ser administrador.</p>
+          <div className="notification-actions">
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={() => {
+                const id = transferTo.id;
+                setTransferTo(null);
+                void run("role", { participantId: id, action: "transfer" });
+              }}
+            >
+              Transferir
+            </button>
+            <button className="secondary" onClick={() => setTransferTo(null)}>
+              Cancelar
+            </button>
+          </div>
+        </Dialog>
+      )}
     </>
   );
 }

@@ -1425,7 +1425,42 @@
 }
 .people-panel-list {
   display: grid;
-  gap: 10px;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.person-row {
+  position: relative;
+}
+.person-row .person-more {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+}
+.person-row:hover .person-more,
+.person-row:focus-within .person-more,
+.person-more[aria-expanded="true"] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .person-row .person-more {
+    opacity: 1;
+  }
+}
+.participant-ping {
+  margin-left: auto;
+  color: #9aa3c4;
+  font: 11px var(--mono);
+  white-space: nowrap;
+}
+.person-row .participant-ping {
+  margin-right: 34px;
+}
+.room-admin {
+  margin-left: 6px;
+  color: #a8adff;
 }
 .people-toggle {
   position: relative;
@@ -1447,20 +1482,6 @@
 .room-creator {
   margin-left: 6px;
   color: #ffce65;
-}
-.participant-detail {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-  font-size: 12px;
-}
-.person-color-swatch {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 1px solid #abb6d8;
-  border-radius: 50%;
 }
 
 /* Room chat uses one neutral ink across all existing dark surfaces. */
@@ -1652,13 +1673,6 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.person-management {
-  display: grid;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #303244;
-}
-.person-management summary,
 .public-permissions summary {
   cursor: pointer;
   padding: 8px 0;

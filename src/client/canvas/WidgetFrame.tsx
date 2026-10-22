@@ -325,7 +325,7 @@ export function WidgetFrame(props: Props) {
           items={menuItems}
           label={`Ações de ${title}`}
           close={() => setMenu(null)}
-          doc={element.current?.ownerDocument}
+          origin={element.current}
         />
       )}
       {floating && (

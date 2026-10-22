@@ -6,6 +6,7 @@ import {
   Monitor,
   Palette,
   Crown,
+  ShieldCheck,
 } from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
@@ -84,7 +85,19 @@ export function ParticipantCard({
                 role="img"
                 aria-label="Criador da sala"
                 className="room-creator"
-              />
+              >
+                <title>Criador da sala</title>
+              </Crown>
+            )}
+            {detailed && person.role === "admin" && (
+              <ShieldCheck
+                size={14}
+                role="img"
+                aria-label="Administrador"
+                className="room-admin"
+              >
+                <title>Administrador</title>
+              </ShieldCheck>
             )}
             {own && <small> · você</small>}
           </strong>
@@ -100,6 +113,17 @@ export function ParticipantCard({
             )}
           </span>
         </div>
+        {detailed && (
+          <span
+            className="participant-ping"
+            title="Ping com o servidor"
+            aria-label={`Ping ${person.pingMs ?? "desconhecido"} ms`}
+          >
+            {!person.online || person.pingMs === undefined
+              ? "—"
+              : `${person.pingMs} ms`}
+          </span>
+        )}
         {person.inCall && (
           <span
             title={
@@ -131,25 +155,6 @@ export function ParticipantCard({
             </button>
           )}
         </>
-      )}
-      {detailed && (
-        <div className="participant-detail">
-          <span>
-            <i
-              className="person-color-swatch"
-              style={{ backgroundColor: person.color }}
-            />{" "}
-            Cor: {person.color}
-          </span>
-          <span>
-            Ping:{" "}
-            {!person.online
-              ? "desconectado"
-              : person.pingMs === undefined
-                ? "aguardando"
-                : `${person.pingMs} ms`}
-          </span>
-        </div>
       )}
       {person.inCall && !own && (
         <label className="person-volume">

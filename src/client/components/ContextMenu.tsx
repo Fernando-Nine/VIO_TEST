@@ -19,15 +19,21 @@ export function ContextMenu({
   items,
   label,
   close,
-  doc = document,
+  origin,
 }: {
   at: { x: number; y: number };
   items: MenuItem[];
   label: string;
   close: () => void;
-  /** Owner document of the trigger (the room can live in a PiP window). */
-  doc?: Document;
+  /**
+   * Element the menu belongs to. Gives the right document (the room can live
+   * in a PiP window) and keeps the menu inside an open modal dialog, outside
+   * of which everything is inert.
+   */
+  origin?: Element | null;
 }) {
+  const doc = origin?.ownerDocument || document;
+  const container = origin?.closest("dialog[open]") || doc.body;
   const menu = useRef<HTMLDivElement>(null);
   const closeRef = useRef(close);
   closeRef.current = close;
@@ -104,6 +110,6 @@ export function ContextMenu({
         </button>
       ))}
     </div>,
-    doc.body,
+    container,
   );
 }
