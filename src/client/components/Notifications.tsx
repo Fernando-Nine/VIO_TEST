@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell } from "lucide-react";
 import { AnchoredPopover } from "./AnchoredPopover";
 import type { Controller } from "../room/controller";
 import type { SharedWidget } from "../../shared/widgets";
@@ -189,13 +189,6 @@ export function Notifications({
         >
           <header>
             <strong>Notificações</strong>
-            <button
-              className="icon-button"
-              aria-label="Fechar notificações"
-              onClick={() => set(false)}
-            >
-              <X size={16} />
-            </button>
           </header>
           {!remaining.length && <p>Nenhuma notificação.</p>}
           {remaining.map((item) => (
