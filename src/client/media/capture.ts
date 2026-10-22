@@ -175,6 +175,7 @@ export class Captures {
     }
     if (this.context !== context || context.state === "closed") {
       raw.getTracks().forEach((track) => track.stop());
+      void context.close().catch(() => {});
       return;
     }
     this.rawVoice = raw;

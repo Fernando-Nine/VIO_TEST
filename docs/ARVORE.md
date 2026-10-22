@@ -12,7 +12,7 @@ pacote de código-fonte. O build produz `dist/client`, `dist/server/index.js` e
 | `.nvmrc` | Configuração, licença ou guia inicial |
 | `CHANGELOG.md` | Configuração, licença ou guia inicial |
 | `Dockerfile` | Configuração, licença ou guia inicial |
-| `ESTADO-DO-PROJETO.md` | Configuração, licença ou guia inicial |
+| `docs/ESTADO.md` | Configuração, licença ou guia inicial |
 | `LICENSE` | Configuração, licença ou guia inicial |
 | `README.md` | Configuração, licença ou guia inicial |
 | `compose.yaml` | Configuração, licença ou guia inicial |
