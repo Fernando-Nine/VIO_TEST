@@ -1305,7 +1305,7 @@ export function RoomCanvas(props: Props) {
             <>
               <div className="widget-catalog">
                 {Object.values(widgetRegistry)
-                  .filter((w) => w.id !== "screen" && w.id !== "custom")
+                  .filter((w) => !["screen", "custom", "canvas"].includes(w.id))
                   .map((w) => (
                     <button
                       className="catalog-item"

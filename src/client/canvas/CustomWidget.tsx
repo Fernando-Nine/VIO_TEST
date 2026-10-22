@@ -3,6 +3,7 @@ import { Plus, Minus, Share2, Settings2, Copy, Trash2 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import { NoteActions } from "./NoteActions";
+import { HeaderTools, ScopeBadge } from "./header-tools";
 import {
   operateWidget,
   timerElapsed,
@@ -230,8 +231,8 @@ export function CustomWidget({
   };
   return (
     <div className="custom-widget">
-      <div className="widget-scope">
-        <span>{shared ? "Compartilhado com a sala" : "Só para você"}</span>
+      <HeaderTools>
+        <ScopeBadge shared={shared} />
         {owner && (
           <button
             className="icon-button"
@@ -278,7 +279,7 @@ export function CustomWidget({
             <Copy size={16} />
           </button>
         )}
-      </div>
+      </HeaderTools>
       <div className="custom-blocks">
         {widget.config.noteSender && (
           <p className="note-origin">
@@ -358,7 +359,7 @@ export function CustomWidget({
               ))}
             {block.kind === "timer" && (
               <>
-                <strong>{block.label}</strong>
+                {block.label !== value.title && <strong>{block.label}</strong>}
                 <output
                   className="widget-clock"
                   aria-label="Tempo do cronômetro"
@@ -664,18 +665,19 @@ function StructureEditor({
               </label>
             </>
           )}
-          <button
-            className="text-button"
-            disabled={draft.blocks.length === 1}
-            onClick={() =>
-              setDraft({
-                ...draft,
-                blocks: draft.blocks.filter((b) => b.id !== block.id),
-              })
-            }
-          >
-            Remover bloco
-          </button>
+          {draft.blocks.length > 1 && (
+            <button
+              className="text-button"
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  blocks: draft.blocks.filter((b) => b.id !== block.id),
+                })
+              }
+            >
+              Remover bloco
+            </button>
+          )}
         </fieldset>
       ))}
       {kind === "custom" && (

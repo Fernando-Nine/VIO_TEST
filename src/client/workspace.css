@@ -696,26 +696,14 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
-.widget-scope {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #c4cbea;
-}
-.widget-scope > span {
-  margin-right: auto;
-}
-.widget-scope .icon-button {
-  min-width: 30px;
-  width: 30px;
-  min-height: 30px;
-  height: 30px;
-}
 .custom-block {
   border-top: 1px solid #35405f;
   padding-top: 12px;
   font-size: 12px;
+}
+.custom-block:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 .widget-score {
   display: flex;
@@ -1372,7 +1360,6 @@
 }
 @media (pointer: coarse) {
   .widget-header .icon-button,
-  .widget-scope .icon-button,
   .widget-resizer,
   .canvas-toolbar button,
   .strip-controls .icon-button {
@@ -1510,17 +1497,6 @@
   color: #f1f2fa;
   padding: 8px;
   box-sizing: border-box;
-}
-.chat-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 24px;
-}
-.chat-meta .icon-button {
-  min-height: 24px;
-  width: 28px;
-  height: 28px;
 }
 .chat-messages {
   flex: 1;
@@ -1758,10 +1734,7 @@
 
 .canvas-toolbar .text-button .notification-count { display: grid; }
 
-.module-widget { height:100%; min-height:0; min-width:0; display:flex; flex-direction:column; gap:8px; padding:8px; box-sizing:border-box; }
-.module-tools { display:flex; align-items:center; gap:4px; min-height:26px; flex-shrink:0; }
-.module-tools > span { flex:1; }
-.module-tools .icon-button { width:28px; height:28px; min-height:28px; padding:4px; }
+.module-widget { height:100%; min-height:0; min-width:0; display:flex; flex-direction:column; gap:8px; padding:12px; box-sizing:border-box; }
 .module-content { min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#656b8a transparent; overscroll-behavior:contain; display:flex; flex-direction:column; gap:8px; }
 .module-question { font-size:15px; overflow-wrap:anywhere; }
 .module-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
@@ -1791,7 +1764,7 @@
 .module-actions, .module-scope { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .module-actions button { min-height:32px; padding:6px 10px; font-size:12px; }
 .module-widget .error-text, .module-widget .field-note { font-size:12px; margin:0; overflow-wrap:anywhere; }
-.module-widget.is-compact { padding:4px; gap:4px; }
+.module-widget.is-compact { padding:8px; gap:6px; }
 .is-compact .module-content { gap:5px; }
 .is-compact .module-history { gap:2px; }
 .is-compact .module-history li { padding:3px 0; }
@@ -1803,3 +1776,100 @@
 .dice-guide { display:grid; gap:5px; }
 .dice-guide dt { font:12px var(--mono); color:#f1f2fa; margin-top:10px; cursor:auto; overflow-wrap:anywhere; }
 .dice-guide dd { margin:0; color:#bcc1da; font-size:13px; line-height:1.5; }
+/* Widget header tools: scope, count, share and edit share the title line. */
+.widget-tools {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+.widget-tools:empty {
+  display: none;
+}
+.widget-tools .icon-button {
+  width: 28px;
+  min-width: 28px;
+}
+.widget-scope-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: #8e97bb;
+}
+.widget-scope-badge.is-shared {
+  color: #a8adff;
+}
+.widget-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #252b43;
+  color: #c5cdea;
+  font: 11px/16px "IBM Plex Mono", monospace;
+  text-align: center;
+}
+.widget-tools .limit-help .icon-button {
+  width: 26px;
+  min-width: 26px;
+}
+.widget-quick {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.widget-quick-row {
+  display: flex;
+  gap: 6px;
+}
+.widget-quick-row > * {
+  flex: 1;
+  min-width: 0;
+}
+.widget-quick-row select,
+.widget-quick-row button {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.widget-quick-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.context-menu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 300;
+  min-width: 190px;
+  max-width: calc(100vw - 16px);
+  padding: 4px;
+  display: grid;
+  border: 1px solid #4b5578;
+  border-radius: 10px;
+  background: #171d30;
+  color: #eff2ff;
+  box-shadow: 0 12px 32px #0008;
+}
+.context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+.context-menu button:hover,
+.context-menu button:focus {
+  background: #2a3352;
+  outline: none;
+}
+.context-menu .is-danger {
+  color: #ffb4bd;
+}

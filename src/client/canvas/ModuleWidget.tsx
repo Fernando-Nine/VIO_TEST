@@ -28,6 +28,7 @@ import {
   type ModuleResult,
 } from "../../shared/room-modules";
 import type { WidgetProps } from "./widgets";
+import { HeaderTools, ScopeBadge } from "./header-tools";
 import type { WidgetInstance } from "./model";
 import type { Controller } from "../room/controller";
 
@@ -213,9 +214,8 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     }
   }
   const controls = (
-    <div className="module-tools">
-      <small>{widget.config.sharedId ? "Da sala" : "Só para você"}</small>
-      <span />
+    <HeaderTools>
+      <ScopeBadge shared={!!widget.config.sharedId} />
       {!widget.config.sharedId && (
         <button
           className="icon-button"
@@ -244,7 +244,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           <Settings2 size={14} />
         </button>
       )}
-    </div>
+    </HeaderTools>
   );
   const activeIndex = Math.min(
     state.activeIndex || 0,

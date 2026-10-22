@@ -5,6 +5,7 @@ import {
   useState,
   type ComponentType,
 } from "react";
+import { HeaderTools } from "./header-tools";
 import {
   MonitorUp,
   Settings2,
@@ -20,9 +21,14 @@ import {
   PencilRuler,
   Timer,
   Blocks,
-  Dice5, Vote, Shuffle, ListTodo,
+  Dice5,
+  Vote,
+  Shuffle,
+  ListTodo,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
+import type { MenuItem } from "../components/ContextMenu";
 import type { Controller } from "../room/controller";
 import { Media } from "../components/Media";
 import { ParticipantCard } from "../components/ParticipantCard";
@@ -58,6 +64,8 @@ export interface WidgetDefinition {
   apiVersion: 1;
   icon: LucideIcon;
   render: ComponentType<WidgetProps>;
+  /** Secondary actions offered in the header's right-click menu. */
+  menu?: (props: WidgetProps) => MenuItem[];
 }
 function ScreenWidget({
   widget,
@@ -164,20 +172,18 @@ function PeopleWidget({ engine, visible, people, widget }: WidgetProps) {
     engine.view.snapshot?.participants.filter(
       (p) => widget.type !== "call" || p.inCall,
     ) || [];
+  const total = engine.view.snapshot?.participants.length || 0;
   return (
     <div className="widget-people">
-      <div className="widget-people-summary">
-        <span>
-          {members.length} {members.length === 1 ? "pessoa" : "pessoas"}
+      <HeaderTools>
+        <span
+          className="widget-count"
+          aria-label={`${members.length} ${members.length === 1 ? "pessoa" : "pessoas"}`}
+        >
+          {members.length}
         </span>
-        <RoomLimit
-          count={engine.view.snapshot?.participants.length || 0}
-          threshold={6}
-        />
-        <button className="text-button" onClick={people}>
-          Minha cor
-        </button>
-      </div>
+        {total >= 6 && <RoomLimit count={total} threshold={6} />}
+      </HeaderTools>
       <div className="widget-people-grid">
         {members.map((person) => (
           <ParticipantCard
@@ -190,9 +196,7 @@ function PeopleWidget({ engine, visible, people, widget }: WidgetProps) {
           />
         ))}
       </div>
-      {!members.length && (
-        <p className="widget-empty">Ninguém na chamada ainda.</p>
-      )}
+      {!members.length && <p className="widget-empty">Ninguém na chamada.</p>}
     </div>
   );
 }
@@ -206,9 +210,6 @@ function MixerWidget({ engine }: WidgetProps) {
     ) || [];
   return (
     <div className="widget-mixer">
-      <p className="field-note">
-        Volumes individuais. O volume geral continua valendo para todos.
-      </p>
       {screens.map((id) => {
         const level = engine.screenLevel(id);
         const name = engine.screenInfo(id)?.name || "Participante";
@@ -275,14 +276,12 @@ function MixerWidget({ engine }: WidgetProps) {
         </div>
       ))}
       {!screens.length && !voices.length && (
-        <p className="widget-empty">
-          Entre na chamada ou aceite uma transmissão para ajustar seu volume.
-        </p>
+        <p className="widget-empty">Nenhuma voz ou tela para ajustar.</p>
       )}
     </div>
   );
 }
-function ConnectionWidget({ engine, diagnostics }: WidgetProps) {
+function ConnectionWidget({ engine }: WidgetProps) {
   return (
     <div className="widget-connection">
       <p>
@@ -334,9 +333,6 @@ function ConnectionWidget({ engine, diagnostics }: WidgetProps) {
             </dl>
           </section>
         ))}
-      <button className="secondary" onClick={diagnostics}>
-        Mais detalhes
-      </button>
     </div>
   );
 }
@@ -356,12 +352,14 @@ function TimeWidget({ engine, visible }: WidgetProps) {
     <div className="widget-time">
       <span>Sala aberta há</span>
       <output>{show(engine.roomSeconds())}</output>
-      <span>Sua transmissão</span>
-      <output>
-        {publication?.createdAt
-          ? show(Math.max(0, (now - publication.createdAt) / 1000))
-          : "Sem envio de tela"}
-      </output>
+      {publication?.createdAt && (
+        <>
+          <span>Sua transmissão</span>
+          <output>
+            {show(Math.max(0, (now - publication.createdAt) / 1000))}
+          </output>
+        </>
+      )}
     </div>
   );
 }
@@ -385,26 +383,21 @@ function ViewersWidget({ engine }: WidgetProps) {
                 <li key={p.id}>{p.name}</li>
               ))}
           </ul>
-          <p className="field-note">
-            Inclui quem mantém o áudio em segundo plano.
-          </p>
         </>
       ) : (
-        <p className="widget-empty">
-          Os espectadores aparecem quando você compartilha sua tela.
-        </p>
+        <p className="widget-empty">Você não está transmitindo.</p>
       )}
     </div>
   );
 }
-function QuickWidget({ engine, settings, share }: WidgetProps) {
+function QuickWidget({ engine, share }: WidgetProps) {
   const quality = engine.captures.quality;
   const publication = engine.publications.get("screen");
   return (
     <div className="widget-quick">
-      <label>
-        Resolução
+      <div className="widget-quick-row">
         <select
+          aria-label="Resolução"
           value={quality.resolution}
           onChange={(e) =>
             void engine
@@ -418,10 +411,8 @@ function QuickWidget({ engine, settings, share }: WidgetProps) {
             </option>
           ))}
         </select>
-      </label>
-      <label>
-        Quadros por segundo
         <select
+          aria-label="Quadros por segundo"
           value={quality.fps}
           onChange={(e) =>
             void engine
@@ -435,13 +426,9 @@ function QuickWidget({ engine, settings, share }: WidgetProps) {
             </option>
           ))}
         </select>
-      </label>
+      </div>
       {publication ? (
-        <>
-          <p className="field-note">
-            Áudio da fonte: {publication.audio ? "incluído" : "não incluído"}.
-            Para mudar, escolha a fonte novamente.
-          </p>
+        <div className="widget-quick-row">
           <button
             className="secondary"
             onClick={() => {
@@ -459,20 +446,28 @@ function QuickWidget({ engine, settings, share }: WidgetProps) {
               engine.bump();
             }}
           >
-            {publication.muted ? "Retomar vídeo" : "Pausar só o vídeo"}
+            {publication.muted ? "Retomar vídeo" : "Pausar vídeo"}
           </button>
-          <button className="text-button" onClick={share}>
-            Escolher outra fonte e áudio
+          <button
+            className="secondary"
+            onClick={share}
+            title={
+              publication.audio ? "Áudio da fonte incluído" : "Fonte sem áudio"
+            }
+          >
+            {publication.audio ? (
+              <Volume2 size={15} aria-hidden="true" />
+            ) : (
+              <VolumeX size={15} aria-hidden="true" />
+            )}
+            Trocar fonte
           </button>
-        </>
+        </div>
       ) : (
         <button className="primary" onClick={share}>
           <MonitorUp size={17} /> Compartilhar
         </button>
       )}
-      <button className="text-button" onClick={settings}>
-        <Settings2 size={16} /> Todos os ajustes
-      </button>
     </div>
   );
 }
@@ -482,6 +477,7 @@ const definition = (
   description: string,
   render: ComponentType<WidgetProps>,
   autoHide = false,
+  menu?: WidgetDefinition["menu"],
 ): WidgetDefinition => ({
   id,
   title,
@@ -504,12 +500,19 @@ const definition = (
       canvas: PencilRuler,
       timer: Timer,
       custom: Blocks,
-      poll: Vote, dice: Dice5, random: Shuffle, tasks: ListTodo,
+      poll: Vote,
+      dice: Dice5,
+      random: Shuffle,
+      tasks: ListTodo,
     } as Record<string, LucideIcon>
   )[id],
   render,
   autoHide,
+  menu,
 });
+const colorItem = ({ people }: WidgetProps): MenuItem[] => [
+  { label: "Minha cor", icon: Palette, run: people },
+];
 export const widgetRegistry: Record<string, WidgetDefinition> = {
   screen: definition(
     "screen",
@@ -523,6 +526,7 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     "Quem está aqui, compartilha e participa da chamada.",
     PeopleWidget,
     true,
+    colorItem,
   ),
   call: definition(
     "call",
@@ -530,6 +534,7 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     "Voz, câmera e indicadores de fala.",
     PeopleWidget,
     true,
+    colorItem,
   ),
   viewers: definition(
     "viewers",
@@ -548,6 +553,10 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     "Conexão",
     "Ping, bitrate, perda e qualidade da mídia.",
     ConnectionWidget,
+    false,
+    ({ diagnostics }) => [
+      { label: "Detalhes da conexão", icon: Activity, run: diagnostics },
+    ],
   ),
   time: definition(
     "time",
@@ -561,6 +570,9 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     "Qualidade, FPS e pausa do vídeo.",
     QuickWidget,
     true,
+    ({ settings }) => [
+      { label: "Todos os ajustes", icon: Settings2, run: settings },
+    ],
   ),
   chat: definition(
     "chat",
@@ -569,10 +581,30 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     ChatWidget,
   ),
   canvas: definition("canvas", "Canvas", "Em breve", () => null),
-  poll: definition("poll", "Votação", "Pergunta, opções e prazo para decidir em conjunto.", ModuleWidget),
-  dice: definition("dice", "Dados", "Comandos, resultados e histórico com autoria.", ModuleWidget),
-  random: definition("random", "Sorteador", "Opções com pesos e retirada de sorteados.", ModuleWidget),
-  tasks: definition("tasks", "Tarefas + agenda", "Etapas, responsáveis e tempo da sessão.", ModuleWidget),
+  poll: definition(
+    "poll",
+    "Votação",
+    "Pergunta, opções e prazo para decidir em conjunto.",
+    ModuleWidget,
+  ),
+  dice: definition(
+    "dice",
+    "Dados",
+    "Comandos, resultados e histórico com autoria.",
+    ModuleWidget,
+  ),
+  random: definition(
+    "random",
+    "Sorteador",
+    "Opções com pesos e retirada de sorteados.",
+    ModuleWidget,
+  ),
+  tasks: definition(
+    "tasks",
+    "Tarefas + agenda",
+    "Etapas, responsáveis e tempo da sessão.",
+    ModuleWidget,
+  ),
   timer: definition(
     "timer",
     "Cronômetro",
@@ -595,14 +627,15 @@ export function createWidget(type: string): WidgetInstance {
     type,
     title: def.title,
     config: {},
-    ...(isModule(type) ? {state:createModule(type)} : {}),
+    ...(isModule(type) ? { state: createModule(type) } : {}),
     ...(["notes", "timer", "custom"].includes(type)
       ? { state: createContent(type) }
       : {}),
   };
 }
 export function titleOf(widget: WidgetInstance, engine: Controller) {
-  if (isModule(widget.type)) return moduleValue(widget,engine)?.title || widget.title;
+  if (isModule(widget.type))
+    return moduleValue(widget, engine)?.title || widget.title;
   if (widget.type === "screen") {
     const info = engine.screenInfo(widget.config.publicationId);
     return `${info?.name || "Participante"}${info?.publication.owner === engine.view.id ? " · minha prévia" : ""}`;
