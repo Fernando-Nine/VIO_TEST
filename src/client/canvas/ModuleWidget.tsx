@@ -8,6 +8,7 @@ import {
   X,
   Plus,
   Trophy,
+  RotateCcw,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
@@ -29,7 +30,12 @@ import {
   type ModuleResult,
 } from "../../shared/room-modules";
 import type { WidgetProps } from "./widgets";
-import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
+import {
+  HeaderTools,
+  ScopeBadge,
+  useMenuItems,
+  useRename,
+} from "./header-tools";
 import type { WidgetInstance } from "./model";
 import type { Controller } from "../room/controller";
 
@@ -115,18 +121,14 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     [help, setHelp] = useState(false),
     [history, setHistory] = useState(false),
     [allTasks, setAllTasks] = useState(false);
-  const [expression, setExpression] = useState(
-    config?.kind === "dice" ? config.expression : "1d20",
-  );
+  // Empty on purpose: the configured command shows as the suggestion.
+  const [expression, setExpression] = useState("");
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [now, setNow] = useState(() => engine.serverNow());
   const retry = useRef({ serialized: "", id: "" });
   const compact = height < 330;
-  useEffect(() => {
-    if (config?.kind === "dice") setExpression(config.expression);
-  }, [config?.kind === "dice" ? config.expression : ""]);
   useEffect(() => {
     if (!visible || !["poll", "tasks"].includes(config?.kind || "")) return;
     const timer = setInterval(() => setNow(engine.serverNow()), 1000);
@@ -168,6 +170,18 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     const timer = setTimeout(() => setRevealAt(0), 2600);
     return () => clearTimeout(timer);
   }, [revealAt]);
+  useMenuItems(
+    value && config && editable && config.kind !== "poll"
+      ? [
+          {
+            label: "Reiniciar resultados e progresso",
+            icon: RotateCcw,
+            danger: true,
+            run: () => void act({ kind: "reset", revision: value.revision }),
+          },
+        ]
+      : undefined,
+  );
   useRename(
     value && config && editable
       ? (title) =>
@@ -307,7 +321,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           <HelpCircle size={14} />
         </button>
       )}
-      {editable && (
+      {editable && config.kind !== "dice" && (
         <button
           className="icon-button"
           aria-label={`Editar ${value.title}`}
@@ -441,17 +455,21 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
               className="module-roll"
               onSubmit={(e) => {
                 e.preventDefault();
-                void act({ kind: "roll", expression });
+                void act({
+                  kind: "roll",
+                  expression: expression.trim() || config.expression,
+                });
               }}
             >
               <input
                 aria-label="Comando dos dados"
+                placeholder={config.expression}
                 value={expression}
                 maxLength={200}
                 readOnly={busy}
                 onChange={(e) => setExpression(e.target.value)}
               />
-              <button className="primary" disabled={busy || !expression.trim()}>
+              <button className="primary" disabled={busy}>
                 Rolar
               </button>
             </form>
@@ -565,10 +583,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           value={value}
           close={() => setEditing(false)}
           save={saveContent}
-          reset={async () => {
-            await act({ kind: "reset", revision: value.revision });
-            setEditing(false);
-          }}
         />
       )}
       {history && (
@@ -637,12 +651,10 @@ function ModuleEditor({
   value,
   close,
   save,
-  reset,
 }: {
   value: SharedWidget;
   close: () => void;
   save: (content: WidgetContent) => Promise<void>;
-  reset: () => Promise<void>;
 }) {
   const [title, setTitle] = useState(value.title),
     [config, setConfig] = useState<ModuleConfig>(() =>
@@ -926,14 +938,6 @@ function ModuleEditor({
         )}
         <button className="primary" disabled={busy}>
           Salvar
-        </button>
-        <button
-          type="button"
-          className="text-button"
-          disabled={busy}
-          onClick={() => void reset()}
-        >
-          Reiniciar resultados e progresso
         </button>
       </form>
     </Dialog>
