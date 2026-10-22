@@ -40,6 +40,16 @@ export const soundEvents = [
     description: "Ao reativar o áudio da sala.",
   },
   {
+    cue: "screen-new",
+    label: "Nova transmissão",
+    description: "Quando outra pessoa começa a compartilhar a tela.",
+  },
+  {
+    cue: "chat-message",
+    label: "Nova mensagem",
+    description: "Mensagens de outras pessoas no chat, no máximo a cada 4 s.",
+  },
+  {
     cue: "poll-open",
     label: "Votação aberta",
     description: "Quando uma votação começa.",
