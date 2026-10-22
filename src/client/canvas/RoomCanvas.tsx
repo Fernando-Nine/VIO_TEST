@@ -285,6 +285,20 @@ export function RoomCanvas(props: Props) {
   }, [props.isFullscreen]);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
+  useLayoutEffect(() => {
+    const player = root.current?.closest<HTMLElement>(".player");
+    const strip = geometry.strip;
+    // Lift the call dock above a bottom strip so it never covers it.
+    const lift =
+      stripMode &&
+      !state.single &&
+      strip &&
+      strip.width > strip.height &&
+      strip.y > geometry.bounds.height / 2
+        ? geometry.bounds.height - strip.y
+        : 0;
+    player?.style.setProperty("--dock-lift", `${lift}px`);
+  }, [geometry, stripMode, state.single, root]);
   useStripInput(root, strip, stripMode && !state.single);
   const offer = state.pending[0];
   useEffect(() => {
