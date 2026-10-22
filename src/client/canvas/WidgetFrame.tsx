@@ -13,7 +13,7 @@ import {
 import { useDraggable } from "@dnd-kit/react";
 import { ArrowLeftRight, Grip, Pencil, X } from "lucide-react";
 import { ContextMenu, type MenuItem } from "../components/ContextMenu";
-import { HeaderToolsSlot, type Rename } from "./header-tools";
+import { HeaderToolsSlot, type MenuSource, type Rename } from "./header-tools";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -95,12 +95,14 @@ export function WidgetFrame(props: Props) {
   const [tools, setTools] = useState<HTMLElement | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [rename, setRenameState] = useState<Rename>();
+  const [bodyMenu, setBodyMenu] = useState<MenuSource>();
   const [renaming, setRenaming] = useState(false);
   const slot = useMemo(
     () => ({
       slot: tools,
       // Wrapped so React stores the function instead of calling it.
       setRename: (next: Rename | undefined) => setRenameState(() => next),
+      setMenu: (next: MenuSource | undefined) => setBodyMenu(() => next),
     }),
     [tools],
   );
@@ -179,6 +181,7 @@ export function WidgetFrame(props: Props) {
       ? [{ label: "Renomear", icon: Pencil, run: () => setRenaming(true) }]
       : []),
     ...(def?.menu?.(props) || []),
+    ...(bodyMenu?.() || []),
     ...(focused
       ? []
       : [
