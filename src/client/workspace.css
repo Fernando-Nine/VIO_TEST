@@ -156,7 +156,7 @@
   }
   .in-room .dock {
     gap: 6px;
-    bottom: max(10px, env(safe-area-inset-bottom));
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--dock-lift, 0px));
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -1169,19 +1169,32 @@
   flex-direction: column;
 }
 .strip-controls .icon-button {
-  pointer-events: auto;
+  pointer-events: none;
   width: 40px;
   min-width: 40px;
   min-height: 40px;
   padding: 0;
   border-radius: 50%;
-  background: transparent;
-  border: 1px solid transparent;
-  opacity: 0.65;
+  background: #1d2236e6;
+  border: 1px solid #3a4262;
+  /* Hidden until the strip is hovered or a button has keyboard focus, so the
+     arrows never sit on top of widget headers at rest. Touch swipes instead. */
+  opacity: 0;
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
     opacity 120ms ease;
+}
+@media (hover: hover) {
+  .canvas-viewport:has([data-strip-axis]:hover, .strip-controls :hover)
+    .strip-controls
+    .icon-button {
+    pointer-events: auto;
+    opacity: 0.8;
+  }
+}
+.strip-controls .icon-button:focus-visible {
+  pointer-events: auto;
 }
 .strip-controls .icon-button:hover,
 .strip-controls .icon-button:focus-visible {

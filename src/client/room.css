@@ -317,7 +317,7 @@ input[type="checkbox"] {
 }
 .in-room .dock {
   position: absolute;
-  bottom: 12px;
+  bottom: calc(12px + var(--dock-lift, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
