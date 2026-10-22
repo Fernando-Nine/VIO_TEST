@@ -312,20 +312,32 @@ export function RoomCanvas(props: Props) {
   }, [props.isFullscreen]);
   const seen = useRef(new Set<string>());
   const stripMode = isStrip(state);
+  const stripBox = geometry.strip;
+  // Lift the call dock above a bottom strip so it never covers it.
+  const dockLift =
+    stripMode &&
+    !state.single &&
+    stripBox &&
+    stripBox.width > stripBox.height &&
+    stripBox.y > geometry.bounds.height / 2
+      ? geometry.bounds.height - stripBox.y
+      : 0;
   useLayoutEffect(() => {
-    const player = root.current?.closest<HTMLElement>(".player");
-    const strip = geometry.strip;
-    // Lift the call dock above a bottom strip so it never covers it.
-    const lift =
-      stripMode &&
-      !state.single &&
-      strip &&
-      strip.width > strip.height &&
-      strip.y > geometry.bounds.height / 2
-        ? geometry.bounds.height - strip.y
-        : 0;
-    player?.style.setProperty("--dock-lift", `${lift}px`);
-  }, [geometry, stripMode, state.single, root]);
+    root.current
+      ?.closest<HTMLElement>(".player")
+      ?.style.setProperty("--dock-lift", `${dockLift}px`);
+  }, [dockLift, root]);
+  // The dock floats at the bottom centre; widgets ending right there reserve
+  // its height so their last controls (chat input, poll actions) stay usable.
+  const underDock = (box: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) =>
+    Math.abs(box.y + box.height - (geometry.bounds.height - dockLift)) < 14 &&
+    box.x < geometry.bounds.width / 2 + 230 &&
+    box.x + box.width > geometry.bounds.width / 2 - 230;
   useStripInput(root, strip, stripMode && !state.single);
   const offer = state.pending[0];
   useEffect(() => {
@@ -1155,6 +1167,12 @@ export function RoomCanvas(props: Props) {
                 engine={engine}
                 box={box || { x: 0, y: 0, width: 1, height: 1 }}
                 bounds={geometry.bounds}
+                underDock={
+                  widget.type !== "screen" &&
+                  !floating &&
+                  !!box &&
+                  underDock(box)
+                }
                 height={box?.height || 0}
                 visible={visible}
                 focused={focused}

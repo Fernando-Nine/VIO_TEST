@@ -2053,3 +2053,6 @@
 .canvas-toolbar .live-chip:hover {
   background: #4d1a28;
 }
+.widget-host.under-dock .widget-body {
+  padding-bottom: calc(var(--dock-height, 64px) + 14px);
+}
