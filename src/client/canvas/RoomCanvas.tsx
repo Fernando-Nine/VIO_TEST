@@ -14,7 +14,12 @@ import {
   useDroppable,
   type DragEndEvent,
 } from "@dnd-kit/react";
-import { Accessibility, Feedback } from "@dnd-kit/dom";
+import {
+  Accessibility,
+  Feedback,
+  PointerActivationConstraints,
+  PointerSensor,
+} from "@dnd-kit/dom";
 import { Rectangle } from "@dnd-kit/geometry";
 import {
   ArrowDown,
@@ -60,6 +65,28 @@ import { createWidget, titleOf, widgetRegistry } from "./widgets";
 import { createModule } from "./ModuleWidget";
 import { isModule, type ModuleKind } from "../../shared/room-modules";
 
+// dnd-kit starts a mouse drag on the handle at pointerdown, so a plain click
+// (or double click to rename) would already detach the widget. Require a
+// small movement first; touch and other pointers keep the library defaults.
+const sensors = (
+  defaults: Parameters<
+    NonNullable<
+      Extract<import("@dnd-kit/dom").DragDropManagerInput["sensors"], Function>
+    >
+  >[0],
+) => [
+  PointerSensor.configure({
+    activationConstraints: (event, source) => {
+      if (event.pointerType === "mouse")
+        return [new PointerActivationConstraints.Distance({ value: 4 })];
+      const fallback = PointerSensor.defaults.activationConstraints;
+      return typeof fallback === "function"
+        ? fallback(event, source)
+        : fallback;
+    },
+  }),
+  ...defaults.filter((s) => s !== PointerSensor),
+];
 const plugins = (
   defaults: Parameters<
     NonNullable<
@@ -813,6 +840,7 @@ export function RoomCanvas(props: Props) {
       </div>
       <DragDropProvider
         plugins={plugins}
+        sensors={sensors}
         onDragStart={(event, manager) => {
           const id = String(event.operation.source?.id || "");
           const rect = event.operation.source?.element?.getBoundingClientRect();

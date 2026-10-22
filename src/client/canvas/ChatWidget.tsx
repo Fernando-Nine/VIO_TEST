@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Settings2 } from "lucide-react";
 import { Avatar } from "../components/Avatar";
-import { HeaderTools, ScopeBadge } from "./header-tools";
+import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import type { WidgetProps } from "./widgets";
@@ -30,9 +30,21 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
     document.addEventListener("visibilitychange", mark);
     return () => document.removeEventListener("visibilitychange", mark);
   }, [visible, chat?.id, last?.id, engine]);
+  const editable =
+    !!chat && canEditPublic(engine.view.snapshot, engine.view.id, chat);
+  useRename(
+    chat && editable
+      ? async (title) => {
+          await engine.request("widget-structure", {
+            id: chat.id,
+            revision: chat.revision,
+            content: { kind: "chat", title, blocks: [] },
+          });
+        }
+      : undefined,
+  );
   if (!chat) return <p className="widget-empty">Este chat foi encerrado.</p>;
   const manages = canManageRoom(engine.view.snapshot, engine.view.id);
-  const editable = canEditPublic(engine.view.snapshot, engine.view.id, chat);
   return (
     <div className="chat-widget">
       <HeaderTools>

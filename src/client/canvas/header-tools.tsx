@@ -1,13 +1,38 @@
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { User, Users } from "lucide-react";
 
-/** Where a widget body renders its compact header tools (scope, share, edit). */
-export const HeaderToolsSlot = createContext<HTMLElement | null>(null);
+export type Rename = (title: string) => Promise<void>;
 
+/** Bridge between a widget body and its frame's header. */
+export const HeaderToolsSlot = createContext<{
+  slot: HTMLElement | null;
+  setRename: (rename: Rename | undefined) => void;
+} | null>(null);
+
+/** Renders compact tools (scope, share, edit) on the widget's title line. */
 export function HeaderTools({ children }: { children: ReactNode }) {
-  const slot = useContext(HeaderToolsSlot);
+  const slot = useContext(HeaderToolsSlot)?.slot;
   return slot ? createPortal(children, slot) : null;
+}
+
+/** Lets the header title be edited in place while `rename` is provided. */
+export function useRename(rename: Rename | undefined) {
+  const setRename = useContext(HeaderToolsSlot)?.setRename;
+  const latest = useRef(rename);
+  latest.current = rename;
+  const enabled = !!rename;
+  useEffect(() => {
+    if (!setRename || !enabled) return;
+    setRename((title) => latest.current?.(title) ?? Promise.resolve());
+    return () => setRename(undefined);
+  }, [setRename, enabled]);
 }
 
 /** Discreet "only you" / "whole room" marker beside the widget title. */

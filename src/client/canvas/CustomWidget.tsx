@@ -3,7 +3,7 @@ import { Plus, Minus, Share2, Settings2, Copy, Trash2 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import { NoteActions } from "./NoteActions";
-import { HeaderTools, ScopeBadge } from "./header-tools";
+import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
 import {
   operateWidget,
   timerElapsed,
@@ -188,15 +188,56 @@ export function CustomWidget({
     visible,
     !!value?.blocks.some((b) => b.kind === "timer" && b.startedAt !== null),
   ]);
+  const shared = !!widget.config.sharedId;
+  const owner =
+    !!value &&
+    (!shared || canEditPublic(engine.view.snapshot, engine.view.id, value));
+  useRename(
+    value && owner
+      ? (title) =>
+          saveStructure(
+            widgetContent.parse({
+              kind: value.kind,
+              title,
+              blocks: value.blocks,
+            }),
+            value.revision,
+          )
+      : undefined,
+  );
   if (!value)
     return (
       <p className="widget-empty">
         Este widget foi encerrado ou seu estado não pôde ser restaurado.
       </p>
     );
-  const shared = !!widget.config.sharedId;
-  const owner =
-    !shared || canEditPublic(engine.view.snapshot, engine.view.id, value);
+  async function saveStructure(content: WidgetContent, baseRevision: number) {
+    if (!value) return;
+    if (shared)
+      await engine.request("widget-structure", {
+        id: value.id,
+        revision: baseRevision,
+        content,
+      });
+    else {
+      const latest = engine.canvas
+        .getSnapshot()
+        .widgets.find((w) => w.id === widget.id);
+      const current = latest && widgetValue(latest, engine);
+      if (!current || current.revision !== baseRevision)
+        throw new Error(
+          "O widget mudou. Reabra a edição antes de salvar a estrutura.",
+        );
+      engine.canvas.updateWidget(widget.id, {
+        title: content.title,
+        state: {
+          ...current,
+          ...content,
+          revision: current.revision + 1,
+        },
+      });
+    }
+  }
   async function operate(operation: WidgetOperation) {
     if (!owner)
       throw new Error(
@@ -426,32 +467,7 @@ export function CustomWidget({
           kind={widget.type}
           shared={shared}
           close={() => setEditing(false)}
-          save={async (content, baseRevision) => {
-            if (shared)
-              await engine.request("widget-structure", {
-                id: value.id,
-                revision: baseRevision,
-                content,
-              });
-            else {
-              const latest = engine.canvas
-                .getSnapshot()
-                .widgets.find((w) => w.id === widget.id);
-              const current = latest && widgetValue(latest, engine);
-              if (!current || current.revision !== baseRevision)
-                throw new Error(
-                  "O widget mudou. Reabra a edição antes de salvar a estrutura.",
-                );
-              engine.canvas.updateWidget(widget.id, {
-                title: content.title,
-                state: {
-                  ...current,
-                  ...content,
-                  revision: current.revision + 1,
-                },
-              });
-            }
-          }}
+          save={saveStructure}
           remove={
             shared &&
             (value.owner === engine.view.id ||

@@ -28,7 +28,7 @@ import {
   type ModuleResult,
 } from "../../shared/room-modules";
 import type { WidgetProps } from "./widgets";
-import { HeaderTools, ScopeBadge } from "./header-tools";
+import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
 import type { WidgetInstance } from "./model";
 import type { Controller } from "../room/controller";
 
@@ -131,8 +131,43 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     const timer = setInterval(() => setNow(engine.serverNow()), 1000);
     return () => clearInterval(timer);
   }, [visible, config?.kind, engine]);
+  useRename(
+    value && config && editable
+      ? (title) =>
+          saveContent(
+            widgetContent.parse({
+              kind: config.kind,
+              title,
+              blocks: [],
+              module: config,
+            }),
+          )
+      : undefined,
+  );
   if (!value || !config)
     return <p className="widget-empty">Este widget não está disponível.</p>;
+  async function saveContent(content: WidgetContent) {
+    if (!value) return;
+    if (widget.config.sharedId)
+      await engine.request("widget-structure", {
+        id: value.id,
+        revision: value.revision,
+        content,
+      });
+    else
+      engine.canvas.updateWidget(widget.id, {
+        title: content.title,
+        state: {
+          ...value,
+          ...content,
+          revision: value.revision + 1,
+          moduleState:
+            JSON.stringify(content.module) === JSON.stringify(config)
+              ? state
+              : {},
+        },
+      });
+  }
   async function act(operation: ModuleAction) {
     if (busy || !value?.module) return;
     setBusy(true);
@@ -475,27 +510,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
         <ModuleEditor
           value={value}
           close={() => setEditing(false)}
-          save={async (content) => {
-            if (widget.config.sharedId)
-              await engine.request("widget-structure", {
-                id: value.id,
-                revision: value.revision,
-                content,
-              });
-            else
-              engine.canvas.updateWidget(widget.id, {
-                title: content.title,
-                state: {
-                  ...value,
-                  ...content,
-                  revision: value.revision + 1,
-                  moduleState:
-                    JSON.stringify(content.module) === JSON.stringify(config)
-                      ? state
-                      : {},
-                },
-              });
-          }}
+          save={saveContent}
           reset={async () => {
             await act({ kind: "reset", revision: value.revision });
             setEditing(false);

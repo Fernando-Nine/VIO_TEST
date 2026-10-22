@@ -1873,3 +1873,19 @@
 .context-menu .is-danger {
   color: #ffb4bd;
 }
+.widget-rename {
+  cursor: text;
+}
+.widget-header .widget-rename input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  min-height: 28px;
+  font-size: 12px;
+  padding: 2px 7px;
+  border: 1px solid #5b67a0;
+  border-radius: 6px;
+  background: #0d1019;
+  color: inherit;
+  font: inherit;
+}

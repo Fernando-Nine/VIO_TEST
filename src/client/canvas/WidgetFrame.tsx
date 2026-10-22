@@ -4,15 +4,16 @@ import {
   memo,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
-import { ArrowLeftRight, Grip, X } from "lucide-react";
+import { ArrowLeftRight, Grip, Pencil, X } from "lucide-react";
 import { ContextMenu, type MenuItem } from "../components/ContextMenu";
-import { HeaderToolsSlot } from "./header-tools";
+import { HeaderToolsSlot, type Rename } from "./header-tools";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -93,6 +94,22 @@ export function WidgetFrame(props: Props) {
   const title = titleOf(widget, engine);
   const [tools, setTools] = useState<HTMLElement | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [rename, setRenameState] = useState<Rename>();
+  const [renaming, setRenaming] = useState(false);
+  const slot = useMemo(
+    () => ({
+      slot: tools,
+      // Wrapped so React stores the function instead of calling it.
+      setRename: (next: Rename | undefined) => setRenameState(() => next),
+    }),
+    [tools],
+  );
+  function commitTitle(input: HTMLInputElement) {
+    const next = input.value.trim();
+    setRenaming(false);
+    if (!rename || !next || next === title) return;
+    rename(next.slice(0, 64)).catch((e) => engine.fail(e));
+  }
   const endsForEveryone =
     !!widget.config.sharedId &&
     engine.view.snapshot?.widgets?.some(
@@ -158,6 +175,9 @@ export function WidgetFrame(props: Props) {
       ? "Desconectar transmissão"
       : "Remover deste layout";
   const menuItems: MenuItem[] = [
+    ...(rename
+      ? [{ label: "Renomear", icon: Pencil, run: () => setRenaming(true) }]
+      : []),
     ...(def?.menu?.(props) || []),
     ...(focused
       ? []
@@ -204,18 +224,50 @@ export function WidgetFrame(props: Props) {
           );
         }}
       >
-        <button
-          ref={handleRef}
-          className="widget-handle"
-          tabIndex={props.tabIndex}
-          onFocus={props.onFocusHeader}
-          onKeyDown={props.navigate}
-          aria-label={`Mover ${title}. Use espaço para mover pelo teclado. No mouse, segure ${canvasShortcuts.snap.label} para encaixar.`}
-          title={`Arrastar livremente · ${canvasShortcuts.snap.label} encaixa`}
-        >
-          <Icon size={15} aria-hidden="true" />
-          <span>{title}</span>
-        </button>
+        {renaming ? (
+          <label className="widget-handle widget-rename">
+            <Icon size={15} aria-hidden="true" />
+            <input
+              aria-label={`Nome de ${title}`}
+              defaultValue={title}
+              maxLength={64}
+              autoFocus
+              onFocus={(e) => e.currentTarget.select()}
+              onBlur={(e) => commitTitle(e.currentTarget)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== "Escape") return;
+                e.stopPropagation();
+                if (e.key === "Escape") e.currentTarget.value = title;
+                e.currentTarget.blur();
+                // Keyboard users land back on the title they were editing.
+                requestAnimationFrame(() =>
+                  element.current
+                    ?.querySelector<HTMLElement>("button.widget-handle")
+                    ?.focus({ preventScroll: true }),
+                );
+              }}
+            />
+          </label>
+        ) : (
+          <button
+            ref={handleRef}
+            className="widget-handle"
+            tabIndex={props.tabIndex}
+            onFocus={props.onFocusHeader}
+            onKeyDown={(event) => {
+              if (event.key === "F2" && rename) {
+                event.preventDefault();
+                setRenaming(true);
+              } else props.navigate(event);
+            }}
+            onDoubleClick={() => rename && setRenaming(true)}
+            aria-label={`Mover ${title}. Use espaço para mover pelo teclado. No mouse, segure ${canvasShortcuts.snap.label} para encaixar.${rename ? " F2 renomeia." : ""}`}
+            title={`Arrastar livremente · ${canvasShortcuts.snap.label} encaixa${rename ? " · clique duplo renomeia" : ""}`}
+          >
+            <Icon size={15} aria-hidden="true" />
+            <span>{title}</span>
+          </button>
+        )}
         <HeaderAccessory widget={widget} engine={engine} />
         <div className="widget-tools" ref={setTools} />
         <div className="widget-actions">
@@ -256,7 +308,7 @@ export function WidgetFrame(props: Props) {
             props.focus();
         }}
       >
-        <HeaderToolsSlot.Provider value={tools}>
+        <HeaderToolsSlot.Provider value={slot}>
           <Body
             {...props}
             visible={visible}
