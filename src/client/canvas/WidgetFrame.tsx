@@ -33,6 +33,7 @@ interface Props extends WidgetProps {
   floatingOrder: number;
   active: boolean;
   stripAxis?: "x" | "y";
+  underDock?: boolean;
   moving?: { x: number; y: number };
   motionKey: string;
   tabIndex: number;
@@ -205,7 +206,7 @@ export function WidgetFrame(props: Props) {
     <section
       ref={hostRef}
       style={style}
-      className={`widget-host ${widget.type === "screen" ? "is-screen" : ""} ${focused ? "is-focused" : ""} ${floating ? "is-floating" : ""} ${widget.type === "screen" && !props.active ? "screen-controls-idle" : ""} ${moving ? "is-dragging" : ""}`}
+      className={`widget-host ${widget.type === "screen" ? "is-screen" : ""} ${focused ? "is-focused" : ""} ${floating ? "is-floating" : ""} ${widget.type === "screen" && !props.active ? "screen-controls-idle" : ""} ${moving ? "is-dragging" : ""} ${props.underDock ? "under-dock" : ""}`}
       data-widget-id={widget.id}
       data-strip-axis={props.stripAxis}
       aria-label={title}
