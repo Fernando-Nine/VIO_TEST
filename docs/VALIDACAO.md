@@ -6,7 +6,7 @@
 para a expectativa do novo layout inicial. TypeScript e build aprovados.
 Os novos testes verificam a roda da tira e o modificador, cópias de notas com cotas
 e isolamento por sala, autoria, criador e ping medido por Socket.IO.
-Requisitos, diagnósticos e decisões abertas: [RODADA-D.md](RODADA-D.md).
+Requisitos, diagnósticos e decisões abertas: [ESTADO.md](ESTADO.md).
 
 ### Prévia publicada — conferência visual em 11/10/2026
 
@@ -87,8 +87,8 @@ Ainda faltam queda com mídia ativa, aviso durante teclado móvel, volume com te
 remotas, PC + celular, leitores de tela e demais navegadores. O ensaio automatizado
 de sinalização inclui reinício real do servidor, mas não certifica mídia física.
 
-Propostas C24, C25 e C26 continuam em `RODADA-C.md`. Roteiro de aceite e requisitos
-em `PENDENCIAS.md`. Os registros abaixo são históricos; não certificam a rc.4.
+Propostas C24, C25 e C26 continuam em `arquivo/RODADA-C.md`. Roteiro de aceite e requisitos
+em `arquivo/PENDENCIAS.md`. Os registros abaixo são históricos; não certificam a rc.4.
 
 ## Prévia 2.7.0-rc.1 — atualização em 06/10/2026
 
