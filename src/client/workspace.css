@@ -2011,3 +2011,31 @@
     background: #5a4a17;
   }
 }
+.canvas-toolbar .live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  max-width: 40vw;
+  margin-left: 4px;
+  padding: 4px 11px;
+  border: 1px solid #ff6b7d80;
+  border-radius: 999px;
+  background: #3a1520;
+  color: #ffd9de;
+  font-size: 12px;
+  font-weight: 600;
+}
+.canvas-toolbar .live-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.canvas-toolbar .live-chip .live-pulse {
+  width: 8px;
+  height: 8px;
+  background: #ff4d63;
+}
+.canvas-toolbar .live-chip:hover {
+  background: #4d1a28;
+}

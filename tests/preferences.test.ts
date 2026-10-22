@@ -127,3 +127,23 @@ test("sons de presença ignoram duplicatas, quedas, reconexões e troca de inst�
   );
   assert.deepEqual(presenceCues(a, snapshot([person("friend")]), "self"), []);
 });
+
+test("som de transmissão nova só para telas de outras pessoas", () => {
+  const screen = (owner: string, id: string): Participant => ({
+    ...person(owner),
+    publications: [
+      { id, owner, kind: "screen", key: id, audio: false, muted: false },
+    ],
+  });
+  const a = snapshot([person("self"), person("friend")]);
+  assert.deepEqual(
+    presenceCues(a, snapshot([person("self"), screen("friend", "s1")]), "self"),
+    ["screen-new"],
+  );
+  assert.deepEqual(
+    presenceCues(a, snapshot([screen("self", "s2"), person("friend")]), "self"),
+    [],
+  );
+  const live = snapshot([person("self"), screen("friend", "s1")]);
+  assert.deepEqual(presenceCues(live, live, "self"), []);
+});

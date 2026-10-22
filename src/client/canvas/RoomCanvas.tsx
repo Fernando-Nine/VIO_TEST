@@ -369,6 +369,9 @@ export function RoomCanvas(props: Props) {
         })),
     ) || [];
   const publicationsKey = publications.map((p) => p.id).join("|");
+  const liveUnwatched = publications.filter(
+    (p) => !p.own && !engine.view.watching.includes(p.id),
+  );
   const epoch = useRef(snapshot?.epoch);
 
   function focusHeader(id: string) {
@@ -825,6 +828,28 @@ export function RoomCanvas(props: Props) {
           openScreen={showPublication}
           onOpenChange={setNotificationsOpen}
         />
+        {liveUnwatched.length > 0 && (
+          <button
+            className="live-chip"
+            onClick={() => {
+              if (liveUnwatched.length === 1)
+                showPublication(liveUnwatched[0].id);
+              else {
+                setCatalog(
+                  state.slots.find((s) => !s.widgetId && !s.offer)?.id ?? "new",
+                );
+                setCatalogTab("live");
+              }
+            }}
+          >
+            <i className="live-pulse" aria-hidden="true" />
+            <span>
+              {liveUnwatched.length === 1
+                ? `${liveUnwatched[0].title} ao vivo`
+                : `${liveUnwatched.length} transmissões ao vivo`}
+            </span>
+          </button>
+        )}
         <button
           className="icon-button canvas-fullscreen"
           onClick={props.fullscreen}

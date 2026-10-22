@@ -262,6 +262,14 @@ export class Controller {
   private updateCueVolume() {
     this.cues.setVolume(this.sounds ? this.masterVolume * this.soundVolume : 0);
   }
+  private lastChatCue = -Infinity;
+  /** One chime per burst of chat messages, not one per line. */
+  private chatCue() {
+    const now = performance.now();
+    if (now - this.lastChatCue < 4000) return;
+    this.lastChatCue = now;
+    void this.playCue("chat-message");
+  }
   playCue(cue: Cue, preview = false): Promise<boolean> {
     if (this.disposed || !this.sounds || (!preview && !this.soundEvents[cue]))
       return Promise.resolve(false);
@@ -495,6 +503,17 @@ export class Controller {
         "widget-updated",
         (event: { id: string; widget: SharedWidget | null }) => {
           if (!current() || !this.view.snapshot) return;
+          const before = this.view.snapshot.widgets?.find(
+            (w) => w.id === event.id,
+          );
+          const last = event.widget?.messages?.at(-1);
+          if (
+            before &&
+            last &&
+            last.authorId !== this.view.id &&
+            last.id !== before.messages?.at(-1)?.id
+          )
+            this.chatCue();
           const widgets = (this.view.snapshot.widgets || []).filter(
             (w) => w.id !== event.id,
           );
