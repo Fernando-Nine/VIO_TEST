@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Settings2 } from "lucide-react";
 import { Avatar } from "../components/Avatar";
+import { HeaderTools, ScopeBadge } from "./header-tools";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import type { WidgetProps } from "./widgets";
@@ -34,8 +35,8 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const editable = canEditPublic(engine.view.snapshot, engine.view.id, chat);
   return (
     <div className="chat-widget">
-      <div className="chat-meta">
-        <small>Chat da sala</small>
+      <HeaderTools>
+        <ScopeBadge shared />
         {editable && (
           <button
             className="icon-button"
@@ -48,7 +49,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
             <Settings2 size={14} />
           </button>
         )}
-      </div>
+      </HeaderTools>
       <div
         ref={list}
         className="chat-messages"

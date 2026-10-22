@@ -5,11 +5,14 @@ import {
   useCallback,
   useLayoutEffect,
   useRef,
+  useState,
   type CSSProperties,
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
 import { ArrowLeftRight, Grip, X } from "lucide-react";
+import { ContextMenu, type MenuItem } from "../components/ContextMenu";
+import { HeaderToolsSlot } from "./header-tools";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -88,6 +91,8 @@ export function WidgetFrame(props: Props) {
     [ref],
   );
   const title = titleOf(widget, engine);
+  const [tools, setTools] = useState<HTMLElement | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const endsForEveryone =
     !!widget.config.sharedId &&
     engine.view.snapshot?.widgets?.some(
@@ -147,6 +152,24 @@ export function WidgetFrame(props: Props) {
           ? 3
           : 2,
   } as CSSProperties;
+  const removeLabel = endsForEveryone
+    ? "Encerrar para todos"
+    : widget.type === "screen"
+      ? "Desconectar transmissão"
+      : "Remover deste layout";
+  const menuItems: MenuItem[] = [
+    ...(def?.menu?.(props) || []),
+    ...(focused
+      ? []
+      : [
+          {
+            label: "Trazer para o foco",
+            icon: ArrowLeftRight,
+            run: props.focus,
+          },
+        ]),
+    { label: removeLabel, icon: X, danger: true, run: props.close },
+  ];
   function resizeTo(width: number, height: number) {
     engine.canvas.detach(widget.id, {
       x: box.x / bounds.width,
@@ -167,7 +190,20 @@ export function WidgetFrame(props: Props) {
       onPointerDownCapture={() => floating && engine.canvas.raise(widget.id)}
       onFocusCapture={() => floating && engine.canvas.raise(widget.id)}
     >
-      <header className="widget-header">
+      <header
+        className="widget-header"
+        onContextMenu={(event) => {
+          if ((event.target as HTMLElement).closest("input, textarea")) return;
+          event.preventDefault();
+          // The ContextMenu key reports no pointer position: open at the title.
+          const box = event.currentTarget.getBoundingClientRect();
+          setMenu(
+            event.clientX || event.clientY
+              ? { x: event.clientX, y: event.clientY }
+              : { x: box.left + 12, y: box.bottom },
+          );
+        }}
+      >
         <button
           ref={handleRef}
           className="widget-handle"
@@ -181,6 +217,7 @@ export function WidgetFrame(props: Props) {
           <span>{title}</span>
         </button>
         <HeaderAccessory widget={widget} engine={engine} />
+        <div className="widget-tools" ref={setTools} />
         <div className="widget-actions">
           {!focused && (
             <button
@@ -202,13 +239,7 @@ export function WidgetFrame(props: Props) {
                   ? `Desconectar ${title}`
                   : `Remover ${title} deste layout`
             }
-            title={
-              endsForEveryone
-                ? "Encerrar para todos na sala"
-                : widget.type === "screen"
-                  ? "Desconectar transmissão"
-                  : "Remover deste layout"
-            }
+            title={removeLabel}
           >
             <X size={15} />
           </button>
@@ -225,12 +256,23 @@ export function WidgetFrame(props: Props) {
             props.focus();
         }}
       >
-        <Body
-          {...props}
-          visible={visible}
-          height={Math.max(0, box.height - 38)}
-        />
+        <HeaderToolsSlot.Provider value={tools}>
+          <Body
+            {...props}
+            visible={visible}
+            height={Math.max(0, box.height - 38)}
+          />
+        </HeaderToolsSlot.Provider>
       </div>
+      {menu && (
+        <ContextMenu
+          at={menu}
+          items={menuItems}
+          label={`Ações de ${title}`}
+          close={() => setMenu(null)}
+          doc={element.current?.ownerDocument}
+        />
+      )}
       {floating && (
         <button
           className="widget-resizer"
