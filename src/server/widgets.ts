@@ -1,6 +1,10 @@
 import { Fault } from "./security";
 import { randomInt } from "node:crypto";
-import { applyModuleAction, type ModuleActor, type ModuleAction } from "../shared/room-modules";
+import {
+  applyModuleAction,
+  type ModuleActor,
+  type ModuleAction,
+} from "../shared/room-modules";
 import {
   operateWidget,
   contentKind,
@@ -10,6 +14,26 @@ import {
   type WidgetOperation,
   type ChatMessage,
 } from "../shared/widgets";
+
+/** Keeps the newest entries whose combined size fits the budget. */
+export function trimToBudget<T>(
+  items: T[],
+  max: number,
+  budget: number,
+  size: (item: T) => number,
+) {
+  const kept: T[] = [];
+  let used = 0;
+  for (let i = items.length - 1; i >= 0 && kept.length < max; i--) {
+    used += size(items[i]);
+    if (used > budget && kept.length) break;
+    kept.unshift(items[i]);
+  }
+  return kept;
+}
+/** Per-room memory bounds: every widget is held in memory and resent in snapshots. */
+export const chatBudget = { messages: 100, chars: 32000, widgets: 4 };
+export const historyBudget = { results: 20, chars: 8000 };
 
 /** Room-scoped ephemeral state. Only Rooms supplies the authenticated actor. */
 export class RoomWidgets {
@@ -38,6 +62,14 @@ export class RoomWidgets {
       throw new Fault(
         "WIDGET_LIMIT",
         "Limite de widgets compartilhados atingido: até 6 por criador e 32 na sala.",
+      );
+    if (
+      content.kind === "chat" &&
+      this.list().filter((w) => w.kind === "chat").length >= chatBudget.widgets
+    )
+      throw new Fault(
+        "WIDGET_LIMIT",
+        `A sala já tem ${chatBudget.widgets} chats. Use um dos existentes.`,
       );
     if (!validContent(content))
       throw new Fault(
@@ -88,8 +120,14 @@ export class RoomWidgets {
         "INVALID_REQUEST",
         "Cada bloco precisa de uma identidade única.",
       );
-    const next = { ...current, ...content, revision: current.revision + 1,
-      ...(content.module && JSON.stringify(content.module) !== JSON.stringify(current.module) ? {moduleState:{}} : {}),
+    const next = {
+      ...current,
+      ...content,
+      revision: current.revision + 1,
+      ...(content.module &&
+      JSON.stringify(content.module) !== JSON.stringify(current.module)
+        ? { moduleState: {} }
+        : {}),
     };
     this.entries.set(id, next);
     return next;
@@ -119,10 +157,24 @@ export class RoomWidgets {
     const next = {
       ...current,
       revision: current.revision + 1,
-      messages: [...messages, message].slice(-100),
+      messages: trimToBudget(
+        [...messages, message],
+        chatBudget.messages,
+        chatBudget.chars,
+        (m) => m.text.length + m.authorName.length,
+      ),
     };
     this.entries.set(id, next);
     return next;
+  }
+  /** Drops a departed participant from per-widget editor lists. */
+  forget(participantId: string) {
+    for (const [id, widget] of this.entries)
+      if (widget.guestEditors?.includes(participantId))
+        this.entries.set(id, {
+          ...widget,
+          guestEditors: widget.guestEditors.filter((v) => v !== participantId),
+        });
   }
   permission(id: string, participantId: string | undefined, allowed: boolean) {
     const current = this.entries.get(id);
@@ -144,21 +196,63 @@ export class RoomWidgets {
     this.entries.set(id, next);
     return next;
   }
-  interact(actor:ModuleActor,id:string,operationId:string,operation:ModuleAction) {
-    const current=this.entries.get(id);
-    if(!current?.module) throw new Fault("NOT_FOUND","Widget indisponível.");
-    const key=`${actor.id}:${id}:${operationId}`;
-    if(this.operations.has(key)) return current;
-    const now=Date.now(), throttle=`module:${actor.id}`;
-    if((operation.kind==="roll" || operation.kind==="draw") && now-(this.lastMessages.get(throttle)||0)<700) throw new Fault("RATE_LIMIT","Espere um instante antes de tentar novamente.");
+  interact(
+    actor: ModuleActor,
+    id: string,
+    operationId: string,
+    operation: ModuleAction,
+  ) {
+    const current = this.entries.get(id);
+    if (!current?.module) throw new Fault("NOT_FOUND", "Widget indisponível.");
+    const key = `${actor.id}:${id}:${operationId}`;
+    if (this.operations.has(key)) return current;
+    const now = Date.now(),
+      throttle = `module:${actor.id}`;
+    if (
+      (operation.kind === "roll" || operation.kind === "draw") &&
+      now - (this.lastMessages.get(throttle) || 0) < 700
+    )
+      throw new Fault(
+        "RATE_LIMIT",
+        "Espere um instante antes de tentar novamente.",
+      );
     try {
-      const moduleState=applyModuleAction(current.module,current.moduleState||{},operation,actor,operationId,current.revision,now,randomInt);
-      const next={...current,moduleState,revision:current.revision+1};
-      this.entries.set(id,next); this.operations.set(key,now);
-      if(operation.kind==="roll" || operation.kind==="draw") this.lastMessages.set(throttle,now);
-      while(this.operations.size>4096) this.operations.delete(this.operations.keys().next().value!);
+      const state = applyModuleAction(
+        current.module,
+        current.moduleState || {},
+        operation,
+        actor,
+        operationId,
+        current.revision,
+        now,
+        randomInt,
+      );
+      const moduleState = state.history
+        ? {
+            ...state,
+            history: trimToBudget(
+              state.history,
+              historyBudget.results,
+              historyBudget.chars,
+              (r) =>
+                r.detail.length + r.label.length + (r.expression?.length || 0),
+            ),
+          }
+        : state;
+      const next = { ...current, moduleState, revision: current.revision + 1 };
+      this.entries.set(id, next);
+      this.operations.set(key, now);
+      if (operation.kind === "roll" || operation.kind === "draw")
+        this.lastMessages.set(throttle, now);
+      while (this.operations.size > 4096)
+        this.operations.delete(this.operations.keys().next().value!);
       return next;
-    } catch(e) { throw new Fault("INVALID_REQUEST",e instanceof Error ? e.message : "Não foi possível concluir."); }
+    } catch (e) {
+      throw new Fault(
+        "INVALID_REQUEST",
+        e instanceof Error ? e.message : "Não foi possível concluir.",
+      );
+    }
   }
   operate(
     actor: string,
