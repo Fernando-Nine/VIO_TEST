@@ -10,6 +10,8 @@ const notes: Record<Cue, number[]> = {
   mute: [390, 260],
   deafen: [300, 220, 180],
   undeafen: [300, 440, 600],
+  "poll-open": [587.33, 880, 587.33, 880],
+  "poll-end": [523.25, 659.25, 783.99, 1046.5],
   "timer-end": [880, 660, 880, 660, 880],
 };
 export class SoundCues {
