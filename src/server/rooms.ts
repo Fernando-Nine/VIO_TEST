@@ -180,15 +180,19 @@ export class Rooms {
     for (const sub of [...room.subscriptions.values()])
       if (sub.viewer === member.id) this.closeSub(room, sub);
     room.members.delete(member.id);
+    room.widgets.forget(member.id);
     if (!room.members.size) {
       room.widgets.clear();
       room.shareRequests.clear();
       room.notices = [];
     }
     if (room.creatorId === member.id && room.members.size) {
+      const members = [...room.members.values()];
       const next =
-        [...room.members.values()].find((m) => m.role === "admin") ||
-        room.members.values().next().value!;
+        members.find((m) => m.role === "admin" && m.online) ||
+        members.find((m) => m.online) ||
+        members.find((m) => m.role === "admin") ||
+        members[0];
       room.creatorId = next.id;
       next.role = "creator";
       room.notices.push({
@@ -429,10 +433,21 @@ export class Rooms {
       return {};
     }
     if (action === "module-interact") {
-      const current=room.widgets.entries.get(data.id);
-      if (["reset","task","session","poll-control"].includes(data.operation.kind) && !editable(current)) deny();
-      const widget=room.widgets.interact({id:m.id,name:m.name},data.id,data.operationId,data.operation);
-      this.io.to(room.code).emit("widget-updated",{id:data.id,widget});
+      const current = room.widgets.entries.get(data.id);
+      if (
+        ["reset", "task", "session", "poll-control"].includes(
+          data.operation.kind,
+        ) &&
+        !editable(current)
+      )
+        deny();
+      const widget = room.widgets.interact(
+        { id: m.id, name: m.name },
+        data.id,
+        data.operationId,
+        data.operation,
+      );
+      this.io.to(room.code).emit("widget-updated", { id: data.id, widget });
       return widget;
     }
     if (action === "chat-send") {
@@ -472,8 +487,12 @@ export class Rooms {
           const previous = room.shareRequests.get(data.id);
           if (previous && previous.owner !== m.id) deny();
           if (!previous || previous.status !== "pending") {
+            // Answered requests are only history; drop the oldest first.
+            for (const [id, r] of room.shareRequests)
+              if (room.shareRequests.size < 48) break;
+              else if (r.status !== "pending") room.shareRequests.delete(id);
             if (
-              room.shareRequests.size >= 128 ||
+              room.shareRequests.size >= 48 ||
               [...room.shareRequests.values()].filter(
                 (r) => r.owner === m.id && r.status === "pending",
               ).length >= 6
