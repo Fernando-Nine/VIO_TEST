@@ -604,6 +604,14 @@ input[type="checkbox"] {
   .in-room .invite > span {
     display: none;
   }
+  /* A truncated code is useless: keep only the copy button. */
+  .in-room .room-code > span,
+  .in-room .connection .ping-source {
+    display: none;
+  }
+  .in-room .connection .ping-value {
+    white-space: nowrap;
+  }
   .in-room .room-heading {
     padding: 0 7px;
     flex-basis: 42px;

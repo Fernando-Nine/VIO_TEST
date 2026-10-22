@@ -272,6 +272,7 @@ export default function App({ engine }: { engine: Controller }) {
               <button
                 className="room-code"
                 title="Copiar código da sala"
+                aria-label={`Copiar código da sala ${view.snapshot.code}`}
                 onClick={() => void copy(false)}
               >
                 <span>{view.snapshot.code}</span>
