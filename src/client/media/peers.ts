@@ -60,6 +60,7 @@ export class Peers {
   private statsTimer: ReturnType<typeof setInterval>;
   private collecting = false;
   private pendingVideoDemand = new Map<string, VideoDemand>();
+  private accepting = new Set<string>();
   private generation = 0;
   constructor(
     private me: () => string,
@@ -97,8 +98,11 @@ export class Peers {
   async accept(sub: Subscription) {
     const generation = this.generation;
     if (this.ice.expiresAt < Date.now()) {
+      this.accepting.add(sub.id);
       const ice = await this.freshIce();
-      if (generation !== this.generation) return;
+      // close() during the await drops the id; creating the PC now would orphan it.
+      if (!this.accepting.delete(sub.id) || generation !== this.generation)
+        return;
       this.ice = ice;
     }
     const existing = this.entries.get(sub.id);
@@ -421,6 +425,7 @@ export class Peers {
   }
   close(id: string) {
     this.pendingVideoDemand.delete(id);
+    this.accepting.delete(id);
     const peer = this.entries.get(id);
     if (!peer) return;
     this.entries.delete(id);
@@ -539,6 +544,7 @@ export class Peers {
   closeAll() {
     this.generation++;
     this.pendingVideoDemand.clear();
+    this.accepting.clear();
     for (const id of [...this.entries.keys()]) this.close(id);
   }
   destroy() {
