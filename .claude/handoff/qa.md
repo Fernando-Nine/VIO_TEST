@@ -18,7 +18,6 @@ Sem tarefa em andamento. Abertas na área: #19, #20, #21, #22.
 - Formatação (Prettier) e `npm audit` ficam fora da CI até #20 e #19 resolverem;
   entram como passos depois, para não deixar a `main` vermelha.
 - Bancada de mídia segue manual até #22; aceite de mídia continua humano na prévia.
-
 - Sem proteção de branch: no plano Free, repo privado não aplica regras. Vale a regra
   dos agentes (merge só com CI verde) + hook contra push na `main`. Rever se o repo
   ficar público ou mudar de plano.
