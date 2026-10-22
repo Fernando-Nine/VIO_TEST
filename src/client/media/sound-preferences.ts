@@ -39,6 +39,11 @@ export const soundEvents = [
     label: "Voltar a ouvir",
     description: "Ao reativar o áudio da sala.",
   },
+  {
+    cue: "timer-end",
+    label: "Fim do cronômetro",
+    description: "Quando um cronômetro chega ao final.",
+  },
 ] as const;
 export type Cue = (typeof soundEvents)[number]["cue"];
 export type SoundEvents = Record<Cue, boolean>;

@@ -4,11 +4,10 @@ import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import { NoteActions } from "./NoteActions";
 import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
+import { TimerBlock } from "./TimerBlock";
 import {
   operateWidget,
   timerElapsed,
-  timerDisplay,
-  timerFinished,
   contentKind,
   widgetContent,
   type SharedWidget,
@@ -68,11 +67,6 @@ export function widgetValue(
     createdAt: raw?.createdAt || Date.now(),
   };
 }
-function clock(seconds: number) {
-  const s = Math.max(0, Math.floor(seconds));
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-}
-
 function TextBlock({
   block,
   revision,
@@ -274,7 +268,7 @@ export function CustomWidget({
     <div className="custom-widget">
       <HeaderTools>
         <ScopeBadge shared={shared} />
-        {owner && (
+        {owner && widget.type !== "timer" && (
           <button
             className="icon-button"
             aria-label="Editar estrutura do widget"
@@ -399,50 +393,26 @@ export function CustomWidget({
                 </div>
               ))}
             {block.kind === "timer" && (
-              <>
-                {block.label !== value.title && <strong>{block.label}</strong>}
-                <output
-                  className="widget-clock"
-                  aria-label="Tempo do cronômetro"
-                >
-                  {clock(timerDisplay(block, now))}
-                </output>
-                <div className="widget-inline-actions">
-                  <button
-                    className="secondary"
-                    onClick={() =>
-                      act({
-                        kind: "timer",
-                        blockId: block.id,
-                        action:
-                          block.startedAt === null || timerFinished(block, now)
-                            ? "start"
-                            : "pause",
-                        revision: value.revision,
-                      })
-                    }
-                  >
-                    {timerFinished(block, now)
-                      ? "Reiniciar"
-                      : block.startedAt === null
-                        ? "Iniciar"
-                        : "Pausar"}
-                  </button>
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      act({
-                        kind: "timer",
-                        blockId: block.id,
-                        action: "reset",
-                        revision: value.revision,
-                      })
-                    }
-                  >
-                    Zerar
-                  </button>
-                </div>
-              </>
+              <TimerBlock
+                block={block}
+                now={now}
+                engine={engine}
+                editable={owner}
+                revision={value.revision}
+                act={act}
+                update={(next) =>
+                  void saveStructure(
+                    widgetContent.parse({
+                      kind: value.kind,
+                      title: value.title,
+                      blocks: value.blocks.map((b) =>
+                        b.id === next.id ? next : b,
+                      ),
+                    }),
+                    value.revision,
+                  ).catch((e) => setError(e.message))
+                }
+              />
             )}
           </section>
         ))}
