@@ -20,13 +20,6 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
   }
   return (
     <>
-      <fieldset>
-        <legend>Organização dos widgets</legend>
-        <p className="field-note">
-          Arraste livremente. Segure Shift para encaixar no grid. No toque ou
-          sem arrastar, use Layout → Mover widget.
-        </p>
-      </fieldset>
       <fieldset className="application-volume">
         <legend>
           <Volume2 size={17} /> Volume do aplicativo
@@ -92,10 +85,6 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
             }}
           />
         </label>
-        <p className="field-note">
-          Este volume acompanha o volume geral. Suas escolhas abaixo ficam
-          salvas mesmo com os sons desligados.
-        </p>
         <div className="sound-event-list">
           {soundEvents.map(({ cue, label, description }) => (
             <div className="sound-event" key={cue}>

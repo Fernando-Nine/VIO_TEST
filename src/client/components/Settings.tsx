@@ -322,9 +322,6 @@ export function Settings({ engine }: { engine: Controller }) {
         {engine.output.supported && (
           <fieldset>
             <legend>Saída de áudio</legend>
-            <p className="field-note">
-              Onde você ouve a conversa e o som das telas.
-            </p>
             {engine.output.restoreMessage && (
               <p className="field-note" role="status">
                 {engine.output.restoreMessage}

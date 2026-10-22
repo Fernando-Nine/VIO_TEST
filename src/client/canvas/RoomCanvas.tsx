@@ -490,12 +490,17 @@ export function RoomCanvas(props: Props) {
     setCatalog(null);
   }
   async function addWidget(type: string, scope?: "room" | "individual") {
-    if (isModule(type) && !scope) {setModuleChoice(type); return;}
+    if (isModule(type) && !scope) {
+      setModuleChoice(type);
+      return;
+    }
     if (type === "chat" || (isModule(type) && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
           id: freshKey(),
-          content: isModule(type) ? createModule(type) : { kind: "chat", title: "Chat", blocks: [] },
+          content: isModule(type)
+            ? createModule(type)
+            : { kind: "chat", title: "Chat", blocks: [] },
         });
         engine.receiveSharedWidget(widget);
         openShared(widget);
@@ -505,7 +510,8 @@ export function RoomCanvas(props: Props) {
       return;
     }
     const existing =
-      !["custom", "notes", "timer"].includes(type) && !isModule(type) &&
+      !["custom", "notes", "timer"].includes(type) &&
+      !isModule(type) &&
       store.getSnapshot().widgets.find((w) => w.type === type);
     if (existing) {
       focus(existing.id);
@@ -1201,7 +1207,7 @@ export function RoomCanvas(props: Props) {
             </div>
           </fieldset>
           <fieldset className="layout-details">
-            <legend>Organize seu Layout</legend>
+            <legend>{stripMode ? "Posição do foco" : "Disposição"}</legend>
             {stripMode ? (
               <div
                 className="layout-directions"
@@ -1258,17 +1264,7 @@ export function RoomCanvas(props: Props) {
                 />
               </label>
             )}
-            <p className="field-note">
-              O layout preserva os widgets abertos. Espaços vazios podem ser
-              removidos pelo X. Arraste livremente; segure{" "}
-              {canvasShortcuts.snap.label} para encaixar.
-            </p>
           </fieldset>
-          <p className="field-note">
-            A partir de seis participantes, o envio direto entre navegadores
-            exige mais rede e processamento. A sala não tem limite fixo de
-            pessoas.
-          </p>
         </Dialog>
       )}
       {catalog && (
@@ -1396,15 +1392,48 @@ export function RoomCanvas(props: Props) {
           )}
         </Dialog>
       )}
-      {catalog && moduleChoice && <Dialog title={widgetRegistry[moduleChoice].title} centered close={()=>setModuleChoice(null)}>
-        <p>Escolha onde usar este widget.</p>
-        <div className="module-scope">
-          <button className="primary" disabled={!canManageRoom(snapshot,engine.view.id)} onClick={()=>{const type=moduleChoice;setModuleChoice(null);void addWidget(type,"room");}}>Adicionar à sala</button>
-          <button className="secondary" onClick={()=>{const type=moduleChoice;setModuleChoice(null);void addWidget(type,"individual");}}>Só para mim</button>
-        </div>
-        {!canManageRoom(snapshot,engine.view.id) && <p className="field-note">Só o criador e administradores adicionam diretamente à sala. Você pode criar um individual e pedir para compartilhar.</p>}
-        <p className="field-note">Na sala, cada pessoa recebe um convite para adicionar ao próprio layout.</p>
-      </Dialog>}
+      {catalog && moduleChoice && (
+        <Dialog
+          title={widgetRegistry[moduleChoice].title}
+          centered
+          close={() => setModuleChoice(null)}
+        >
+          <p>Escolha onde usar este widget.</p>
+          <div className="module-scope">
+            <button
+              className="primary"
+              disabled={!canManageRoom(snapshot, engine.view.id)}
+              onClick={() => {
+                const type = moduleChoice;
+                setModuleChoice(null);
+                void addWidget(type, "room");
+              }}
+            >
+              Adicionar à sala
+            </button>
+            <button
+              className="secondary"
+              onClick={() => {
+                const type = moduleChoice;
+                setModuleChoice(null);
+                void addWidget(type, "individual");
+              }}
+            >
+              Só para mim
+            </button>
+          </div>
+          {!canManageRoom(snapshot, engine.view.id) && (
+            <p className="field-note">
+              Só o criador e administradores adicionam diretamente à sala. Você
+              pode criar um individual e pedir para compartilhar.
+            </p>
+          )}
+          <p className="field-note">
+            Na sala, cada pessoa recebe um convite para adicionar ao próprio
+            layout.
+          </p>
+        </Dialog>
+      )}
       {catalog && communityNotice && (
         <Dialog
           title="Widgets personalizados"
