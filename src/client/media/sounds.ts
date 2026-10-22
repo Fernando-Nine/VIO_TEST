@@ -10,6 +10,7 @@ const notes: Record<Cue, number[]> = {
   mute: [390, 260],
   deafen: [300, 220, 180],
   undeafen: [300, 440, 600],
+  "timer-end": [880, 660, 880, 660, 880],
 };
 export class SoundCues {
   private context?: AudioContext;
