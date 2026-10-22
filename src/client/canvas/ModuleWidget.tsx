@@ -7,6 +7,7 @@ import {
   ArrowDown,
   X,
   Plus,
+  Trophy,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
@@ -131,6 +132,42 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     const timer = setInterval(() => setNow(engine.serverNow()), 1000);
     return () => clearInterval(timer);
   }, [visible, config?.kind, engine]);
+  const pollStart = config?.kind === "poll" ? (state.startedAt ?? null) : null;
+  const pollEnd =
+    config?.kind === "poll" && pollStart != null && config.duration
+      ? pollStart + config.duration * 1000
+      : null;
+  const pollClosed = config?.kind === "poll" && !!state.closed;
+  const [revealAt, setRevealAt] = useState(0);
+  const seen = useRef({ start: pollStart, closed: pollClosed });
+  useEffect(() => {
+    const before = seen.current;
+    seen.current = { start: pollStart, closed: pollClosed };
+    // Chime only for changes that happen while this widget is open, not for
+    // a poll that was already running or closed when it mounted.
+    if (pollStart != null && before.start == null)
+      void engine.playCue("poll-open");
+    if (pollStart != null && pollClosed && !before.closed) {
+      void engine.playCue("poll-end");
+      setRevealAt(Date.now());
+    }
+  }, [pollStart, pollClosed, engine]);
+  useEffect(() => {
+    if (pollEnd == null || pollClosed) return;
+    const left = pollEnd - engine.serverNow();
+    if (left <= 0) return;
+    const timer = setTimeout(() => {
+      void engine.playCue("poll-end");
+      setNow(engine.serverNow());
+      setRevealAt(Date.now());
+    }, left);
+    return () => clearTimeout(timer);
+  }, [pollEnd, pollClosed, engine]);
+  useEffect(() => {
+    if (!revealAt) return;
+    const timer = setTimeout(() => setRevealAt(0), 2600);
+    return () => clearTimeout(timer);
+  }, [revealAt]);
   useRename(
     value && config && editable
       ? (title) =>
@@ -316,6 +353,19 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     state.startedAt != null &&
     !state.closed &&
     (!config.duration || now < state.startedAt + config.duration * 1000);
+  const pollCounts =
+    config.kind === "poll"
+      ? config.options.map(
+          (option) =>
+            Object.values(state.votes || {}).filter((v) => v === option.id)
+              .length,
+        )
+      : [];
+  const topVotes = Math.max(0, ...pollCounts);
+  const winners =
+    config.kind === "poll" && state.startedAt != null && !pollOpen && topVotes
+      ? config.options.filter((_, i) => pollCounts[i] === topVotes)
+      : [];
   return (
     <div className={`module-widget ${compact ? "is-compact" : ""}`}>
       {controls}
@@ -327,17 +377,22 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
               {state.startedAt == null
                 ? "Aguardando abertura"
                 : !pollOpen
-                  ? "Votação encerrada"
+                  ? winners.length === 1
+                    ? `Vencedor: ${winners[0].label}`
+                    : winners.length
+                      ? "Empate"
+                      : "Votação encerrada"
                   : config.duration
                     ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}`
                     : "Votação aberta"}{" "}
-              · {Object.keys(state.votes || {}).length} votos
+              · {Object.keys(state.votes || {}).length}{" "}
+              {Object.keys(state.votes || {}).length === 1 ? "voto" : "votos"}
             </small>
-            <div className="module-options">
-              {config.options.map((option) => (
+            <div className={`module-options ${revealAt ? "is-revealing" : ""}`}>
+              {config.options.map((option, i) => (
                 <button
                   key={option.id}
-                  className="secondary"
+                  className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
                   aria-pressed={state.votes?.[engine.view.id] === option.id}
                   disabled={!pollOpen || busy}
                   onClick={() =>
@@ -346,11 +401,10 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                 >
                   <span>{option.label}</span>
                   <b>
-                    {
-                      Object.values(state.votes || {}).filter(
-                        (v) => v === option.id,
-                      ).length
-                    }
+                    {winners.includes(option) && (
+                      <Trophy size={13} aria-label="Vencedor" />
+                    )}
+                    {pollCounts[i]}
                   </b>
                 </button>
               ))}
