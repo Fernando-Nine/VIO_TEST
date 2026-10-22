@@ -178,7 +178,7 @@ um intermediário de rede, mecanismos de encerramento e um modelo de distribuiç
 Esses controles não estão implementados e não são anunciados como disponíveis.
 
 Contas, verificação de autores, denúncias, remoção de plugins, instalável e dono da sala
-ficam para etapas futuras. Consulte `PENDENCIAS.md` para requisitos em linguagem simples.
+ficam para etapas futuras. Consulte `arquivo/PENDENCIAS.md` para requisitos em linguagem simples.
 
 ## Aceite
 

@@ -12,7 +12,7 @@ O código antigo de VIO foi substituído pela implementação atual em 11/10/202
 preservando o histórico, sem force push (commit 196ba88). A versão 2.7.1 passou
 pelo aceite direcionado e pelo health check do Render; criação de sala conferida.
 A prévia acrescenta Chat, papéis, notificações e mesclagem da tira. Estado,
-limites e decisões abertas: [Rodada E](docs/RODADA-E.md).
+limites e decisões abertas: [estado atual](docs/ESTADO.md).
 
 ## Executar
 
@@ -68,7 +68,7 @@ auxiliares desaparecem após dois segundos sem atividade, preservando foco de te
 Tema escuro, azul #2727F5, fontes locais e movimento reduzido permanecem.
 
 Detalhes: [arquitetura do canvas](docs/CANVAS.md), [validação](docs/VALIDACAO.md)
-e [pendências em linguagem simples](docs/PENDENCIAS.md).
+e [estado atual](docs/ESTADO.md).
 
 ## O que a interface oferece
 
