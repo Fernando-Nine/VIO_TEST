@@ -754,18 +754,16 @@ export function RoomCanvas(props: Props) {
         </button>
         <button
           className="text-button"
-          aria-label="Adicionar espaço vazio"
+          aria-label="Adicionar widget"
           onClick={() => {
-            const id =
-              state.slots.find((s) => !s.widgetId && !s.offer)?.id ||
-              store.addSlot();
-            setHighlightedSlot(id);
+            // Target the first free slot; with none, picking a widget adds one.
             store.change((s) => {
               s.single = false;
             });
-            announce(
-              "Espaço vazio pronto. Clique em Adicionar widget para escolher o conteúdo.",
+            setCatalog(
+              state.slots.find((s) => !s.widgetId && !s.offer)?.id ?? "new",
             );
+            setCatalogTab("native");
           }}
         >
           <Plus size={16} />
