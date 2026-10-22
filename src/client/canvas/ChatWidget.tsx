@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Settings2 } from "lucide-react";
 import { Avatar } from "../components/Avatar";
+import { EmojiPicker } from "../components/EmojiPicker";
 import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
@@ -17,6 +18,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState("");
   const list = useRef<HTMLDivElement>(null);
+  const composer = useRef<HTMLInputElement>(null);
   const last = chat?.messages?.at(-1);
   const operation = useRef({ text: "", id: "" });
   useEffect(() => {
@@ -44,6 +46,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
       : undefined,
   );
   if (!chat) return <p className="widget-empty">Este chat foi encerrado.</p>;
+  let groupStart = 0;
   const manages = canManageRoom(engine.view.snapshot, engine.view.id);
   return (
     <div className="chat-widget">
@@ -75,10 +78,17 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           <p className="widget-empty">Comece a conversa.</p>
         )}
         {chat.messages?.map((message, i, messages) => {
+          // A group keeps one header until the author changes or five
+          // minutes pass since the header that opened it.
           const grouped =
             i > 0 &&
             messages[i - 1].authorId === message.authorId &&
-            message.sentAt - messages[i - 1].sentAt < 300000;
+            message.sentAt - groupStart < 300000;
+          if (!grouped) groupStart = message.sentAt;
+          const time = new Date(message.sentAt).toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
           return (
             <div
               key={message.id}
@@ -92,18 +102,26 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
                 />
               )}
               <div>
-                <div className="chat-message-heading">
-                  {!grouped && <strong>{message.authorName}</strong>}
+                {grouped && (
                   <time
+                    className="chat-hover-time"
                     dateTime={new Date(message.sentAt).toISOString()}
-                    aria-label={`Enviada às ${new Date(message.sentAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+                    aria-label={`Enviada às ${time}`}
                   >
-                    {new Date(message.sentAt).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {time}
                   </time>
-                </div>
+                )}
+                {!grouped && (
+                  <div className="chat-message-heading">
+                    <strong>{message.authorName}</strong>
+                    <time
+                      dateTime={new Date(message.sentAt).toISOString()}
+                      aria-label={`Enviada às ${time}`}
+                    >
+                      {time}
+                    </time>
+                  </div>
+                )}
                 <p>{message.text}</p>
               </div>
             </div>
@@ -142,7 +160,22 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           }
         }}
       >
+        <EmojiPicker
+          onPick={(emoji) => {
+            const input = composer.current;
+            const at = input?.selectionStart ?? draft.length;
+            const end = input?.selectionEnd ?? at;
+            setDraft((d) =>
+              (d.slice(0, at) + emoji + d.slice(end)).slice(0, 2000),
+            );
+            requestAnimationFrame(() => {
+              input?.focus();
+              input?.setSelectionRange(at + emoji.length, at + emoji.length);
+            });
+          }}
+        />
         <input
+          ref={composer}
           aria-label="Mensagem"
           placeholder="Mensagem…"
           maxLength={2000}
@@ -155,7 +188,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           aria-label="Enviar mensagem"
           disabled={busy || !draft.trim()}
         >
-          <Send size={17} />
+          <Send size={20} />
         </button>
       </form>
       {editing && (

@@ -1507,6 +1507,7 @@
   overscroll-behavior: contain;
 }
 .chat-message {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -1540,10 +1541,22 @@
 }
 .chat-message.is-grouped {
   padding-left: 39px;
-  margin-top: -5px;
+  margin-top: -6px;
+}
+.chat-message .chat-hover-time {
+  position: absolute;
+  left: 0;
+  width: 32px;
+  margin-top: 3px;
+  text-align: center;
+  opacity: 0;
+}
+.chat-message:hover .chat-hover-time {
+  opacity: 1;
 }
 .chat-compose {
   display: flex;
+  align-items: center;
   gap: 4px;
   flex-shrink: 0;
   margin: 0;
@@ -1552,12 +1565,39 @@
   min-width: 0;
   flex: 1;
   width: 0;
-  padding: 7px 9px;
+  height: 40px;
+  padding: 7px 10px;
   font-size: 13px;
 }
 .chat-compose .icon-button {
-  flex: 0 0 36px;
-  min-height: 36px;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 34px);
+  gap: 2px;
+  width: auto;
+  padding: 6px;
+}
+.emoji-picker button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font-size: 19px;
+  line-height: 1;
+}
+.emoji-picker button:hover,
+.emoji-picker button:focus-visible {
+  background: #2a3352;
 }
 .chat-widget .error-text {
   font-size: 12px;
