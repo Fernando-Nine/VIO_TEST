@@ -1577,18 +1577,27 @@
 }
 .chat-compose {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   flex-shrink: 0;
   margin: 0;
 }
-.chat-compose input {
+.chat-compose textarea {
   min-width: 0;
   flex: 1;
   width: 0;
-  height: 40px;
-  padding: 7px 10px;
+  min-height: 40px;
+  max-height: 120px;
+  field-sizing: content;
+  resize: none;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0d1221;
+  color: inherit;
+  font: inherit;
   font-size: 13px;
+  line-height: 1.4;
 }
 .chat-compose .icon-button {
   flex: 0 0 40px;
@@ -1975,8 +1984,9 @@
   color: #aeb6d6;
 }
 .widget-clock.timer-edit {
-  width: 100%;
-  padding: 0;
+  width: auto;
+  max-width: 100%;
+  padding: 0 0.1em;
   border: 0;
   border-radius: 8px;
   background: none;
@@ -2196,11 +2206,15 @@
     min-height: 2.2em;
     padding: 0.35em 0.6em;
   }
-  .module-history li:nth-child(n + 2),
-  .module-history details {
+  .module-widget .module-content > .text-button.history-short {
+    display: inline-flex;
+  }
+  /* Only the inline list; the history dialog keeps every entry. */
+  .module-content > .module-history li:nth-child(n + 2),
+  .module-content > .module-history details {
     display: none;
   }
-  .module-history li {
+  .module-content > .module-history li {
     border: 0;
     padding: 0;
   }
@@ -2605,4 +2619,19 @@ button.inline-text.is-empty {
   .module-widget.kind-poll .module-duration .text-button {
     display: none;
   }
+}
+
+.module-content > .text-button.history-short {
+  display: none;
+}
+/* The repeat toggle matches the mode chip beside it, so its target is what it shows. */
+.timer-face .timer-modes > .icon-button {
+  width: 2.3em;
+  min-width: 2.3em;
+  height: 2.3em;
+  min-height: 2.3em;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
 }

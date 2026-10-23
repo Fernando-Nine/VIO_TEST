@@ -15,7 +15,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const list = useRef<HTMLDivElement>(null);
-  const composer = useRef<HTMLInputElement>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const last = chat?.messages?.at(-1);
   const operation = useRef({ text: "", id: "" });
   useEffect(() => {
@@ -158,13 +158,21 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
             });
           }}
         />
-        <input
+        <textarea
           ref={composer}
           aria-label="Mensagem"
           placeholder="Mensagem…"
           maxLength={2000}
+          rows={1}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter sends; Shift+Enter breaks the line.
+            if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing)
+              return;
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+          }}
           readOnly={busy}
         />
         <button
