@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Settings2 } from "lucide-react";
+import { Send } from "lucide-react";
 import { Avatar } from "../components/Avatar";
 import { EmojiPicker } from "../components/EmojiPicker";
 import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
-import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import type { WidgetProps } from "./widgets";
-import { canManageRoom, canEditPublic } from "../../shared/permissions";
+import { canEditPublic } from "../../shared/permissions";
 
 export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const chat = engine.view.snapshot?.widgets?.find(
@@ -15,8 +14,6 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState("");
   const list = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLInputElement>(null);
   const last = chat?.messages?.at(-1);
@@ -47,23 +44,10 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   );
   if (!chat) return <p className="widget-empty">Este chat foi encerrado.</p>;
   let groupStart = 0;
-  const manages = canManageRoom(engine.view.snapshot, engine.view.id);
   return (
     <div className="chat-widget">
       <HeaderTools>
         <ScopeBadge shared />
-        {editable && (
-          <button
-            className="icon-button"
-            aria-label="Editar chat"
-            onClick={() => {
-              setTitle(chat.title);
-              setEditing(true);
-            }}
-          >
-            <Settings2 size={14} />
-          </button>
-        )}
       </HeaderTools>
       <div
         ref={list}
@@ -128,7 +112,7 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           );
         })}
       </div>
-      {error && !editing && (
+      {error && (
         <p className="error-text" role="alert">
           {error}
         </p>
@@ -191,48 +175,6 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           <Send size={20} />
         </button>
       </form>
-      {editing && (
-        <Dialog title="Editar chat" close={() => setEditing(false)}>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await engine.request("widget-structure", {
-                  id: chat.id,
-                  revision: chat.revision,
-                  content: { kind: "chat", title, blocks: [] },
-                });
-                setEditing(false);
-              } catch (e) {
-                setError(
-                  e instanceof Error ? e.message : "Não foi possível salvar.",
-                );
-              }
-            }}
-          >
-            <label>
-              Nome do chat
-              <input
-                value={title}
-                maxLength={64}
-                required
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </label>
-            <button className="primary">Salvar</button>
-          </form>
-          {error && (
-            <p className="error-text" role="alert">
-              {error}
-            </p>
-          )}
-          {manages && (
-            <p className="field-note">
-              As permissões de edição ficam em Pessoas na sala.
-            </p>
-          )}
-        </Dialog>
-      )}
     </div>
   );
 }
