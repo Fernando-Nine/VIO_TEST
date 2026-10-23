@@ -2521,3 +2521,88 @@ button.inline-text.is-empty {
     display: none;
   }
 }
+
+/* #53: the poll is set up on its face, votes stay hidden until it ends. */
+.module-fields > .poll-start {
+  align-self: center;
+  min-height: 2.6em;
+  padding: 0.45em 1.6em;
+  font-size: 1em;
+  margin-top: 0.3em;
+}
+.module-widget.kind-poll .module-fields {
+  justify-content: safe center;
+}
+.module-widget.kind-poll .module-fields > * {
+  width: 100%;
+  max-width: 44em;
+  align-self: center;
+}
+.module-widget.kind-poll .module-fields > .poll-start {
+  width: auto;
+}
+.module-widget.kind-poll .module-fields > .module-question {
+  text-align: center;
+}
+.module-options button > svg {
+  flex-shrink: 0;
+  color: #a5acff;
+}
+.module-options button > span {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.module-footer {
+  display: contents;
+}
+.module-widget.kind-poll .module-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em 1em;
+}
+.module-widget.kind-poll .module-footer > .poll-start {
+  margin: 0;
+}
+.module-rows .row-add {
+  border: 0;
+}
+/* Short spaces: options become chips on one line, reordering waits for more room. */
+@container widget-body (max-height: 260px) {
+  .module-widget.kind-poll .module-fields {
+    gap: 0.35em;
+  }
+  .module-widget.kind-poll .module-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+  }
+  .module-widget.kind-poll .module-rows li {
+    flex: 1 1 6.5em;
+    gap: 0.1em;
+    padding: 0.1em 0.2em 0.1em 0.5em;
+    border: 1px solid #36384d;
+    border-radius: 8px;
+  }
+  .module-widget.kind-poll .module-rows li.row-add {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0;
+  }
+  .module-widget.kind-poll .row-add .module-add > span,
+  .module-widget.kind-poll .row-tools .icon-button:not(:last-child) {
+    display: none;
+  }
+  .module-widget.kind-poll .row-add .module-add {
+    min-height: 2em;
+    padding: 0 0.4em;
+  }
+  .module-widget.kind-poll .module-footer > .poll-start {
+    min-height: 2.3em;
+    padding: 0.3em 1.1em;
+  }
+  .module-widget.kind-poll .module-duration .text-button {
+    display: none;
+  }
+}
