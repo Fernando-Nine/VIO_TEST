@@ -6,6 +6,10 @@ import {
   type ModuleAction,
 } from "../shared/room-modules";
 import {
+  trimToBudget,
+  trimMessages,
+  chatBudget,
+  historyBudget,
   operateWidget,
   contentKind,
   validContent,
@@ -15,25 +19,7 @@ import {
   type ChatMessage,
 } from "../shared/widgets";
 
-/** Keeps the newest entries whose combined size fits the budget. */
-export function trimToBudget<T>(
-  items: T[],
-  max: number,
-  budget: number,
-  size: (item: T) => number,
-) {
-  const kept: T[] = [];
-  let used = 0;
-  for (let i = items.length - 1; i >= 0 && kept.length < max; i--) {
-    used += size(items[i]);
-    if (used > budget && kept.length) break;
-    kept.unshift(items[i]);
-  }
-  return kept;
-}
-/** Per-room memory bounds: every widget is held in memory and resent in snapshots. */
-export const chatBudget = { messages: 100, chars: 32000, widgets: 4 };
-export const historyBudget = { results: 20, chars: 8000 };
+export { trimToBudget, chatBudget, historyBudget };
 
 /** Room-scoped ephemeral state. Only Rooms supplies the authenticated actor. */
 export class RoomWidgets {
@@ -136,7 +122,8 @@ export class RoomWidgets {
     this.owned(owner, id, authorized);
     this.entries.delete(id);
   }
-  message(id: string, message: ChatMessage) {
+  /** Returns the chat and whether the message is new (false for a retry). */
+  message(id: string, message: ChatMessage): [SharedWidget, boolean] {
     const current = this.entries.get(id);
     if (!current || current.kind !== "chat")
       throw new Fault("NOT_FOUND", "Este chat não está disponível.");
@@ -146,7 +133,7 @@ export class RoomWidgets {
         (m) => m.id === message.id && m.authorId === message.authorId,
       )
     )
-      return current;
+      return [current, false];
     const key = message.authorId;
     if (message.sentAt - (this.lastMessages.get(key) || 0) < 700)
       throw new Fault(
@@ -157,15 +144,10 @@ export class RoomWidgets {
     const next = {
       ...current,
       revision: current.revision + 1,
-      messages: trimToBudget(
-        [...messages, message],
-        chatBudget.messages,
-        chatBudget.chars,
-        (m) => m.text.length + m.authorName.length,
-      ),
+      messages: trimMessages([...messages, message]),
     };
     this.entries.set(id, next);
-    return next;
+    return [next, true];
   }
   /** Drops a departed participant from per-widget editor lists. */
   forget(participantId: string) {

@@ -2,7 +2,12 @@ import { randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
-import type { ShareRequest, RoomNotice, SharedWidget } from "../shared/widgets";
+import type {
+  ShareRequest,
+  RoomNotice,
+  SharedWidget,
+  ChatMessageEvent,
+} from "../shared/widgets";
 import { pollOpen, viewModuleState } from "../shared/room-modules";
 import { defaultColor } from "../shared/colors";
 import {
@@ -106,7 +111,8 @@ export class Rooms {
     this.cloudflareIce = result;
     return result;
   }
-  snapshot(room: Room, viewerId?: string): Snapshot {
+  /** Widgets are left out unless asked: they travel in widget events. */
+  snapshot(room: Room, viewerId?: string, widgets = true): Snapshot {
     return {
       epoch: this.epoch,
       code: room.code,
@@ -114,7 +120,9 @@ export class Rooms {
       serverTime: Date.now(),
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
-      widgets: room.widgets.list().map((w) => this.view(w, viewerId)),
+      ...(widgets && {
+        widgets: room.widgets.list().map((w) => this.view(w, viewerId)),
+      }),
       shareRequests: [...room.shareRequests.values()].filter(
         (r) =>
           r.owner === viewerId ||
@@ -190,13 +198,21 @@ export class Rooms {
   private broadcastViewers(room: Room) {
     this.io.to(room.code).emit("screen-viewers", this.screenViewers(room));
   }
-  broadcast(room: Room) {
+  /** `widgets`: true for everyone, or the one member (a joiner) who needs them. */
+  broadcast(room: Room, widgets: boolean | string = false) {
     room.touched = Date.now();
     for (const member of room.members.values())
       if (member.socketId)
         this.io
           .to(member.socketId)
-          .emit("snapshot", this.snapshot(room, member.id));
+          .emit(
+            "snapshot",
+            this.snapshot(
+              room,
+              member.id,
+              widgets === true || widgets === member.id,
+            ),
+          );
   }
   private member(socket: Socket): [Room, Member] {
     const code = this.membership.get(socket.data.id);
@@ -256,7 +272,7 @@ export class Rooms {
       if (request.owner === member.id && request.status === "pending")
         room.shareRequests.delete(id);
     this.membership.delete(member.id);
-    this.broadcast(room);
+    this.broadcast(room, true);
   }
   clean() {
     this.limits.clean();
@@ -446,7 +462,7 @@ export class Rooms {
       room.members.set(member.id, member);
       this.membership.set(member.id, code);
       await socket.join(code);
-      this.broadcast(room);
+      this.broadcast(room, member.id);
       for (const sub of room.subscriptions.values())
         if (sub.viewer === member.id || sub.publication.owner === member.id)
           socket.emit("subscription", sub);
@@ -503,7 +519,7 @@ export class Rooms {
       return this.view(widget, m.id);
     }
     if (action === "chat-send") {
-      const widget = room.widgets.message(data.id, {
+      const [widget, added] = room.widgets.message(data.id, {
         id: data.messageId,
         authorId: m.id,
         authorName: m.name,
@@ -512,8 +528,13 @@ export class Rooms {
         text: data.text,
         sentAt: Date.now(),
       });
-      this.io.to(room.code).emit("widget-updated", { id: data.id, widget });
-      return widget;
+      if (added)
+        this.io.to(room.code).emit("chat-message", {
+          id: data.id,
+          revision: widget.revision,
+          message: widget.messages!.at(-1)!,
+        } satisfies ChatMessageEvent);
+      return { id: data.id, revision: widget.revision };
     }
     if (action.startsWith("widget-")) {
       let widget;
@@ -582,7 +603,7 @@ export class Rooms {
           );
         }
         request.status = data.approve ? "approved" : "denied";
-        this.broadcast(room);
+        this.broadcast(room, true);
         return widget ? this.view(widget, m.id) : {};
       }
       if (action === "widget-permission") {
