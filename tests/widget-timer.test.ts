@@ -5,6 +5,7 @@ import {
   timerDisplay,
   timerElapsed,
   timerFinished,
+  timerRinging,
   widgetContent,
   contentKind,
   type SharedWidget,
@@ -58,6 +59,48 @@ test("cronômetro repete pelo relógio compartilhado sem eventos ou timers de fu
       timerDisplay(restart.blocks[0], 91000),
     59,
   );
+});
+
+test("alarme do fim é estado do widget: desligar vale para todos e reiniciar rearma", () => {
+  const block = {
+    id: crypto.randomUUID(),
+    kind: "timer" as const,
+    label: "Pausa",
+    duration: 60,
+    elapsed: 0,
+    startedAt: 1000,
+    mode: "down" as const,
+    loop: false,
+  };
+  const widget: SharedWidget = {
+    id: crypto.randomUUID(),
+    owner: "owner",
+    kind: "timer",
+    title: "Cronômetro",
+    blocks: [block],
+    revision: 3,
+    createdAt: 0,
+  };
+  assert.equal(timerRinging(block, 60000), false);
+  assert.equal(timerRinging(block, 61000), true);
+  assert.equal(timerRinging(block, 120999), true);
+  assert.equal(timerRinging(block, 121000), false);
+  assert.equal(timerRinging({ ...block, loop: true }, 61000), false);
+  // A stale revision still silences: two people pressing at once is fine.
+  const silenced = operateWidget(
+    widget,
+    { kind: "timer", blockId: block.id, action: "silence", revision: 1 },
+    70000,
+  );
+  const s = silenced.blocks[0];
+  assert.ok(s.kind === "timer" && s.silenced && !timerRinging(s, 70000));
+  const again = operateWidget(
+    silenced,
+    { kind: "timer", blockId: block.id, action: "start", revision: 4 },
+    80000,
+  );
+  const a = again.blocks[0];
+  assert.ok(a.kind === "timer" && !a.silenced && timerRinging(a, 140000));
 });
 
 test("widgets dedicados recusam tipos misturados e loop sem duração", () => {
