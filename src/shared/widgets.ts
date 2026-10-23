@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { moduleConfig, moduleAction, isModule, validModule, type ModuleState } from "./room-modules";
+import {
+  moduleConfig,
+  moduleAction,
+  isModule,
+  validModule,
+  type ModuleState,
+} from "./room-modules";
 
 const identifier = z.string().uuid();
 const label = z.string().trim().min(1).max(64);
@@ -35,14 +41,30 @@ export const widgetBlock = z.discriminatedUnion("kind", [
 ]);
 export const widgetContent = z
   .object({
-    kind: z.enum(["custom", "notes", "timer", "chat", "poll", "dice", "random", "tasks"]).optional(),
+    kind: z
+      .enum([
+        "custom",
+        "notes",
+        "timer",
+        "chat",
+        "poll",
+        "dice",
+        "random",
+        "tasks",
+      ])
+      .optional(),
     title: label,
     blocks: z.array(widgetBlock).max(6),
     module: moduleConfig.optional(),
   })
   .strict()
   .refine((content) => {
-    if (isModule(content.kind)) return content.blocks.length === 0 && content.module?.kind === content.kind && validModule(content.module);
+    if (isModule(content.kind))
+      return (
+        content.blocks.length === 0 &&
+        content.module?.kind === content.kind &&
+        validModule(content.module)
+      );
     if (content.module) return false;
     if (content.kind === "chat") return content.blocks.length === 0;
     if (!content.blocks.length) return false;
@@ -82,6 +104,39 @@ export function contentKind(
         ? "timer"
         : "custom")
   );
+}
+/** Keeps the newest entries whose combined size fits the budget. */
+export function trimToBudget<T>(
+  items: T[],
+  max: number,
+  budget: number,
+  size: (item: T) => number,
+) {
+  const kept: T[] = [];
+  let used = 0;
+  for (let i = items.length - 1; i >= 0 && kept.length < max; i--) {
+    used += size(items[i]);
+    if (used > budget && kept.length) break;
+    kept.unshift(items[i]);
+  }
+  return kept;
+}
+/** Per-room memory bounds: every widget is held in memory and resent in snapshots. */
+export const chatBudget = { messages: 100, chars: 32000, widgets: 4 };
+export const historyBudget = { results: 20, chars: 8000 };
+export function trimMessages(messages: ChatMessage[]) {
+  return trimToBudget(
+    messages,
+    chatBudget.messages,
+    chatBudget.chars,
+    (m) => m.text.length + m.authorName.length,
+  );
+}
+/** Incremental chat event: only the new message travels, not the whole widget. */
+export interface ChatMessageEvent {
+  id: string;
+  revision: number;
+  message: ChatMessage;
 }
 export interface ChatMessage {
   id: string;
@@ -154,7 +209,13 @@ export const widgetOperation = z.discriminatedUnion("kind", [
 ]);
 export type WidgetOperation = z.infer<typeof widgetOperation>;
 export const widgetSchemas = {
-  "module-interact": z.object({id:identifier,operationId:identifier,operation:moduleAction}).strict(),
+  "module-interact": z
+    .object({
+      id: identifier,
+      operationId: identifier,
+      operation: moduleAction,
+    })
+    .strict(),
   "chat-send": z
     .object({
       id: identifier,

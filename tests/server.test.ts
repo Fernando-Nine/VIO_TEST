@@ -7,7 +7,7 @@ import { readConfig } from "../src/server/config";
 import { verifyToken, issueToken } from "../src/server/security";
 import { defaultModule } from "../src/shared/room-modules";
 import { trimToBudget, chatBudget, historyBudget } from "../src/server/widgets";
-import type { SharedWidget } from "../src/shared/widgets";
+import type { SharedWidget, ChatMessageEvent } from "../src/shared/widgets";
 import type {
   Reply,
   Snapshot,
@@ -1534,6 +1534,8 @@ test("rodada E: chat autenticado, permissões, pedidos e sucessão por administr
     );
     data(await request(admin, "widget-create", { id, content: chat }));
     const messageId = crypto.randomUUID();
+    const events: ChatMessageEvent[] = [];
+    admin.on("chat-message", (e: ChatMessageEvent) => events.push(e));
     const sent = data(
       await request(guest, "chat-send", {
         id,
@@ -1541,9 +1543,13 @@ test("rodada E: chat autenticado, permissões, pedidos e sucessão por administr
         text: "<img src=x onerror=alert(1)>",
       }),
     );
-    assert.equal(sent.messages[0].authorId, people[1].id);
-    assert.equal(sent.messages[0].authorName, "Pessoa 1");
-    assert.equal(sent.messages[0].text, "<img src=x onerror=alert(1)>");
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(events.length, 1);
+    assert.equal(events[0].id, id);
+    assert.equal(events[0].revision, sent.revision);
+    assert.equal(events[0].message.authorId, people[1].id);
+    assert.equal(events[0].message.authorName, "Pessoa 1");
+    assert.equal(events[0].message.text, "<img src=x onerror=alert(1)>");
     const retry = data(
       await request(guest, "chat-send", {
         id,
@@ -1551,7 +1557,16 @@ test("rodada E: chat autenticado, permissões, pedidos e sucessão por administr
         text: "<img src=x onerror=alert(1)>",
       }),
     );
-    assert.equal(retry.messages.length, 1);
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(retry.revision, sent.revision);
+    assert.equal(events.length, 1);
+    const rejoined = data(
+      await request(admin, "join", { name: "Pessoa 2", code: "RODADAE" }),
+    ).snapshot as Snapshot;
+    assert.equal(
+      rejoined.widgets!.find((w) => w.id === id)!.messages!.length,
+      1,
+    );
     assert.equal(
       (
         await request(guest, "chat-send", {
@@ -2147,6 +2162,61 @@ test("votação esconde votos por opção até encerrar, por fechamento ou prazo
       );
       assert.equal(revealed.moduleState?.voters, 1);
     }
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("snapshots de sala omitem widgets, exceto para quem entra e quando widgets mudam", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const sessions = await Promise.all([
+      session(app.url),
+      session(app.url),
+      session(app.url),
+    ]);
+    for (const s of sessions) sockets.push(await connect(app.url, s.token));
+    const [creator, guest, late] = sockets;
+    data(await request(creator, "join", { code: "LEANSNAP", name: "Criador" }));
+    data(await request(guest, "join", { code: "LEANSNAP", name: "Convidado" }));
+    const snaps = (socket: Socket) => {
+      const seen: Snapshot[] = [];
+      socket.on("snapshot", (s: Snapshot) => seen.push(s));
+      return seen;
+    };
+    const guestSnaps = snaps(guest),
+      lateSnaps = snaps(late);
+    data(
+      await request(creator, "widget-create", {
+        id: crypto.randomUUID(),
+        content: { kind: "chat", title: "Chat", blocks: [] },
+      }),
+    );
+    data(await request(creator, "color", { color: "#2727F5" }));
+    data(await request(late, "join", { code: "LEANSNAP", name: "Atrasado" }));
+    const pollId = crypto.randomUUID();
+    data(
+      await request(guest, "widget-create", {
+        id: pollId,
+        content: {
+          kind: "poll",
+          title: "P",
+          blocks: [],
+          module: defaultModule("poll", () => crypto.randomUUID()),
+        },
+      }),
+    );
+    data(
+      await request(creator, "widget-review", { id: pollId, approve: true }),
+    );
+    await new Promise((r) => setTimeout(r, 100));
+    assert.ok(guestSnaps.length >= 4);
+    assert.equal(guestSnaps[0].widgets, undefined);
+    assert.equal(guestSnaps[1].widgets, undefined);
+    assert.equal(guestSnaps.at(-1)!.widgets?.length, 2);
+    assert.equal(lateSnaps[0].widgets?.length, 1);
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();

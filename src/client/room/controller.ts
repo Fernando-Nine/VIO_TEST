@@ -1,5 +1,9 @@
 import { CanvasStore } from "../canvas/model";
-import type { SharedWidget } from "../../shared/widgets";
+import {
+  trimMessages,
+  type ChatMessageEvent,
+  type SharedWidget,
+} from "../../shared/widgets";
 import { io, type Socket } from "socket.io-client";
 import type {
   Action,
@@ -59,7 +63,8 @@ export class Controller {
   readonly chatRead = new Map<string, number>();
   markChatRead(id: string, time: number) {
     if ((this.chatRead.get(id) || 0) >= time) return;
-    this.chatRead.set(id, time); this.bump();
+    this.chatRead.set(id, time);
+    this.bump();
   }
   watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
   private desiredVideo = new Map<string, VideoDemand>();
@@ -522,6 +527,33 @@ export class Controller {
           this.bump();
         },
       );
+      socket.on("chat-message", (event: ChatMessageEvent) => {
+        if (!current() || !this.view.snapshot) return;
+        const chat = this.view.snapshot.widgets?.find((w) => w.id === event.id);
+        const messages = chat?.messages || [];
+        if (
+          !chat ||
+          messages.some(
+            (m) =>
+              m.id === event.message.id &&
+              m.authorId === event.message.authorId,
+          )
+        )
+          return;
+        if (event.message.authorId !== this.view.id) this.chatCue();
+        const next = {
+          ...chat,
+          revision: event.revision,
+          messages: trimMessages([...messages, event.message]),
+        };
+        this.view.snapshot = {
+          ...this.view.snapshot,
+          widgets: (this.view.snapshot.widgets || []).map((w) =>
+            w.id === event.id ? next : w,
+          ),
+        };
+        this.bump();
+      });
       socket.on("video-demand", (event: VideoDemand & { id: string }) => {
         if (current())
           void this.peers.demand(event.id, event).catch((e) => this.fail(e));
@@ -685,7 +717,15 @@ export class Controller {
         this.view.id,
       ))
         void this.playCue(cue);
-    this.view.snapshot = snapshot;
+    // Room broadcasts omit widgets; they arrive through widget events.
+    const previous = this.view.snapshot;
+    this.view.snapshot =
+      snapshot.widgets ||
+      !previous ||
+      previous.epoch !== snapshot.epoch ||
+      previous.code !== snapshot.code
+        ? snapshot
+        : { ...snapshot, widgets: previous.widgets };
     const ownColor = snapshot.participants.find(
       (p) => p.id === this.view.id,
     )?.color;
