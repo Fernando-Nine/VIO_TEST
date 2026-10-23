@@ -36,6 +36,8 @@ export const widgetBlock = z.discriminatedUnion("kind", [
       startedAt: z.number().finite().min(0).max(8640000000000000).nullable(),
       mode: z.enum(["up", "down"]).optional(),
       loop: z.boolean().optional(),
+      /** Someone turned the end alarm off; cleared by start, pause or reset. */
+      silenced: z.boolean().optional(),
     })
     .strict(),
 ]);
@@ -202,7 +204,7 @@ export const widgetOperation = z.discriminatedUnion("kind", [
     .object({
       kind: z.literal("timer"),
       blockId: identifier,
-      action: z.enum(["start", "pause", "reset"]),
+      action: z.enum(["start", "pause", "reset", "silence"]),
       revision: z.number().int().nonnegative(),
     })
     .strict(),
@@ -278,6 +280,23 @@ export function timerFinished(
     timerElapsed(block, now) >= block.duration
   );
 }
+/** Alarm window shared by the room: from the end of a countdown for one minute. */
+export const timerAlarmMs = 60_000;
+/** When a running countdown ends (server time), or null if it never rings. */
+export function timerEndsAt(block: Extract<WidgetBlock, { kind: "timer" }>) {
+  return block.startedAt === null || block.loop || !block.duration
+    ? null
+    : block.startedAt + Math.max(0, block.duration - block.elapsed) * 1000;
+}
+export function timerRinging(
+  block: Extract<WidgetBlock, { kind: "timer" }>,
+  now: number,
+) {
+  const end = timerEndsAt(block);
+  return (
+    end !== null && !block.silenced && now >= end && now < end + timerAlarmMs
+  );
+}
 export function timerDisplay(
   block: Extract<WidgetBlock, { kind: "timer" }>,
   now: number,
@@ -295,7 +314,12 @@ export function operateWidget(
 ): SharedWidget {
   const block = widget.blocks.find((b) => b.id === operation.blockId);
   if (!block || block.kind !== operation.kind) throw new Error("BLOCK_MISSING");
-  if (operation.kind !== "score" && operation.revision !== widget.revision)
+  // Counting and silencing commute, so they never conflict with a newer revision.
+  if (
+    operation.kind !== "score" &&
+    !(operation.kind === "timer" && operation.action === "silence") &&
+    operation.revision !== widget.revision
+  )
     throw new Error("WIDGET_CONFLICT");
   const next: WidgetBlock =
     block.kind === "score" && operation.kind === "score"
@@ -308,17 +332,22 @@ export function operateWidget(
         }
       : block.kind === "text" && operation.kind === "text"
         ? { ...block, value: operation.value }
-        : block.kind === "timer" && operation.kind === "timer"
-          ? {
-              ...block,
-              elapsed:
-                operation.action === "reset" ||
-                (operation.action === "start" && timerFinished(block, now))
-                  ? 0
-                  : timerElapsed(block, now),
-              startedAt: operation.action === "start" ? now : null,
-            }
-          : block;
+        : block.kind === "timer" &&
+            operation.kind === "timer" &&
+            operation.action === "silence"
+          ? { ...block, silenced: true }
+          : block.kind === "timer" && operation.kind === "timer"
+            ? {
+                ...block,
+                silenced: undefined,
+                elapsed:
+                  operation.action === "reset" ||
+                  (operation.action === "start" && timerFinished(block, now))
+                    ? 0
+                    : timerElapsed(block, now),
+                startedAt: operation.action === "start" ? now : null,
+              }
+            : block;
   return {
     ...widget,
     revision: widget.revision + 1,

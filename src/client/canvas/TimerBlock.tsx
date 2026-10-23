@@ -4,6 +4,8 @@ import type { MenuItem } from "../components/ContextMenu";
 import {
   timerDisplay,
   timerElapsed,
+  timerAlarmMs,
+  timerEndsAt,
   timerFinished,
   type WidgetBlock,
   type WidgetOperation,
@@ -32,26 +34,27 @@ export function parseClock(text: string): number | null {
   return seconds > 0 && seconds <= 86400 ? seconds : null;
 }
 
-const alarmLimit = 60_000;
 const ringEvery = 1_200;
 
 /**
- * Rings for every viewer, even while the widget is off screen. A countdown
- * that ends rings as an alarm until this person turns it off or a minute
- * passes; a repeating one chimes once per lap.
+ * Rings for every viewer, even while the widget is off screen. The alarm is
+ * part of the widget's state: it rings from the end of a countdown until
+ * anyone turns it off (for a room widget, for the whole room) or a minute
+ * passes. A repeating countdown chimes once per lap instead.
  */
 function useEndAlarm(block: Timer, engine: Controller) {
-  const { startedAt, elapsed, duration, loop } = block;
+  const { startedAt, elapsed, duration, loop, silenced } = block;
+  const end = timerEndsAt(block);
   const [ringing, setRinging] = useState(false);
   useEffect(() => {
-    if (startedAt === null || !duration) return;
-    const timer = { ...block, startedAt, elapsed, duration, loop };
-    const done = timerElapsed(timer, engine.serverNow());
-    if (!loop && done >= duration) return;
+    if (startedAt === null || !duration || !loop) return;
+    const done = timerElapsed(
+      { ...block, startedAt, elapsed, duration, loop },
+      engine.serverNow(),
+    );
     let repeat: ReturnType<typeof setInterval> | undefined;
     const first = setTimeout(
       () => {
-        if (!loop) return setRinging(true);
         void engine.playCue("timer-end");
         repeat = setInterval(
           () => void engine.playCue("timer-end"),
@@ -63,22 +66,37 @@ function useEndAlarm(block: Timer, engine: Controller) {
     return () => {
       clearTimeout(first);
       clearInterval(repeat);
-      // Starting, pausing or resetting the timer also silences the alarm.
-      setRinging(false);
     };
     // The block object changes on every revision; only timing fields matter.
   }, [startedAt, elapsed, duration, loop, engine]);
   useEffect(() => {
-    if (!ringing) return;
-    void engine.playCue("timer-end");
-    const ring = setInterval(() => void engine.playCue("timer-end"), ringEvery);
-    const stop = setTimeout(() => setRinging(false), alarmLimit);
+    if (end === null || silenced) return;
+    const now = engine.serverNow();
+    if (now >= end + timerAlarmMs) return;
+    let ring: ReturnType<typeof setInterval> | undefined;
+    const begin = setTimeout(
+      () => {
+        setRinging(true);
+        void engine.playCue("timer-end");
+        ring = setInterval(() => void engine.playCue("timer-end"), ringEvery);
+      },
+      Math.max(0, end - now),
+    );
+    const stop = setTimeout(
+      () => {
+        clearInterval(ring);
+        setRinging(false);
+      },
+      end + timerAlarmMs - now,
+    );
     return () => {
-      clearInterval(ring);
+      clearTimeout(begin);
       clearTimeout(stop);
+      clearInterval(ring);
+      setRinging(false);
     };
-  }, [ringing, engine]);
-  return { ringing, silence: () => setRinging(false) };
+  }, [end, silenced, engine]);
+  return ringing;
 }
 
 const switchedMode = (block: Timer): Timer => {
@@ -136,7 +154,7 @@ export function TimerBlock({
   update: (next: Timer) => void;
 }) {
   const [editingTime, setEditingTime] = useState(false);
-  const alarm = useEndAlarm(block, engine);
+  const ringing = useEndAlarm(block, engine);
   const mode = block.mode || (block.duration ? "down" : "up");
   const other = mode === "down" ? "up" : "down";
   const finished = timerFinished(block, now);
@@ -150,7 +168,7 @@ export function TimerBlock({
       update({ ...block, ...stopped, duration: seconds });
   }
   return (
-    <div className={`timer-face ${alarm.ringing ? "is-ringing" : ""}`}>
+    <div className={`timer-face ${ringing ? "is-ringing" : ""}`}>
       {editable ? (
         <div className="timer-modes" role="group" aria-label="Modo">
           <button
@@ -213,8 +231,18 @@ export function TimerBlock({
         </output>
       )}
       <div className="widget-inline-actions">
-        {alarm.ringing && (
-          <button className="primary timer-silence" onClick={alarm.silence}>
+        {ringing && editable && (
+          <button
+            className="primary timer-silence"
+            onClick={() =>
+              act({
+                kind: "timer",
+                blockId: block.id,
+                action: "silence",
+                revision,
+              })
+            }
+          >
             <BellOff size={16} aria-hidden="true" />
             Desligar alarme
           </button>
