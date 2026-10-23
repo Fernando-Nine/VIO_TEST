@@ -2054,3 +2054,101 @@ test("orçamento de memória: chats, histórico e reinício de Dados só com per
     await app.close();
   }
 });
+
+test("votação esconde votos por opção até encerrar, por fechamento ou prazo", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const sessions = await Promise.all([
+      session(app.url),
+      session(app.url),
+      session(app.url),
+    ]);
+    for (const s of sessions) sockets.push(await connect(app.url, s.token));
+    const [creator, guest, other] = sockets;
+    data(
+      await request(creator, "join", { code: "SECRETPOLL", name: "Criador" }),
+    );
+    data(
+      await request(guest, "join", { code: "SECRETPOLL", name: "Convidado" }),
+    );
+    data(await request(other, "join", { code: "SECRETPOLL", name: "Outro" }));
+    const poll = defaultModule("poll", () => crypto.randomUUID());
+    if (poll.kind !== "poll") assert.fail();
+    const interact = (socket: Socket, id: string, operation: unknown) =>
+      request<SharedWidget>(socket, "module-interact", {
+        id,
+        operation,
+        operationId: crypto.randomUUID(),
+      });
+    const updates = (socket: Socket, id: string) => {
+      const seen: SharedWidget[] = [];
+      socket.on(
+        "widget-updated",
+        (e: { id: string; widget: SharedWidget }) =>
+          e.id === id && seen.push(e.widget),
+      );
+      return seen;
+    };
+    for (const duration of [0, 1]) {
+      const id = crypto.randomUUID();
+      const seen = updates(other, id);
+      data(
+        await request(creator, "widget-create", {
+          id,
+          content: {
+            kind: "poll",
+            title: "Segredo",
+            blocks: [],
+            module: { ...poll, duration },
+          },
+        }),
+      );
+      data(
+        await interact(creator, id, {
+          kind: "poll-control",
+          action: "start",
+          revision: 0,
+        }),
+      );
+      const mine: SharedWidget = data(
+        await interact(guest, id, {
+          kind: "vote",
+          optionId: poll.options[1].id,
+        }),
+      );
+      assert.deepEqual(mine.moduleState?.votes, {
+        [sessions[1].id]: poll.options[1].id,
+      });
+      assert.equal(mine.moduleState?.voters, 1);
+      const snap = data(
+        await request(creator, "join", { code: "SECRETPOLL", name: "Criador" }),
+      ).snapshot as Snapshot;
+      const hidden = snap.widgets!.find((w) => w.id === id)!;
+      assert.deepEqual(hidden.moduleState?.votes, {});
+      assert.equal(hidden.moduleState?.voters, 1);
+      await new Promise((r) => setTimeout(r, 100));
+      assert.ok(seen.length >= 2);
+      assert.ok(seen.every((w) => !w.moduleState?.votes?.[sessions[1].id]));
+      if (duration) await new Promise((r) => setTimeout(r, 1200));
+      else
+        data(
+          await interact(creator, id, {
+            kind: "poll-control",
+            action: "close",
+            revision: mine.revision,
+          }),
+        );
+      await new Promise((r) => setTimeout(r, 100));
+      const revealed = seen.at(-1)!;
+      assert.equal(
+        revealed.moduleState?.votes?.[sessions[1].id],
+        poll.options[1].id,
+      );
+      assert.equal(revealed.moduleState?.voters, 1);
+    }
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});

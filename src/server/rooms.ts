@@ -3,6 +3,7 @@ import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
 import type { ShareRequest, RoomNotice, SharedWidget } from "../shared/widgets";
+import { pollOpen, viewModuleState } from "../shared/room-modules";
 import { defaultColor } from "../shared/colors";
 import {
   Fault,
@@ -113,7 +114,7 @@ export class Rooms {
       serverTime: Date.now(),
       maxParticipants: null,
       recommendedParticipants: this.config.recommendedParticipants,
-      widgets: room.widgets.list(),
+      widgets: room.widgets.list().map((w) => this.view(w, viewerId)),
       shareRequests: [...room.shareRequests.values()].filter(
         (r) =>
           r.owner === viewerId ||
@@ -127,6 +128,55 @@ export class Rooms {
         ({ socketId, lastSeen, ...member }) => member,
       ),
     };
+  }
+  /** What a given viewer may see of a widget (hidden poll votes). */
+  private view(widget: SharedWidget, viewerId?: string): SharedWidget {
+    return widget.module && widget.moduleState
+      ? {
+          ...widget,
+          moduleState: viewModuleState(
+            widget.module,
+            widget.moduleState,
+            viewerId,
+            Date.now(),
+          ),
+        }
+      : widget;
+  }
+  private emitWidget(room: Room, id: string, widget: SharedWidget | null) {
+    if (!widget?.module || widget.module.kind !== "poll") {
+      this.io.to(room.code).emit("widget-updated", { id, widget });
+      return;
+    }
+    for (const member of room.members.values())
+      if (member.socketId)
+        this.io
+          .to(member.socketId)
+          .emit("widget-updated", { id, widget: this.view(widget, member.id) });
+  }
+  /** Polls with a deadline reveal their votes when time runs out. */
+  private scheduleReveal(room: Room, widget: SharedWidget) {
+    const { module, moduleState: state } = widget;
+    if (
+      module?.kind !== "poll" ||
+      !state ||
+      !pollOpen(module, state, Date.now())
+    )
+      return;
+    if (!module.duration) return;
+    const startedAt = state.startedAt!;
+    setTimeout(
+      () => {
+        const current = room.widgets.entries.get(widget.id);
+        if (
+          this.rooms.get(room.code) === room &&
+          current?.moduleState?.startedAt === startedAt &&
+          !current.moduleState.closed
+        )
+          this.emitWidget(room, widget.id, current);
+      },
+      Math.max(0, startedAt + module.duration * 1000 - Date.now()) + 50,
+    ).unref();
   }
   private screenViewers(room: Room): Record<string, string[]> {
     const viewers: Record<string, string[]> = {};
@@ -447,8 +497,10 @@ export class Rooms {
         data.operationId,
         data.operation,
       );
-      this.io.to(room.code).emit("widget-updated", { id: data.id, widget });
-      return widget;
+      this.emitWidget(room, data.id, widget);
+      if (data.operation.kind === "poll-control")
+        this.scheduleReveal(room, widget);
+      return this.view(widget, m.id);
     }
     if (action === "chat-send") {
       const widget = room.widgets.message(data.id, {
@@ -482,7 +534,7 @@ export class Rooms {
         if (!manages) {
           if (current) {
             if (current.owner !== m.id) deny();
-            return current;
+            return this.view(current, m.id);
           }
           const previous = room.shareRequests.get(data.id);
           if (previous && previous.owner !== m.id) deny();
@@ -531,7 +583,7 @@ export class Rooms {
         }
         request.status = data.approve ? "approved" : "denied";
         this.broadcast(room);
-        return widget || {};
+        return widget ? this.view(widget, m.id) : {};
       }
       if (action === "widget-permission") {
         if (!manages) deny();
@@ -566,10 +618,8 @@ export class Rooms {
         if (!manages && current?.owner !== m.id) deny();
         room.widgets.remove(m.id, data.id, true);
       }
-      this.io
-        .to(room.code)
-        .emit("widget-updated", { id: data.id, widget: widget || null });
-      return widget || {};
+      this.emitWidget(room, data.id, widget || null);
+      return widget ? this.view(widget, m.id) : {};
     }
     if (action === "demand") {
       const sub = room.subscriptions.get(data.id);

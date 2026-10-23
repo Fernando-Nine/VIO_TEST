@@ -108,7 +108,10 @@ export interface ModuleResult {
   detail: string;
 }
 export interface ModuleState {
+  /** While a poll is open, viewers receive only their own vote here. */
   votes?: Record<string, string>;
+  /** Number of people who voted; set on non-empty poll states sent to clients. */
+  voters?: number;
   startedAt?: number | null;
   closed?: boolean;
   history?: ModuleResult[];
@@ -168,6 +171,32 @@ export function moduleElapsed(state: ModuleState, now: number) {
     (state.elapsed || 0) +
     (state.startedAt == null ? 0 : Math.max(0, (now - state.startedAt) / 1000))
   );
+}
+export function pollOpen(
+  config: ModuleConfig,
+  state: ModuleState,
+  now: number,
+) {
+  return (
+    config.kind === "poll" &&
+    state.startedAt != null &&
+    !state.closed &&
+    !(config.duration > 0 && now >= state.startedAt + config.duration * 1000)
+  );
+}
+/** Per-viewer state: other people's votes stay hidden until the poll ends. */
+export function viewModuleState(
+  config: ModuleConfig,
+  state: ModuleState,
+  viewerId: string | undefined,
+  now: number,
+): ModuleState {
+  if (config.kind !== "poll" || !Object.keys(state).length) return state;
+  const votes = state.votes || {};
+  const voters = Object.keys(votes).length;
+  if (!pollOpen(config, state, now)) return { ...state, voters };
+  const own = viewerId ? votes[viewerId] : undefined;
+  return { ...state, voters, votes: own ? { [viewerId!]: own } : {} };
 }
 /** The caller enforces editing permissions and supplies the authenticated actor/time/randomness. */
 export function applyModuleAction(
