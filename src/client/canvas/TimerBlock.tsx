@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeftRight, Repeat } from "lucide-react";
+import type { MenuItem } from "../components/ContextMenu";
 import {
   timerDisplay,
   timerElapsed,
@@ -59,6 +60,43 @@ function useEndSound(block: Timer, engine: Controller) {
   }, [startedAt, elapsed, duration, loop, engine]);
 }
 
+const switchedMode = (block: Timer): Timer => {
+  const other =
+    (block.mode || (block.duration ? "down" : "up")) === "down" ? "up" : "down";
+  return {
+    ...block,
+    elapsed: 0,
+    startedAt: null,
+    mode: other,
+    duration: other === "down" ? block.duration || 1500 : 0,
+    loop: other === "down" && !!block.loop,
+  };
+};
+
+/** Mode and repeat, for the header menu when the space is too small to show them. */
+export function timerMenu(
+  block: Timer,
+  update: (next: Timer) => void,
+): MenuItem[] {
+  const mode = block.mode || (block.duration ? "down" : "up");
+  return [
+    {
+      label: `Trocar para ${modeName[mode === "down" ? "up" : "down"]}`,
+      icon: ArrowLeftRight,
+      run: () => update(switchedMode(block)),
+    },
+    ...(mode === "down"
+      ? [
+          {
+            label: block.loop ? "Não repetir" : "Repetir ao chegar ao final",
+            icon: Repeat,
+            run: () => update({ ...block, loop: !block.loop }),
+          },
+        ]
+      : []),
+  ];
+}
+
 export function TimerBlock({
   block,
   now,
@@ -91,22 +129,14 @@ export function TimerBlock({
       update({ ...block, ...stopped, duration: seconds });
   }
   return (
-    <>
+    <div className="timer-face">
       {editable ? (
         <div className="timer-modes" role="group" aria-label="Modo">
           <button
             className="timer-mode"
             aria-label={`Modo ${modeName[mode]}. Trocar para ${modeName[other]}`}
             title={`Trocar para ${modeName[other]}`}
-            onClick={() =>
-              update({
-                ...block,
-                ...stopped,
-                mode: other,
-                duration: other === "down" ? block.duration || 1500 : 0,
-                loop: other === "down" && !!block.loop,
-              })
-            }
+            onClick={() => update(switchedMode(block))}
           >
             <ArrowLeftRight size={13} aria-hidden="true" />
             {modeName[mode]}
@@ -191,6 +221,6 @@ export function TimerBlock({
           </button>
         )}
       </div>
-    </>
+    </div>
   );
 }

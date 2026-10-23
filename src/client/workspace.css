@@ -2056,3 +2056,289 @@
 .widget-host.under-dock .widget-body {
   padding-bottom: calc(var(--dock-height, 64px) + 14px);
 }
+
+/* #52: widgets scale with the space they get. The body is a size container,
+   so content can follow both width and height: compact without scrolling in
+   the strip, larger and centred in the focus. Rem-free sizes use `em` so one
+   font-size per widget scales everything inside it. */
+.widget-body {
+  container: widget-body / size;
+}
+.widget-more {
+  display: none;
+}
+@container (max-width: 300px) {
+  .widget-header {
+    flex-wrap: nowrap;
+  }
+  .widget-handle {
+    flex-basis: auto;
+  }
+  .widget-tools,
+  .widget-actions .widget-focus {
+    display: none;
+  }
+  .widget-more {
+    display: inline-flex;
+  }
+}
+.widget-body > .module-widget,
+.widget-body > .custom-widget.kind-timer,
+.widget-body > .custom-widget.kind-custom {
+  height: 100%;
+  min-height: 0;
+  font-size: clamp(12px, min(2.3cqw, 4.2cqh), 22px);
+}
+.module-widget {
+  gap: 0.6em;
+}
+.module-content {
+  flex: 1;
+  gap: 0.6em;
+}
+.module-widget:is(.kind-poll, .kind-dice, .kind-random) .module-content {
+  justify-content: safe center;
+  align-items: center;
+}
+.module-widget:is(.kind-poll, .kind-dice, .kind-random) .module-content > * {
+  width: 100%;
+  max-width: 44em;
+}
+.module-widget .module-content > .text-button {
+  width: auto;
+  min-height: 2.2em;
+  font-size: 0.9em;
+}
+.module-question {
+  font-size: 1.2em;
+  line-height: 1.25;
+}
+.module-widget.kind-poll .module-question,
+.module-widget.kind-poll .module-content > small {
+  text-align: center;
+}
+.module-widget small {
+  font-size: 0.85em;
+}
+.module-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(7.5em, 100%), 1fr));
+  gap: 0.45em;
+}
+.module-options button {
+  min-height: 2.6em;
+  padding: 0.5em 0.7em;
+  font-size: 1em;
+  align-items: center;
+}
+.module-roll {
+  gap: 0.45em;
+}
+.module-widget .module-roll input {
+  margin: 0;
+  min-height: 2.6em;
+  padding: 0.55em 0.7em;
+  font-size: 1em;
+}
+.module-roll button,
+.module-widget.kind-random .module-content > .primary {
+  min-height: 2.6em;
+  padding: 0.5em 1.1em;
+  font-size: 1em;
+}
+.module-widget.kind-random .module-content > .primary {
+  max-width: 18em;
+}
+.module-widget.kind-random .module-content > small {
+  width: auto;
+}
+.module-history {
+  gap: 0.4em;
+}
+.module-history li {
+  padding: 0.4em 0;
+}
+.module-history strong,
+.is-compact .module-history strong {
+  font-size: 1.35em;
+}
+.module-history span,
+.module-history code,
+.module-history summary {
+  font-size: 0.8em;
+}
+.module-tasks label,
+.session-current > span {
+  font-size: 1em;
+}
+.module-tasks input {
+  width: 1.1em;
+  height: 1.1em;
+  flex-basis: 1.1em;
+}
+.module-actions button {
+  min-height: 2.4em;
+  font-size: 0.9em;
+}
+.module-widget.is-compact {
+  padding: 8px;
+}
+/* Short spaces show only the latest result; the full list is a click away. */
+@container widget-body (max-width: 260px) {
+  .module-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container widget-body (max-height: 230px) {
+  .module-question {
+    font-size: 1.05em;
+  }
+  .module-options button {
+    min-height: 2.2em;
+    padding: 0.35em 0.6em;
+  }
+  .module-history li:nth-child(n + 2),
+  .module-history details {
+    display: none;
+  }
+  .module-history li {
+    border: 0;
+    padding: 0;
+  }
+}
+
+/* Timer: column in tall spaces, clock beside the controls in short ones. */
+.custom-widget.kind-timer .custom-blocks,
+.custom-widget.kind-timer .custom-block {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+.timer-face {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 0.5em;
+}
+.timer-face .widget-clock {
+  margin: 0;
+  line-height: 1;
+  font-size: clamp(26px, min(21cqw, 30cqh), 220px);
+}
+.timer-face .widget-clock.timer-input {
+  width: min(100%, 6em);
+}
+.timer-face .timer-modes .timer-mode {
+  min-height: 2.3em;
+  padding: 0.25em 0.9em;
+  font-size: 0.9em;
+}
+.timer-face .widget-inline-actions {
+  margin: 0;
+  gap: 0.4em;
+}
+.timer-face .widget-inline-actions > button,
+.custom-widget.kind-timer .widget-inline-actions > button {
+  min-height: 2.6em;
+  padding: 0.45em 1.3em;
+  font-size: 1em;
+}
+@container widget-body (max-height: 210px) and (min-width: 260px) {
+  .timer-face {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas: "clock modes" "clock actions";
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4em 1em;
+  }
+  .timer-face > :is(.widget-clock, .timer-input) {
+    grid-area: clock;
+    font-size: clamp(26px, min(17cqw, 44cqh), 120px);
+  }
+  .timer-face > :is(.timer-modes, .timer-mode-label) {
+    grid-area: modes;
+    justify-content: flex-start;
+  }
+  .timer-face > .widget-inline-actions {
+    grid-area: actions;
+    justify-content: flex-start;
+  }
+}
+@container widget-body (max-height: 130px) {
+  .timer-face > :is(.timer-modes, .timer-mode-label) {
+    display: none;
+  }
+  .timer-face {
+    grid-template-areas: "clock actions";
+  }
+}
+
+/* Score: each counter fills its share; short spaces put it on one line. */
+.custom-widget.kind-custom .custom-blocks {
+  align-content: safe center;
+  grid-template-columns: repeat(auto-fit, minmax(min(14em, 100%), 1fr));
+}
+.custom-widget.kind-custom .custom-block {
+  border-top: 0;
+  padding-top: 0;
+  font-size: 1em;
+  align-items: center;
+  gap: 0.3em;
+}
+.custom-widget.kind-custom .widget-score {
+  width: 100%;
+  max-width: 22em;
+}
+.custom-widget.kind-custom .widget-score output {
+  font-size: clamp(22px, min(14cqw, 18cqh), 110px);
+  line-height: 1.1;
+}
+.custom-widget.kind-custom .widget-score button {
+  min-width: 2.6em;
+  min-height: 2.6em;
+}
+@container widget-body (max-height: 260px) {
+  .custom-widget.kind-custom .custom-blocks {
+    gap: 0.4em;
+  }
+  .custom-widget.kind-custom .custom-block {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .custom-widget.kind-custom .custom-block > strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .custom-widget.kind-custom .widget-score {
+    width: auto;
+  }
+  .custom-widget.kind-custom .widget-score output {
+    font-size: 1.8em;
+    min-width: 2ch;
+    text-align: center;
+  }
+  .custom-widget.kind-custom .widget-score button {
+    min-width: 2.2em;
+    min-height: 2.2em;
+  }
+}
+.widget-time output {
+  font-size: clamp(18px, min(10cqw, 18cqh), 96px);
+}
+.widget-time output:last-child {
+  font-size: clamp(12px, min(6cqw, 10cqh), 48px);
+}
+.widget-time {
+  font-size: clamp(12px, min(2.4cqw, 4cqh), 18px);
+}
+.module-widget:is(.kind-dice, .kind-random) .module-content > * {
+  max-width: 32em;
+}
+.widget-body > .module-widget.kind-tasks {
+  font-size: clamp(12px, min(2.3cqw, 4.2cqh), 17px);
+}

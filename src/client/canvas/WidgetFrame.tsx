@@ -11,7 +11,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
-import { ArrowLeftRight, Grip, Pencil, X } from "lucide-react";
+import { ArrowLeftRight, Ellipsis, Grip, Pencil, X } from "lucide-react";
 import { ContextMenu, type MenuItem } from "../components/ContextMenu";
 import { HeaderToolsSlot, type MenuSource, type Rename } from "./header-tools";
 import type { Controller } from "../room/controller";
@@ -275,6 +275,17 @@ export function WidgetFrame(props: Props) {
         <HeaderAccessory widget={widget} engine={engine} />
         <div className="widget-tools" ref={setTools} />
         <div className="widget-actions">
+          <button
+            className="icon-button widget-more"
+            aria-label={`Ações de ${title}`}
+            aria-haspopup="menu"
+            onClick={(event) => {
+              const box = event.currentTarget.getBoundingClientRect();
+              setMenu({ x: box.left, y: box.bottom });
+            }}
+          >
+            <Ellipsis size={16} />
+          </button>
           {!focused && (
             <button
               className="icon-button widget-focus"
