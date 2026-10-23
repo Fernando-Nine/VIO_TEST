@@ -665,8 +665,12 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
             </>
           )}
           {(config.kind === "dice" || config.kind === "random") &&
-            (state.history?.length || 0) > 3 && (
-              <button className="text-button" onClick={() => setHistory(true)}>
+            (state.history?.length || 0) > 1 && (
+              <button
+                // Up to three entries fit inline; short spaces show only one.
+                className={`text-button ${(state.history?.length || 0) <= 3 ? "history-short" : ""}`}
+                onClick={() => setHistory(true)}
+              >
                 Histórico ({state.history!.length})
               </button>
             )}
