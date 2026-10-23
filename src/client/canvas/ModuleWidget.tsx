@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Settings2,
   Share2,
@@ -8,6 +8,7 @@ import {
   X,
   Plus,
   Trophy,
+  Check,
   RotateCcw,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
@@ -197,7 +198,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                 },
               ]
             : []),
-          ...(editable && config.kind !== "dice"
+          ...(editable && config.kind !== "dice" && config.kind !== "poll"
             ? [
                 {
                   label: "Editar",
@@ -395,7 +396,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           <HelpCircle size={14} />
         </button>
       )}
-      {editable && config.kind !== "dice" && (
+      {editable && config.kind !== "dice" && config.kind !== "poll" && (
         <button
           className="icon-button"
           aria-label={`Editar ${value.title}`}
@@ -451,8 +452,13 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
         )
       : [];
   const topVotes = Math.max(0, ...pollCounts);
+  // The server sends per-option votes only once the poll ends.
+  const revealed =
+    config.kind === "poll" && state.startedAt != null && !pollOpen;
+  const pollSetup = config.kind === "poll" && state.startedAt == null;
+  const voters = state.voters ?? Object.keys(state.votes || {}).length;
   const winners =
-    config.kind === "poll" && state.startedAt != null && !pollOpen && topVotes
+    revealed && config.kind === "poll" && topVotes
       ? config.options.filter((_, i) => pollCounts[i] === topVotes)
       : [];
   return (
@@ -460,13 +466,29 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       className={`module-widget kind-${config.kind} ${compact ? "is-compact" : ""}`}
     >
       {controls}
-      {editing && editable ? (
+      {editable && (editing || pollSetup) ? (
         <ModuleFields
           config={config}
           current={() => pending.current ?? config}
           save={saveConfig}
-          done={() => setEditing(false)}
-        />
+          done={pollSetup ? undefined : () => setEditing(false)}
+        >
+          {pollSetup && (
+            <button
+              className="primary poll-start"
+              disabled={busy}
+              onClick={() =>
+                void act({
+                  kind: "poll-control",
+                  action: "start",
+                  revision: value.revision,
+                })
+              }
+            >
+              Abrir votação
+            </button>
+          )}
+        </ModuleFields>
       ) : (
         <div className="module-content">
           {config.kind === "poll" && (
@@ -475,63 +497,59 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
               <small>
                 {state.startedAt == null
                   ? "Aguardando abertura"
-                  : !pollOpen
-                    ? winners.length === 1
-                      ? `Vencedor: ${winners[0].label}`
-                      : winners.length
-                        ? "Empate"
-                        : "Votação encerrada"
-                    : config.duration
-                      ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}`
-                      : "Votação aberta"}{" "}
-                · {Object.keys(state.votes || {}).length}{" "}
-                {Object.keys(state.votes || {}).length === 1 ? "voto" : "votos"}
+                  : pollOpen
+                    ? `${config.duration ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}` : "Votação aberta"} · ${voters} ${voters === 1 ? "pessoa votou" : "pessoas votaram"}`
+                    : `${
+                        winners.length === 1
+                          ? `Vencedor: ${winners[0].label}`
+                          : winners.length
+                            ? "Empate"
+                            : "Votação encerrada"
+                      } · ${voters} ${voters === 1 ? "voto" : "votos"}`}
               </small>
               <div
                 className={`module-options ${revealAt ? "is-revealing" : ""}`}
               >
-                {config.options.map((option, i) => (
-                  <button
-                    key={option.id}
-                    className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
-                    aria-pressed={state.votes?.[engine.view.id] === option.id}
-                    disabled={!pollOpen || busy}
-                    onClick={() =>
-                      void act({ kind: "vote", optionId: option.id })
-                    }
-                  >
-                    <span>{option.label}</span>
-                    <b>
-                      {winners.includes(option) && (
-                        <Trophy size={13} aria-label="Vencedor" />
+                {config.options.map((option, i) => {
+                  const mine = state.votes?.[engine.view.id] === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
+                      aria-pressed={mine}
+                      disabled={!pollOpen || busy}
+                      onClick={() =>
+                        void act({ kind: "vote", optionId: option.id })
+                      }
+                    >
+                      <span>{option.label}</span>
+                      {revealed ? (
+                        <b>
+                          {winners.includes(option) && (
+                            <Trophy size={13} aria-label="Vencedor" />
+                          )}
+                          {pollCounts[i]}
+                        </b>
+                      ) : (
+                        mine && <Check size={14} aria-label="Seu voto" />
                       )}
-                      {pollCounts[i]}
-                    </b>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
-              {editable && (
+              {editable && state.startedAt != null && (
                 <button
                   className="text-button"
                   disabled={busy}
                   onClick={() =>
                     void act({
                       kind: "poll-control",
-                      action:
-                        state.startedAt == null
-                          ? "start"
-                          : pollOpen
-                            ? "close"
-                            : "reset",
+                      action: pollOpen ? "close" : "reset",
                       revision: value.revision,
                     })
                   }
                 >
-                  {state.startedAt == null
-                    ? "Abrir votação"
-                    : pollOpen
-                      ? "Encerrar votação"
-                      : "Reiniciar votação"}
+                  {pollOpen ? "Encerrar votação" : "Nova votação"}
                 </button>
               )}
             </>
@@ -746,11 +764,13 @@ function ModuleFields({
   current,
   save,
   done,
+  children,
 }: {
   config: ModuleConfig;
   current: () => ModuleConfig;
   save: (next: ModuleConfig) => void;
-  done: () => void;
+  done?: () => void;
+  children?: ReactNode;
 }) {
   if (config.kind === "dice") return null;
   const kind = config.kind;
@@ -875,88 +895,99 @@ function ModuleFields({
             </span>
           </li>
         ))}
-      </ol>
-      {rows.length < max && (
-        <button
-          type="button"
-          className="text-button module-add"
-          onClick={() =>
-            setRows((list) => [
-              ...list,
-              kind === "tasks"
-                ? {
-                    id: freshKey(),
-                    label: `Etapa ${list.length + 1}`,
-                    assignee: "",
-                    duration: 900,
-                  }
-                : kind === "random"
-                  ? {
-                      id: freshKey(),
-                      label: `Opção ${list.length + 1}`,
-                      weight: 1,
-                    }
-                  : { id: freshKey(), label: `Opção ${list.length + 1}` },
-            ])
-          }
-        >
-          <Plus size={15} /> Adicionar {noun}
-        </button>
-      )}
-      {config.kind === "poll" && (
-        <div className="module-duration">
-          <span>Prazo</span>
-          <InlineText
-            className="row-number"
-            label="Prazo em minutos ou mm:ss"
-            value={config.duration ? clock(config.duration) : ""}
-            placeholder="Sem prazo"
-            numeric
-            maxLength={8}
-            accept={(t) => !t || t === "0" || parseClock(t) !== null}
-            save={(t) => {
-              const base = current();
-              if (base.kind === "poll")
-                save({
-                  ...base,
-                  duration: !t || t === "0" ? 0 : parseClock(t)!,
-                });
-            }}
-          />
-          {!!config.duration && (
+        {rows.length < max && (
+          <li className="row-add">
             <button
               type="button"
-              className="text-button"
-              onClick={() => {
-                const base = current();
-                if (base.kind === "poll") save({ ...base, duration: 0 });
-              }}
+              className="text-button module-add"
+              aria-label={`Adicionar ${noun}`}
+              onClick={() =>
+                setRows((list) => [
+                  ...list,
+                  kind === "tasks"
+                    ? {
+                        id: freshKey(),
+                        label: `Etapa ${list.length + 1}`,
+                        assignee: "",
+                        duration: 900,
+                      }
+                    : kind === "random"
+                      ? {
+                          id: freshKey(),
+                          label: `Opção ${list.length + 1}`,
+                          weight: 1,
+                        }
+                      : { id: freshKey(), label: `Opção ${list.length + 1}` },
+                ])
+              }
             >
-              Sem prazo
+              <Plus size={15} aria-hidden="true" />
+              <span>Adicionar {noun}</span>
             </button>
-          )}
-        </div>
+          </li>
+        )}
+      </ol>
+      <div className="module-footer">
+        {config.kind === "poll" && (
+          <div className="module-duration">
+            <span>Prazo</span>
+            <InlineText
+              className="row-number"
+              label="Prazo em minutos ou mm:ss"
+              value={config.duration ? clock(config.duration) : ""}
+              placeholder="Sem prazo"
+              numeric
+              maxLength={8}
+              accept={(t) => !t || t === "0" || parseClock(t) !== null}
+              save={(t) => {
+                const base = current();
+                if (base.kind === "poll")
+                  save({
+                    ...base,
+                    duration: !t || t === "0" ? 0 : parseClock(t)!,
+                  });
+              }}
+            />
+            {!!config.duration && (
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  const base = current();
+                  if (base.kind === "poll") save({ ...base, duration: 0 });
+                }}
+              >
+                Sem prazo
+              </button>
+            )}
+          </div>
+        )}
+        {config.kind === "random" && (
+          <label className="module-check">
+            <input
+              type="checkbox"
+              checked={config.removeDrawn}
+              onChange={(e) => {
+                const base = current();
+                if (base.kind === "random")
+                  save({ ...base, removeDrawn: e.target.checked });
+              }}
+            />
+            Retirar opções já sorteadas
+          </label>
+        )}
+        {kind !== "poll" && (
+          <p className="field-note">
+            Mudar opções ou etapas reinicia os resultados.
+          </p>
+        )}
+        {children}
+      </div>
+      {done && (
+        <button type="button" className="secondary module-done" onClick={done}>
+          Concluir
+        </button>
       )}
-      {config.kind === "random" && (
-        <label className="module-check">
-          <input
-            type="checkbox"
-            checked={config.removeDrawn}
-            onChange={(e) => {
-              const base = current();
-              if (base.kind === "random")
-                save({ ...base, removeDrawn: e.target.checked });
-            }}
-          />
-          Retirar opções já sorteadas
-        </label>
-      )}
-      <p className="field-note">
-        Mudar opções ou etapas reinicia os resultados.
-      </p>
-      <button type="button" className="secondary module-done" onClick={done}>
-        Concluir
-      </button>
     </div>
   );
 }
