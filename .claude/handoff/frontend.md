@@ -1,45 +1,43 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-22
+Atualizado: 2026-10-23
 
 ## Agora
 
-Backlog do usuário concluído: #7, #8, #9, #10, #11, #12, #13, #14, #15, #16 e as do
-diagnóstico (#36, #37, #45). Nada em andamento.
+Bloco #52–#55 entregue (PRs #59, #60, #61, #53 na PR seguinte). Nada em andamento.
 
 ## Feito recentemente
 
-- Infra de widget: `canvas/header-tools.tsx` (`HeaderTools` = portal para a linha do
-  título, `ScopeBadge`, `useRename`, `useMenuItems`); `components/ContextMenu.tsx`
-  (menu de botão direito; `origin` o mantém dentro de diálogo modal);
-  `WidgetDefinition.menu`; título editável (duplo clique/F2/menu); arraste do mouse
-  exige 4 px (antes um clique soltava o widget).
-- `canvas/TimerBlock.tsx` (tempo no lugar, modo, repetir, som); `EmojiPicker`;
-  chat agrupado por autor/5 min; votação com som e vencedor; Dados com sugestão;
-  painel Pessoas com ⋯/botão direito; chip "ao vivo" na barra do canvas.
-- Sons novos (aba Aplicativo): timer-end, poll-open, poll-end, screen-new,
-  chat-message (coalescido 4 s).
-- Layout: canvas de borda a borda; `--dock-lift` (dock acima da tira de baixo);
-  widgets sob o dock ganham `under-dock` e reservam `--dock-height`.
+- #52: `.widget-body` é contêiner de tamanho (`container: widget-body / size`); widgets
+  usam `cqw/cqh` e `em` a partir de um `font-size` por widget. Cronômetro curto põe o
+  relógio ao lado dos controles. Cabeçalho ≤300 px: uma linha, ferramentas no botão ⋯
+  (`.widget-more`), que abre o mesmo menu do botão direito.
+- #54: `canvas/InlineText.tsx` (clique edita, blur/Enter salva, Esc cancela). Placar e
+  Notas sem janela; Sorteador/Tarefas editam dentro do widget (`ModuleFields`), cada campo
+  salva ao sair (fila em `saveConfig`, revisão vinda da resposta do servidor). Sem setinhas
+  em `input[type=number]`.
+- #55: `useEndAlarm` em `TimerBlock.tsx`: toca a cada 1,2 s até "Desligar alarme" ou 1 min.
+- #53: Votação configurada na própria face antes de abrir; votos ocultos até o fim
+  (contrato do Backend em #53: `votes` só o próprio, `voters` total).
 
 ## Decisões
 
-- Ação secundária vai para o menu do cabeçalho/linha, nunca para o corpo.
-- Escopo do widget é só ícone (pessoa/grupo) com `title`.
-- Não rodar Prettier em arquivo inteiro fora do que mudou (#20 é do QA).
-- Esperar a CI verde antes do squash merge.
+- Ação secundária vai para o menu do cabeçalho/⋯, nunca para o corpo.
+- Toda ferramenta do cabeçalho também existe no menu (o ⋯ esconde as ferramentas).
+- Esperar a CI verde antes do squash merge; `npm run build` local pega erro de CSS
+  (lightningcss) que o typecheck não pega.
 
 ## Pendente / bloqueios
 
-- Cabeçalho de widget estreito (~190 px na tira do celular) ainda quebra em 2 linhas.
-- Na tira do celular o Cronômetro fica no limite da altura.
+- Tira do celular (~190×150): Votação aberta com rótulos longos quebra a palavra e pode
+  rolar um pouco; avaliar com o usuário.
+
+## Como testar a tela
+
+Script de screenshots: semeia `vio:canvas:v2` no localStorage (preset `strip-left`,
+foco + 3 na tira) e entra numa sala nova com Playwright global
+(`/opt/node-tools/node_modules/playwright`). Viewports 1366×768 e 390×844.
 
 ## Próximo passo
 
 Pedir ao usuário o retorno da prévia e abrir issues do que ele apontar.
-
-## Como testar a tela
-
-`npm run dev` + Playwright global (`/opt/node-tools/node_modules/playwright`); um
-contexto de navegador por sala (o layout persiste no localStorage). Para tela
-compartilhada: `--auto-select-desktop-capture-source=Entire screen`.
