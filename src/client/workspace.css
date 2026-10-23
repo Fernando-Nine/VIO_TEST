@@ -2482,6 +2482,10 @@ button.inline-text.is-empty {
     display: none;
   }
   .row-tools .icon-button:not(:last-child) {
+    display: none;
+  }
+}
+
 /* #55: an ended countdown rings until each person turns it off. */
 .timer-face.is-ringing .widget-clock {
   color: #ffd27a;
