@@ -1,13 +1,15 @@
 # QA/Release — handoff
 
-Atualizado: 2026-10-22
+Atualizado: 2026-10-23
 
 ## Agora
 
-Sem tarefa em andamento. Abertas na área: #19, #20, #21, #22.
+Sem tarefa em andamento. Milestones: 2.8.0 (#19, #20, #30, #52–#55), 2.9.0
+(#21–#25), App Windows (#26).
 
 ## Feito recentemente
 
+- Prévia 2.8.0-rc.3 (PRs #27–#51: interface enxuta, sons, correções de mídia/memória).
 - CI no GitHub Actions (#6, PR #18): `.github/workflows/ci.yml` em PR e push na `main`,
   Node 24 + cache npm → `npm ci`, typecheck, test, build e `CHANGELOG.md` sem diff.
 - Diagnóstico: 90/90 testes passam, 6 execuções seguidas sem instabilidade (~6 s).
