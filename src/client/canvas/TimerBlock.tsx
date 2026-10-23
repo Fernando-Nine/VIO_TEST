@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeftRight, Repeat } from "lucide-react";
+import { ArrowLeftRight, BellOff, Repeat } from "lucide-react";
 import type { MenuItem } from "../components/ContextMenu";
 import {
   timerDisplay,
@@ -32,9 +32,17 @@ export function parseClock(text: string): number | null {
   return seconds > 0 && seconds <= 86400 ? seconds : null;
 }
 
-/** Plays the end cue for every viewer, even while the widget is off screen. */
-function useEndSound(block: Timer, engine: Controller) {
+const alarmLimit = 60_000;
+const ringEvery = 1_200;
+
+/**
+ * Rings for every viewer, even while the widget is off screen. A countdown
+ * that ends rings as an alarm until this person turns it off or a minute
+ * passes; a repeating one chimes once per lap.
+ */
+function useEndAlarm(block: Timer, engine: Controller) {
   const { startedAt, elapsed, duration, loop } = block;
+  const [ringing, setRinging] = useState(false);
   useEffect(() => {
     if (startedAt === null || !duration) return;
     const timer = { ...block, startedAt, elapsed, duration, loop };
@@ -43,21 +51,34 @@ function useEndSound(block: Timer, engine: Controller) {
     let repeat: ReturnType<typeof setInterval> | undefined;
     const first = setTimeout(
       () => {
+        if (!loop) return setRinging(true);
         void engine.playCue("timer-end");
-        if (loop)
-          repeat = setInterval(
-            () => void engine.playCue("timer-end"),
-            duration * 1000,
-          );
+        repeat = setInterval(
+          () => void engine.playCue("timer-end"),
+          duration * 1000,
+        );
       },
       (duration - done) * 1000,
     );
     return () => {
       clearTimeout(first);
       clearInterval(repeat);
+      // Starting, pausing or resetting the timer also silences the alarm.
+      setRinging(false);
     };
     // The block object changes on every revision; only timing fields matter.
   }, [startedAt, elapsed, duration, loop, engine]);
+  useEffect(() => {
+    if (!ringing) return;
+    void engine.playCue("timer-end");
+    const ring = setInterval(() => void engine.playCue("timer-end"), ringEvery);
+    const stop = setTimeout(() => setRinging(false), alarmLimit);
+    return () => {
+      clearInterval(ring);
+      clearTimeout(stop);
+    };
+  }, [ringing, engine]);
+  return { ringing, silence: () => setRinging(false) };
 }
 
 const switchedMode = (block: Timer): Timer => {
@@ -115,7 +136,7 @@ export function TimerBlock({
   update: (next: Timer) => void;
 }) {
   const [editingTime, setEditingTime] = useState(false);
-  useEndSound(block, engine);
+  const alarm = useEndAlarm(block, engine);
   const mode = block.mode || (block.duration ? "down" : "up");
   const other = mode === "down" ? "up" : "down";
   const finished = timerFinished(block, now);
@@ -129,7 +150,7 @@ export function TimerBlock({
       update({ ...block, ...stopped, duration: seconds });
   }
   return (
-    <div className="timer-face">
+    <div className={`timer-face ${alarm.ringing ? "is-ringing" : ""}`}>
       {editable ? (
         <div className="timer-modes" role="group" aria-label="Modo">
           <button
@@ -192,6 +213,12 @@ export function TimerBlock({
         </output>
       )}
       <div className="widget-inline-actions">
+        {alarm.ringing && (
+          <button className="primary timer-silence" onClick={alarm.silence}>
+            <BellOff size={16} aria-hidden="true" />
+            Desligar alarme
+          </button>
+        )}
         <button
           className="secondary"
           onClick={() =>

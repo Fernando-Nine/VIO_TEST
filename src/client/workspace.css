@@ -2485,3 +2485,39 @@ button.inline-text.is-empty {
     display: none;
   }
 }
+
+/* #55: an ended countdown rings until each person turns it off. */
+.timer-face.is-ringing .widget-clock {
+  color: #ffd27a;
+}
+.timer-face.is-ringing .widget-inline-actions > .text-button {
+  display: none;
+}
+.timer-face .widget-inline-actions > .timer-silence {
+  min-height: 2.6em;
+  padding: 0.45em 1.1em;
+  gap: 0.4em;
+  font-size: 1em;
+  background: #b4561f;
+}
+.timer-face .widget-inline-actions > .timer-silence:hover {
+  background: #c9652a;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .timer-face.is-ringing .widget-clock {
+    animation: timer-ring 1.2s ease-in-out infinite;
+  }
+}
+@keyframes timer-ring {
+  50% {
+    opacity: 0.45;
+  }
+}
+.timer-face.is-ringing > :is(.timer-modes, .timer-mode-label) {
+  display: none;
+}
+@container widget-body (max-width: 300px) {
+  .timer-face.is-ringing .widget-inline-actions > .secondary {
+    display: none;
+  }
+}
