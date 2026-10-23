@@ -3,8 +3,13 @@ import { Plus, Minus, Share2, Settings2, Copy, Trash2 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { freshKey } from "../id";
 import { NoteActions } from "./NoteActions";
-import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
-import { TimerBlock } from "./TimerBlock";
+import {
+  HeaderTools,
+  ScopeBadge,
+  useMenuItems,
+  useRename,
+} from "./header-tools";
+import { TimerBlock, timerMenu } from "./TimerBlock";
 import {
   operateWidget,
   timerElapsed,
@@ -16,6 +21,7 @@ import {
   type WidgetOperation,
 } from "../../shared/widgets";
 import { canEditPublic, canManageRoom } from "../../shared/permissions";
+import type { MenuItem } from "../components/ContextMenu";
 import type { Controller } from "../room/controller";
 import type { WidgetInstance } from "./model";
 
@@ -199,6 +205,27 @@ export function CustomWidget({
           )
       : undefined,
   );
+  const timer = value?.blocks.find((b) => b.kind === "timer");
+  // Mirrors the header tools so narrow headers, which hide them, keep them.
+  useMenuItems(
+    value
+      ? ([
+          ...(owner && timer ? timerMenu(timer, updateTimer) : []),
+          ...(owner && widget.type !== "timer"
+            ? [
+                {
+                  label: "Editar",
+                  icon: Settings2,
+                  run: () => setEditing(true),
+                },
+              ]
+            : []),
+          ...(shared
+            ? [{ label: "Criar cópia individual", icon: Copy, run: copy }]
+            : [{ label: "Compartilhar", icon: Share2, run: startShare }]),
+        ] satisfies MenuItem[])
+      : undefined,
+  );
   if (!value)
     return (
       <p className="widget-empty">
@@ -260,12 +287,41 @@ export function CustomWidget({
       }
     }
   }
+  function startShare() {
+    shareId.current ||= widget.id;
+    setSharing(true);
+  }
+  function copy() {
+    if (!value) return;
+    engine.canvas.add(
+      {
+        id: freshKey(),
+        type: widget.type,
+        title: value.title,
+        config: {},
+        state: { ...value, revision: 0 },
+      },
+      undefined,
+      true,
+    );
+  }
+  function updateTimer(next: Extract<WidgetBlock, { kind: "timer" }>) {
+    if (!value) return;
+    void saveStructure(
+      widgetContent.parse({
+        kind: value.kind,
+        title: value.title,
+        blocks: value.blocks.map((b) => (b.id === next.id ? next : b)),
+      }),
+      value.revision,
+    ).catch((e) => setError(e.message));
+  }
   const act = (operation: WidgetOperation) => {
     setError("");
     void operate(operation).catch((e) => setError(e.message));
   };
   return (
-    <div className="custom-widget">
+    <div className={`custom-widget kind-${value.kind || "custom"}`}>
       <HeaderTools>
         <ScopeBadge shared={shared} />
         {owner && widget.type !== "timer" && (
@@ -285,10 +341,7 @@ export function CustomWidget({
                 ? "Compartilhar notas para editar juntos"
                 : "Compartilhar widget com a sala"
             }
-            onClick={() => {
-              shareId.current ||= widget.id;
-              setSharing(true);
-            }}
+            onClick={startShare}
           >
             <Share2 size={16} />
           </button>
@@ -297,19 +350,7 @@ export function CustomWidget({
           <button
             className="icon-button"
             aria-label="Criar cópia individual"
-            onClick={() =>
-              engine.canvas.add(
-                {
-                  id: freshKey(),
-                  type: widget.type,
-                  title: value.title,
-                  config: {},
-                  state: { ...value, revision: 0 },
-                },
-                undefined,
-                true,
-              )
-            }
+            onClick={copy}
           >
             <Copy size={16} />
           </button>
@@ -400,18 +441,7 @@ export function CustomWidget({
                 editable={owner}
                 revision={value.revision}
                 act={act}
-                update={(next) =>
-                  void saveStructure(
-                    widgetContent.parse({
-                      kind: value.kind,
-                      title: value.title,
-                      blocks: value.blocks.map((b) =>
-                        b.id === next.id ? next : b,
-                      ),
-                    }),
-                    value.revision,
-                  ).catch((e) => setError(e.message))
-                }
+                update={updateTimer}
               />
             )}
           </section>

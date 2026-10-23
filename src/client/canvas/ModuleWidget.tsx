@@ -170,15 +170,48 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     const timer = setTimeout(() => setRevealAt(0), 2600);
     return () => clearTimeout(timer);
   }, [revealAt]);
+  // Mirrors the header tools so narrow headers, which hide them, keep them.
   useMenuItems(
-    value && config && editable && config.kind !== "poll"
+    value && config
       ? [
-          {
-            label: "Reiniciar resultados e progresso",
-            icon: RotateCcw,
-            danger: true,
-            run: () => void act({ kind: "reset", revision: value.revision }),
-          },
+          ...(widget.config.sharedId
+            ? []
+            : [
+                {
+                  label: "Compartilhar",
+                  icon: Share2,
+                  run: () => void share(),
+                },
+              ]),
+          ...(config.kind === "dice"
+            ? [
+                {
+                  label: "Guia de dados",
+                  icon: HelpCircle,
+                  run: () => setHelp(true),
+                },
+              ]
+            : []),
+          ...(editable && config.kind !== "dice"
+            ? [
+                {
+                  label: "Editar",
+                  icon: Settings2,
+                  run: () => setEditing(true),
+                },
+              ]
+            : []),
+          ...(editable && config.kind !== "poll"
+            ? [
+                {
+                  label: "Reiniciar resultados e progresso",
+                  icon: RotateCcw,
+                  danger: true,
+                  run: () =>
+                    void act({ kind: "reset", revision: value.revision }),
+                },
+              ]
+            : []),
         ]
       : undefined,
   );
@@ -381,7 +414,9 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       ? config.options.filter((_, i) => pollCounts[i] === topVotes)
       : [];
   return (
-    <div className={`module-widget ${compact ? "is-compact" : ""}`}>
+    <div
+      className={`module-widget kind-${config.kind} ${compact ? "is-compact" : ""}`}
+    >
       {controls}
       <div className="module-content">
         {config.kind === "poll" && (
