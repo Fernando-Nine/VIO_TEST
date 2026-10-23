@@ -7,9 +7,29 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.8.0-rc.2";
+export const version = "2.8.0-rc.3";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-23",
+  title: "Prévia · Interface mais enxuta e sons",
+  sections: [
+    {
+      title: "Somente no vio-test",
+      items: [
+        "O canvas ocupa toda a área da sala. No celular, o cabeçalho fica compacto. As setas da tira aparecem só ao passar o mouse.",
+        "Widgets com cabeçalho compacto: renomeie no próprio título e use o botão direito para as demais ações. Clicar não solta mais o widget do lugar.",
+        "Cronômetro: edite o tempo direto no widget, veja o modo e a repetição, e ouça um aviso ao terminar.",
+        "Chat agrupa horários, tem botão de enviar maior e um seletor leve de emojis.",
+        "Sons para votação aberta, transmissão nova e mensagem nova. Ao encerrar, a votação destaca a vencedora. Indicador de transmissão ao vivo na barra.",
+        "Dados começa com o campo vazio e uma sugestão; reiniciar fica no menu do cabeçalho.",
+        "Pessoas: ações ao passar o mouse e no botão direito. Notificações sem botão de fechar; Widget na barra sempre abre o catálogo.",
+        "Correções: mídia mais estável em reconexões rápidas, memória da sala limitada e sucessão do criador prefere quem está online.",
+      ],
+    },
+  ],
+};
+const sessionWidgetsRelease: Release = {
+  version: "2.8.0-rc.2",
   date: "2026-10-12",
   title: "Prévia · Novos widgets da sessão",
   sections: [{title: "Somente no vio-test", items: [
@@ -361,6 +381,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  sessionWidgetsRelease,
   phaseTwoInitialRelease,
   followupRelease,
   roundEPhaseOneRelease,

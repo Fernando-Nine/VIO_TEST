@@ -8,7 +8,7 @@ Atualizado: 2026-10-22.
 |          | Versão     | Repositório                   | Endereço                       |
 | -------- | ---------- | ----------------------------- | ------------------------------ |
 | Produção | 2.7.1      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.8.0-rc.2 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.8.0-rc.3 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 A prévia tem, além da produção: chat, papéis na sala (criador/admin/convidado),

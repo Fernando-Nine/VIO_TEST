@@ -11,6 +11,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
+import { InlineText } from "./InlineText";
+import { clock, parseClock } from "./TimerBlock";
 import { freshKey } from "../id";
 import { canEditPublic } from "../../shared/permissions";
 import {
@@ -128,6 +130,9 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     [busy, setBusy] = useState(false),
     [now, setNow] = useState(() => engine.serverNow());
   const retry = useRef({ serialized: "", id: "" });
+  const queue = useRef(Promise.resolve());
+  const pending = useRef<ModuleConfig | null>(null);
+  const saved = useRef(0);
   const compact = height < 330;
   useEffect(() => {
     if (!visible || !["poll", "tasks"].includes(config?.kind || "")) return;
@@ -170,15 +175,48 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     const timer = setTimeout(() => setRevealAt(0), 2600);
     return () => clearTimeout(timer);
   }, [revealAt]);
+  // Mirrors the header tools so narrow headers, which hide them, keep them.
   useMenuItems(
-    value && config && editable && config.kind !== "poll"
+    value && config
       ? [
-          {
-            label: "Reiniciar resultados e progresso",
-            icon: RotateCcw,
-            danger: true,
-            run: () => void act({ kind: "reset", revision: value.revision }),
-          },
+          ...(widget.config.sharedId
+            ? []
+            : [
+                {
+                  label: "Compartilhar",
+                  icon: Share2,
+                  run: () => void share(),
+                },
+              ]),
+          ...(config.kind === "dice"
+            ? [
+                {
+                  label: "Guia de dados",
+                  icon: HelpCircle,
+                  run: () => setHelp(true),
+                },
+              ]
+            : []),
+          ...(editable && config.kind !== "dice"
+            ? [
+                {
+                  label: "Editar",
+                  icon: Settings2,
+                  run: () => setEditing(!editing),
+                },
+              ]
+            : []),
+          ...(editable && config.kind !== "poll"
+            ? [
+                {
+                  label: "Reiniciar resultados e progresso",
+                  icon: RotateCcw,
+                  danger: true,
+                  run: () =>
+                    void act({ kind: "reset", revision: value.revision }),
+                },
+              ]
+            : []),
         ]
       : undefined,
   );
@@ -198,25 +236,61 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
   if (!value || !config)
     return <p className="widget-empty">Este widget não está disponível.</p>;
   async function saveContent(content: WidgetContent) {
-    if (!value) return;
-    if (widget.config.sharedId)
-      await engine.request("widget-structure", {
-        id: value.id,
-        revision: value.revision,
+    if (widget.config.sharedId) {
+      const latest = moduleValue(widget, engine);
+      if (!latest) return;
+      const next = await engine.request<SharedWidget>("widget-structure", {
+        id: latest.id,
+        revision: Math.max(latest.revision, saved.current),
         content,
       });
-    else
-      engine.canvas.updateWidget(widget.id, {
-        title: content.title,
-        state: {
-          ...value,
-          ...content,
-          revision: value.revision + 1,
-          moduleState:
-            JSON.stringify(content.module) === JSON.stringify(config)
-              ? state
-              : {},
-        },
+      saved.current = next.revision;
+      return;
+    }
+    const current = engine.canvas
+      .getSnapshot()
+      .widgets.find((w) => w.id === widget.id);
+    const latest = current && moduleValue(current, engine);
+    if (!latest?.module) return;
+    engine.canvas.updateWidget(widget.id, {
+      title: content.title,
+      state: {
+        ...latest,
+        ...content,
+        revision: latest.revision + 1,
+        moduleState:
+          JSON.stringify(content.module) === JSON.stringify(latest.module)
+            ? latest.moduleState
+            : {},
+      },
+    });
+  }
+  /** Saves each field as it is left; edits made while one is in flight build on it. */
+  function saveConfig(next: ModuleConfig) {
+    const parsed = moduleConfig.safeParse(next);
+    if (!parsed.success) {
+      setError("Confira os campos e os limites.");
+      return;
+    }
+    setError("");
+    pending.current = parsed.data;
+    const title = value?.title || moduleTitles[parsed.data.kind];
+    queue.current = queue.current
+      .then(() =>
+        saveContent(
+          widgetContent.parse({
+            kind: parsed.data.kind,
+            title,
+            blocks: [],
+            module: parsed.data,
+          }),
+        ),
+      )
+      .catch((e) =>
+        setError(e instanceof Error ? e.message : "Não foi possível salvar."),
+      )
+      .finally(() => {
+        if (pending.current === parsed.data) pending.current = null;
       });
   }
   async function act(operation: ModuleAction) {
@@ -325,7 +399,8 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
         <button
           className="icon-button"
           aria-label={`Editar ${value.title}`}
-          onClick={() => setEditing(true)}
+          aria-pressed={editing}
+          onClick={() => setEditing(!editing)}
         >
           <Settings2 size={14} />
         </button>
@@ -381,188 +456,204 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       ? config.options.filter((_, i) => pollCounts[i] === topVotes)
       : [];
   return (
-    <div className={`module-widget ${compact ? "is-compact" : ""}`}>
+    <div
+      className={`module-widget kind-${config.kind} ${compact ? "is-compact" : ""}`}
+    >
       {controls}
-      <div className="module-content">
-        {config.kind === "poll" && (
-          <>
-            <strong className="module-question">{config.question}</strong>
-            <small>
-              {state.startedAt == null
-                ? "Aguardando abertura"
-                : !pollOpen
-                  ? winners.length === 1
-                    ? `Vencedor: ${winners[0].label}`
-                    : winners.length
-                      ? "Empate"
-                      : "Votação encerrada"
-                  : config.duration
-                    ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}`
-                    : "Votação aberta"}{" "}
-              · {Object.keys(state.votes || {}).length}{" "}
-              {Object.keys(state.votes || {}).length === 1 ? "voto" : "votos"}
-            </small>
-            <div className={`module-options ${revealAt ? "is-revealing" : ""}`}>
-              {config.options.map((option, i) => (
-                <button
-                  key={option.id}
-                  className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
-                  aria-pressed={state.votes?.[engine.view.id] === option.id}
-                  disabled={!pollOpen || busy}
-                  onClick={() =>
-                    void act({ kind: "vote", optionId: option.id })
-                  }
-                >
-                  <span>{option.label}</span>
-                  <b>
-                    {winners.includes(option) && (
-                      <Trophy size={13} aria-label="Vencedor" />
-                    )}
-                    {pollCounts[i]}
-                  </b>
-                </button>
-              ))}
-            </div>
-            {editable && (
-              <button
-                className="text-button"
-                disabled={busy}
-                onClick={() =>
-                  void act({
-                    kind: "poll-control",
-                    action:
-                      state.startedAt == null
-                        ? "start"
-                        : pollOpen
-                          ? "close"
-                          : "reset",
-                    revision: value.revision,
-                  })
-                }
-              >
+      {editing && editable ? (
+        <ModuleFields
+          config={config}
+          current={() => pending.current ?? config}
+          save={saveConfig}
+          done={() => setEditing(false)}
+        />
+      ) : (
+        <div className="module-content">
+          {config.kind === "poll" && (
+            <>
+              <strong className="module-question">{config.question}</strong>
+              <small>
                 {state.startedAt == null
-                  ? "Abrir votação"
-                  : pollOpen
-                    ? "Encerrar votação"
-                    : "Reiniciar votação"}
-              </button>
-            )}
-          </>
-        )}
-        {config.kind === "dice" && (
-          <>
-            <form
-              className="module-roll"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void act({
-                  kind: "roll",
-                  expression: expression.trim() || config.expression,
-                });
-              }}
-            >
-              <input
-                aria-label="Comando dos dados"
-                placeholder={config.expression}
-                value={expression}
-                maxLength={200}
-                readOnly={busy}
-                onChange={(e) => setExpression(e.target.value)}
-              />
-              <button className="primary" disabled={busy}>
-                Rolar
-              </button>
-            </form>
-            {!!state.history?.length && (
-              <Results entries={state.history.slice(-3)} />
-            )}
-          </>
-        )}
-        {config.kind === "random" && (
-          <>
-            <button
-              className="primary"
-              disabled={
-                busy ||
-                (config.removeDrawn &&
-                  state.drawn?.length === config.options.length)
-              }
-              onClick={() => void act({ kind: "draw" })}
-            >
-              Sortear
-            </button>
-            <small>
-              {config.removeDrawn
-                ? config.options.length - (state.drawn?.length || 0)
-                : config.options.length}{" "}
-              opções disponíveis
-            </small>
-            {!!state.history?.length && (
-              <Results entries={state.history.slice(-3)} />
-            )}
-          </>
-        )}
-        {config.kind === "tasks" && (
-          <>
-            <div className="session-current">
-              <strong>
-                {activeIndex + 1}. {tasks[activeIndex].label}
-              </strong>
-              <span>
-                {tasks[activeIndex].duration
-                  ? time(
-                      tasks[activeIndex].duration - moduleElapsed(state, now),
-                    )
-                  : time(moduleElapsed(state, now))}
-              </span>
-            </div>
-            {editable && (
-              <div className="module-actions">
+                  ? "Aguardando abertura"
+                  : !pollOpen
+                    ? winners.length === 1
+                      ? `Vencedor: ${winners[0].label}`
+                      : winners.length
+                        ? "Empate"
+                        : "Votação encerrada"
+                    : config.duration
+                      ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}`
+                      : "Votação aberta"}{" "}
+                · {Object.keys(state.votes || {}).length}{" "}
+                {Object.keys(state.votes || {}).length === 1 ? "voto" : "votos"}
+              </small>
+              <div
+                className={`module-options ${revealAt ? "is-revealing" : ""}`}
+              >
+                {config.options.map((option, i) => (
+                  <button
+                    key={option.id}
+                    className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
+                    aria-pressed={state.votes?.[engine.view.id] === option.id}
+                    disabled={!pollOpen || busy}
+                    onClick={() =>
+                      void act({ kind: "vote", optionId: option.id })
+                    }
+                  >
+                    <span>{option.label}</span>
+                    <b>
+                      {winners.includes(option) && (
+                        <Trophy size={13} aria-label="Vencedor" />
+                      )}
+                      {pollCounts[i]}
+                    </b>
+                  </button>
+                ))}
+              </div>
+              {editable && (
                 <button
-                  className="secondary"
+                  className="text-button"
                   disabled={busy}
                   onClick={() =>
                     void act({
-                      kind: "session",
-                      action: state.startedAt == null ? "start" : "pause",
+                      kind: "poll-control",
+                      action:
+                        state.startedAt == null
+                          ? "start"
+                          : pollOpen
+                            ? "close"
+                            : "reset",
                       revision: value.revision,
                     })
                   }
                 >
-                  {state.startedAt == null ? "Iniciar etapa" : "Pausar etapa"}
+                  {state.startedAt == null
+                    ? "Abrir votação"
+                    : pollOpen
+                      ? "Encerrar votação"
+                      : "Reiniciar votação"}
                 </button>
+              )}
+            </>
+          )}
+          {config.kind === "dice" && (
+            <>
+              <form
+                className="module-roll"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void act({
+                    kind: "roll",
+                    expression: expression.trim() || config.expression,
+                  });
+                }}
+              >
+                <input
+                  aria-label="Comando dos dados"
+                  placeholder={config.expression}
+                  value={expression}
+                  maxLength={200}
+                  readOnly={busy}
+                  onChange={(e) => setExpression(e.target.value)}
+                />
+                <button className="primary" disabled={busy}>
+                  Rolar
+                </button>
+              </form>
+              {!!state.history?.length && (
+                <Results entries={state.history.slice(-3)} />
+              )}
+            </>
+          )}
+          {config.kind === "random" && (
+            <>
+              <button
+                className="primary"
+                disabled={
+                  busy ||
+                  (config.removeDrawn &&
+                    state.drawn?.length === config.options.length)
+                }
+                onClick={() => void act({ kind: "draw" })}
+              >
+                Sortear
+              </button>
+              <small>
+                {config.removeDrawn
+                  ? config.options.length - (state.drawn?.length || 0)
+                  : config.options.length}{" "}
+                opções disponíveis
+              </small>
+              {!!state.history?.length && (
+                <Results entries={state.history.slice(-3)} />
+              )}
+            </>
+          )}
+          {config.kind === "tasks" && (
+            <>
+              <div className="session-current">
+                <strong>
+                  {activeIndex + 1}. {tasks[activeIndex].label}
+                </strong>
+                <span>
+                  {tasks[activeIndex].duration
+                    ? time(
+                        tasks[activeIndex].duration - moduleElapsed(state, now),
+                      )
+                    : time(moduleElapsed(state, now))}
+                </span>
+              </div>
+              {editable && (
+                <div className="module-actions">
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      void act({
+                        kind: "session",
+                        action: state.startedAt == null ? "start" : "pause",
+                        revision: value.revision,
+                      })
+                    }
+                  >
+                    {state.startedAt == null ? "Iniciar etapa" : "Pausar etapa"}
+                  </button>
+                  <button
+                    className="text-button"
+                    disabled={busy || activeIndex === tasks.length - 1}
+                    onClick={() =>
+                      void act({
+                        kind: "session",
+                        action: "next",
+                        revision: value.revision,
+                      })
+                    }
+                  >
+                    Próxima
+                  </button>
+                </div>
+              )}
+              {taskList(
+                compact ? tasks.slice(activeIndex, activeIndex + 3) : tasks,
+              )}
+              {compact && tasks.length > 3 && (
                 <button
                   className="text-button"
-                  disabled={busy || activeIndex === tasks.length - 1}
-                  onClick={() =>
-                    void act({
-                      kind: "session",
-                      action: "next",
-                      revision: value.revision,
-                    })
-                  }
+                  onClick={() => setAllTasks(true)}
                 >
-                  Próxima
+                  Ver todas ({tasks.length})
                 </button>
-              </div>
-            )}
-            {taskList(
-              compact ? tasks.slice(activeIndex, activeIndex + 3) : tasks,
-            )}
-            {compact && tasks.length > 3 && (
-              <button className="text-button" onClick={() => setAllTasks(true)}>
-                Ver todas ({tasks.length})
+              )}
+            </>
+          )}
+          {(config.kind === "dice" || config.kind === "random") &&
+            (state.history?.length || 0) > 3 && (
+              <button className="text-button" onClick={() => setHistory(true)}>
+                Histórico ({state.history!.length})
               </button>
             )}
-          </>
-        )}
-        {(config.kind === "dice" || config.kind === "random") &&
-          (state.history?.length || 0) > 3 && (
-            <button className="text-button" onClick={() => setHistory(true)}>
-              Histórico ({state.history!.length})
-            </button>
-          )}
-      </div>
+        </div>
+      )}
       {error && (
         <p role="alert" className="error-text">
           {error}
@@ -578,13 +669,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           ? `${state.history.at(-1)!.authorName}: ${state.history.at(-1)!.label}`
           : ""}
       </span>
-      {editing && (
-        <ModuleEditor
-          value={value}
-          close={() => setEditing(false)}
-          save={saveContent}
-        />
-      )}
       {history && (
         <Dialog title="Histórico" close={() => setHistory(false)}>
           <Results entries={state.history || []} />
@@ -647,299 +731,232 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
   );
 }
 
-function ModuleEditor({
-  value,
-  close,
+type Row = {
+  id: string;
+  label: string;
+  weight?: number;
+  assignee?: string;
+  duration?: number;
+};
+const rowLimits = { poll: [2, 12], random: [2, 50], tasks: [1, 30] } as const;
+
+/** Settings edited in place inside the widget: every field saves as it is left. */
+function ModuleFields({
+  config,
+  current,
   save,
+  done,
 }: {
-  value: SharedWidget;
-  close: () => void;
-  save: (content: WidgetContent) => Promise<void>;
+  config: ModuleConfig;
+  current: () => ModuleConfig;
+  save: (next: ModuleConfig) => void;
+  done: () => void;
 }) {
-  const [title, setTitle] = useState(value.title),
-    [config, setConfig] = useState<ModuleConfig>(() =>
-      structuredClone(value.module!),
-    );
-  const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  const rows: {
-    id: string;
-    label: string;
-    weight?: number;
-    assignee?: string;
-    duration?: number;
-  }[] =
-    config.kind === "poll" || config.kind === "random"
-      ? config.options
-      : config.kind === "tasks"
-        ? config.items
-        : [];
-  function patch(index: number, values: Record<string, string | number>) {
-    if (config.kind === "poll" || config.kind === "random")
-      setConfig({
-        ...config,
-        options: config.options.map((v, i) =>
-          i === index ? { ...v, ...values } : v,
-        ),
-      } as ModuleConfig);
-    else if (config.kind === "tasks")
-      setConfig({
-        ...config,
-        items: config.items.map((v, i) =>
-          i === index ? { ...v, ...values } : v,
-        ),
-      });
+  if (config.kind === "dice") return null;
+  const kind = config.kind;
+  const rows: Row[] =
+    kind === "tasks"
+      ? (config as Extract<ModuleConfig, { kind: "tasks" }>).items
+      : (config as Extract<ModuleConfig, { kind: "poll" | "random" }>).options;
+  const [min, max] = rowLimits[kind];
+  const noun = kind === "tasks" ? "etapa" : "opção";
+  function setRows(edit: (rows: Row[]) => Row[]) {
+    const base = current();
+    if (base.kind === "tasks")
+      save({ ...base, items: edit(base.items) as typeof base.items });
+    else if (base.kind === "poll")
+      save({ ...base, options: edit(base.options) as typeof base.options });
+    else if (base.kind === "random")
+      save({ ...base, options: edit(base.options) as typeof base.options });
   }
-  function order(index: number, direction: number) {
-    const next = [...rows],
-      target = index + direction;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
-    setRows(next);
-  }
-  function setRows(next: typeof rows) {
-    if (config.kind === "poll" || config.kind === "random")
-      setConfig({ ...config, options: next } as ModuleConfig);
-    else if (config.kind === "tasks")
-      setConfig({ ...config, items: next } as ModuleConfig);
+  const patch = (id: string, values: Partial<Row>) =>
+    setRows((list) => list.map((r) => (r.id === id ? { ...r, ...values } : r)));
+  function move(id: string, step: number) {
+    setRows((list) => {
+      const next = [...list];
+      const from = next.findIndex((r) => r.id === id);
+      const to = from + step;
+      if (from < 0 || to < 0 || to >= next.length) return list;
+      [next[from], next[to]] = [next[to], next[from]];
+      return next;
+    });
   }
   return (
-    <Dialog title={`Editar ${value.title}`} close={close}>
-      <form
-        className="module-editor"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setBusy(true);
-          setError("");
-          try {
-            const parsed = moduleConfig.parse(config);
-            const content = widgetContent.parse({
-              kind: parsed.kind,
-              title,
-              blocks: [],
-              module: parsed,
-            });
-            await save(content);
-            close();
-          } catch (e) {
-            setError(
-              e instanceof Error && !("issues" in e)
-                ? e.message
-                : "Confira os campos e limites antes de salvar.",
-            );
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <label>
-          Nome do widget
-          <input
-            value={title}
-            maxLength={64}
-            required
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </label>
-        {config.kind === "poll" && (
-          <>
-            <label>
-              Pergunta
-              <input
-                value={config.question}
-                maxLength={120}
-                required
-                onChange={(e) =>
-                  setConfig({ ...config, question: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Duração em segundos (0 = sem prazo)
-              <input
-                type="number"
-                min={0}
-                max={86400}
-                required
-                value={config.duration}
-                onChange={(e) =>
-                  setConfig({ ...config, duration: Number(e.target.value) })
-                }
-              />
-            </label>
-          </>
-        )}
-        {config.kind === "dice" && (
-          <label>
-            Comando inicial
-            <input
-              value={config.expression}
-              maxLength={200}
-              required
-              onChange={(e) =>
-                setConfig({ ...config, expression: e.target.value })
-              }
-            />
-          </label>
-        )}
-        {config.kind === "random" && (
-          <label className="module-check">
-            <input
-              type="checkbox"
-              checked={config.removeDrawn}
-              onChange={(e) =>
-                setConfig({ ...config, removeDrawn: e.target.checked })
-              }
-            />
-            Retirar opções já sorteadas
-          </label>
-        )}
+    <div className="module-fields">
+      {config.kind === "poll" && (
+        <InlineText
+          className="module-question"
+          label="Pergunta"
+          value={config.question}
+          save={(question) => {
+            const base = current();
+            if (base.kind === "poll") save({ ...base, question });
+          }}
+        />
+      )}
+      <ol className="module-rows">
         {rows.map((row, index) => (
-          <fieldset key={row.id}>
-            <legend>
-              {config.kind === "tasks" ? "Etapa" : "Opção"} {index + 1}
-            </legend>
-            <label>
-              Texto
-              <input
-                required
-                value={row.label}
-                maxLength={120}
-                onChange={(e) => patch(index, { label: e.target.value })}
+          <li key={row.id}>
+            <InlineText
+              className="row-label"
+              label={`Texto da ${noun} ${index + 1}`}
+              value={row.label}
+              save={(label) => patch(row.id, { label })}
+            />
+            {kind === "random" && (
+              <InlineText
+                className="row-number"
+                label={`Peso da opção ${index + 1}`}
+                value={String(row.weight)}
+                display={`×${row.weight}`}
+                numeric
+                maxLength={4}
+                accept={(t) => /^\d{1,4}$/.test(t) && +t >= 1 && +t <= 1000}
+                save={(t) => patch(row.id, { weight: +t })}
               />
-            </label>
-            {config.kind === "random" && "weight" in row && (
-              <label>
-                Peso
-                <input
-                  type="number"
-                  min={1}
-                  max={1000}
-                  required
-                  value={row.weight}
-                  onChange={(e) =>
-                    patch(index, { weight: Number(e.target.value) })
+            )}
+            {kind === "tasks" && (
+              <>
+                <InlineText
+                  className="row-assignee"
+                  label={`Responsável pela etapa ${index + 1}`}
+                  value={row.assignee || ""}
+                  placeholder="Responsável"
+                  maxLength={64}
+                  accept={() => true}
+                  save={(assignee) => patch(row.id, { assignee })}
+                />
+                <InlineText
+                  className="row-number"
+                  label={`Duração da etapa ${index + 1} em minutos ou mm:ss`}
+                  value={row.duration ? clock(row.duration) : ""}
+                  placeholder="Sem tempo"
+                  numeric
+                  maxLength={8}
+                  accept={(t) => !t || t === "0" || parseClock(t) !== null}
+                  save={(t) =>
+                    patch(row.id, {
+                      duration: !t || t === "0" ? 0 : parseClock(t)!,
+                    })
                   }
                 />
-              </label>
-            )}
-            {config.kind === "tasks" && "assignee" in row && (
-              <>
-                <label>
-                  Responsável
-                  <input
-                    maxLength={64}
-                    value={row.assignee}
-                    onChange={(e) => patch(index, { assignee: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Duração em segundos
-                  <input
-                    type="number"
-                    min={0}
-                    max={86400}
-                    required
-                    value={row.duration}
-                    onChange={(e) =>
-                      patch(index, { duration: Number(e.target.value) })
-                    }
-                  />
-                </label>
               </>
             )}
-            <div className="module-actions">
+            <span className="row-tools">
               <button
                 type="button"
                 className="icon-button"
-                aria-label={`Mover item ${index + 1} para cima`}
+                aria-label={`Mover ${noun} ${index + 1} para cima`}
                 disabled={index === 0}
-                onClick={() => order(index, -1)}
+                onClick={() => move(row.id, -1)}
               >
-                <ArrowUp size={16} />
+                <ArrowUp size={14} />
               </button>
               <button
                 type="button"
                 className="icon-button"
-                aria-label={`Mover item ${index + 1} para baixo`}
+                aria-label={`Mover ${noun} ${index + 1} para baixo`}
                 disabled={index === rows.length - 1}
-                onClick={() => order(index, 1)}
+                onClick={() => move(row.id, 1)}
               >
-                <ArrowDown size={16} />
+                <ArrowDown size={14} />
               </button>
               <button
                 type="button"
                 className="icon-button"
-                aria-label={`Excluir item ${index + 1}`}
-                disabled={rows.length <= (config.kind === "tasks" ? 1 : 2)}
-                onClick={() => setRows(rows.filter((_, i) => i !== index))}
+                aria-label={`Excluir ${noun} ${index + 1}`}
+                disabled={rows.length <= min}
+                onClick={() =>
+                  setRows((list) => list.filter((r) => r.id !== row.id))
+                }
               >
-                <X size={16} />
+                <X size={14} />
               </button>
-            </div>
-          </fieldset>
+            </span>
+          </li>
         ))}
-        {config.kind !== "dice" && (
-          <button
-            type="button"
-            className="secondary"
-            disabled={
-              rows.length >=
-              (config.kind === "poll" ? 12 : config.kind === "tasks" ? 30 : 50)
-            }
-            onClick={() => {
-              if (config.kind === "poll")
-                setConfig({
-                  ...config,
-                  options: [
-                    ...config.options,
-                    { id: freshKey(), label: `Opção ${rows.length + 1}` },
-                  ],
-                });
-              else if (config.kind === "random")
-                setConfig({
-                  ...config,
-                  options: [
-                    ...config.options,
-                    {
+      </ol>
+      {rows.length < max && (
+        <button
+          type="button"
+          className="text-button module-add"
+          onClick={() =>
+            setRows((list) => [
+              ...list,
+              kind === "tasks"
+                ? {
+                    id: freshKey(),
+                    label: `Etapa ${list.length + 1}`,
+                    assignee: "",
+                    duration: 900,
+                  }
+                : kind === "random"
+                  ? {
                       id: freshKey(),
-                      label: `Opção ${rows.length + 1}`,
+                      label: `Opção ${list.length + 1}`,
                       weight: 1,
-                    },
-                  ],
-                });
-              else if (config.kind === "tasks")
-                setConfig({
-                  ...config,
-                  items: [
-                    ...config.items,
-                    {
-                      id: freshKey(),
-                      label: `Etapa ${rows.length + 1}`,
-                      assignee: "",
-                      duration: 900,
-                    },
-                  ],
+                    }
+                  : { id: freshKey(), label: `Opção ${list.length + 1}` },
+            ])
+          }
+        >
+          <Plus size={15} /> Adicionar {noun}
+        </button>
+      )}
+      {config.kind === "poll" && (
+        <div className="module-duration">
+          <span>Prazo</span>
+          <InlineText
+            className="row-number"
+            label="Prazo em minutos ou mm:ss"
+            value={config.duration ? clock(config.duration) : ""}
+            placeholder="Sem prazo"
+            numeric
+            maxLength={8}
+            accept={(t) => !t || t === "0" || parseClock(t) !== null}
+            save={(t) => {
+              const base = current();
+              if (base.kind === "poll")
+                save({
+                  ...base,
+                  duration: !t || t === "0" ? 0 : parseClock(t)!,
                 });
             }}
-          >
-            <Plus size={16} />
-            Adicionar {config.kind === "tasks" ? "etapa" : "opção"}
-          </button>
-        )}
-        <p className="field-note">
-          Alterar a configuração reinicia os votos, resultados ou progresso
-          deste widget. Alterar só o nome preserva o estado.
-        </p>
-        {error && (
-          <p className="error-text" role="alert">
-            {error}
-          </p>
-        )}
-        <button className="primary" disabled={busy}>
-          Salvar
-        </button>
-      </form>
-    </Dialog>
+          />
+          {!!config.duration && (
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                const base = current();
+                if (base.kind === "poll") save({ ...base, duration: 0 });
+              }}
+            >
+              Sem prazo
+            </button>
+          )}
+        </div>
+      )}
+      {config.kind === "random" && (
+        <label className="module-check">
+          <input
+            type="checkbox"
+            checked={config.removeDrawn}
+            onChange={(e) => {
+              const base = current();
+              if (base.kind === "random")
+                save({ ...base, removeDrawn: e.target.checked });
+            }}
+          />
+          Retirar opções já sorteadas
+        </label>
+      )}
+      <p className="field-note">
+        Mudar opções ou etapas reinicia os resultados.
+      </p>
+      <button type="button" className="secondary module-done" onClick={done}>
+        Concluir
+      </button>
+    </div>
   );
 }
