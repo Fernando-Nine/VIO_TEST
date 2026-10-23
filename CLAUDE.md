@@ -24,6 +24,7 @@ O resto de `docs/` é referência técnica; `docs/arquivo/` é histórico e **n�
 | Mídia             | WebRTC, captura, áudio, TURN, futuro app Windows/celular           | `midia.md`    |
 | Backend/Segurança | Servidor, protocolo, permissões, limites, revisão de segurança     | `backend.md`  |
 | QA/Release        | CI, testes, BrowserLab, versões, promoção para o VIO               | `qa.md`       |
+| Design/Produto    | Rascunhos visuais, landing, página de download, identidade         | `design.md`   |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
@@ -44,8 +45,8 @@ Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão 
 
 - **Tarefas** são Issues no VIO_TEST, com etiqueta de área (`frontend`, `midia`, `backend`,
   `qa`, `docs`) e Milestone da versão. Não existem mais "rodadas".
-- **Trabalho**: um branch curto por tarefa → PR no VIO_TEST → CI verde → o próprio agente
-  faz _squash merge_. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
+- **Trabalho**: um branch curto por tarefa → PR no VIO*TEST → CI verde → o próprio agente
+  faz \_squash merge*. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
   e os testes do que mudou.
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
 - **Versão**: semver. Fonte única `src/shared/releases.ts` (+ `package.json`). Correção =
@@ -87,6 +88,9 @@ de `.claude/handoff/README.md`, faça commit e avise. O chat novo começa lendo
 - Negociação _perfect negotiation_ com `round`; todo sinal passa por `signalSchema`.
 - Identidade estável por token HMAC (não `socket.id`); `epoch` mudou = refazer tudo.
 - Service worker nunca intercepta navegação, sala, sessão ou socket.
+- Widget compartilhado é **um só estado para a sala**: toda ação (iniciar, pausar, desligar
+  alarme, votar, rolar, sortear, editar) vale para todos, via servidor. Estado só local é
+  permitido apenas em widget individual ou em preferência pessoal (volume, posição).
 
 ## Convenções
 
