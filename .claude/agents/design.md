@@ -21,6 +21,7 @@ conceitos de cada widget, landing page, página de download e identidade visual.
 - Respeitar acessibilidade (contraste AA, movimento reduzido) já no rascunho.
 
 **Skills (carregue a que se aplica antes de trabalhar):**
+
 - `artifact-design` — sempre, antes de montar qualquer página de rascunho.
 - `design:design-system` — padronização entre widgets (cores, paletas, estados, permissões).
 - `design:design-critique` — autocrítica de cada alternativa antes de entregar.
