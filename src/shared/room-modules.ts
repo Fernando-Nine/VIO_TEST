@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { rollDice } from "./dice";
+import { paletteIds } from "./palettes";
 
 const id = z.string().uuid();
 const label = z.string().trim().min(1).max(120);
@@ -24,12 +25,21 @@ export const moduleConfig = z.discriminatedUnion("kind", [
       options: z
         .array(
           z
-            .object({ id, label, weight: z.number().int().min(1).max(1000) })
+            .object({
+              id,
+              label,
+              weight: z.number().int().min(1).max(1000),
+              color: z
+                .string()
+                .regex(/^#[\da-fA-F]{6}$/)
+                .optional(),
+            })
             .strict(),
         )
         .min(2)
         .max(50),
       removeDrawn: z.boolean(),
+      palette: z.enum(paletteIds).optional(),
     })
     .strict(),
   z
@@ -165,6 +175,23 @@ export function validModule(config: ModuleConfig) {
         ? config.items
         : [];
   return new Set(items.map((i) => i.id)).size === items.length;
+}
+/** Colors and palette only change how the wheel looks; results are kept. */
+export function moduleResets(
+  before: ModuleConfig | undefined,
+  after: ModuleConfig,
+) {
+  const plain = (config: ModuleConfig | undefined) =>
+    JSON.stringify(
+      config?.kind === "random"
+        ? {
+            ...config,
+            palette: undefined,
+            options: config.options.map((o) => ({ ...o, color: undefined })),
+          }
+        : config,
+    );
+  return plain(before) !== plain(after);
 }
 export function moduleElapsed(state: ModuleState, now: number) {
   return (

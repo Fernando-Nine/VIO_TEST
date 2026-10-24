@@ -1,0 +1,384 @@
+/* #78: raffle wheel (docs/design/sorteador.md). */
+.module-widget.kind-random .module-content > .raffle-face {
+  max-width: none;
+}
+.raffle-face {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 5cqw, 64px);
+}
+
+/* Wheel. */
+.raffle-wheel {
+  flex: none;
+  width: clamp(110px, min(80cqh, 46cqw), 440px);
+  aspect-ratio: 1;
+}
+.raffle-wheel svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.raffle-wheel g {
+  transform-origin: 50px 50px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .raffle-wheel g.is-spinning {
+    transition: transform 800ms cubic-bezier(0.15, 0.7, 0.2, 1);
+  }
+}
+.raffle-wheel path:not(.raffle-pointer) {
+  stroke: #10131f;
+  stroke-width: 0.4;
+}
+.raffle-hub {
+  fill: #10131f;
+}
+.raffle-pointer {
+  fill: #f3f3fb;
+  stroke: #10131f;
+  stroke-width: 0.6;
+}
+.raffle-slice-label {
+  font:
+    600 4px "Bricolage Grotesque Variable",
+    sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+  display: none;
+}
+@container widget-body (min-height: 330px) and (min-width: 330px) {
+  .raffle-slice-label {
+    display: block;
+  }
+}
+
+/* Result, list and actions. */
+.raffle-side {
+  flex: 0 1 22em;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+}
+.raffle-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+.raffle-result strong {
+  font-size: 2em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+.raffle-result small {
+  color: #a3a5bc;
+  font-size: 0.8em;
+}
+.raffle-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow: auto;
+}
+.raffle-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 2.5em;
+  border-bottom: 1px solid #1e2030;
+  font-size: 0.95em;
+}
+.raffle-chip {
+  flex: none;
+  width: 0.9em;
+  height: 0.9em;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--chip);
+}
+button.raffle-chip {
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 4px;
+  outline: 1px solid transparent;
+  outline-offset: 2px;
+}
+button.raffle-chip:hover {
+  outline-color: #6a6d88;
+}
+.raffle-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.raffle-list li.is-drawn .raffle-name {
+  color: #6a6d88;
+  text-decoration: line-through;
+}
+.raffle-list li.is-drawn .raffle-chip {
+  opacity: 0.35;
+}
+.raffle-out {
+  color: #a3a5bc;
+  font: 0.75em var(--mono);
+}
+.raffle-weight {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #2a2c3c;
+  border-radius: 7px;
+  font: 0.8em var(--mono);
+}
+.raffle-weight button {
+  min-height: 0;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #a3a5bc;
+}
+.raffle-weight button:hover:not(:disabled) {
+  color: #f3f3fb;
+}
+.raffle-weight > span {
+  min-width: 2.4em;
+  text-align: center;
+}
+.raffle-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6em;
+}
+.raffle-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  color: #d9dbec;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+.raffle-switch input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 2.3em;
+  height: 1.3em;
+  margin: 0;
+  border-radius: 999px;
+  background: #2a2c3c;
+  cursor: pointer;
+}
+.raffle-switch input::after {
+  content: "";
+  position: absolute;
+  top: 0.2em;
+  left: 0.2em;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  background: #f3f3fb;
+  transition: transform 150ms;
+}
+.raffle-switch input:checked {
+  background: #2727f5;
+}
+.raffle-switch input:checked::after {
+  transform: translateX(1em);
+}
+.raffle-draw {
+  min-height: 0;
+  height: 2.8em;
+  padding: 0 1.6em;
+  font-size: 1em;
+}
+
+/* Popovers: color of one option, palettes. */
+.raffle-pop {
+  padding: 10px;
+  border: 1px solid #2a2c3c;
+  border-radius: 12px;
+  background: #14151f;
+  color: #f3f3fb;
+  box-shadow: 0 10px 30px #0008;
+}
+.raffle-colors {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.raffle-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.raffle-swatches button {
+  min-height: 0;
+  aspect-ratio: 1;
+  border-radius: 6px;
+}
+.raffle-swatches button[aria-pressed="true"] {
+  box-shadow:
+    0 0 0 2px #14151f,
+    0 0 0 4px #f3f3fb;
+}
+.raffle-colors .color-hue input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+.raffle-hex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.raffle-hex i {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.raffle-pop label.raffle-hex > input {
+  flex: 1;
+  min-height: 0;
+  height: 32px;
+  margin: 0;
+  padding: 0 10px;
+  font: 13px var(--mono);
+}
+.raffle-palettes {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.raffle-palettes button {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: left;
+}
+.raffle-palettes button:hover {
+  background: #ffffff08;
+}
+.raffle-palettes button[aria-pressed="true"] {
+  border-color: #4446a8;
+  background: #1f2140;
+}
+.raffle-palettes button.is-random {
+  margin-top: 4px;
+  border-top: 1px solid #2a2c3c;
+  border-radius: 0 0 8px 8px;
+}
+.raffle-strip {
+  display: flex;
+  width: 96px;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.raffle-strip i {
+  flex: 1;
+}
+/* Phones: the palettes open as a bottom sheet. */
+@media (max-width: 600px) {
+  .anchored-popover.raffle-palettes {
+    left: 8px !important;
+    right: 8px;
+    top: auto !important;
+    bottom: 8px;
+    width: auto;
+    max-width: none !important;
+    padding: 14px;
+  }
+  .raffle-palettes button {
+    min-height: 48px;
+  }
+}
+
+/* Wheel hidden: large result and the list. */
+.raffle-face.no-wheel .raffle-result strong {
+  font-size: 2.6em;
+}
+
+/* Small side space: wheel, result and Sortear; the list stays in focus. */
+@container widget-body (max-height: 330px) {
+  .raffle-list,
+  .raffle-switch {
+    display: none;
+  }
+  .raffle-side {
+    flex: 0 1 auto;
+    gap: 0.6em;
+  }
+  .raffle-face.no-wheel .raffle-side {
+    align-items: center;
+    text-align: center;
+  }
+  .raffle-face.no-wheel .raffle-draw {
+    min-width: 12em;
+  }
+}
+/* Phone width: a column, with Sortear across the bottom. */
+@container widget-body (max-width: 460px) and (min-height: 331px) {
+  .raffle-face {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8em;
+  }
+  .raffle-wheel {
+    align-self: center;
+    width: clamp(160px, min(60cqw, 42cqh), 260px);
+  }
+  .raffle-side {
+    flex: 1;
+    min-height: 0;
+  }
+  .raffle-face:not(.no-wheel) .raffle-result {
+    align-items: center;
+    text-align: center;
+  }
+  .raffle-list {
+    flex: 1;
+  }
+  .raffle-actions {
+    margin-top: auto;
+  }
+  .raffle-draw {
+    flex: 1 0 100%;
+  }
+}
+/* Narrow tiles: the wheel gives way to the result. */
+@container widget-body (max-width: 300px) and (max-height: 330px) {
+  .raffle-wheel {
+    display: none;
+  }
+  .raffle-side {
+    align-items: center;
+    text-align: center;
+  }
+  .raffle-result strong {
+    font-size: 1.5em;
+  }
+}

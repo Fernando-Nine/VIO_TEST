@@ -2,6 +2,7 @@ import { Fault } from "./security";
 import { randomInt } from "node:crypto";
 import {
   applyModuleAction,
+  moduleResets,
   type ModuleActor,
   type ModuleAction,
 } from "../shared/room-modules";
@@ -110,8 +111,7 @@ export class RoomWidgets {
       ...current,
       ...content,
       revision: current.revision + 1,
-      ...(content.module &&
-      JSON.stringify(content.module) !== JSON.stringify(current.module)
+      ...(content.module && moduleResets(current.module, content.module)
         ? { moduleState: {} }
         : {}),
     };
