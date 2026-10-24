@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.1";
+export const version = "2.9.0-rc.2";
 export const currentRelease: Release = {
   version,
   date: "2026-10-24",
@@ -17,6 +17,7 @@ export const currentRelease: Release = {
       title: "Somente no vio-test",
       items: [
         "Cronômetro em anel: o anel mostra o tempo que resta, atalhos de 5, 10 e 25 minutos, voltas compartilhadas com a melhor destacada e alarme com Desligar para a sala.",
+        "Votação com linha do prazo, rostos de quem votou (nunca em quê) e resultado em barras, pizza ou só a vencedora, à escolha de cada pessoa. Rótulos longos não quebram mais no meio da palavra.",
       ],
     },
   ],

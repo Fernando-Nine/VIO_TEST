@@ -112,6 +112,8 @@ export interface ModuleState {
   votes?: Record<string, string>;
   /** Number of people who voted; set on non-empty poll states sent to clients. */
   voters?: number;
+  /** Who voted (never what), first ones first, while the poll is open. */
+  voterIds?: string[];
   startedAt?: number | null;
   closed?: boolean;
   history?: ModuleResult[];
@@ -184,6 +186,8 @@ export function pollOpen(
     !(config.duration > 0 && now >= state.startedAt + config.duration * 1000)
   );
 }
+/** Enough faces and a hover list without resending thousands of ids. */
+export const voterIdLimit = 100;
 /** Per-viewer state: other people's votes stay hidden until the poll ends. */
 export function viewModuleState(
   config: ModuleConfig,
@@ -196,7 +200,12 @@ export function viewModuleState(
   const voters = Object.keys(votes).length;
   if (!pollOpen(config, state, now)) return { ...state, voters };
   const own = viewerId ? votes[viewerId] : undefined;
-  return { ...state, voters, votes: own ? { [viewerId!]: own } : {} };
+  return {
+    ...state,
+    voters,
+    voterIds: Object.keys(votes).slice(0, voterIdLimit),
+    votes: own ? { [viewerId!]: own } : {},
+  };
 }
 /** The caller enforces editing permissions and supplies the authenticated actor/time/randomness. */
 export function applyModuleAction(
