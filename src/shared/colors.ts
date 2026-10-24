@@ -33,7 +33,7 @@ function hex(values: number[]): string {
       .toUpperCase()
   );
 }
-function luminance(color: string): number {
+export function luminance(color: string): number {
   const linear = rgb(color).map((c) => {
     const value = c / 255;
     return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;

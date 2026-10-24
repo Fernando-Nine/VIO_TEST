@@ -8,6 +8,7 @@ import {
   X,
   Plus,
   RotateCcw,
+  Palette,
   History,
   Square,
 } from "lucide-react";
@@ -15,6 +16,13 @@ import { Dialog } from "../components/Dialog";
 import { InlineText } from "./InlineText";
 import { DiceFace } from "./DiceFace";
 import { PollFace, chartMenu, useChart } from "./PollFace";
+import { RaffleFace, useWheel, wheelMenu, withPalette } from "./RaffleFace";
+import {
+  colorAt,
+  paletteColors,
+  paletteIds,
+  paletteNames,
+} from "../../shared/palettes";
 import { clock, parseClock } from "./TimerBlock";
 import { freshKey } from "../id";
 import { canEditPublic } from "../../shared/permissions";
@@ -28,6 +36,7 @@ import {
   defaultModule,
   moduleConfig,
   moduleElapsed,
+  moduleResets,
   moduleTitles,
   type ModuleAction,
   type ModuleConfig,
@@ -156,8 +165,9 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       ? pollStart + config.duration * 1000
       : null;
   const pollClosed = config?.kind === "poll" && !!state.closed;
-  // Re-renders the header menu when the personal chart choice changes.
+  // Re-render the header menu when a personal view choice changes.
   useChart();
+  useWheel();
   const pollRunning =
     pollStart != null && !pollClosed && (pollEnd == null || now < pollEnd);
   const [revealAt, setRevealAt] = useState(0);
@@ -218,6 +228,33 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                         run: () => setHistory(true),
                       },
                     ]
+                  : []),
+              ]
+            : []),
+          ...(config.kind === "random"
+            ? [
+                wheelMenu(),
+                ...(state.history?.length
+                  ? [
+                      {
+                        label: "Histórico completo",
+                        icon: History,
+                        run: () => setHistory(true),
+                      },
+                    ]
+                  : []),
+                ...(editable
+                  ? paletteIds.map((id) => ({
+                      label: `Paleta ${paletteNames[id]}`,
+                      icon: Palette,
+                      run: () =>
+                        saveConfig(
+                          withPalette(
+                            (pending.current ?? config) as typeof config,
+                            id,
+                          ),
+                        ),
+                    }))
                   : []),
               ]
             : []),
@@ -311,9 +348,9 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
         ...content,
         revision: latest.revision + 1,
         moduleState:
-          JSON.stringify(content.module) === JSON.stringify(latest.module)
-            ? latest.moduleState
-            : {},
+          content.module && moduleResets(latest.module, content.module)
+            ? {}
+            : latest.moduleState,
       },
     });
   }
@@ -550,28 +587,15 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
             />
           )}
           {config.kind === "random" && (
-            <>
-              <button
-                className="primary"
-                disabled={
-                  busy ||
-                  (config.removeDrawn &&
-                    state.drawn?.length === config.options.length)
-                }
-                onClick={() => void act({ kind: "draw" })}
-              >
-                Sortear
-              </button>
-              <small>
-                {config.removeDrawn
-                  ? config.options.length - (state.drawn?.length || 0)
-                  : config.options.length}{" "}
-                opções disponíveis
-              </small>
-              {!!state.history?.length && (
-                <Results entries={state.history.slice(-3)} />
-              )}
-            </>
+            <RaffleFace
+              config={config}
+              state={state}
+              busy={busy}
+              editable={editable}
+              current={() => pending.current ?? config}
+              save={saveConfig}
+              draw={() => void act({ kind: "draw" })}
+            />
           )}
           {config.kind === "tasks" && (
             <>
@@ -629,15 +653,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                 </button>
               )}
             </>
-          )}
-          {config.kind === "random" && (state.history?.length || 0) > 1 && (
-            <button
-              // Up to three entries fit inline; short spaces show only one.
-              className={`text-button ${(state.history?.length || 0) <= 3 ? "history-short" : ""}`}
-              onClick={() => setHistory(true)}
-            >
-              Histórico ({state.history!.length})
-            </button>
           )}
         </div>
       )}
@@ -749,6 +764,15 @@ function ModuleFields({
       : (config as Extract<ModuleConfig, { kind: "poll" | "random" }>).options;
   const [min, max] = rowLimits[kind];
   const noun = kind === "tasks" ? "etapa" : "opção";
+  const nextColor = (index: number) => {
+    const base = current();
+    if (base.kind !== "random") return undefined;
+    const colors = paletteColors(
+      base.palette,
+      base.options.map((o) => o.color),
+    );
+    return colorAt(colors, index);
+  };
   function setRows(edit: (rows: Row[]) => Row[]) {
     const base = current();
     if (base.kind === "tasks")
@@ -885,6 +909,8 @@ function ModuleFields({
                           id: freshKey(),
                           label: `Opção ${list.length + 1}`,
                           weight: 1,
+                          // A new option takes the next color of the palette.
+                          color: nextColor(list.length),
                         }
                       : { id: freshKey(), label: `Opção ${list.length + 1}` },
                 ])
