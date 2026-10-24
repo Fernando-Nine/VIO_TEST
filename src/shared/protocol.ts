@@ -18,8 +18,47 @@ export const roomCode = z
   .trim()
   .toUpperCase()
   .regex(/^[A-Z0-9]{4,24}$/);
+/** Room-wide permissions (Discord-like roles). The creator can do everything. */
+export const roomPermissions = z
+  .object({
+    /** Guests start/pause/reset timers, silence alarms, open/close polls, run tasks. */
+    guestControl: z.boolean(),
+    /** Guests edit public widgets (structure, text and score blocks). */
+    guestEdit: z.boolean(),
+    /** Guests share widgets to the room without approval. */
+    guestShare: z.boolean(),
+    /** Guests ask to share widgets (creator/admin approves). */
+    guestRequest: z.boolean(),
+    guestChat: z.boolean(),
+    guestScreen: z.boolean(),
+    guestVoice: z.boolean(),
+    guestCamera: z.boolean(),
+    /** Admins add collective widgets and approve share requests. Creator only. */
+    adminCreate: z.boolean(),
+    /** Admins close widgets created by others. Creator only. */
+    adminClose: z.boolean(),
+  })
+  .strict();
+export type RoomPermissions = z.infer<typeof roomPermissions>;
+export type RoomPermission = keyof RoomPermissions;
+export const defaultPermissions: RoomPermissions = {
+  guestControl: false,
+  guestEdit: false,
+  guestShare: false,
+  guestRequest: true,
+  guestChat: true,
+  guestScreen: true,
+  guestVoice: true,
+  guestCamera: false,
+  adminCreate: true,
+  adminClose: true,
+};
 export const schemas = {
   ...widgetSchemas,
+  "room-permissions": z
+    .object({ permissions: roomPermissions.partial().strict() })
+    .strict()
+    .refine((x) => Object.keys(x.permissions).length > 0),
   demand: z
     .object({
       id: z.string().max(80),
@@ -136,6 +175,8 @@ export interface Snapshot {
   shareRequests?: ShareRequest[];
   notices?: RoomNotice[];
   creatorId?: string;
+  /** Always sent by the server; absent only in old snapshots. */
+  permissions?: RoomPermissions;
   /** Explicit main screen subscriptions, scoped to members of this room. */
   screenViewers?: Record<string, string[]>;
   maxParticipants: null;
