@@ -4,7 +4,7 @@ Atualizado: 2026-10-24
 
 ## Agora
 
-Nada em andamento. Visual novo dos 4 widgets na prévia como 2.9.0-rc.1…rc.4.
+Nada em andamento. Visual novo dos widgets, cor salva e limites na prévia (2.9.0-rc.6).
 
 ## Feito recentemente
 
@@ -17,6 +17,10 @@ Nada em andamento. Visual novo dos 4 widgets na prévia como 2.9.0-rc.1…rc.4.
 - #78 (PR #91): Sorteador em `RaffleFace.tsx` + `raffle.css`; paletas em
   `shared/palettes.ts`. Opção ganhou `color`, módulo ganhou `palette`; `moduleResets`
   ignora cor/paleta (não zera o sorteio). Roleta visível: localStorage `vio:raffle-wheel`.
+- #93 (PR #97): cor pessoal salva em `vio:preferences.color`, aplicada após cada `join`.
+- #92 (PR #98): `Limits` virou balde com reposição contínua; widgets com rajada
+  (structure 120/min + 40, interact 240 + 60, operate 300 + 60); rolar/sortear 300 ms
+  por widget. Na prévia: 2.9.0-rc.6.
 
 ## Decisões
 
@@ -30,8 +34,6 @@ Nada em andamento. Visual novo dos 4 widgets na prévia como 2.9.0-rc.1…rc.4.
 ## Pendente / bloqueios
 
 - Aceite do usuário na prévia (visual e giro da roleta em aparelho real).
-- Limite de frequência compartilha rolar/sortear: rolar logo após sortear mostra
-  "Espere um instante" (comportamento anterior; avaliar com Backend se incomodar).
 
 ## Como testar a tela
 
@@ -42,4 +44,4 @@ servidor (não recarrega sozinho). Viewports 1366×768 e 390×844.
 
 ## Próximo passo
 
-Pedir ao usuário o retorno da 2.9.0-rc.4 e abrir issues do que ele apontar.
+Pedir ao usuário o retorno da 2.9.0-rc.6 e abrir issues do que ele apontar.
