@@ -1,0 +1,508 @@
+/* #76: poll face (docs/design/votacao.md). Sizes follow the widget's em. */
+.widget-body > .module-widget.kind-poll {
+  position: relative;
+  font-size: clamp(13px, min(2.3cqw, 4.2cqh), 20px);
+}
+.module-widget.kind-poll .module-content > .poll-view {
+  max-width: 36em;
+}
+.poll-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.poll-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  min-width: 0;
+}
+.poll-deadline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: #2727f5;
+  transition: width 1s linear;
+}
+.poll-question {
+  font-size: 1.15em;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+.poll-question.is-quiet {
+  font-size: 0.85em;
+  font-weight: 400;
+  color: #a3a5bc;
+}
+/* Whole words wrap; a word only breaks when it alone is wider than the line. */
+.poll-label {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* Open: one row per option, my choice in dark blue; counts stay hidden. */
+.poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.poll-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  min-height: 2.6em;
+  padding: 0.45em 0.8em;
+  border: 1px solid #2a2c3c;
+  border-radius: 8px;
+  background: none;
+  color: #d9dbec;
+  font-size: 0.95em;
+  text-align: left;
+}
+.poll-option:hover:not(:disabled) {
+  border-color: #3a3d5c;
+  background: #ffffff05;
+}
+.poll-option[aria-pressed="true"] {
+  border-color: #4446a8;
+  background: #1f2140;
+  color: #f3f3fb;
+}
+.poll-radio {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+  border: 1.5px solid #6a6d88;
+  border-radius: 50%;
+}
+.poll-option[aria-pressed="true"] .poll-radio {
+  border: 0.3em solid #a6a9ff;
+  background: #1f2140;
+}
+.poll-footer > .poll-more {
+  display: none;
+}
+
+.poll-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 2em;
+}
+.poll-footer > small {
+  color: #a3a5bc;
+  font-size: 0.8em;
+}
+.poll-faces {
+  display: flex;
+  align-items: center;
+}
+.poll-face,
+.poll-extra {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: max(1.55em, 18px);
+  height: max(1.55em, 18px);
+  margin-right: -0.3em;
+  border: 2px solid #10131f;
+  border-radius: 50%;
+  background: var(--face);
+  color: var(--face-ink);
+  font-size: max(0.75em, 10px);
+  font-weight: 700;
+}
+.poll-extra {
+  margin-left: 0.1em;
+  background: #2a2c3c;
+  color: #d9dbec;
+  font: 600 0.7em var(--mono);
+  cursor: default;
+}
+.poll-faces:not(:empty) + .poll-count {
+  margin-left: 0.4em;
+}
+.poll-names {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 8em;
+  max-height: 12em;
+  overflow: auto;
+  padding: 6px 10px;
+  border: 1px solid #2a2c3c;
+  border-radius: 8px;
+  background: #14151f;
+  color: #d9dbec;
+  font: 400 12px var(--font, inherit);
+  text-align: left;
+  box-shadow: 0 6px 18px #0006;
+}
+.poll-extra:is(:hover, :focus-visible) > .poll-names {
+  display: flex;
+}
+.poll-left {
+  margin-left: auto;
+  font: 0.85em var(--mono);
+  color: #d9dbec;
+}
+.poll-footer > .poll-end {
+  min-height: 0;
+  height: 2.2em;
+  padding: 0 1em;
+  font-size: 0.8em;
+}
+.poll-left + .poll-end,
+.poll-footer.is-result > .poll-end {
+  margin-left: 0.4em;
+}
+.poll-footer.is-result {
+  justify-content: space-between;
+}
+.poll-count + .poll-end {
+  margin-left: auto;
+}
+
+/* Result tools in the header: personal choice of chart. */
+.poll-charts {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid #2a2c3c;
+  border-radius: 8px;
+}
+.poll-charts > .icon-button {
+  width: 24px;
+  min-width: 24px;
+  height: 22px;
+  min-height: 22px;
+  border-radius: 6px;
+  color: #a3a5bc;
+}
+.poll-charts > .icon-button[aria-pressed="true"] {
+  background: #1f2140;
+  color: #f3f3fb;
+}
+
+/* Bars. */
+.poll-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.poll-bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.3em 0.8em;
+  color: #d9dbec;
+}
+.poll-bars li.is-winner {
+  color: #f3f3fb;
+  font-weight: 650;
+}
+.poll-bars .poll-label > svg {
+  margin-left: 0.4em;
+  vertical-align: -2px;
+  color: #a6a9ff;
+}
+.poll-num {
+  font: 0.85em var(--mono);
+  color: #a3a5bc;
+  white-space: nowrap;
+}
+.poll-bar {
+  grid-column: 1 / -1;
+  height: 0.45em;
+  border-radius: 99px;
+  background: #1e2030;
+  overflow: hidden;
+}
+.poll-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #474a6a;
+}
+.is-winner .poll-bar > span {
+  background: #a6a9ff;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .poll-view.is-revealing .poll-bar > span {
+    animation: poll-grow 480ms ease-out both;
+  }
+}
+@keyframes poll-grow {
+  from {
+    width: 0;
+  }
+}
+
+/* Pie. */
+.poll-pie {
+  flex-direction: row;
+  align-items: center;
+  gap: 1.4em;
+}
+.poll-donut-box {
+  position: relative;
+  flex: none;
+  width: clamp(96px, min(42cqw, 70cqh), 360px);
+  aspect-ratio: 1;
+}
+.poll-donut {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.poll-donut circle {
+  fill: none;
+  stroke-width: 18;
+}
+.poll-donut-empty {
+  stroke: #1e2030;
+}
+.poll-donut-gap {
+  stroke: #10131f;
+  stroke-width: 1.4;
+}
+.poll-donut-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.poll-donut-center b {
+  font: 400 1.6em/1 var(--mono);
+}
+.poll-donut-center small {
+  margin-top: 0.4em;
+  color: #a3a5bc;
+  font-size: max(0.65em, 10px);
+}
+.poll-pie-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+}
+.poll-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.poll-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  color: #d9dbec;
+  font-size: 0.9em;
+}
+.poll-legend li.is-winner {
+  color: #f3f3fb;
+  font-weight: 650;
+}
+.poll-legend .poll-label {
+  flex: 1;
+}
+.poll-swatch {
+  flex: none;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+}
+
+/* No chart: the winner, large. */
+.poll-final {
+  align-items: center;
+  text-align: center;
+  gap: 0.5em;
+}
+.poll-winner {
+  font-size: 2.2em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+.poll-score {
+  font: 0.9em var(--mono);
+  color: #a6a9ff;
+}
+.poll-others {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3em 1.2em;
+  color: #a3a5bc;
+  font-size: 0.85em;
+}
+.poll-others b {
+  color: #f3f3fb;
+  font-weight: 600;
+}
+.poll-final > .poll-footer {
+  justify-content: center;
+  gap: 1em;
+}
+
+/* Focus: roomier rows. */
+@container widget-body (min-height: 420px) {
+  .poll-view.is-open .poll-body {
+    gap: 1em;
+  }
+  .poll-option {
+    min-height: 3em;
+    padding: 0.6em 1em;
+  }
+}
+
+/* Small side space: three options (the rest counted in the footer), thin
+   bars, and no footer buttons (they live in the ⋯ menu). */
+@container widget-body (max-height: 300px) {
+  .module-widget.kind-poll .module-content {
+    justify-content: flex-start;
+  }
+  .poll-body,
+  .poll-pie-side {
+    gap: 0.4em;
+  }
+  .poll-question {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-size: 1.05em;
+  }
+  .poll-options {
+    gap: 0.3em;
+  }
+  .poll-option:nth-child(n + 4),
+  .poll-bars li:nth-child(n + 4),
+  .poll-legend li:nth-child(n + 4) {
+    display: none;
+  }
+  .poll-footer > .poll-more.fits-3 {
+    display: inline;
+  }
+  .poll-option {
+    min-height: 1.85em;
+    padding: 0.2em 0.7em;
+  }
+  .poll-option .poll-label,
+  .poll-legend .poll-label,
+  .poll-bars .poll-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .poll-footer {
+    min-height: 1.7em;
+  }
+  .poll-footer > .poll-end {
+    display: none;
+  }
+  .poll-bars {
+    gap: 0.35em;
+  }
+  .poll-bars li {
+    row-gap: 0.15em;
+  }
+  .poll-bar {
+    height: 0.25em;
+  }
+  .poll-final .poll-winner {
+    font-size: 1.6em;
+  }
+  .poll-final {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .poll-final .poll-others {
+    justify-content: flex-start;
+  }
+}
+/* Phone strip and other narrow tiles: short footer, smaller pie. */
+@container widget-body (max-width: 300px) {
+  .poll-count-tail,
+  .poll-num-word,
+  .poll-faces {
+    display: none;
+  }
+  .poll-pie {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .poll-pie .poll-donut-box {
+    align-self: center;
+    width: clamp(72px, 50cqw, 132px);
+  }
+}
+/* Tiny tiles (phone strip): two options, results without the question or pie. */
+@container widget-body (max-width: 300px) and (max-height: 220px) {
+  .poll-option:nth-child(n + 3) {
+    display: none;
+  }
+  .poll-footer > .poll-more.fits-3 {
+    display: none;
+  }
+  .poll-footer > .poll-more.fits-2 {
+    display: inline;
+  }
+  .poll-view:not(.is-open) .poll-question:not(.is-quiet),
+  .poll-pie .poll-donut-box,
+  .poll-final > .poll-question {
+    display: none;
+  }
+  .poll-question {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  .poll-final .poll-winner {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 1.3em;
+  }
+}
+/* Phone width: the pie sits above its legend. */
+@container widget-body (max-width: 460px) and (min-height: 301px) {
+  .poll-pie {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .poll-pie .poll-donut-box {
+    order: 1;
+    align-self: center;
+    width: clamp(120px, 58cqw, 220px);
+  }
+  .poll-pie-side {
+    display: contents;
+  }
+  .poll-pie-side > .poll-question {
+    order: 0;
+  }
+  .poll-pie-side > :is(.poll-legend, .poll-footer) {
+    order: 2;
+  }
+  .poll-final .poll-others {
+    flex-direction: column;
+    align-items: center;
+  }
+}

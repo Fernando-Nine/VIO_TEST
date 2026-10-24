@@ -8,6 +8,8 @@ import {
   timerRinging,
   widgetContent,
   contentKind,
+  lapTimes,
+  timerLapLimit,
   type SharedWidget,
 } from "../src/shared/widgets";
 
@@ -156,4 +158,65 @@ test("widgets dedicados recusam tipos misturados e loop sem duração", () => {
     }),
     "notes",
   );
+});
+
+test("voltas do cronômetro são estado do widget e zeram ao reiniciar", () => {
+  const block = {
+    id: crypto.randomUUID(),
+    kind: "timer" as const,
+    label: "Cronômetro",
+    duration: 0,
+    elapsed: 0,
+    startedAt: 0,
+    mode: "up" as const,
+  };
+  const widget: SharedWidget = {
+    id: crypto.randomUUID(),
+    owner: "owner",
+    kind: "timer",
+    title: "Cronômetro",
+    blocks: [block],
+    revision: 0,
+    createdAt: 0,
+  };
+  const lap = (w: SharedWidget, at: number) =>
+    operateWidget(
+      w,
+      { kind: "timer", blockId: block.id, action: "lap", revision: w.revision },
+      at,
+    );
+  const twice = lap(lap(widget, 2000), 5500);
+  const b = twice.blocks[0];
+  assert.ok(b.kind === "timer");
+  assert.deepEqual(b.laps, [2, 5.5]);
+  assert.deepEqual(lapTimes(b), [2, 3.5]);
+  assert.ok(
+    widgetContent.safeParse({ kind: "timer", title: "x", blocks: [b] }).success,
+  );
+  const reset = operateWidget(
+    twice,
+    {
+      kind: "timer",
+      blockId: block.id,
+      action: "reset",
+      revision: twice.revision,
+    },
+    6000,
+  );
+  assert.ok(reset.blocks[0].kind === "timer" && !reset.blocks[0].laps);
+  // A countdown or a paused stopwatch has no laps to mark.
+  assert.throws(() =>
+    lap(
+      { ...widget, blocks: [{ ...block, mode: "down", duration: 60 }] },
+      1000,
+    ),
+  );
+  assert.throws(() =>
+    lap({ ...widget, blocks: [{ ...block, startedAt: null }] }, 1000),
+  );
+  const full = {
+    ...block,
+    laps: Array.from({ length: timerLapLimit }, (_, i) => i),
+  };
+  assert.throws(() => lap({ ...widget, blocks: [full] }, 30000));
 });

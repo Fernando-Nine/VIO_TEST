@@ -1800,10 +1800,6 @@
 .module-widget { height:100%; min-height:0; min-width:0; display:flex; flex-direction:column; gap:8px; padding:12px; box-sizing:border-box; }
 .module-content { min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#656b8a transparent; overscroll-behavior:contain; display:flex; flex-direction:column; gap:8px; }
 .module-question { font-size:15px; overflow-wrap:anywhere; }
-.module-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-.module-options button { display:flex; justify-content:space-between; gap:8px; min-width:0; text-align:left; padding:8px; min-height:36px; }
-.module-options button > span { overflow-wrap:anywhere; min-width:0; }
-.module-options button[aria-pressed="true"] { background:#343481; border-color:#a5acff; }
 .module-history { list-style:none; margin:0; padding:0; display:grid; gap:7px; }
 .module-history li { padding:7px 0; border-bottom:1px solid #ffffff14; min-width:0; }
 .module-history li > div { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; }
@@ -1949,89 +1945,6 @@
   color: inherit;
   font: inherit;
 }
-.timer-modes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-}
-.timer-modes .timer-mode {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 4px 11px;
-  border: 1px solid #343b57;
-  border-radius: 999px;
-  background: none;
-  color: #c9cfea;
-  font-size: 12px;
-}
-.timer-modes .timer-mode:hover {
-  border-color: #7c86d8;
-}
-.timer-modes > .icon-button[aria-pressed="true"] {
-  color: #a8adff;
-  background: #252b52;
-}
-.timer-mode-label {
-  display: block;
-  text-align: center;
-  color: #aeb6d6;
-}
-.widget-clock.timer-edit {
-  width: auto;
-  max-width: 100%;
-  padding: 0 0.1em;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  color: inherit;
-  cursor: text;
-}
-.widget-clock.timer-edit:hover {
-  background: #1c2134;
-}
-.widget-clock.timer-input {
-  width: 100%;
-  padding: 0;
-  border: 1px solid #5b67a0;
-  border-radius: 8px;
-  background: #0d1019;
-  color: inherit;
-  text-align: center;
-}
-.module-options button.is-winner,
-.module-options button.is-winner:disabled {
-  border-color: #e3b341;
-  background: #3a3114;
-  color: #fff4d6;
-  opacity: 1;
-}
-.module-options .is-winner b {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #f5c84c;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .module-options.is-revealing .is-winner {
-    animation: winner-pop 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 2;
-  }
-}
-@keyframes winner-pop {
-  /* Stays inside the box: the options list scrolls and would clip a scale. */
-  0%,
-  100% {
-    box-shadow: inset 0 0 0 0 #f5c84c00;
-    background: #3a3114;
-  }
-  40% {
-    box-shadow: inset 0 0 0 2px #f5c84c;
-    background: #5a4a17;
-  }
-}
 .canvas-toolbar .live-chip {
   display: inline-flex;
   align-items: center;
@@ -2090,7 +2003,6 @@
   }
 }
 .widget-body > .module-widget,
-.widget-body > .custom-widget.kind-timer,
 .widget-body > .custom-widget.kind-custom {
   height: 100%;
   min-height: 0;
@@ -2126,16 +2038,6 @@
 }
 .module-widget small {
   font-size: 0.85em;
-}
-.module-options {
-  grid-template-columns: repeat(auto-fit, minmax(min(7.5em, 100%), 1fr));
-  gap: 0.45em;
-}
-.module-options button {
-  min-height: 2.6em;
-  padding: 0.5em 0.7em;
-  font-size: 1em;
-  align-items: center;
 }
 .module-widget.kind-random .module-content > .primary {
   min-height: 2.6em;
@@ -2180,18 +2082,9 @@
   padding: 8px;
 }
 /* Short spaces show only the latest result; the full list is a click away. */
-@container widget-body (max-width: 260px) {
-  .module-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @container widget-body (max-height: 230px) {
   .module-question {
     font-size: 1.05em;
-  }
-  .module-options button {
-    min-height: 2.2em;
-    padding: 0.35em 0.6em;
   }
   .module-widget .module-content > .text-button.history-short {
     display: inline-flex;
@@ -2204,76 +2097,6 @@
   .module-content > .module-history li {
     border: 0;
     padding: 0;
-  }
-}
-
-/* Timer: column in tall spaces, clock beside the controls in short ones. */
-.custom-widget.kind-timer .custom-blocks,
-.custom-widget.kind-timer .custom-block {
-  height: 100%;
-  min-height: 0;
-  padding: 0;
-}
-.timer-face {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: safe center;
-  gap: 0.5em;
-}
-.timer-face .widget-clock {
-  margin: 0;
-  line-height: 1;
-  font-size: clamp(26px, min(21cqw, 30cqh), 220px);
-}
-.timer-face .widget-clock.timer-input {
-  width: min(100%, 6em);
-}
-.timer-face .timer-modes .timer-mode {
-  min-height: 2.3em;
-  padding: 0.25em 0.9em;
-  font-size: 0.9em;
-}
-.timer-face .widget-inline-actions {
-  margin: 0;
-  gap: 0.4em;
-}
-.timer-face .widget-inline-actions > button,
-.custom-widget.kind-timer .widget-inline-actions > button {
-  min-height: 2.6em;
-  padding: 0.45em 1.3em;
-  font-size: 1em;
-}
-@container widget-body (max-height: 210px) and (min-width: 260px) {
-  .timer-face {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-template-areas: "clock modes" "clock actions";
-    align-content: center;
-    justify-content: center;
-    align-items: center;
-    gap: 0.4em 1em;
-  }
-  .timer-face > :is(.widget-clock, .timer-input) {
-    grid-area: clock;
-    font-size: clamp(26px, min(17cqw, 44cqh), 120px);
-  }
-  .timer-face > :is(.timer-modes, .timer-mode-label) {
-    grid-area: modes;
-    justify-content: flex-start;
-  }
-  .timer-face > .widget-inline-actions {
-    grid-area: actions;
-    justify-content: flex-start;
-  }
-}
-@container widget-body (max-height: 130px) {
-  .timer-face > :is(.timer-modes, .timer-mode-label) {
-    display: none;
-  }
-  .timer-face {
-    grid-template-areas: "clock actions";
   }
 }
 
@@ -2487,42 +2310,6 @@ button.inline-text.is-empty {
   }
 }
 
-/* #55: an ended countdown rings until each person turns it off. */
-.timer-face.is-ringing .widget-clock {
-  color: #ffd27a;
-}
-.timer-face.is-ringing .widget-inline-actions > .text-button {
-  display: none;
-}
-.timer-face .widget-inline-actions > .timer-silence {
-  min-height: 2.6em;
-  padding: 0.45em 1.1em;
-  gap: 0.4em;
-  font-size: 1em;
-  background: #b4561f;
-}
-.timer-face .widget-inline-actions > .timer-silence:hover {
-  background: #c9652a;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .timer-face.is-ringing .widget-clock {
-    animation: timer-ring 1.2s ease-in-out infinite;
-  }
-}
-@keyframes timer-ring {
-  50% {
-    opacity: 0.45;
-  }
-}
-.timer-face.is-ringing > :is(.timer-modes, .timer-mode-label) {
-  display: none;
-}
-@container widget-body (max-width: 300px) {
-  .timer-face.is-ringing .widget-inline-actions > .secondary {
-    display: none;
-  }
-}
-
 /* #53: the poll is set up on its face, votes stay hidden until it ends. */
 .module-fields > .poll-start {
   align-self: center;
@@ -2544,14 +2331,6 @@ button.inline-text.is-empty {
 }
 .module-widget.kind-poll .module-fields > .module-question {
   text-align: center;
-}
-.module-options button > svg {
-  flex-shrink: 0;
-  color: #a5acff;
-}
-.module-options button > span {
-  overflow-wrap: break-word;
-  hyphens: auto;
 }
 .module-footer {
   display: contents;
@@ -2610,17 +2389,6 @@ button.inline-text.is-empty {
 
 .module-content > .text-button.history-short {
   display: none;
-}
-/* The repeat toggle matches the mode chip beside it, so its target is what it shows. */
-.timer-face .timer-modes > .icon-button {
-  width: 2.3em;
-  min-width: 2.3em;
-  height: 2.3em;
-  min-height: 2.3em;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
 }
 
 /* #71: room permissions as switches in the people panel. */

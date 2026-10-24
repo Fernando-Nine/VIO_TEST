@@ -175,20 +175,22 @@ export function CustomWidget({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const shareId = useRef("");
+  const runningTimer = value?.blocks.find(
+    (b) => b.kind === "timer" && b.startedAt !== null,
+  );
+  // A running stopwatch shows tenths, so it ticks faster than a countdown.
+  const tick = !runningTimer
+    ? 0
+    : runningTimer.kind === "timer" &&
+        (runningTimer.mode || (runningTimer.duration ? "down" : "up")) === "up"
+      ? 100
+      : 250;
   useEffect(() => {
-    if (
-      !visible ||
-      !value?.blocks.some((b) => b.kind === "timer" && b.startedAt !== null)
-    )
-      return;
+    if (!visible || !tick) return;
     setNow(engine.serverNow());
-    const timer = setInterval(() => setNow(engine.serverNow()), 250);
+    const timer = setInterval(() => setNow(engine.serverNow()), tick);
     return () => clearInterval(timer);
-  }, [
-    engine,
-    visible,
-    !!value?.blocks.some((b) => b.kind === "timer" && b.startedAt !== null),
-  ]);
+  }, [engine, visible, tick]);
   const shared = !!widget.config.sharedId;
   const owner =
     !!value &&
