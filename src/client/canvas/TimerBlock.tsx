@@ -141,6 +141,7 @@ export function TimerBlock({
   now,
   engine,
   editable,
+  controllable,
   act,
   update,
   revision,
@@ -150,6 +151,8 @@ export function TimerBlock({
   now: number;
   engine: Controller;
   editable: boolean;
+  /** Start, pause, reset and the alarm; the room may allow this without editing. */
+  controllable: boolean;
   act: (operation: WidgetOperation) => void;
   update: (next: Timer) => void;
 }) {
@@ -230,52 +233,55 @@ export function TimerBlock({
           {clock(timerDisplay(block, now))}
         </output>
       )}
-      <div className="widget-inline-actions">
-        {ringing && editable && (
+      {controllable && (
+        <div className="widget-inline-actions">
+          {ringing && (
+            <button
+              className="primary timer-silence"
+              onClick={() =>
+                act({
+                  kind: "timer",
+                  blockId: block.id,
+                  action: "silence",
+                  revision,
+                })
+              }
+            >
+              <BellOff size={16} aria-hidden="true" />
+              Desligar alarme
+            </button>
+          )}
           <button
-            className="primary timer-silence"
+            className="secondary"
             onClick={() =>
               act({
                 kind: "timer",
                 blockId: block.id,
-                action: "silence",
+                action:
+                  block.startedAt === null || finished ? "start" : "pause",
                 revision,
               })
             }
           >
-            <BellOff size={16} aria-hidden="true" />
-            Desligar alarme
+            {finished ? "Reiniciar" : running ? "Pausar" : "Iniciar"}
           </button>
-        )}
-        <button
-          className="secondary"
-          onClick={() =>
-            act({
-              kind: "timer",
-              blockId: block.id,
-              action: block.startedAt === null || finished ? "start" : "pause",
-              revision,
-            })
-          }
-        >
-          {finished ? "Reiniciar" : running ? "Pausar" : "Iniciar"}
-        </button>
-        {(block.elapsed > 0 || block.startedAt !== null) && (
-          <button
-            className="text-button"
-            onClick={() =>
-              act({
-                kind: "timer",
-                blockId: block.id,
-                action: "reset",
-                revision,
-              })
-            }
-          >
-            Zerar
-          </button>
-        )}
-      </div>
+          {(block.elapsed > 0 || block.startedAt !== null) && (
+            <button
+              className="text-button"
+              onClick={() =>
+                act({
+                  kind: "timer",
+                  blockId: block.id,
+                  action: "reset",
+                  revision,
+                })
+              }
+            >
+              Zerar
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

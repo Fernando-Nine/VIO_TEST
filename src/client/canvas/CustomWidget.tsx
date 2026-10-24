@@ -193,6 +193,15 @@ export function CustomWidget({
   const owner =
     !!value &&
     (!shared || canEditPublic(engine.view.snapshot, engine.view.id, value));
+  const control =
+    !!value &&
+    (!shared ||
+      canEditPublic(
+        engine.view.snapshot,
+        engine.view.id,
+        value,
+        "guestControl",
+      ));
   useRename(
     value && owner
       ? (title) =>
@@ -280,7 +289,7 @@ export function CustomWidget({
     }
   }
   async function operate(operation: WidgetOperation) {
-    if (!owner)
+    if (operation.kind === "timer" ? !control : !owner)
       throw new Error(
         "Você não tem permissão para editar este widget público. Peça ao criador ou a um administrador.",
       );
@@ -516,6 +525,7 @@ export function CustomWidget({
                 now={now}
                 engine={engine}
                 editable={owner}
+                controllable={control}
                 revision={value.revision}
                 act={act}
                 update={updateTimer}

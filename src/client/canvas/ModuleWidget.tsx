@@ -120,6 +120,16 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
   const editable =
     !widget.config.sharedId ||
     (!!value && canEditPublic(engine.view.snapshot, engine.view.id, value));
+  // Opening polls, steps and resets are controls; the room may allow them alone.
+  const controllable =
+    !widget.config.sharedId ||
+    (!!value &&
+      canEditPublic(
+        engine.view.snapshot,
+        engine.view.id,
+        value,
+        "guestControl",
+      ));
   const [editing, setEditing] = useState(false),
     [help, setHelp] = useState(false),
     [history, setHistory] = useState(false),
@@ -207,7 +217,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                 },
               ]
             : []),
-          ...(editable && config.kind !== "poll"
+          ...(controllable && config.kind !== "poll"
             ? [
                 {
                   label: "Reiniciar resultados e progresso",
@@ -420,7 +430,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           <input
             type="checkbox"
             checked={!!state.done?.[item.id]}
-            disabled={!editable || busy}
+            disabled={!controllable || busy}
             onChange={(e) =>
               void act({
                 kind: "task",
@@ -473,7 +483,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           save={saveConfig}
           done={pollSetup ? undefined : () => setEditing(false)}
         >
-          {pollSetup && (
+          {pollSetup && controllable && (
             <button
               className="primary poll-start"
               disabled={busy}
@@ -537,19 +547,28 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                   );
                 })}
               </div>
-              {editable && state.startedAt != null && (
+              {controllable && (state.startedAt != null || !editable) && (
                 <button
                   className="text-button"
                   disabled={busy}
                   onClick={() =>
                     void act({
                       kind: "poll-control",
-                      action: pollOpen ? "close" : "reset",
+                      action:
+                        state.startedAt == null
+                          ? "start"
+                          : pollOpen
+                            ? "close"
+                            : "reset",
                       revision: value.revision,
                     })
                   }
                 >
-                  {pollOpen ? "Encerrar votação" : "Nova votação"}
+                  {state.startedAt == null
+                    ? "Abrir votação"
+                    : pollOpen
+                      ? "Encerrar votação"
+                      : "Nova votação"}
                 </button>
               )}
             </>
@@ -621,7 +640,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                     : time(moduleElapsed(state, now))}
                 </span>
               </div>
-              {editable && (
+              {controllable && (
                 <div className="module-actions">
                   <button
                     className="secondary"

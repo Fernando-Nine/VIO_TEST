@@ -5,7 +5,12 @@ import { EmojiPicker } from "../components/EmojiPicker";
 import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
 import { freshKey } from "../id";
 import type { WidgetProps } from "./widgets";
-import { canEditPublic } from "../../shared/permissions";
+import {
+  canEditPublic,
+  canUseWidget,
+  permissionText,
+  roomRole,
+} from "../../shared/permissions";
 
 export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   const chat = engine.view.snapshot?.widgets?.find(
@@ -43,6 +48,16 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
       : undefined,
   );
   if (!chat) return <p className="widget-empty">Este chat foi encerrado.</p>;
+  const snapshot = engine.view.snapshot;
+  const canChat =
+    !snapshot ||
+    canUseWidget(
+      snapshot.permissions,
+      roomRole(snapshot, engine.view.id),
+      engine.view.id,
+      chat,
+      "guestChat",
+    );
   let groupStart = 0;
   return (
     <div className="chat-widget">
@@ -117,72 +132,78 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
           {error}
         </p>
       )}
-      <form
-        className="chat-compose"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const text = draft.trim();
-          if (!text || busy) return;
-          if (operation.current.text !== text)
-            operation.current = { text, id: freshKey() };
-          setBusy(true);
-          setError("");
-          try {
-            await engine.request("chat-send", {
-              id: chat.id,
-              messageId: operation.current.id,
-              text,
-            });
-            setDraft("");
-            operation.current = { text: "", id: "" };
-          } catch (e) {
-            setError(
-              e instanceof Error ? e.message : "Não foi possível enviar.",
-            );
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <EmojiPicker
-          onPick={(emoji) => {
-            const input = composer.current;
-            const at = input?.selectionStart ?? draft.length;
-            const end = input?.selectionEnd ?? at;
-            setDraft((d) =>
-              (d.slice(0, at) + emoji + d.slice(end)).slice(0, 2000),
-            );
-            requestAnimationFrame(() => {
-              input?.focus();
-              input?.setSelectionRange(at + emoji.length, at + emoji.length);
-            });
-          }}
-        />
-        <textarea
-          ref={composer}
-          aria-label="Mensagem"
-          placeholder="Mensagem…"
-          maxLength={2000}
-          rows={1}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            // Enter sends; Shift+Enter breaks the line.
-            if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing)
-              return;
+      {!canChat ? (
+        <p className="field-note chat-locked">
+          A sala não permite que convidados possam {permissionText.guestChat}.
+        </p>
+      ) : (
+        <form
+          className="chat-compose"
+          onSubmit={async (e) => {
             e.preventDefault();
-            e.currentTarget.form?.requestSubmit();
+            const text = draft.trim();
+            if (!text || busy) return;
+            if (operation.current.text !== text)
+              operation.current = { text, id: freshKey() };
+            setBusy(true);
+            setError("");
+            try {
+              await engine.request("chat-send", {
+                id: chat.id,
+                messageId: operation.current.id,
+                text,
+              });
+              setDraft("");
+              operation.current = { text: "", id: "" };
+            } catch (e) {
+              setError(
+                e instanceof Error ? e.message : "Não foi possível enviar.",
+              );
+            } finally {
+              setBusy(false);
+            }
           }}
-          readOnly={busy}
-        />
-        <button
-          className="icon-button"
-          aria-label="Enviar mensagem"
-          disabled={busy || !draft.trim()}
         >
-          <Send size={20} />
-        </button>
-      </form>
+          <EmojiPicker
+            onPick={(emoji) => {
+              const input = composer.current;
+              const at = input?.selectionStart ?? draft.length;
+              const end = input?.selectionEnd ?? at;
+              setDraft((d) =>
+                (d.slice(0, at) + emoji + d.slice(end)).slice(0, 2000),
+              );
+              requestAnimationFrame(() => {
+                input?.focus();
+                input?.setSelectionRange(at + emoji.length, at + emoji.length);
+              });
+            }}
+          />
+          <textarea
+            ref={composer}
+            aria-label="Mensagem"
+            placeholder="Mensagem…"
+            maxLength={2000}
+            rows={1}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter sends; Shift+Enter breaks the line.
+              if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing)
+                return;
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }}
+            readOnly={busy}
+          />
+          <button
+            className="icon-button"
+            aria-label="Enviar mensagem"
+            disabled={busy || !draft.trim()}
+          >
+            <Send size={20} />
+          </button>
+        </form>
+      )}
     </div>
   );
 }

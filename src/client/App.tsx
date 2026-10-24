@@ -1,3 +1,4 @@
+import { permissionText, roleAllows, roomRole } from "../shared/permissions";
 import {
   lazy,
   Suspense,
@@ -175,6 +176,15 @@ export default function App({ engine }: { engine: Controller }) {
     !hasVoice || engine.captures.micMuted || engine.captures.deaf;
   const canShare = engine.captures.canShare;
   const canMedia = engine.captures.canUseDevices;
+  // The server refuses what the room does not allow; the dock says so up front.
+  const role = view.snapshot ? roomRole(view.snapshot, view.id) : "guest";
+  const roomBlocks = (key: "guestVoice" | "guestCamera" | "guestScreen") =>
+    view.snapshot && !roleAllows(view.snapshot.permissions, role, key)
+      ? `A sala não permite que convidados possam ${permissionText[key]}.`
+      : undefined;
+  const voiceBlocked = roomBlocks("guestVoice");
+  const cameraBlocked = roomBlocks("guestCamera");
+  const screenBlocked = roomBlocks("guestScreen");
   const allStats = engine.peers.infos();
   const canFullscreen =
     !!document.fullscreenEnabled ||
@@ -435,7 +445,10 @@ export default function App({ engine }: { engine: Controller }) {
                                   : "Silenciar microfone"
                                 : "Conectar microfone"
                             }
-                            disabled={!canMedia && !hasVoice}
+                            disabled={
+                              (!canMedia || !!voiceBlocked) && !hasVoice
+                            }
+                            title={hasVoice ? undefined : voiceBlocked}
                             onClick={() => void engine.microphone()}
                           >
                             {micMuted ? <MicOff /> : <Mic />}
@@ -464,7 +477,10 @@ export default function App({ engine }: { engine: Controller }) {
                               hasCamera ? "Desligar câmera" : "Ligar câmera"
                             }
                             aria-pressed={hasCamera}
-                            disabled={!canMedia && !hasCamera}
+                            disabled={
+                              (!canMedia || !!cameraBlocked) && !hasCamera
+                            }
+                            title={hasCamera ? undefined : cameraBlocked}
                             onClick={() => void engine.camera()}
                           >
                             {hasCamera ? <Camera /> : <CameraOff />}
@@ -493,7 +509,8 @@ export default function App({ engine }: { engine: Controller }) {
                       <button
                         className={`share-button ${hasScreen ? "sharing" : ""}`}
                         aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
-                        disabled={!canShare && !hasScreen}
+                        disabled={(!canShare || !!screenBlocked) && !hasScreen}
+                        title={hasScreen ? undefined : screenBlocked}
                         onClick={() =>
                           hasScreen ? void engine.stop("screen") : open("share")
                         }

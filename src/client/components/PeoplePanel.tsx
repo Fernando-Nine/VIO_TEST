@@ -7,8 +7,17 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
-import { canManageRoom } from "../../shared/permissions";
-import type { Participant } from "../../shared/protocol";
+import {
+  canManageRoom,
+  canSetPermission,
+  permissionText,
+  roomRole,
+} from "../../shared/permissions";
+import {
+  defaultPermissions,
+  type Participant,
+  type RoomPermission,
+} from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Dialog } from "./Dialog";
@@ -154,6 +163,52 @@ export function PeoplePanel({
           );
         })}
       </ul>
+      {manages && snapshot && (
+        <details className="public-permissions room-permissions">
+          <summary>Permissões da sala</summary>
+          {(
+            [
+              ["Convidados podem", "guest"],
+              ["Administradores podem", "admin"],
+            ] as const
+          ).map(([heading, prefix]) => (
+            <fieldset key={prefix}>
+              <legend>{heading}</legend>
+              {(Object.keys(defaultPermissions) as RoomPermission[])
+                .filter((key) => key.startsWith(prefix))
+                .map((key) => {
+                  const allowed = canSetPermission(
+                    roomRole(snapshot, engine.view.id),
+                    key,
+                  );
+                  const text = permissionText[key];
+                  return (
+                    <label
+                      className="toggle"
+                      key={key}
+                      title={allowed ? undefined : "Só o criador altera."}
+                    >
+                      <span>{text[0].toUpperCase() + text.slice(1)}</span>
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        disabled={busy || !allowed}
+                        checked={
+                          (snapshot.permissions || defaultPermissions)[key]
+                        }
+                        onChange={(e) =>
+                          void run("room-permissions", {
+                            permissions: { [key]: e.target.checked },
+                          })
+                        }
+                      />
+                    </label>
+                  );
+                })}
+            </fieldset>
+          ))}
+        </details>
+      )}
       {manages && !!widgets.length && (
         <details className="public-permissions">
           <summary>Edição por todos os convidados</summary>
