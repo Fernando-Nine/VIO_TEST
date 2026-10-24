@@ -8,6 +8,10 @@ import { verifyToken, issueToken } from "../src/server/security";
 import { defaultModule } from "../src/shared/room-modules";
 import { trimToBudget, chatBudget, historyBudget } from "../src/server/widgets";
 import type { SharedWidget, ChatMessageEvent } from "../src/shared/widgets";
+import {
+  defaultPermissions,
+  type RoomPermissions,
+} from "../src/shared/protocol";
 import type {
   Reply,
   Snapshot,
@@ -2217,6 +2221,248 @@ test("snapshots de sala omitem widgets, exceto para quem entra e quando widgets 
     assert.equal(guestSnaps[1].widgets, undefined);
     assert.equal(guestSnaps.at(-1)!.widgets?.length, 2);
     assert.equal(lateSnaps[0].widgets?.length, 1);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("permissões da sala: padrões, quem altera cada chave e validação de cada ação no servidor", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const sessions = await Promise.all([
+      session(app.url),
+      session(app.url),
+      session(app.url),
+    ]);
+    for (const s of sessions) sockets.push(await connect(app.url, s.token));
+    const [creator, admin, guest] = sockets;
+    const ids = sessions.map((s) => s.id);
+    const joined = data(
+      await request(creator, "join", { code: "PERMS", name: "Criador" }),
+    ).snapshot as Snapshot;
+    assert.deepEqual(joined.permissions, defaultPermissions);
+    data(await request(admin, "join", { code: "PERMS", name: "Admin" }));
+    data(await request(guest, "join", { code: "PERMS", name: "Convidado" }));
+    data(
+      await request(creator, "role", {
+        participantId: ids[1],
+        action: "promote",
+      }),
+    );
+    const denied = async (
+      socket: Socket,
+      action: string,
+      payload: unknown,
+      text?: RegExp,
+    ) => {
+      const r = await request(socket, action, payload);
+      assert.equal(r.ok, false, `${action} deveria ser recusado`);
+      if (!r.ok) {
+        assert.equal(r.code, "FORBIDDEN");
+        if (text) assert.match(r.message, text);
+      }
+    };
+    const set = (socket: Socket, permissions: Partial<RoomPermissions>) =>
+      request<RoomPermissions>(socket, "room-permissions", { permissions });
+
+    // Who flips which switch.
+    await denied(guest, "room-permissions", {
+      permissions: { guestChat: false },
+    });
+    await denied(
+      admin,
+      "room-permissions",
+      { permissions: { adminClose: false } },
+      /Só o criador/,
+    );
+    assert.equal(
+      data(await set(admin, { guestControl: true })).guestControl,
+      true,
+    );
+    data(await set(admin, { guestControl: false }));
+
+    // Media: voice and screen on by default, camera off.
+    const publish = (socket: Socket, kind: string) =>
+      request<Publication>(socket, "publish", {
+        kind,
+        key: crypto.randomUUID(),
+        audio: kind !== "camera",
+        muted: false,
+      });
+    await denied(
+      guest,
+      "publish",
+      { kind: "camera", key: crypto.randomUUID(), audio: false, muted: false },
+      /ligar a câmera/,
+    );
+    data(await publish(admin, "camera"));
+    data(await publish(guest, "voice"));
+    const screen = data(await publish(guest, "screen"));
+    const ended: string[] = [];
+    creator.on("publication-ended", (id: string) => ended.push(id));
+    data(await set(creator, { guestScreen: false }));
+    await new Promise((r) => setTimeout(r, 50));
+    assert.ok(ended.includes(screen.id));
+    await denied(
+      guest,
+      "publish",
+      { kind: "screen", key: crypto.randomUUID(), audio: true, muted: false },
+      /compartilhar tela/,
+    );
+
+    // Timer control and editing.
+    const timerId = crypto.randomUUID(),
+      blockId = crypto.randomUUID();
+    const timer = data(
+      await request<SharedWidget>(creator, "widget-create", {
+        id: timerId,
+        content: {
+          kind: "timer",
+          title: "Tempo",
+          blocks: [
+            {
+              id: blockId,
+              kind: "timer",
+              label: "Tempo",
+              duration: 60,
+              elapsed: 0,
+              startedAt: null,
+            },
+          ],
+        },
+      }),
+    );
+    const start = (socket: Socket, revision: number) =>
+      request<SharedWidget>(socket, "widget-operate", {
+        id: timerId,
+        operationId: crypto.randomUUID(),
+        operation: { kind: "timer", blockId, action: "start", revision },
+      });
+    await denied(
+      guest,
+      "widget-operate",
+      {
+        id: timerId,
+        operationId: crypto.randomUUID(),
+        operation: {
+          kind: "timer",
+          blockId,
+          action: "start",
+          revision: timer.revision,
+        },
+      },
+      /controlar widgets/,
+    );
+    data(await set(admin, { guestControl: true }));
+    const started = data(await start(guest, timer.revision));
+    await denied(
+      guest,
+      "widget-structure",
+      {
+        id: timerId,
+        revision: started.revision,
+        content: { kind: "timer", title: "Outro", blocks: started.blocks },
+      },
+      /editar widgets/,
+    );
+    data(await set(admin, { guestControl: false }));
+    data(
+      await request(creator, "widget-permission", {
+        id: timerId,
+        participantId: ids[2],
+        allowed: true,
+      }),
+    );
+    data(
+      await request(guest, "widget-operate", {
+        id: timerId,
+        operationId: crypto.randomUUID(),
+        operation: {
+          kind: "timer",
+          blockId,
+          action: "pause",
+          revision: started.revision + 1,
+        },
+      }),
+    );
+
+    // Chat.
+    const chatId = crypto.randomUUID();
+    data(
+      await request(creator, "widget-create", {
+        id: chatId,
+        content: { kind: "chat", title: "Chat", blocks: [] },
+      }),
+    );
+    data(
+      await request(guest, "chat-send", {
+        id: chatId,
+        messageId: crypto.randomUUID(),
+        text: "oi",
+      }),
+    );
+    data(await set(admin, { guestChat: false }));
+    await new Promise((r) => setTimeout(r, 750));
+    await denied(
+      guest,
+      "chat-send",
+      { id: chatId, messageId: crypto.randomUUID(), text: "oi de novo" },
+      /enviar mensagens/,
+    );
+    data(
+      await request(admin, "chat-send", {
+        id: chatId,
+        messageId: crypto.randomUUID(),
+        text: "admin fala",
+      }),
+    );
+
+    // Sharing: request (default), off, or direct.
+    const dice = () => ({
+      kind: "dice",
+      title: "Dados",
+      blocks: [],
+      module: defaultModule("dice", () => crypto.randomUUID()),
+    });
+    assert.equal(
+      data(
+        await request(guest, "widget-create", {
+          id: crypto.randomUUID(),
+          content: dice(),
+        }),
+      ).pending,
+      true,
+    );
+    data(await set(admin, { guestRequest: false }));
+    await denied(
+      guest,
+      "widget-create",
+      { id: crypto.randomUUID(), content: dice() },
+      /pedir para compartilhar/,
+    );
+    data(await set(admin, { guestShare: true }));
+    const directId = crypto.randomUUID();
+    const direct = data(
+      await request<SharedWidget>(guest, "widget-create", {
+        id: directId,
+        content: dice(),
+      }),
+    );
+    assert.equal(direct.owner, ids[2]);
+
+    // Admin switches.
+    data(await set(creator, { adminClose: false, adminCreate: false }));
+    await denied(admin, "widget-delete", { id: timerId }, /encerrar widgets/);
+    await denied(
+      admin,
+      "widget-create",
+      { id: crypto.randomUUID(), content: dice() },
+      /adicionar widgets coletivos/,
+    );
+    data(await request(guest, "widget-delete", { id: directId }));
+    data(await request(creator, "widget-delete", { id: timerId }));
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();

@@ -19,6 +19,16 @@ import {
   log,
 } from "./security";
 import {
+  canSetPermission,
+  canUseWidget,
+  permissionText,
+  roleAllows,
+  type RoomRole,
+} from "../shared/permissions";
+import {
+  defaultPermissions,
+  type RoomPermission,
+  type RoomPermissions,
   schemas,
   commandSchema,
   signalSchema,
@@ -41,7 +51,21 @@ interface Room {
   shareRequests: Map<string, ShareRequest>;
   notices: RoomNotice[];
   creatorId: string;
+  permissions: RoomPermissions;
   touched: number;
+}
+const publishPermission = {
+  screen: "guestScreen",
+  voice: "guestVoice",
+  camera: "guestCamera",
+} as const satisfies Record<Publication["kind"], RoomPermission>;
+function refuse(role: RoomRole, key: RoomPermission): never {
+  throw new Fault(
+    "FORBIDDEN",
+    role === "admin"
+      ? `O criador não permite que administradores possam ${permissionText[key]}.`
+      : `A sala não permite que convidados possam ${permissionText[key]}.`,
+  );
 }
 export class Rooms {
   readonly epoch = randomUUID();
@@ -131,11 +155,28 @@ export class Rooms {
       ),
       notices: room.notices,
       creatorId: room.creatorId,
+      permissions: room.permissions,
       screenViewers: this.screenViewers(room),
       participants: [...room.members.values()].map(
         ({ socketId, lastSeen, ...member }) => member,
       ),
     };
+  }
+  private role(room: Room, id: string): RoomRole {
+    return id === room.creatorId
+      ? "creator"
+      : room.members.get(id)?.role === "admin"
+        ? "admin"
+        : "guest";
+  }
+  /** Ends publications whose kind the owner's role no longer allows. */
+  private enforcePublications(room: Room) {
+    for (const member of room.members.values()) {
+      const role = this.role(room, member.id);
+      for (const p of [...member.publications])
+        if (!roleAllows(room.permissions, role, publishPermission[p.kind]))
+          this.removePublication(room, p);
+    }
   }
   /** What a given viewer may see of a widget (hidden poll votes). */
   private view(widget: SharedWidget, viewerId?: string): SharedWidget {
@@ -251,6 +292,7 @@ export class Rooms {
       room.widgets.clear();
       room.shareRequests.clear();
       room.notices = [];
+      room.permissions = { ...defaultPermissions };
     }
     if (room.creatorId === member.id && room.members.size) {
       const members = [...room.members.values()];
@@ -288,6 +330,7 @@ export class Rooms {
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
       role: 20,
+      "room-permissions": 30,
       "chat-send": 45,
       "module-interact": 60,
       "widget-review": 30,
@@ -434,6 +477,7 @@ export class Rooms {
           shareRequests: new Map(),
           notices: [],
           creatorId: socket.data.id,
+          permissions: { ...defaultPermissions },
           touched: Date.now(),
         };
         this.rooms.set(code, room);
@@ -476,9 +520,32 @@ export class Rooms {
         "Esta ação exige permissão do criador ou de um administrador da sala.",
       );
     };
-    const editable = (widget: SharedWidget | undefined) =>
-      !!widget &&
-      (manages || widget.allGuestsEdit || widget.guestEditors?.includes(m.id));
+    const role = this.role(room, m.id);
+    const require = (key: RoomPermission) => {
+      if (!roleAllows(room.permissions, role, key)) refuse(role, key);
+    };
+    const useWidget = (
+      widget: SharedWidget | undefined,
+      need: RoomPermission,
+    ) => {
+      if (!widget)
+        throw new Fault("NOT_FOUND", "Este widget não está mais disponível.");
+      if (!canUseWidget(room.permissions, role, m.id, widget, need))
+        refuse(role, need);
+    };
+    if (action === "room-permissions") {
+      if (!manages) deny();
+      for (const key of Object.keys(data.permissions) as RoomPermission[])
+        if (!canSetPermission(role, key))
+          throw new Fault(
+            "FORBIDDEN",
+            `Só o criador decide se administradores podem ${permissionText[key]}.`,
+          );
+      room.permissions = { ...room.permissions, ...data.permissions };
+      this.enforcePublications(room);
+      this.broadcast(room);
+      return room.permissions;
+    }
     if (action === "role") {
       if (m.id !== room.creatorId) deny();
       const target = room.members.get(data.participantId);
@@ -495,6 +562,7 @@ export class Rooms {
         });
         room.notices = room.notices.slice(-30);
       } else target.role = data.action === "promote" ? "admin" : "guest";
+      this.enforcePublications(room);
       this.broadcast(room);
       return {};
     }
@@ -503,10 +571,9 @@ export class Rooms {
       if (
         ["reset", "task", "session", "poll-control"].includes(
           data.operation.kind,
-        ) &&
-        !editable(current)
+        )
       )
-        deny();
+        useWidget(current, "guestControl");
       const widget = room.widgets.interact(
         { id: m.id, name: m.name },
         data.id,
@@ -519,6 +586,7 @@ export class Rooms {
       return this.view(widget, m.id);
     }
     if (action === "chat-send") {
+      useWidget(room.widgets.entries.get(data.id), "guestChat");
       const [widget, added] = room.widgets.message(data.id, {
         id: data.messageId,
         authorId: m.id,
@@ -552,11 +620,13 @@ export class Rooms {
             "Notas foram substituídas pelo Chat.",
           );
         if (data.content.kind === "chat" && !manages) deny();
-        if (!manages) {
+        if (role === "admin") require("adminCreate");
+        if (role === "guest" && !room.permissions.guestShare) {
           if (current) {
             if (current.owner !== m.id) deny();
             return this.view(current, m.id);
           }
+          require("guestRequest");
           const previous = room.shareRequests.get(data.id);
           if (previous && previous.owner !== m.id) deny();
           if (!previous || previous.status !== "pending") {
@@ -590,6 +660,7 @@ export class Rooms {
       }
       if (action === "widget-review") {
         if (!manages) deny();
+        if (role === "admin") require("adminCreate");
         const request = room.shareRequests.get(data.id);
         if (!request || request.status !== "pending")
           throw new Fault("NOT_FOUND", "Este pedido já foi respondido.");
@@ -617,7 +688,7 @@ export class Rooms {
         );
       }
       if (action === "widget-structure") {
-        if (!editable(current)) deny();
+        useWidget(current, "guestEdit");
         widget = room.widgets.structure(
           m.id,
           data.id,
@@ -627,7 +698,10 @@ export class Rooms {
         );
       }
       if (action === "widget-operate") {
-        if (!editable(current)) deny();
+        useWidget(
+          current,
+          data.operation.kind === "timer" ? "guestControl" : "guestEdit",
+        );
         widget = room.widgets.operate(
           m.id,
           data.id,
@@ -636,7 +710,10 @@ export class Rooms {
         );
       }
       if (action === "widget-delete") {
-        if (!manages && current?.owner !== m.id) deny();
+        if (current && current.owner !== m.id) {
+          if (!manages) deny();
+          if (role === "admin") require("adminClose");
+        }
         room.widgets.remove(m.id, data.id, true);
       }
       this.emitWidget(room, data.id, widget || null);
@@ -677,6 +754,7 @@ export class Rooms {
       return {};
     }
     if (action === "publish") {
+      require(publishPermission[data.kind as Publication["kind"]]);
       if (data.kind !== "screen") m.inCall = true;
       let p = m.publications.find(
         (p) => p.kind === data.kind && p.key === data.key,
