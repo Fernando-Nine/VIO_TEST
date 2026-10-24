@@ -45,8 +45,8 @@ Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão 
 
 - **Tarefas** são Issues no VIO_TEST, com etiqueta de área (`frontend`, `midia`, `backend`,
   `qa`, `docs`) e Milestone da versão. Não existem mais "rodadas".
-- **Trabalho**: um branch curto por tarefa → PR no VIO*TEST → CI verde → o próprio agente
-  faz \_squash merge*. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
+- **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` → CI verde → o próprio agente
+  faz **squash merge**. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
   e os testes do que mudou.
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
 - **Versão**: semver. Fonte única `src/shared/releases.ts` (+ `package.json`). Correção =

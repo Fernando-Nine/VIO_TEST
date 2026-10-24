@@ -1,13 +1,13 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-10-22.
+Atualizado: 2026-10-24.
 
 ## Ambientes
 
 |          | Versão     | Repositório                   | Endereço                       |
 | -------- | ---------- | ----------------------------- | ------------------------------ |
-| Produção | 2.7.1      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Produção | 2.7.2      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
 | Prévia   | 2.8.0-rc.3 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
@@ -26,6 +26,11 @@ notificações, mesclar espaços na tira e os widgets Votação, Dados, Sorteado
 3. Promover a prévia para produção quando o usuário aprovar.
 
 ## Decisões vigentes
+
+- Instaladores do app Windows ficarão no repositório público Fernando-Nine/vio-releases (a criar pelo usuário)
+  (GitHub Releases), também usado pelo atualizador automático. Assinatura só ao abrir ao público.
+- Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
+- Visual novo dos widgets passa por rascunhos da área Design antes do código.
 
 - Contas, banco de dados e gravação no servidor: **adiados**, não proibidos.
   Clips gravados no aparelho são objetivo futuro.
