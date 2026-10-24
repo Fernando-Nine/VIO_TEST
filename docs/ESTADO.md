@@ -27,8 +27,10 @@ notificações, mesclar espaços na tira e os widgets Votação, Dados, Sorteado
 
 ## Decisões vigentes
 
-- Instaladores do app Windows ficarão no repositório público Fernando-Nine/vio-releases (a criar pelo usuário)
+- Instaladores do app Windows ficam no repositório público Fernando-Nine/vio-releases (criado em 2026-10-24)
   (GitHub Releases), também usado pelo atualizador automático. Assinatura só ao abrir ao público.
+- Permissões da sala no estilo cargos do Discord (#71, antiga E12): criador e admins
+  controlam widgets da sala; convidados conforme switches da sala.
 - Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
 - Visual novo dos widgets passa por rascunhos da área Design antes do código.
 
@@ -44,7 +46,6 @@ notificações, mesclar espaços na tira e os widgets Votação, Dados, Sorteado
 ## Em aberto (aguardam o usuário)
 
 - E10: grid personalizado (até 6×6) — proposta em `docs/arquivo/RODADA-E.md`.
-- E12: interface de permissões da sala (switches) — mesma proposta.
 - Widget Personalizado/Comunidade: fora de escopo até haver isolamento de código.
 
 ## Referências
