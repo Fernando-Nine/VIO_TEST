@@ -58,7 +58,8 @@ screenshots só quando a mudança tocar aquela parte.
   e a marca `systemChange` da 2.0.0 **nunca** são apagados.
 - **Produção**: o VIO recebe o **mesmo código** do VIO_TEST, só depois do aval do usuário
   na prévia. QA/copiloto abre a PR de release no VIO e cria a tag `vX.Y.Z`. Nunca push
-  direto na `main` do VIO.
+  direto na `main` do VIO. **Exceção:** correções de segurança vão direto para a produção
+  (hotfix PATCH sobre a versão de produção), sem esperar aval.
 
 ## Contexto e troca de chat
 
