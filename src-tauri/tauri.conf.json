@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "VIO",
+  "version": "../package.json",
+  "identifier": "studio.nerdquest.vio.test",
+  "build": {
+    "frontendDist": "https://vio-test.onrender.com"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "capabilities": []
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": false,
+    "publisher": "NerdQuest Studios",
+    "shortDescription": "Compartilhe a tela, converse e assista junto.",
+    "category": "SocialNetworking",
+    "licenseFile": "../LICENSE",
+    "icon": ["icons/icon.ico"],
+    "resources": { "../dist/source.tar.gz": "source.tar.gz" },
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["PortugueseBR"],
+        "displayLanguageSelector": false
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdENDk5RUI5MUYwQ0ExRkUKUldUK29Rd2Z1WjVKZmJLclBZY2toRk9iTkl4K20ydVlkdVNyK1BLUlNSckQ2RFVXc09PcmRheTIK",
+      "endpoints": [
+        "https://github.com/Fernando-Nine/vio-releases/releases/latest/download/latest.json"
+      ],
+      "windows": { "installMode": "passive" }
+    }
+  }
+}

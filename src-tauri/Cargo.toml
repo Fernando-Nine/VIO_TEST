@@ -1,0 +1,21 @@
+[package]
+name = "vio-desktop"
+version = "0.0.0"
+description = "VIO para Windows"
+authors = ["NerdQuest Studios"]
+license = "AGPL-3.0-only"
+edition = "2021"
+rust-version = "1.85"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[target.'cfg(windows)'.dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-updater = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
