@@ -25,6 +25,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # Raise to --audit-level=high once #83 is fixed.
+      - run: npm audit --omit=dev --audit-level=critical
       - run: npm run build
       # build regenerates CHANGELOG.md from releases.ts; a diff means it was not committed.
       - run: git diff --exit-code -- CHANGELOG.md
