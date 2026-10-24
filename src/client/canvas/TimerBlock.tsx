@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { ArrowLeftRight, BellOff, Repeat } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import "./timer.css";
+import {
+  ArrowLeftRight,
+  BellOff,
+  Flag,
+  Pause,
+  Play,
+  Repeat,
+  RotateCcw,
+} from "lucide-react";
 import type { MenuItem } from "../components/ContextMenu";
 import {
   timerDisplay,
@@ -7,6 +16,8 @@ import {
   timerAlarmMs,
   timerEndsAt,
   timerFinished,
+  timerLapLimit,
+  lapTimes,
   type WidgetBlock,
   type WidgetOperation,
 } from "../../shared/widgets";
@@ -109,6 +120,7 @@ const switchedMode = (block: Timer): Timer => {
     mode: other,
     duration: other === "down" ? block.duration || 1500 : 0,
     loop: other === "down" && !!block.loop,
+    laps: undefined,
   };
 };
 
@@ -136,6 +148,32 @@ export function timerMenu(
   ];
 }
 
+const presets = [5, 10, 25];
+
+function Ring({
+  progress,
+  children,
+}: {
+  progress: number;
+  children: ReactNode;
+}) {
+  return (
+    <div className="timer-ring">
+      <svg aria-hidden="true">
+        <circle className="timer-ring-track" />
+        {progress > 0 && (
+          <circle
+            className="timer-ring-progress"
+            pathLength={1}
+            strokeDasharray={`${Math.min(1, progress)} 1`}
+          />
+        )}
+      </svg>
+      <div className="timer-ring-text">{children}</div>
+    </div>
+  );
+}
+
 export function TimerBlock({
   block,
   now,
@@ -159,129 +197,180 @@ export function TimerBlock({
   const [editingTime, setEditingTime] = useState(false);
   const ringing = useEndAlarm(block, engine);
   const mode = block.mode || (block.duration ? "down" : "up");
-  const other = mode === "down" ? "up" : "down";
   const finished = timerFinished(block, now);
   const running = block.startedAt !== null && !finished;
-  const stopped = { elapsed: 0, startedAt: null };
-  const timeEditable = editable && mode === "down" && !running;
+  const stopped = { elapsed: 0, startedAt: null, laps: undefined };
+  const timeEditable = editable && mode === "down" && !running && !ringing;
+  const shown = timerDisplay(block, now);
+  const laps = lapTimes(block);
+  const best = laps.length > 1 ? Math.min(...laps) : -1;
+  const progress =
+    mode === "down"
+      ? block.duration
+        ? shown / block.duration
+        : 0
+      : (timerElapsed(block, now) % 60) / 60;
+  const run = (action: "start" | "pause" | "reset" | "silence" | "lap") =>
+    act({ kind: "timer", blockId: block.id, action, revision });
   function commitTime(input: HTMLInputElement) {
     setEditingTime(false);
     const seconds = parseClock(input.value);
     if (seconds !== null && seconds !== block.duration)
       update({ ...block, ...stopped, duration: seconds });
   }
+  function setMode(next: "up" | "down") {
+    if (next !== mode) update(switchedMode(block));
+  }
+  const time =
+    timeEditable && editingTime ? (
+      <input
+        className="timer-time timer-input"
+        aria-label="Duração em minutos ou mm:ss"
+        defaultValue={clock(block.duration)}
+        autoFocus
+        inputMode="numeric"
+        onFocus={(e) => e.currentTarget.select()}
+        onBlur={(e) => commitTime(e.currentTarget)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") e.currentTarget.value = clock(block.duration);
+          if (e.key === "Enter" || e.key === "Escape") {
+            e.stopPropagation();
+            e.currentTarget.blur();
+          }
+        }}
+      />
+    ) : timeEditable ? (
+      <button
+        className="timer-time timer-edit"
+        title="Clique para editar o tempo"
+        aria-label={`Tempo ${clock(shown)}. Editar duração`}
+        onClick={() => setEditingTime(true)}
+      >
+        {clock(shown)}
+      </button>
+    ) : (
+      <output className="timer-time" aria-label="Tempo do cronômetro">
+        {clock(shown)}
+        {mode === "up" && (
+          <small className="timer-tenths">
+            .{Math.floor((shown * 10) % 10)}
+          </small>
+        )}
+      </output>
+    );
   return (
-    <div className={`timer-face ${ringing ? "is-ringing" : ""}`}>
-      {editable ? (
-        <div className="timer-modes" role="group" aria-label="Modo">
-          <button
-            className="timer-mode"
-            aria-label={`Modo ${modeName[mode]}. Trocar para ${modeName[other]}`}
-            title={`Trocar para ${modeName[other]}`}
-            onClick={() => update(switchedMode(block))}
-          >
-            <ArrowLeftRight size={13} aria-hidden="true" />
-            {modeName[mode]}
-          </button>
-          {mode === "down" && (
-            <button
-              className="icon-button"
-              aria-pressed={!!block.loop}
-              aria-label="Repetir ao chegar ao final"
-              title="Repetir ao chegar ao final"
-              onClick={() => update({ ...block, loop: !block.loop })}
-            >
-              <Repeat size={15} />
-            </button>
-          )}
-        </div>
-      ) : (
-        <small className="timer-mode-label">
-          {modeName[mode]}
-          {block.loop && " · repete"}
+    <div
+      className={`timer-face mode-${mode} ${ringing ? "is-ringing" : ""} ${finished ? "is-finished" : ""}`}
+    >
+      <Ring progress={ringing ? 1 : progress}>
+        {time}
+        <small className="timer-sub">
+          {mode === "down"
+            ? finished
+              ? `${clock(block.duration)} concluídos`
+              : `de ${clock(block.duration)}${block.loop ? " · repete" : ""}`
+            : laps.length > 0
+              ? `Volta ${laps.length} · ${clock(laps[laps.length - 1])}`
+              : null}
         </small>
-      )}
-      {timeEditable && editingTime ? (
-        <input
-          className="widget-clock timer-input"
-          aria-label="Duração em minutos ou mm:ss"
-          defaultValue={clock(block.duration)}
-          autoFocus
-          inputMode="numeric"
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={(e) => commitTime(e.currentTarget)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape")
-              e.currentTarget.value = clock(block.duration);
-            if (e.key === "Enter" || e.key === "Escape") {
-              e.stopPropagation();
-              e.currentTarget.blur();
-            }
-          }}
-        />
-      ) : timeEditable ? (
-        <button
-          className="widget-clock timer-edit"
-          title="Clique para editar o tempo"
-          aria-label={`Tempo ${clock(timerDisplay(block, now))}. Editar duração`}
-          onClick={() => setEditingTime(true)}
-        >
-          {clock(timerDisplay(block, now))}
-        </button>
-      ) : (
-        <output className="widget-clock" aria-label="Tempo do cronômetro">
-          {clock(timerDisplay(block, now))}
-        </output>
-      )}
-      {controllable && (
-        <div className="widget-inline-actions">
-          {ringing && (
-            <button
-              className="primary timer-silence"
-              onClick={() =>
-                act({
-                  kind: "timer",
-                  blockId: block.id,
-                  action: "silence",
-                  revision,
-                })
-              }
-            >
-              <BellOff size={16} aria-hidden="true" />
-              Desligar alarme
-            </button>
-          )}
-          <button
-            className="secondary"
-            onClick={() =>
-              act({
-                kind: "timer",
-                blockId: block.id,
-                action:
-                  block.startedAt === null || finished ? "start" : "pause",
-                revision,
-              })
-            }
-          >
-            {finished ? "Reiniciar" : running ? "Pausar" : "Iniciar"}
-          </button>
-          {(block.elapsed > 0 || block.startedAt !== null) && (
-            <button
-              className="text-button"
-              onClick={() =>
-                act({
-                  kind: "timer",
-                  blockId: block.id,
-                  action: "reset",
-                  revision,
-                })
-              }
-            >
-              Zerar
-            </button>
-          )}
-        </div>
-      )}
+      </Ring>
+      <div className="timer-side">
+        {ringing ? (
+          <strong className="timer-done">Tempo esgotado</strong>
+        ) : editable ? (
+          <div className="timer-seg" role="group" aria-label="Modo">
+            {(["down", "up"] as const).map((m) => (
+              <button
+                key={m}
+                aria-pressed={mode === m}
+                onClick={() => setMode(m)}
+              >
+                {modeName[m]}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <small className="timer-mode-label">{modeName[mode]}</small>
+        )}
+        {!ringing && mode === "down" && editable && (
+          <div className="timer-presets" role="group" aria-label="Atalhos">
+            {presets.map((min) => (
+              <button
+                key={min}
+                className="timer-chip"
+                aria-pressed={block.duration === min * 60}
+                onClick={() =>
+                  block.duration !== min * 60 &&
+                  update({ ...block, ...stopped, duration: min * 60 })
+                }
+              >
+                {min} min
+              </button>
+            ))}
+          </div>
+        )}
+        {!ringing && mode === "up" && laps.length > 0 && (
+          <ol className="timer-laps" aria-label="Voltas">
+            {laps
+              .map((lap, i) => (
+                <li key={i} className={lap === best ? "is-best" : undefined}>
+                  <span>Volta {i + 1}</span>
+                  <span>
+                    {clock(lap)}.{Math.floor((lap * 10) % 10)}
+                  </span>
+                </li>
+              ))
+              .reverse()}
+          </ol>
+        )}
+        {controllable && (
+          <div className="timer-actions">
+            {ringing ? (
+              <button className="primary" onClick={() => run("silence")}>
+                <BellOff size={16} aria-hidden="true" />
+                Desligar
+              </button>
+            ) : (
+              <button
+                className="primary"
+                onClick={() => run(running ? "pause" : "start")}
+              >
+                {running ? (
+                  <Pause size={16} aria-hidden="true" />
+                ) : (
+                  <Play size={16} aria-hidden="true" />
+                )}
+                {finished ? "Reiniciar" : running ? "Pausar" : "Iniciar"}
+              </button>
+            )}
+            {!ringing &&
+              (mode === "up" && running
+                ? (block.laps?.length ?? 0) < timerLapLimit && (
+                    <button
+                      className="secondary"
+                      aria-label="Volta"
+                      title="Volta"
+                      onClick={() => run("lap")}
+                    >
+                      <Flag size={16} aria-hidden="true" />
+                      <span>Volta</span>
+                    </button>
+                  )
+                : (block.elapsed > 0 || block.startedAt !== null) &&
+                  !finished && (
+                    <button
+                      className="secondary"
+                      aria-label="Reiniciar"
+                      title="Reiniciar"
+                      onClick={() => run("reset")}
+                    >
+                      <RotateCcw size={16} aria-hidden="true" />
+                      <span>Reiniciar</span>
+                    </button>
+                  ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
