@@ -332,13 +332,13 @@ export class Rooms {
       role: 20,
       "room-permissions": 30,
       "chat-send": 45,
-      "module-interact": 60,
+      "module-interact": 240,
       "widget-review": 30,
       "widget-permission": 30,
-      "widget-create": 12,
-      "widget-structure": 30,
+      "widget-create": 20,
+      "widget-structure": 120,
       "widget-delete": 30,
-      "widget-operate": 180,
+      "widget-operate": 300,
       demand: 360,
       join: 12,
       leave: 12,
@@ -353,6 +353,12 @@ export class Rooms {
       ice: 12,
       renew: 12,
     };
+    // Widgets are clicked and edited in quick runs; these absorb a run at once.
+    const bursts: Partial<Record<Action, number>> = {
+      "module-interact": 60,
+      "widget-structure": 40,
+      "widget-operate": 60,
+    };
     socket.on("command", async (raw: unknown, ack: unknown) => {
       if (typeof ack !== "function") return;
       try {
@@ -362,7 +368,12 @@ export class Rooms {
             "Sua sessão expirou. Reconecte para continuar.",
           );
         const cmd = commandSchema.parse(raw);
-        this.limits.take(socket.data.id + ":" + cmd.action, rates[cmd.action]);
+        this.limits.take(
+          socket.data.id + ":" + cmd.action,
+          rates[cmd.action],
+          60000,
+          bursts[cmd.action],
+        );
         if (cmd.action === "join")
           this.limits.take(socket.data.ip + ":join", 40);
         const data = schemas[cmd.action].parse(cmd.data);

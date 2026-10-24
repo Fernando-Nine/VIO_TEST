@@ -12,24 +12,36 @@ export class Fault extends Error {
     super(message);
   }
 }
+/**
+ * Token buckets: each key holds up to `burst` actions (default: the per-window
+ * limit) and refills continuously at `limit` per `window`. Quick human bursts
+ * pass, a refill comes back within seconds instead of a whole minute, and a
+ * sustained flood still stops at the steady rate.
+ */
 export class Limits {
-  private buckets = new Map<string, { count: number; expires: number }>();
-  take(key: string, limit: number, window = 60000) {
+  private buckets = new Map<
+    string,
+    { tokens: number; at: number; ttl: number }
+  >();
+  take(key: string, limit: number, window = 60000, burst = limit) {
     const now = Date.now();
-    let b = this.buckets.get(key);
-    if (!b || b.expires < now) {
-      b = { count: 0, expires: now + window };
-      this.buckets.set(key, b);
-    }
-    if (++b.count > limit)
+    const b = this.buckets.get(key) || { tokens: burst, at: now, ttl: 0 };
+    b.tokens = Math.min(burst, b.tokens + ((now - b.at) * limit) / window);
+    b.at = now;
+    // Time until the bucket is full again; then it can be forgotten.
+    b.ttl = ((burst - b.tokens + 1) * window) / limit;
+    this.buckets.set(key, b);
+    if (b.tokens < 1)
       throw new Fault(
         "RATE_LIMIT",
-        "Muitas tentativas. Aguarde um momento e tente novamente.",
+        "Muitas ações seguidas. Aguarde um instante e tente de novo.",
       );
+    b.tokens -= 1;
   }
   clean() {
+    const now = Date.now();
     for (const [k, v] of this.buckets)
-      if (v.expires < Date.now()) this.buckets.delete(k);
+      if (now - v.at > v.ttl) this.buckets.delete(k);
   }
 }
 export function stableId(secret: string, value: string) {

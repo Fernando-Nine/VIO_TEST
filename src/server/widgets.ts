@@ -189,10 +189,11 @@ export class RoomWidgets {
     const key = `${actor.id}:${id}:${operationId}`;
     if (this.operations.has(key)) return current;
     const now = Date.now(),
-      throttle = `module:${actor.id}`;
+      // Per widget: rolling dice right after a draw elsewhere is normal use.
+      throttle = `module:${actor.id}:${id}`;
     if (
       (operation.kind === "roll" || operation.kind === "draw") &&
-      now - (this.lastMessages.get(throttle) || 0) < 700
+      now - (this.lastMessages.get(throttle) || 0) < 300
     )
       throw new Fault(
         "RATE_LIMIT",
