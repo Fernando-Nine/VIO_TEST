@@ -7,9 +7,22 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.8.0";
+export const version = "2.9.0-rc.1";
 export const currentRelease: Release = {
   version,
+  date: "2026-10-24",
+  title: "Prévia · Visual novo dos widgets",
+  sections: [
+    {
+      title: "Somente no vio-test",
+      items: [
+        "Cronômetro em anel: o anel mostra o tempo que resta, atalhos de 5, 10 e 25 minutos, voltas compartilhadas com a melhor destacada e alarme com Desligar para a sala.",
+      ],
+    },
+  ],
+};
+const stableRelease: Release = {
+  version: "2.8.0",
   date: "2026-10-24",
   title: "Chat, papéis na sala e novos widgets",
   sections: [
@@ -427,6 +440,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  stableRelease,
   interfacePreviewRelease,
   sessionWidgetsRelease,
   phaseTwoInitialRelease,

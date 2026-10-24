@@ -2,6 +2,13 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.9.0-rc.1] - 2026-10-24
+
+Prévia · Visual novo dos widgets
+
+### Somente no vio-test
+- Cronômetro em anel: o anel mostra o tempo que resta, atalhos de 5, 10 e 25 minutos, voltas compartilhadas com a melhor destacada e alarme com Desligar para a sala.
+
 ## [2.8.0] - 2026-10-24
 
 Chat, papéis na sala e novos widgets

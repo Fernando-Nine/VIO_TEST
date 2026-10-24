@@ -1,0 +1,297 @@
+/* #75: timer face as a progress ring (docs/design/cronometro.md). */
+.widget-body > .custom-widget.kind-timer {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+.custom-widget.kind-timer .custom-blocks,
+.custom-widget.kind-timer .custom-block {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+}
+.widget-host:has(.timer-face.is-ringing)::after {
+  border-color: #6b6fe0;
+}
+
+/* Side by side by default (column layout further below). */
+.timer-face {
+  --ring: clamp(96px, min(78cqh, 46cqw), 420px);
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4cqh 5cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 7cqw, 72px);
+  font-size: clamp(12px, calc(var(--ring) / 11), 16px);
+}
+
+.timer-ring {
+  position: relative;
+  flex: none;
+  width: var(--ring);
+  height: var(--ring);
+  container: timer-ring / size;
+  display: grid;
+  place-items: center;
+}
+.timer-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+/* Sized in CSS so the stroke stays a few pixels thick at any ring size. */
+.timer-ring circle {
+  --stroke: clamp(5px, 2.2cqw, 8px);
+  cx: 50%;
+  cy: 50%;
+  r: calc(50% - var(--stroke) / 2 - 1px);
+  fill: none;
+  stroke-width: var(--stroke);
+}
+.timer-ring-track {
+  stroke: #1e2030;
+}
+.timer-ring-progress {
+  stroke: #2727f5;
+  stroke-linecap: round;
+}
+.timer-face.is-ringing .timer-ring-progress {
+  stroke: #a6a9ff;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .timer-face.is-ringing .timer-ring svg {
+    animation: timer-ring 1.2s ease-in-out infinite;
+  }
+}
+@keyframes timer-ring {
+  50% {
+    opacity: 0.4;
+  }
+}
+.timer-ring-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 84cqw;
+}
+.timer-time {
+  display: block;
+  padding: 0 0.08em;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #f3f3fb;
+  font: 400 23cqw/1 var(--mono);
+  letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
+}
+.mode-up .timer-time {
+  font-size: 20cqw;
+}
+.timer-tenths {
+  font-size: 0.42em;
+  color: #a3a5bc;
+}
+.timer-time.timer-edit {
+  cursor: text;
+}
+.timer-time.timer-edit:hover {
+  background: #1c2134;
+}
+.timer-time.timer-input {
+  width: 4.2em;
+  border: 1px solid #5b67a0;
+  background: #0d1019;
+}
+.timer-sub {
+  margin-top: 4cqw;
+  color: #a3a5bc;
+  font-size: max(11px, 7.5cqw);
+  white-space: nowrap;
+}
+.timer-sub:empty {
+  display: none;
+}
+.mode-up .timer-sub {
+  font-family: var(--mono);
+  font-size: max(10px, 6.5cqw);
+}
+
+.timer-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2em;
+}
+.timer-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid #2a2c3c;
+  border-radius: 10px;
+  background: #0b0c13;
+}
+.timer-seg button {
+  min-height: 0;
+  height: 2.2em;
+  padding: 0 0.85em;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: #a3a5bc;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.timer-seg button:hover {
+  color: #f3f3fb;
+}
+.timer-seg button[aria-pressed="true"] {
+  background: #1f2140;
+  color: #f3f3fb;
+}
+.timer-mode-label {
+  color: #a3a5bc;
+}
+.timer-done {
+  font-size: 1.15em;
+  font-weight: 650;
+}
+.timer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+.timer-chip {
+  min-height: 0;
+  height: 2.6em;
+  padding: 0 1em;
+  border: 1px solid #2f3146;
+  border-radius: 999px;
+  background: none;
+  color: #d9dbec;
+  font: 500 0.9em var(--mono);
+}
+.timer-chip:hover {
+  border-color: #4446a8;
+}
+.timer-chip[aria-pressed="true"] {
+  background: #1f2140;
+  border-color: #4446a8;
+  color: #f3f3fb;
+}
+.timer-laps {
+  width: min(100%, 18em);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  max-height: 11.5em;
+}
+.timer-laps li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.6em 0;
+  border-bottom: 1px solid #1e2030;
+  color: #d9dbec;
+  font: 0.95em var(--mono);
+}
+.timer-laps li.is-best {
+  color: #a6a9ff;
+}
+.timer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+}
+.timer-actions > button {
+  min-height: 0;
+  height: 2.9em;
+  padding: 0 1.3em;
+  gap: 0.5em;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+/* Taller than wide, or narrow like a phone: one column. */
+@container widget-body (orientation: portrait) or ((max-width: 460px) and (min-height: 280px)) {
+  .timer-face {
+    --ring: clamp(96px, min(64cqw, 44cqh), 260px);
+    flex-direction: column;
+    gap: 3cqh;
+    padding: 3cqh 12px;
+  }
+  .timer-face > .timer-ring {
+    order: 1;
+  }
+  .timer-side {
+    display: contents;
+  }
+  .timer-side > .timer-seg,
+  .timer-side > .timer-mode-label,
+  .timer-side > .timer-done {
+    order: 0;
+  }
+  .timer-side > :is(.timer-presets, .timer-laps) {
+    order: 2;
+  }
+  .timer-side > .timer-actions {
+    order: 3;
+  }
+  .timer-face .timer-laps {
+    width: 100%;
+  }
+}
+
+/* Small side space: shortcuts and the lap list give way; the last lap stays under the time. */
+@container widget-body (max-height: 360px) {
+  .timer-side > :is(.timer-presets, .timer-laps) {
+    display: none;
+  }
+  .timer-side {
+    gap: 0.9em;
+  }
+  .timer-actions > .secondary {
+    width: 2.9em;
+    padding: 0;
+  }
+  .timer-actions > .secondary > span {
+    display: none;
+  }
+}
+@container widget-body (min-height: 361px) {
+  .mode-up .timer-sub {
+    display: none;
+  }
+}
+/* Narrow headers fold the mode into the ⋯ menu; the face keeps the ring and buttons. */
+@container widget-body (max-width: 300px) {
+  .timer-side > :is(.timer-seg, .timer-mode-label) {
+    display: none;
+  }
+  .timer-face {
+    gap: 12px;
+    padding: 6px;
+  }
+  .timer-actions > button {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+  }
+  .timer-actions > .primary {
+    font-size: 0;
+  }
+  .timer-actions > .primary > svg {
+    width: 16px;
+    height: 16px;
+  }
+}
