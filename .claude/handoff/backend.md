@@ -4,10 +4,13 @@ Atualizado: 2026-10-24
 
 ## Agora
 
-PR #73 (#71, permissões da sala) aguardando CI → squash merge. Contrato comentado na #71.
+#83 (segurança 2.8.1): body-parser 2.4.0 (PR #85, mesclada); zod 4.6.7 (PR #86).
+Com as duas na main, `npm audit --omit=dev` = 0. Copiloto avisado para publicar a 2.8.1.
 
 ## Feito recentemente
 
+- #83: zod 3 → 4 sem mudança de schema; exposição era baixa (sem body parser montado,
+  Socket.IO 64 KB, arrays com `max` pequeno). `freshKey` gera UUID v4 válido p/ zod 4.
 - #71 (PR #73): `RoomPermissions` em `protocol.ts` (padrões da issue), comando
   `room-permissions`, helpers em `permissions.ts` (`roleAllows`, `canSetPermission`,
   `canUseWidget`, `roomRole`, `permissionText`). Servidor valida controlar vs editar
