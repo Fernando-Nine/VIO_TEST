@@ -12,6 +12,13 @@ Prévia · Visual novo dos widgets
 - Dados com teclado de ícones (d4 a d20), partes de cada rolagem entre colchetes, crítico no 20 natural do d20 e, no foco, o dado rolado em destaque com o histórico ao lado.
 - Sorteador em roleta: gira e para na opção sorteada para todos, com cores por opção e paletas (Índigo, Pôr do sol, Floresta, Doce e Aleatória em harmonia) compartilhadas pela sala.
 
+## [2.8.1] - 2026-10-24
+
+Correções de segurança
+
+### Segurança
+- Correções de segurança: atualização de duas bibliotecas do servidor.
+
 ## [2.8.0] - 2026-10-24
 
 Chat, papéis na sala e novos widgets

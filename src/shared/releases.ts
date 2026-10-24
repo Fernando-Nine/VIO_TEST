@@ -24,6 +24,19 @@ export const currentRelease: Release = {
     },
   ],
 };
+const securityHotfixRelease: Release = {
+  version: "2.8.1",
+  date: "2026-10-24",
+  title: "Correções de segurança",
+  sections: [
+    {
+      title: "Segurança",
+      items: [
+        "Correções de segurança: atualização de duas bibliotecas do servidor.",
+      ],
+    },
+  ],
+};
 const stableRelease: Release = {
   version: "2.8.0",
   date: "2026-10-24",
@@ -81,12 +94,17 @@ const sessionWidgetsRelease: Release = {
   version: "2.8.0-rc.2",
   date: "2026-10-12",
   title: "Prévia · Novos widgets da sessão",
-  sections: [{title: "Somente no vio-test", items: [
-    "Votação, Dados, Sorteador e Tarefas + agenda: uso individual ou compartilhado, edição por permissão e modo compacto.",
-    "Dados com comandos, guia em português e mini-histórico atribuído a quem rolou. Sorteio com pesos e retirada opcional de resultados.",
-    "Votação com opções, duração e um voto por pessoa. Agenda com responsáveis, etapas e tempo compartilhado.",
-    "Chat mostra o horário ao lado do nome, acima do texto da mensagem.",
-  ]}],
+  sections: [
+    {
+      title: "Somente no vio-test",
+      items: [
+        "Votação, Dados, Sorteador e Tarefas + agenda: uso individual ou compartilhado, edição por permissão e modo compacto.",
+        "Dados com comandos, guia em português e mini-histórico atribuído a quem rolou. Sorteio com pesos e retirada opcional de resultados.",
+        "Votação com opções, duração e um voto por pessoa. Agenda com responsáveis, etapas e tempo compartilhado.",
+        "Chat mostra o horário ao lado do nome, acima do texto da mensagem.",
+      ],
+    },
+  ],
 };
 const securityPatchRelease: Release = {
   version: "2.7.2",
@@ -443,6 +461,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  securityHotfixRelease,
   stableRelease,
   interfacePreviewRelease,
   sessionWidgetsRelease,
