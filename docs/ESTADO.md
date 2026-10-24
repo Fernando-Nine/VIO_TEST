@@ -7,12 +7,12 @@ Atualizado: 2026-10-24.
 
 |          | Versão | Repositório                   | Endereço                       |
 | -------- | ------ | ----------------------------- | ------------------------------ |
-| Produção | 2.7.2  | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Produção | 2.8.0  | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
 | Prévia   | 2.8.0  | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
-A prévia tem, além da produção: chat, papéis na sala (criador/admin/convidado),
-notificações, mesclar espaços na tira e os widgets Votação, Dados, Sorteador e Tarefas.
+Produção e prévia têm o mesmo código desde a 2.8.0 (VIO PR #2, árvore de b435774).
+Tags `v2.7.2` (c249a34) e `v2.8.0` (8993afb) no VIO ainda pendentes.
 
 ## Validado pelo usuário
 
