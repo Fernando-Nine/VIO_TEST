@@ -1804,9 +1804,6 @@
 .module-options button { display:flex; justify-content:space-between; gap:8px; min-width:0; text-align:left; padding:8px; min-height:36px; }
 .module-options button > span { overflow-wrap:anywhere; min-width:0; }
 .module-options button[aria-pressed="true"] { background:#343481; border-color:#a5acff; }
-.module-roll { display:flex; gap:6px; margin:0; }
-.module-roll input { flex:1; min-width:0; width:0; padding:7px 9px; font-family:var(--mono); font-size:13px; }
-.module-roll button { min-height:36px; padding:7px 12px; }
 .module-history { list-style:none; margin:0; padding:0; display:grid; gap:7px; }
 .module-history li { padding:7px 0; border-bottom:1px solid #ffffff14; min-width:0; }
 .module-history li > div { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; }
@@ -2140,16 +2137,6 @@
   font-size: 1em;
   align-items: center;
 }
-.module-roll {
-  gap: 0.45em;
-}
-.module-widget .module-roll input {
-  margin: 0;
-  min-height: 2.6em;
-  padding: 0.55em 0.7em;
-  font-size: 1em;
-}
-.module-roll button,
 .module-widget.kind-random .module-content > .primary {
   min-height: 2.6em;
   padding: 0.5em 1.1em;
