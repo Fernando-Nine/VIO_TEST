@@ -90,6 +90,8 @@ export class Controller {
   private intent?: { name: string; code?: string; color?: string };
   private roomEntered = false;
   roomColor = defaultColor;
+  /** The color chosen last, kept on this device and applied when entering a room. */
+  savedColor = "";
   private subscriptions = new Map<
     string,
     { nonce: string; id?: string; epoch?: string }
@@ -192,6 +194,8 @@ export class Controller {
         this.peopleHidden = p.peopleHidden === true;
         this.fineAudio = p.fineAudio === true && this.playback.supported;
         this.previewsEnabled = p.previewsEnabled === true;
+        this.savedColor =
+          (typeof p.color === "string" && normalizeColor(p.color)) || "";
         if (this.output.supported && typeof p.outputDevice === "string")
           void this.output.restore(p.outputDevice).then(() => this.bump());
         if (Number.isFinite(p.manualGain))
@@ -255,6 +259,7 @@ export class Controller {
             peopleHidden: this.peopleHidden,
             fineAudio: this.fineAudio,
             previewsEnabled: this.previewsEnabled,
+            color: this.savedColor || undefined,
             outputDevice: this.output.pendingDeviceId || this.output.deviceId,
             manualGain: this.captures.manualGain,
             threshold: this.captures.threshold,
@@ -302,7 +307,22 @@ export class Controller {
     const result = await this.request<{ color: string }>("color", { color });
     this.roomColor = result.color;
     if (this.intent) this.intent.color = result.color;
+    this.savedColor = result.color;
+    this.savePreferences();
     this.bump();
+  }
+  /** Brings the saved color into a room just entered; a failure keeps the room's. */
+  private async applySavedColor() {
+    const color = this.savedColor;
+    if (!color || color === this.roomColor) return;
+    try {
+      const result = await this.request<{ color: string }>("color", { color });
+      this.roomColor = result.color;
+      if (this.intent) this.intent.color = result.color;
+      this.bump();
+    } catch {
+      /* The rate limit or a dropped socket only delays it to the next join. */
+    }
   }
   async initialize() {
     if (this.config) return;
@@ -674,6 +694,7 @@ export class Controller {
       this.view.error = "";
       this.view.notice = "";
       this.receiveSnapshot(result.snapshot, false);
+      void this.applySavedColor();
       if (!this.roomEntered) {
         this.roomEntered = true;
         void this.playCue("room-enter");

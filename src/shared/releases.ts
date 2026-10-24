@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.4";
+export const version = "2.9.0-rc.5";
 export const currentRelease: Release = {
   version,
   date: "2026-10-24",
@@ -20,6 +20,7 @@ export const currentRelease: Release = {
         "Votação com linha do prazo, rostos de quem votou (nunca em quê) e resultado em barras, pizza ou só a vencedora, à escolha de cada pessoa. Rótulos longos não quebram mais no meio da palavra.",
         "Dados com teclado de ícones (d4 a d20), partes de cada rolagem entre colchetes, crítico no 20 natural do d20 e, no foco, o dado rolado em destaque com o histórico ao lado.",
         "Sorteador em roleta: gira e para na opção sorteada para todos, com cores por opção e paletas (Índigo, Pôr do sol, Floresta, Doce e Aleatória em harmonia) compartilhadas pela sala.",
+        "Sua cor fica salva neste navegador e é aplicada ao entrar em qualquer sala.",
       ],
     },
   ],
