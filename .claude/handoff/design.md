@@ -4,31 +4,31 @@ Atualizado: 2026-10-24
 
 ## Agora
 
-Rascunhos da 1ª leva de widgets entregues; aguardando escolha do usuário.
+1ª leva de widgets aprovada e especificada. Nada em andamento.
 Canvas: https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ ("Widgets VIO — leva 1").
 
 ## Feito recentemente
 
-- Canvas com 2 alternativas por widget, cada uma em pequeno (420×240), foco (960×640)
-  e celular, no visual real da prévia (screenshot de `npm run dev`):
-  - Cronômetro A · Anel / B · Ponteiro — temporizador com atalhos 5/10/25, cronômetro
-    com voltas, alarme tocando com "Desligar".
-  - Votação A · Barras / B · Pizza — aberta (votos ocultos, quantos votaram, prazo),
-    resultado com gráfico e resultado com gráfico oculto.
-  - Dados A · Ícones (d4…d20 inserem no comando) / B · Mesa (total em destaque,
-    sugestões, histórico em faixa) — vazio e resultado com crítico.
-  - Sorteador A · Roleta / B · Pizza de pesos — gráfico visível e oculto, lista com pesos.
+- Escolhas do usuário viraram specs em `docs/design/` e issues `frontend`:
+  - Cronômetro A · Anel — #75.
+  - Votação A + prazo e rostos da B; resultado em barras, pizza ou sem gráfico (tela da B);
+    mais de 6 votantes = 5 rostos + `+N` — #76. Prancha "Votação · escolhida (A + B)".
+  - Dados A, mantendo o ícone ? do guia de sintaxe — #77.
+  - Sorteador A com cores por opção e paletas harmônicas (não só azul) — #78
+    (`frontend` + `backend`: `color`/`palette` no módulo). Prancha "Sorteador · escolhido".
 
 ## Decisões
 
-- Vencedor/crítico em destaque discreto: azul claro #a6a9ff, sem cor nova.
-- Gráfico liga/desliga por botão no cabeçalho do widget (ícone de pizza/barras).
+- Vencedor/crítico em destaque discreto: `#A6A9FF`, sem cor nova.
 - Animações ≤ 800 ms e desligadas em `prefers-reduced-motion`.
+- Proposta: seletor de gráfico da Votação é preferência pessoal; cores do Sorteador são
+  estado da sala.
 
 ## Pendente / bloqueios
 
-- Escolha do usuário (A/B por widget) e ajustes pedidos nos comentários do canvas.
+- Copiloto/usuário confirmar se o gráfico da Votação é pessoal ou da sala (#76).
+- Comentários do usuário no canvas, se houver.
 
 ## Próximo passo
 
-Com a escolha, escrever `docs/design/<widget>.md` e abrir issue `frontend` por widget.
+Aguardar a próxima leva (Tarefas, landing ou página de download) pelo copiloto.
