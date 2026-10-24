@@ -36,6 +36,10 @@ Pergunte ao usuário **apenas** quando a decisão puder prejudicar usuários em 
 (privacidade, segurança, perda de dados, custo) ou mudar a visão do produto.
 Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão exigir.
 
+**Economia de créditos:** rode só os testes ligados ao que mudou (a CI roda o resto) e não
+releia arquivos que não mudaram desde a última leitura. Suíte completa, BrowserLab e
+screenshots só quando a mudança tocar aquela parte.
+
 ## Ambientes e fluxo
 
 |          | Repositório            | Render (deploy automático da `main`) |
