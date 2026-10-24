@@ -1,43 +1,45 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-23
+Atualizado: 2026-10-24
 
 ## Agora
 
-Bloco #52–#55 entregue (PRs #59, #60, #61, #53 na PR seguinte). Nada em andamento.
+Nada em andamento. Visual novo dos 4 widgets na prévia como 2.9.0-rc.1…rc.4.
 
 ## Feito recentemente
 
-- #52: `.widget-body` é contêiner de tamanho (`container: widget-body / size`); widgets
-  usam `cqw/cqh` e `em` a partir de um `font-size` por widget. Cronômetro curto põe o
-  relógio ao lado dos controles. Cabeçalho ≤300 px: uma linha, ferramentas no botão ⋯
-  (`.widget-more`), que abre o mesmo menu do botão direito.
-- #54: `canvas/InlineText.tsx` (clique edita, blur/Enter salva, Esc cancela). Placar e
-  Notas sem janela; Sorteador/Tarefas editam dentro do widget (`ModuleFields`), cada campo
-  salva ao sair (fila em `saveConfig`, revisão vinda da resposta do servidor). Sem setinhas
-  em `input[type=number]`.
-- #55: `useEndAlarm` em `TimerBlock.tsx`: toca a cada 1,2 s até "Desligar alarme" ou 1 min.
-- #53: Votação configurada na própria face antes de abrir; votos ocultos até o fim
-  (contrato do Backend em #53: `votes` só o próprio, `voters` total).
+- #75 (PR #88): Cronômetro em anel (`TimerBlock.tsx` + `canvas/timer.css`). Voltas são
+  estado da sala: `laps` no bloco timer (máx. 20) e operação `lap`.
+- #76 (PR #89): Votação em `PollFace.tsx` + `poll.css`. Servidor manda `voterIds`
+  (quem votou, máx. 100) enquanto aberta. Gráfico (barras/pizza/sem) é preferência
+  pessoal em localStorage `vio:poll-chart`.
+- #77 (PR #90): Dados em `DiceFace.tsx` + `dice.css`; funções puras em `dice-parts.ts`.
+- #78 (PR #91): Sorteador em `RaffleFace.tsx` + `raffle.css`; paletas em
+  `shared/palettes.ts`. Opção ganhou `color`, módulo ganhou `palette`; `moduleResets`
+  ignora cor/paleta (não zera o sorteio). Roleta visível: localStorage `vio:raffle-wheel`.
 
 ## Decisões
 
-- Ação secundária vai para o menu do cabeçalho/⋯, nunca para o corpo.
-- Toda ferramenta do cabeçalho também existe no menu (o ⋯ esconde as ferramentas).
-- Esperar a CI verde antes do squash merge; `npm run build` local pega erro de CSS
-  (lightningcss) que o typecheck não pega.
+- Cada widget novo tem componente e CSS próprios, importados no componente (chunk lazy,
+  carrega depois do `workspace.css`). Não rodar prettier no `workspace.css` (não está
+  formatado; reformatar gera diff enorme).
+- Ferramentas do cabeçalho sempre também no menu ⋯ (gráfico, paletas, roleta, histórico).
+- Input global tem `min-height: 50px` e margens: seletor do widget precisa vencer
+  `(0,2,1)`.
 
 ## Pendente / bloqueios
 
-- Tira do celular (~190×150): Votação aberta com rótulos longos quebra a palavra e pode
-  rolar um pouco; avaliar com o usuário.
+- Aceite do usuário na prévia (visual e giro da roleta em aparelho real).
+- Limite de frequência compartilha rolar/sortear: rolar logo após sortear mostra
+  "Espere um instante" (comportamento anterior; avaliar com Backend se incomodar).
 
 ## Como testar a tela
 
-Script de screenshots: semeia `vio:canvas:v2` no localStorage (preset `strip-left`,
-foco + 3 na tira) e entra numa sala nova com Playwright global
-(`/opt/node-tools/node_modules/playwright`). Viewports 1366×768 e 390×844.
+Playwright global (`/opt/node-tools/node_modules/playwright`), sala nova pela landing,
+widget pelo catálogo; `Adicionar à sala` para módulos; outras sessões entram com
+`?sala=` e adicionam pela aba Sala. Reinicie `npm run dev` ao mudar `src/shared` ou
+servidor (não recarrega sozinho). Viewports 1366×768 e 390×844.
 
 ## Próximo passo
 
-Pedir ao usuário o retorno da prévia e abrir issues do que ele apontar.
+Pedir ao usuário o retorno da 2.9.0-rc.4 e abrir issues do que ele apontar.
