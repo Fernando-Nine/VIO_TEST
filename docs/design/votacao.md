@@ -32,9 +32,8 @@ O cabeçalho ganha um seletor de 3 ícones: **Barras · Pizza · Sem gráfico**.
   "3 de 6 votos · 50%" em `#A6A9FF`, e as demais em uma linha (ou coluna no celular).
 - Rodapé: "6 votos · encerrada" e `Nova votação`.
 
-**Decisão a confirmar com o copiloto**: o seletor de gráfico é **preferência pessoal**
-(só muda a apresentação para quem clicou), não estado da sala. Se o usuário preferir
-que valha para todos, vira campo do estado do widget no servidor.
+**Decisão (usuário, 2026-10-24)**: o seletor de gráfico é **preferência pessoal** — cada
+pessoa escolhe como vê o resultado; não é estado da sala nem passa pelo servidor.
 
 ## Tamanhos
 

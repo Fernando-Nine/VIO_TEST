@@ -21,12 +21,11 @@ Canvas: https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ ("Widgets VIO — leva
 
 - Vencedor/crítico em destaque discreto: `#A6A9FF`, sem cor nova.
 - Animações ≤ 800 ms e desligadas em `prefers-reduced-motion`.
-- Proposta: seletor de gráfico da Votação é preferência pessoal; cores do Sorteador são
-  estado da sala.
+- Seletor de gráfico da Votação é preferência pessoal (decidido pelo usuário); cores do
+  Sorteador são estado da sala.
 
 ## Pendente / bloqueios
 
-- Copiloto/usuário confirmar se o gráfico da Votação é pessoal ou da sala (#76).
 - Comentários do usuário no canvas, se houver.
 
 ## Próximo passo
