@@ -45,7 +45,11 @@ Tags `v2.7.2` (c249a34) e `v2.8.0` (8993afb) no VIO ainda pendentes.
 
 ## Em aberto (aguardam o usuário)
 
-- E10: grid personalizado (até 6×6) — proposta em `docs/arquivo/RODADA-E.md`.
+- E10: grid personalizado — usuário prefere no máximo 3 linhas × 4 colunas no computador;
+  celular a definir. Em discussão com o copiloto antes de ir ao Design.
+- Pauta de Design a discutir: Pessoas na sala, Ajustes, aviso de novas transmissões, cards
+  de Chamada/Compartilhar sem cobrir a tela, padrão de cores/paletas e permissões entre
+  widgets, e a tela de compartilhar widget.
 - Widget Personalizado/Comunidade: fora de escopo até haver isolamento de código.
 
 ## Referências
