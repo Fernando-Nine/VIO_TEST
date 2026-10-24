@@ -2,13 +2,14 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.9.0-rc.2] - 2026-10-24
+## [2.9.0-rc.3] - 2026-10-24
 
 Prévia · Visual novo dos widgets
 
 ### Somente no vio-test
 - Cronômetro em anel: o anel mostra o tempo que resta, atalhos de 5, 10 e 25 minutos, voltas compartilhadas com a melhor destacada e alarme com Desligar para a sala.
 - Votação com linha do prazo, rostos de quem votou (nunca em quê) e resultado em barras, pizza ou só a vencedora, à escolha de cada pessoa. Rótulos longos não quebram mais no meio da palavra.
+- Dados com teclado de ícones (d4 a d20), partes de cada rolagem entre colchetes, crítico no 20 natural do d20 e, no foco, o dado rolado em destaque com o histórico ao lado.
 
 ## [2.8.0] - 2026-10-24
 
