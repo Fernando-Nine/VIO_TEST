@@ -2146,6 +2146,8 @@ test("votação esconde votos por opção até encerrar, por fechamento ou prazo
       const hidden = snap.widgets!.find((w) => w.id === id)!;
       assert.deepEqual(hidden.moduleState?.votes, {});
       assert.equal(hidden.moduleState?.voters, 1);
+      // Who voted is visible to everyone while open; what they chose is not.
+      assert.deepEqual(hidden.moduleState?.voterIds, [sessions[1].id]);
       await new Promise((r) => setTimeout(r, 100));
       assert.ok(seen.length >= 2);
       assert.ok(seen.every((w) => !w.moduleState?.votes?.[sessions[1].id]));

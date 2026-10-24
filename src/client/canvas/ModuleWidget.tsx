@@ -7,14 +7,15 @@ import {
   ArrowDown,
   X,
   Plus,
-  Trophy,
-  Check,
   RotateCcw,
   Palette,
   History,
+  Square,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { InlineText } from "./InlineText";
+import { DiceFace } from "./DiceFace";
+import { PollFace, chartMenu, useChart } from "./PollFace";
 import { RaffleFace, useWheel, wheelMenu, withPalette } from "./RaffleFace";
 import {
   colorAt,
@@ -144,8 +145,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     [help, setHelp] = useState(false),
     [history, setHistory] = useState(false),
     [allTasks, setAllTasks] = useState(false);
-  // Empty on purpose: the configured command shows as the suggestion.
-  const [expression, setExpression] = useState("");
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -166,8 +165,11 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       ? pollStart + config.duration * 1000
       : null;
   const pollClosed = config?.kind === "poll" && !!state.closed;
-  // Re-renders the header menu when the personal wheel choice changes.
+  // Re-render the header menu when a personal view choice changes.
+  useChart();
   useWheel();
+  const pollRunning =
+    pollStart != null && !pollClosed && (pollEnd == null || now < pollEnd);
   const [revealAt, setRevealAt] = useState(0);
   const seen = useRef({ start: pollStart, closed: pollClosed });
   useEffect(() => {
@@ -218,6 +220,15 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                   icon: HelpCircle,
                   run: () => setHelp(true),
                 },
+                ...(state.history?.length
+                  ? [
+                      {
+                        label: "Histórico completo",
+                        icon: History,
+                        run: () => setHistory(true),
+                      },
+                    ]
+                  : []),
               ]
             : []),
           ...(config.kind === "random"
@@ -254,6 +265,34 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                   icon: Settings2,
                   run: () => setEditing(!editing),
                 },
+              ]
+            : []),
+          ...(config.kind === "poll" && state.startedAt != null && !pollRunning
+            ? chartMenu()
+            : []),
+          ...(controllable && config.kind === "poll" && state.startedAt != null
+            ? [
+                pollRunning
+                  ? {
+                      label: "Encerrar votação",
+                      icon: Square,
+                      run: () =>
+                        void act({
+                          kind: "poll-control",
+                          action: "close",
+                          revision: value.revision,
+                        }),
+                    }
+                  : {
+                      label: "Nova votação",
+                      icon: RotateCcw,
+                      run: () =>
+                        void act({
+                          kind: "poll-control",
+                          action: "reset",
+                          revision: value.revision,
+                        }),
+                    },
               ]
             : []),
           ...(controllable && config.kind !== "poll"
@@ -492,24 +531,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     state.startedAt != null &&
     !state.closed &&
     (!config.duration || now < state.startedAt + config.duration * 1000);
-  const pollCounts =
-    config.kind === "poll"
-      ? config.options.map(
-          (option) =>
-            Object.values(state.votes || {}).filter((v) => v === option.id)
-              .length,
-        )
-      : [];
-  const topVotes = Math.max(0, ...pollCounts);
-  // The server sends per-option votes only once the poll ends.
-  const revealed =
-    config.kind === "poll" && state.startedAt != null && !pollOpen;
   const pollSetup = config.kind === "poll" && state.startedAt == null;
-  const voters = state.voters ?? Object.keys(state.votes || {}).length;
-  const winners =
-    revealed && config.kind === "poll" && topVotes
-      ? config.options.filter((_, i) => pollCounts[i] === topVotes)
-      : [];
   return (
     <div
       className={`module-widget kind-${config.kind} ${compact ? "is-compact" : ""}`}
@@ -541,105 +563,28 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       ) : (
         <div className="module-content">
           {config.kind === "poll" && (
-            <>
-              <strong className="module-question">{config.question}</strong>
-              <small>
-                {state.startedAt == null
-                  ? "Aguardando abertura"
-                  : pollOpen
-                    ? `${config.duration ? `Restam ${time(config.duration - (now - state.startedAt) / 1000)}` : "Votação aberta"} · ${voters} ${voters === 1 ? "pessoa votou" : "pessoas votaram"}`
-                    : `${
-                        winners.length === 1
-                          ? `Vencedor: ${winners[0].label}`
-                          : winners.length
-                            ? "Empate"
-                            : "Votação encerrada"
-                      } · ${voters} ${voters === 1 ? "voto" : "votos"}`}
-              </small>
-              <div
-                className={`module-options ${revealAt ? "is-revealing" : ""}`}
-              >
-                {config.options.map((option, i) => {
-                  const mine = state.votes?.[engine.view.id] === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      className={`secondary ${winners.includes(option) ? "is-winner" : ""}`}
-                      aria-pressed={mine}
-                      disabled={!pollOpen || busy}
-                      onClick={() =>
-                        void act({ kind: "vote", optionId: option.id })
-                      }
-                    >
-                      <span>{option.label}</span>
-                      {revealed ? (
-                        <b>
-                          {winners.includes(option) && (
-                            <Trophy size={13} aria-label="Vencedor" />
-                          )}
-                          {pollCounts[i]}
-                        </b>
-                      ) : (
-                        mine && <Check size={14} aria-label="Seu voto" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              {controllable && (state.startedAt != null || !editable) && (
-                <button
-                  className="text-button"
-                  disabled={busy}
-                  onClick={() =>
-                    void act({
-                      kind: "poll-control",
-                      action:
-                        state.startedAt == null
-                          ? "start"
-                          : pollOpen
-                            ? "close"
-                            : "reset",
-                      revision: value.revision,
-                    })
-                  }
-                >
-                  {state.startedAt == null
-                    ? "Abrir votação"
-                    : pollOpen
-                      ? "Encerrar votação"
-                      : "Nova votação"}
-                </button>
-              )}
-            </>
+            <PollFace
+              config={config}
+              state={state}
+              now={now}
+              viewerId={engine.view.id}
+              participants={engine.view.snapshot?.participants || []}
+              open={pollOpen}
+              busy={busy}
+              controllable={controllable}
+              revision={value.revision}
+              revealing={!!revealAt}
+              act={(operation) => void act(operation)}
+            />
           )}
           {config.kind === "dice" && (
-            <>
-              <form
-                className="module-roll"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void act({
-                    kind: "roll",
-                    expression: expression.trim() || config.expression,
-                  });
-                }}
-              >
-                <input
-                  aria-label="Comando dos dados"
-                  placeholder={config.expression}
-                  value={expression}
-                  maxLength={200}
-                  readOnly={busy}
-                  onChange={(e) => setExpression(e.target.value)}
-                />
-                <button className="primary" disabled={busy}>
-                  Rolar
-                </button>
-              </form>
-              {!!state.history?.length && (
-                <Results entries={state.history.slice(-3)} />
-              )}
-            </>
+            <DiceFace
+              history={state.history || []}
+              placeholder={config.expression}
+              busy={busy}
+              participants={engine.view.snapshot?.participants || []}
+              roll={(expression) => void act({ kind: "roll", expression })}
+            />
           )}
           {config.kind === "random" && (
             <RaffleFace
@@ -708,15 +653,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                 </button>
               )}
             </>
-          )}
-          {config.kind === "dice" && (state.history?.length || 0) > 1 && (
-            <button
-              // Up to three entries fit inline; short spaces show only one.
-              className={`text-button ${(state.history?.length || 0) <= 3 ? "history-short" : ""}`}
-              onClick={() => setHistory(true)}
-            >
-              Histórico ({state.history!.length})
-            </button>
           )}
         </div>
       )}

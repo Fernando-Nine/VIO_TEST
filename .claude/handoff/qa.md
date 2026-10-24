@@ -1,14 +1,16 @@
 # QA/Release — handoff
 
-Atualizado: 2026-10-23
+Atualizado: 2026-10-24
 
 ## Agora
 
-Sem tarefa em andamento. Milestones: 2.8.0 (#19, #20, #30, #52–#55), 2.9.0
-(#21–#25), App Windows (#26).
+Sem tarefa em andamento. Próximo: CI do instalador Windows com a Mídia (#26).
 
 ## Feito recentemente
 
+- Release 2.8.0: VIO_TEST PR #82 (b435774, inclui entrada 2.7.2 no histórico); produção
+  publicada pelo copiloto (VIO PR #2, 8993afb). Esta sessão não tem acesso ao VIO.
+- CI roda `npm audit --omit=dev --audit-level=critical`.
 - Prévia 2.8.0-rc.3 (PRs #27–#51: interface enxuta, sons, correções de mídia/memória).
 - CI no GitHub Actions (#6, PR #18): `.github/workflows/ci.yml` em PR e push na `main`,
   Node 24 + cache npm → `npm ci`, typecheck, test, build e `CHANGELOG.md` sem diff.
@@ -26,7 +28,9 @@ Sem tarefa em andamento. Milestones: 2.8.0 (#19, #20, #30, #52–#55), 2.9.0
 
 ## Pendente / bloqueios
 
-- #19 proxy-addr crítico (com backend) → depois incluir `audit:production` na CI.
+- Tags no VIO: `v2.7.2` → c249a34 e `v2.8.0` → 8993afb (push de tag recusado na rede
+  do copiloto; esta sessão sem acesso ao VIO). Usuário pode criar em Releases no GitHub.
+- #83 body-parser e zod (altas, Backend) → depois subir a CI para `--audit-level=high`.
 - #20 Prettier: 39 arquivos fora do padrão → PR só de formatação + `format:check` na CI.
 - #21 conferência automática da prévia após deploy (`scripts/check-deployment.mjs`).
 - #22 BrowserLab headless na CI (com mídia).
