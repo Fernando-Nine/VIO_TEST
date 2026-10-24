@@ -1,6 +1,6 @@
 {
   "name": "vio",
-  "version": "2.8.0-rc.3",
+  "version": "2.9.0-rc.1",
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
@@ -28,7 +28,7 @@
     "react-dom": "19.3.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
