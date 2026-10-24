@@ -2,6 +2,13 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
+## [2.8.1] - 2026-10-24
+
+Correções de segurança
+
+### Segurança
+- Atualização de duas bibliotecas do servidor: uma permitia travar o servidor com envios malformados e outra podia esgotar a memória com envios muito grandes.
+
 ## [2.8.0] - 2026-10-24
 
 Chat, papéis na sala e novos widgets
