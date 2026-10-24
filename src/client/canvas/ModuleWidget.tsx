@@ -8,10 +8,12 @@ import {
   X,
   Plus,
   RotateCcw,
+  History,
   Square,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { InlineText } from "./InlineText";
+import { DiceFace } from "./DiceFace";
 import { PollFace, chartMenu, useChart } from "./PollFace";
 import { clock, parseClock } from "./TimerBlock";
 import { freshKey } from "../id";
@@ -134,8 +136,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     [help, setHelp] = useState(false),
     [history, setHistory] = useState(false),
     [allTasks, setAllTasks] = useState(false);
-  // Empty on purpose: the configured command shows as the suggestion.
-  const [expression, setExpression] = useState("");
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -210,6 +210,15 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                   icon: HelpCircle,
                   run: () => setHelp(true),
                 },
+                ...(state.history?.length
+                  ? [
+                      {
+                        label: "Histórico completo",
+                        icon: History,
+                        run: () => setHistory(true),
+                      },
+                    ]
+                  : []),
               ]
             : []),
           ...(editable && config.kind !== "dice" && config.kind !== "poll"
@@ -532,33 +541,13 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
             />
           )}
           {config.kind === "dice" && (
-            <>
-              <form
-                className="module-roll"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void act({
-                    kind: "roll",
-                    expression: expression.trim() || config.expression,
-                  });
-                }}
-              >
-                <input
-                  aria-label="Comando dos dados"
-                  placeholder={config.expression}
-                  value={expression}
-                  maxLength={200}
-                  readOnly={busy}
-                  onChange={(e) => setExpression(e.target.value)}
-                />
-                <button className="primary" disabled={busy}>
-                  Rolar
-                </button>
-              </form>
-              {!!state.history?.length && (
-                <Results entries={state.history.slice(-3)} />
-              )}
-            </>
+            <DiceFace
+              history={state.history || []}
+              placeholder={config.expression}
+              busy={busy}
+              participants={engine.view.snapshot?.participants || []}
+              roll={(expression) => void act({ kind: "roll", expression })}
+            />
           )}
           {config.kind === "random" && (
             <>
@@ -641,16 +630,15 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
               )}
             </>
           )}
-          {(config.kind === "dice" || config.kind === "random") &&
-            (state.history?.length || 0) > 1 && (
-              <button
-                // Up to three entries fit inline; short spaces show only one.
-                className={`text-button ${(state.history?.length || 0) <= 3 ? "history-short" : ""}`}
-                onClick={() => setHistory(true)}
-              >
-                Histórico ({state.history!.length})
-              </button>
-            )}
+          {config.kind === "random" && (state.history?.length || 0) > 1 && (
+            <button
+              // Up to three entries fit inline; short spaces show only one.
+              className={`text-button ${(state.history?.length || 0) <= 3 ? "history-short" : ""}`}
+              onClick={() => setHistory(true)}
+            >
+              Histórico ({state.history!.length})
+            </button>
+          )}
         </div>
       )}
       {error && (
