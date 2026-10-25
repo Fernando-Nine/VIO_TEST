@@ -1,10 +1,17 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-24
+Atualizado: 2026-10-25
 
 ## Agora
 
-Nada em andamento. Visual novo dos widgets, cor salva e limites na prévia (2.9.0-rc.6).
+Nada em andamento. Prévia na 2.9.0-rc.6 (widgets novos, cor salva, limites).
+
+Fila (copiloto, 2026-10-25), nesta ordem:
+1. #104 widgets pessoais ou da sala, sem compartilhar — **esperar o contrato do Backend
+   na issue** antes da interface; fazer junto com a #111.
+2. #111 padrão dos widgets, #107 Pessoas, #108 Ajustes, #109 Transmissões, #110
+   Chamada/Compartilhar. Specs em `docs/design/`. Usar as skills `vio-design-system`
+   (ao implementar) e `vio-design-review` (antes de entregar).
 
 ## Feito recentemente
 
@@ -44,4 +51,4 @@ servidor (não recarrega sozinho). Viewports 1366×768 e 390×844.
 
 ## Próximo passo
 
-Pedir ao usuário o retorno da 2.9.0-rc.6 e abrir issues do que ele apontar.
+Conferir se o contrato da #104 saiu; se não, começar pela #111 (sem tocar no modelo pessoal/sala).
