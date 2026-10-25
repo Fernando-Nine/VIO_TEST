@@ -126,6 +126,8 @@ export class Controller {
   remoteMute = false;
   screenVolume = 0.8;
   volumes = new Map<string, number>();
+  /** Volume to restore when "Silenciar para mim" is undone. */
+  silencedVolumes = new Map<string, number>();
   private cues = new SoundCues(this.output);
   private snapshotReceivedAt = 0;
   private icePending?: Promise<IceConfig>;

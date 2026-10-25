@@ -2789,6 +2789,13 @@ button.inline-text.is-empty {
 .person-state .is-away {
   color: #7d8099;
 }
+.person-state .is-blocked {
+  box-sizing: content-box;
+  padding: 2px;
+  border-radius: 6px;
+  background: #ff4d6324;
+  color: var(--danger);
+}
 .sheet-people .person-row .person-more {
   position: static;
   flex-shrink: 0;
