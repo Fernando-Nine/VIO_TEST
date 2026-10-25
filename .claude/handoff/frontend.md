@@ -4,51 +4,35 @@ Atualizado: 2026-10-25
 
 ## Agora
 
-Nada em andamento. Prévia na 2.9.0-rc.6 (widgets novos, cor salva, limites).
-
-Fila (copiloto, 2026-10-25), nesta ordem:
-1. #104 widgets pessoais ou da sala, sem compartilhar — **esperar o contrato do Backend
-   na issue** antes da interface; fazer junto com a #111.
-2. #111 padrão dos widgets, #107 Pessoas, #108 Ajustes, #109 Transmissões, #110
-   Chamada/Compartilhar. Specs em `docs/design/`. Usar as skills `vio-design-system`
-   (ao implementar) e `vio-design-review` (antes de entregar).
+#107 Pessoas pronta no branch `feat/107-people-panel` (sem PR): painel lateral não modal
+(`Dialog modal={false}`, classe `sheet-people`), abas Pessoas · N / Permissões, linhas de
+48 px, menu com volume (`ContextMenu` ganhou `header`), folha no celular. Falta só o
+"Silenciar para mim" (usuário vai confirmar via copiloto). #109 Transmissões não começou:
+o comportamento da etiqueta também espera resposta.
 
 ## Feito recentemente
 
-- #75 (PR #88): Cronômetro em anel (`TimerBlock.tsx` + `canvas/timer.css`). Voltas são
-  estado da sala: `laps` no bloco timer (máx. 20) e operação `lap`.
-- #76 (PR #89): Votação em `PollFace.tsx` + `poll.css`. Servidor manda `voterIds`
-  (quem votou, máx. 100) enquanto aberta. Gráfico (barras/pizza/sem) é preferência
-  pessoal em localStorage `vio:poll-chart`.
-- #77 (PR #90): Dados em `DiceFace.tsx` + `dice.css`; funções puras em `dice-parts.ts`.
-- #78 (PR #91): Sorteador em `RaffleFace.tsx` + `raffle.css`; paletas em
-  `shared/palettes.ts`. Opção ganhou `color`, módulo ganhou `palette`; `moduleResets`
-  ignora cor/paleta (não zera o sorteio). Roleta visível: localStorage `vio:raffle-wheel`.
-- #93 (PR #97): cor pessoal salva em `vio:preferences.color`, aplicada após cada `join`.
-- #92 (PR #98): `Limits` virou balde com reposição contínua; widgets com rajada
-  (structure 120/min + 40, interact 240 + 60, operate 300 + 60); rolar/sortear 300 ms
-  por widget. Na prévia: 2.9.0-rc.6.
+- #104 + #111 (PR #114): sem compartilhar; "Para mim / Para a sala" no catálogo só para
+  quem pode (`adminCreate`/`guestCreate`). Selo `ControlBadge` no `WidgetFrame`
+  (Todos/Admins/Só você), "Quem pode controlar" via `widget-permission allGuests`, menu
+  em ordem única com `separated`, X só remove do layout. Sorteador: "Cor e paleta".
+- #108 (PR #116): Ajustes em lista lateral (`sheet-settings`), Sala só para gestores,
+  medidor de sensibilidade (`capture.inputDb`, aviso à Mídia na PR).
+- #110 (PR #117): doca de 56 px no rodapé, abas no celular (Microfone, Áudio, Tela, Mais),
+  pílula em tela cheia. `underDock`/`dockLift` só em tela cheia. Rodapé antigo some na sala.
+- Prévia: 2.9.0-rc.9.
 
 ## Decisões
 
-- Cada widget novo tem componente e CSS próprios, importados no componente (chunk lazy,
-  carrega depois do `workspace.css`). Não rodar prettier no `workspace.css` (não está
-  formatado; reformatar gera diff enorme).
-- Ferramentas do cabeçalho sempre também no menu ⋯ (gráfico, paletas, roleta, histórico).
-- Input global tem `min-height: 50px` e margens: seletor do widget precisa vencer
-  `(0,2,1)`.
+- Cada PR sobe um `-rc.N` e regenera o `CHANGELOG.md` com `npm run build` (a CI confere).
+- `workspace.css` segue sem prettier; blocos novos vão no fim.
 
 ## Pendente / bloqueios
 
-- Aceite do usuário na prévia (visual e giro da roleta em aparelho real).
-
-## Como testar a tela
-
-Playwright global (`/opt/node-tools/node_modules/playwright`), sala nova pela landing,
-widget pelo catálogo; `Adicionar à sala` para módulos; outras sessões entram com
-`?sala=` e adicionam pela aba Sala. Reinicie `npm run dev` ao mudar `src/shared` ou
-servidor (não recarrega sozinho). Viewports 1366×768 e 390×844.
+- #115 cor e paleta no Cronômetro, Votação e Personalizado (precisa campo no esquema).
+- #118 (Mídia) volume por pessoa até 200%; o menu de Pessoas vai até 100%.
+- Resposta do usuário: "Silenciar para mim" (#107) e etiqueta de transmissões (#109).
 
 ## Próximo passo
 
-Conferir se o contrato da #104 saiu; se não, começar pela #111 (sem tocar no modelo pessoal/sala).
+Com a resposta, terminar #107 (rebase, rc.10, PR) e fazer #109; depois #115.
