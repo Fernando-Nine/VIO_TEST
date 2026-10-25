@@ -34,10 +34,12 @@ import {
   MonitorUp,
   Plus,
   SlidersHorizontal,
+  User,
+  Users,
   X,
 } from "lucide-react";
 import { Notifications } from "../components/Notifications";
-import { canManageRoom } from "../../shared/permissions";
+import { canManageRoom, roleAllows, roomRole } from "../../shared/permissions";
 import type { SharedWidget } from "../../shared/widgets";
 import { contentKind } from "../../shared/widgets";
 import { Dialog } from "../components/Dialog";
@@ -63,7 +65,8 @@ import { WidgetFrame } from "./WidgetFrame";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
 import { createModule } from "./ModuleWidget";
-import { isModule, type ModuleKind } from "../../shared/room-modules";
+import { createContent } from "./CustomWidget";
+import { isModule } from "../../shared/room-modules";
 
 // dnd-kit starts a mouse drag on the handle at pointerdown, so a plain click
 // (or double click to rename) would already detach the widget. Require a
@@ -258,7 +261,7 @@ export function RoomCanvas(props: Props) {
   const [catalog, setCatalog] = useState<string | null>(null);
   const [catalogTab, setCatalogTab] = useState("native");
   const [communityNotice, setCommunityNotice] = useState(false);
-  const [moduleChoice, setModuleChoice] = useState<ModuleKind | null>(null);
+  const [scopeChoice, setScopeChoice] = useState<string | null>(null);
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -462,13 +465,6 @@ export function RoomCanvas(props: Props) {
       ...latest.slots.flatMap((s) => (s.offer ? [s.offer] : [])),
     ])
       if (!live.has(item.id)) store.decline(item.id);
-    for (const widget of latest.widgets) {
-      const approved = snapshot?.widgets?.find(
-        (w) =>
-          w.id === widget.config.pendingShareId && w.owner === engine.view.id,
-      );
-      if (approved) store.bindShared(widget.id, approved.id);
-    }
     for (const widget of latest.widgets)
       if (
         widget.config.sharedId &&
@@ -545,18 +541,31 @@ export function RoomCanvas(props: Props) {
     focusHeader(id);
     setCatalog(null);
   }
+  // "Para a sala" only for whoever the room lets create (#104).
+  const createsForRoom =
+    !!snapshot &&
+    roleAllows(
+      snapshot.permissions,
+      roomRole(snapshot, engine.view.id),
+      roomRole(snapshot, engine.view.id) === "admin"
+        ? "adminCreate"
+        : "guestCreate",
+    );
   async function addWidget(type: string, scope?: "room" | "individual") {
-    if (isModule(type) && !scope) {
-      setModuleChoice(type);
+    const scoped = isModule(type) || type === "timer";
+    if (scoped && !scope && createsForRoom) {
+      setScopeChoice(type);
       return;
     }
-    if (type === "chat" || (isModule(type) && scope === "room")) {
+    if (type === "chat" || (scoped && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
           id: freshKey(),
           content: isModule(type)
             ? createModule(type)
-            : { kind: "chat", title: "Chat", blocks: [] },
+            : type === "timer"
+              ? createContent("timer")
+              : { kind: "chat", title: "Chat", blocks: [] },
         });
         engine.receiveSharedWidget(widget);
         openShared(widget);
@@ -606,20 +615,16 @@ export function RoomCanvas(props: Props) {
     }
     setCatalog(null);
   }
-  async function remove(widget: WidgetInstance) {
+  async function remove(widget: WidgetInstance, forEveryone = false) {
     const slotId = store
       .getSnapshot()
       .slots.find((s) => s.widgetId === widget.id)?.id;
     let endedForEveryone = false;
-    if (widget.config.sharedId) {
+    if (forEveryone && widget.config.sharedId) {
       const shared = engine.view.snapshot?.widgets?.find(
         (w) => w.id === widget.config.sharedId,
       );
-      if (
-        shared &&
-        (shared.owner === engine.view.id ||
-          canManageRoom(snapshot, engine.view.id))
-      ) {
+      if (shared) {
         try {
           await engine.request("widget-delete", { id: shared.id });
           endedForEveryone = true;
@@ -1200,6 +1205,7 @@ export function RoomCanvas(props: Props) {
                 navigate={navigate}
                 focus={() => focus(widget.id)}
                 close={() => void remove(widget)}
+                end={() => void remove(widget, true)}
               />
             );
           })}
@@ -1433,9 +1439,8 @@ export function RoomCanvas(props: Props) {
           {catalogTab === "room" && (
             <>
               {!snapshot?.widgets?.length ? (
-                <p>
-                  Ninguém compartilhou um widget ainda. Crie um widget
-                  individual e use Compartilhar.
+                <p className="widget-empty">
+                  Nenhum widget da sala ainda. Crie um na aba VIO.
                 </p>
               ) : (
                 <div className="widget-catalog">
@@ -1455,11 +1460,6 @@ export function RoomCanvas(props: Props) {
                   ))}
                 </div>
               )}
-              <p className="field-note">
-                Cada pessoa escolhe o que entra no próprio layout. O criador e
-                administradores gerenciam widgets públicos; convidados editam
-                com permissão.
-              </p>
             </>
           )}
           {catalogTab === "community" && (
@@ -1475,46 +1475,34 @@ export function RoomCanvas(props: Props) {
           )}
         </Dialog>
       )}
-      {catalog && moduleChoice && (
+      {catalog && scopeChoice && (
         <Dialog
-          title={widgetRegistry[moduleChoice].title}
+          title={widgetRegistry[scopeChoice].title}
           centered
-          close={() => setModuleChoice(null)}
+          close={() => setScopeChoice(null)}
         >
-          <p>Escolha onde usar este widget.</p>
           <div className="module-scope">
             <button
               className="primary"
-              disabled={!canManageRoom(snapshot, engine.view.id)}
               onClick={() => {
-                const type = moduleChoice;
-                setModuleChoice(null);
+                const type = scopeChoice;
+                setScopeChoice(null);
                 void addWidget(type, "room");
               }}
             >
-              Adicionar à sala
+              <Users size={16} aria-hidden="true" /> Para a sala
             </button>
             <button
               className="secondary"
               onClick={() => {
-                const type = moduleChoice;
-                setModuleChoice(null);
+                const type = scopeChoice;
+                setScopeChoice(null);
                 void addWidget(type, "individual");
               }}
             >
-              Só para mim
+              <User size={16} aria-hidden="true" /> Para mim
             </button>
           </div>
-          {!canManageRoom(snapshot, engine.view.id) && (
-            <p className="field-note">
-              Só o criador e administradores adicionam diretamente à sala. Você
-              pode criar um individual e pedir para compartilhar.
-            </p>
-          )}
-          <p className="field-note">
-            Na sala, cada pessoa recebe um convite para adicionar ao próprio
-            layout.
-          </p>
         </Dialog>
       )}
       {catalog && communityNotice && (

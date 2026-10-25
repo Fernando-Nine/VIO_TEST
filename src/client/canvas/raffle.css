@@ -382,3 +382,39 @@ button.raffle-chip:hover {
     font-size: 1.5em;
   }
 }
+.palette-choice {
+  display: grid;
+  gap: 6px;
+}
+.palette-choice button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #2a2c3c;
+  border-radius: 10px;
+  background: #1b1c29;
+  color: #f3f3fb;
+  text-align: left;
+}
+.palette-choice button[aria-pressed="true"] {
+  border-color: #a6a9ff;
+}
+.palette-choice span {
+  display: flex;
+  width: 70px;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: conic-gradient(
+    #e8615a,
+    #f2c94c,
+    #4cddc3,
+    #8aa8ff,
+    #c08bf2,
+    #e8615a
+  );
+}
+.palette-choice i {
+  flex: 1;
+}

@@ -1818,6 +1818,7 @@
 .session-current strong { overflow-wrap:anywhere; min-width:0; }
 .session-current > span { font:13px var(--mono); flex-shrink:0; }
 .module-actions, .module-scope { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.module-scope button { display:inline-flex; align-items:center; gap:6px; flex:1; justify-content:center; }
 .module-actions button { min-height:32px; padding:6px 10px; font-size:12px; }
 .module-widget .error-text, .module-widget .field-note { font-size:12px; margin:0; overflow-wrap:anywhere; }
 .module-widget.is-compact { padding:8px; gap:6px; }
@@ -1846,15 +1847,72 @@
   width: 28px;
   min-width: 28px;
 }
-.widget-scope-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  color: #8e97bb;
+/* Who controls (docs/design/widgets-padrao.md): Todos, Admins or Só você. */
+.widget-control-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 22px;
+  min-height: 22px;
+  margin: 0 2px;
+  padding: 0 7px;
+  border: 1px solid #3a3f5c;
+  border-radius: 999px;
+  background: none;
+  color: var(--blue-light);
+  font: 500 11px/1 var(--font);
+  white-space: nowrap;
 }
-.widget-scope-badge.is-shared {
-  color: #a8adff;
+/* Pill stays slim; the touch target reaches the header's height. */
+.widget-control-badge::after {
+  content: "";
+  position: absolute;
+  inset: -9px -2px;
+}
+.widget-control-badge.is-admins {
+  color: #c5cdea;
+}
+.widget-control-badge.is-you {
+  border-style: dashed;
+  color: var(--muted);
+}
+.widget-control-badge:hover,
+.widget-control-badge:focus-visible {
+  background: #252b43;
+}
+.widget-control-pop {
+  max-width: 240px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 10px 30px #0008;
+}
+.control-choice {
+  display: grid;
+  gap: 8px;
+}
+.control-choice button {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--raised);
+  color: var(--text);
+  text-align: left;
+}
+.control-choice button[aria-pressed="true"] {
+  border-color: var(--blue-light);
+}
+.control-choice span {
+  color: var(--muted);
+  font-size: 13px;
 }
 .widget-count {
   min-width: 20px;
@@ -1929,6 +1987,17 @@
 .context-menu .is-danger {
   color: #ffb4bd;
 }
+.context-menu .is-separated {
+  position: relative;
+  margin-top: 9px;
+}
+.context-menu .is-separated::before {
+  content: "";
+  position: absolute;
+  inset: -5px 6px auto;
+  height: 1px;
+  background: #2f3754;
+}
 .widget-rename {
   cursor: text;
 }
@@ -1996,6 +2065,12 @@
   }
   .widget-tools,
   .widget-actions .widget-focus {
+    display: none;
+  }
+  .widget-control-badge {
+    padding: 0 5px;
+  }
+  .widget-control-badge span {
     display: none;
   }
   .widget-more {
