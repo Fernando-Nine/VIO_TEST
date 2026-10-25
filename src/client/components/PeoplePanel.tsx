@@ -5,10 +5,13 @@ import {
   Eye,
   HeadphoneOff,
   KeyRound,
+  Mic,
   MicOff,
   Monitor,
   MoreHorizontal,
   Palette,
+  Volume2,
+  VolumeX,
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
@@ -58,15 +61,18 @@ function PersonRow({
   );
   const creator = engine.view.snapshot?.creatorId === person.id;
   const press = useRef(0);
+  const silenced = !own && engine.volumes.get(person.id) === 0;
   const state = !person.online
     ? { icon: HeadphoneOff, label: "Reconectando", tone: "is-away" }
-    : !person.inCall
-      ? { icon: HeadphoneOff, label: "Fora da chamada", tone: "is-away" }
-      : speaking
-        ? { icon: AudioLines, label: "Falando", tone: "is-speaking" }
-        : !voice || voice.muted
-          ? { icon: MicOff, label: "Microfone desligado", tone: "is-muted" }
-          : null;
+    : person.voiceBlocked
+      ? { icon: MicOff, label: "Silenciado pelo dono", tone: "is-blocked" }
+      : !person.inCall
+        ? { icon: HeadphoneOff, label: "Fora da chamada", tone: "is-away" }
+        : speaking
+          ? { icon: AudioLines, label: "Falando", tone: "is-speaking" }
+          : !voice || voice.muted
+            ? { icon: MicOff, label: "Microfone desligado", tone: "is-muted" }
+            : null;
   return (
     <li
       className={`person-row ${speaking ? "speaking" : ""}`}
@@ -125,6 +131,14 @@ function PersonRow({
             className="is-sharing"
             role="img"
             aria-label="Transmitindo"
+          />
+        )}
+        {silenced && (
+          <VolumeX
+            size={16}
+            className="is-away"
+            role="img"
+            aria-label="Silenciado para você"
           />
         )}
         {state && (
@@ -187,11 +201,7 @@ export function PeoplePanel({
     try {
       await engine.request(action, data);
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Não foi possível alterar a permissão.",
-      );
+      setError(e instanceof Error ? e.message : "Não foi possível concluir.");
     } finally {
       setBusy(false);
     }
@@ -200,7 +210,7 @@ export function PeoplePanel({
     if (person.id === engine.view.id)
       return [{ label: "Minha cor", icon: Palette, run: editColor }];
     // Groups in a fixed order (watch, voice, room roles); each non-empty
-    // group after the first opens with a separator. Voice is filled by #122.
+    // group after the first opens with a separator.
     const watch: MenuItem[] = [];
     const voice: MenuItem[] = [];
     const room: MenuItem[] = [];
@@ -211,6 +221,56 @@ export function PeoplePanel({
         icon: Eye,
         run: () => engine.watch(screen.id, true),
       });
+    const silenced = engine.volumes.get(person.id) === 0;
+    voice.push(
+      silenced
+        ? {
+            label: "Ativar para mim",
+            icon: Volume2,
+            run: () => {
+              engine.volumes.set(
+                person.id,
+                engine.silencedVolumes.get(person.id) || 1,
+              );
+              engine.bump();
+            },
+          }
+        : {
+            label: "Silenciar para mim",
+            icon: VolumeX,
+            run: () => {
+              engine.silencedVolumes.set(
+                person.id,
+                engine.volumes.get(person.id) ?? 1,
+              );
+              engine.volumes.set(person.id, 0);
+              engine.bump();
+            },
+          },
+    );
+    if (creator)
+      voice.push(
+        person.voiceBlocked
+          ? {
+              label: "Liberar voz",
+              icon: Mic,
+              run: () =>
+                void run("moderate", {
+                  participantId: person.id,
+                  voiceBlocked: false,
+                }),
+            }
+          : {
+              label: "Silenciar para todos",
+              icon: MicOff,
+              danger: true,
+              run: () =>
+                void run("moderate", {
+                  participantId: person.id,
+                  voiceBlocked: true,
+                }),
+            },
+      );
     if (creator)
       room.push(
         person.role === "admin"

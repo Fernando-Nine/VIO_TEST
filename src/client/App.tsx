@@ -67,6 +67,8 @@ type Panel =
   | "share"
   | "history"
   | null;
+const ownerBlockedText =
+  "O dono da sala silenciou sua voz para todos. Aguarde ele liberar.";
 function Brand() {
   return (
     <span className="brand" aria-label="VIO">
@@ -185,7 +187,19 @@ export default function App({ engine }: { engine: Controller }) {
     view.snapshot && !roleAllows(view.snapshot.permissions, role, key)
       ? `A sala não permite que convidados possam ${permissionText[key]}.`
       : undefined;
-  const voiceBlocked = roomBlocks("guestVoice");
+  const ownerBlocked = view.snapshot?.participants.find(
+    (p) => p.id === view.id,
+  )?.voiceBlocked;
+  const voiceBlocked = ownerBlocked
+    ? ownerBlockedText
+    : roomBlocks("guestVoice");
+  // Say why once when it happens; the dock keeps the reason in its title.
+  useEffect(() => {
+    if (ownerBlocked) engine.view.notice = ownerBlockedText;
+    else if (engine.view.notice === ownerBlockedText) engine.view.notice = "";
+    else return;
+    engine.bump();
+  }, [ownerBlocked, engine]);
   const cameraBlocked = roomBlocks("guestCamera");
   const screenBlocked = roomBlocks("guestScreen");
   const allStats = engine.peers.infos();
@@ -469,8 +483,13 @@ export default function App({ engine }: { engine: Controller }) {
                                 : "Silenciar microfone"
                               : "Conectar microfone"
                           }
-                          disabled={(!canMedia || !!voiceBlocked) && !hasVoice}
-                          title={hasVoice ? undefined : voiceBlocked}
+                          disabled={
+                            ownerBlocked ||
+                            ((!canMedia || !!voiceBlocked) && !hasVoice)
+                          }
+                          title={
+                            hasVoice && !ownerBlocked ? undefined : voiceBlocked
+                          }
                           onClick={() => void engine.microphone()}
                         >
                           {micMuted ? <MicOff /> : <Mic />}
