@@ -1486,33 +1486,6 @@ legend {
 }
 
 /* VIO 2.0: visible room status and compact settings. */
-.settings-tabs {
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  margin: 0 0 24px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #11131e;
-  position: sticky;
-  top: 0;
-  z-index: 3;
-}
-.settings-tabs [role="tab"] {
-  flex: 1;
-  min-height: 44px;
-  border-radius: 8px;
-  color: var(--muted);
-  font-weight: 650;
-}
-.settings-tabs [aria-selected="true"] {
-  background: #3533a5;
-  color: #fff;
-  box-shadow: 0 2px 12px #08091845;
-}
-.settings-panel[hidden] {
-  display: none;
-}
 .manual-gain {
   padding: 16px;
   background: #131523;

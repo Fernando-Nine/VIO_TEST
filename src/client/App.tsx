@@ -627,13 +627,16 @@ export default function App({ engine }: { engine: Controller }) {
               history: "O VIO está crescendo",
             }[panel]
           }
+          className={panel === "settings" ? "sheet-settings" : undefined}
           close={() => open(null)}
         >
           {notice}
           {panel === "people" && (
             <PeoplePanel engine={engine} editColor={() => open("color")} />
           )}
-          {panel === "settings" && <Settings engine={engine} />}
+          {panel === "settings" && (
+            <Settings engine={engine} openPeople={() => open("people")} />
+          )}
           {panel === "share" && (
             <>
               <div className="share-intro">
