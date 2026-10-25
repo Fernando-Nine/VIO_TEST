@@ -34,13 +34,12 @@ export const permissionText: Record<RoomPermission, string> = {
   guestControl:
     "controlar widgets da sala (cronômetro, alarme, iniciar e pausar)",
   guestEdit: "editar widgets públicos",
-  guestShare: "compartilhar widgets sem pedir aprovação",
-  guestRequest: "pedir para compartilhar widgets",
+  guestCreate: "criar widgets para a sala",
   guestChat: "enviar mensagens no chat",
   guestScreen: "compartilhar tela",
   guestVoice: "falar na chamada",
   guestCamera: "ligar a câmera",
-  adminCreate: "adicionar widgets coletivos",
+  adminCreate: "criar widgets para a sala",
   adminClose: "encerrar widgets de outras pessoas",
 };
 /** Who may flip each switch: admin switches belong to the creator alone. */

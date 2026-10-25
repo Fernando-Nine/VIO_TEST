@@ -1683,26 +1683,22 @@ test("rodada E: chat autenticado, permissões, pedidos e sucessão por administr
       ],
     };
     assert.equal(
-      data(
-        await request(guest, "widget-create", { id: timerId, content: timer }),
-      ).pending,
-      true,
+      (await request(guest, "widget-create", { id: timerId, content: timer }))
+        .ok,
+      false,
     );
     assert.equal(
       app.rooms.rooms.get("RODADAE")!.widgets.entries.has(timerId),
       false,
     );
-    assert.equal(
-      (await request(guest, "widget-review", { id: timerId, approve: true }))
-        .ok,
-      false,
+    data(
+      await request(admin, "room-permissions", {
+        permissions: { guestCreate: true },
+      }),
     );
-    const otherGuestSnapshot = app.rooms.snapshot(
-      app.rooms.rooms.get("RODADAE")!,
-      people[4].id,
+    data(
+      await request(guest, "widget-create", { id: timerId, content: timer }),
     );
-    assert.deepEqual(otherGuestSnapshot.shareRequests, []);
-    data(await request(admin, "widget-review", { id: timerId, approve: true }));
     assert.equal(
       app.rooms.rooms.get("RODADAE")!.widgets.entries.get(timerId)?.owner,
       people[1].id,
@@ -1774,13 +1770,12 @@ test("novos widgets: participação, autoria, idempotência e edição autorizad
       blocks: [],
       module: poll,
     };
-    const pending = data(
-      await request(sockets[1], "widget-create", { id: pollId, content }),
-    );
-    assert.equal(pending.pending, true);
     data(
-      await request(sockets[0], "widget-review", { id: pollId, approve: true }),
+      await request(sockets[0], "room-permissions", {
+        permissions: { guestCreate: true },
+      }),
     );
+    data(await request(sockets[1], "widget-create", { id: pollId, content }));
     const interact = (
       socket: Socket,
       id: string,
@@ -2204,6 +2199,11 @@ test("snapshots de sala omitem widgets, exceto para quem entra e quando widgets 
     data(await request(late, "join", { code: "LEANSNAP", name: "Atrasado" }));
     const pollId = crypto.randomUUID();
     data(
+      await request(creator, "room-permissions", {
+        permissions: { guestCreate: true },
+      }),
+    );
+    data(
       await request(guest, "widget-create", {
         id: pollId,
         content: {
@@ -2214,15 +2214,13 @@ test("snapshots de sala omitem widgets, exceto para quem entra e quando widgets 
         },
       }),
     );
-    data(
-      await request(creator, "widget-review", { id: pollId, approve: true }),
-    );
     await new Promise((r) => setTimeout(r, 100));
-    assert.ok(guestSnaps.length >= 4);
-    assert.equal(guestSnaps[0].widgets, undefined);
-    assert.equal(guestSnaps[1].widgets, undefined);
-    assert.equal(guestSnaps.at(-1)!.widgets?.length, 2);
+    assert.ok(guestSnaps.length >= 3);
+    assert.ok(guestSnaps.every((s) => s.widgets === undefined));
     assert.equal(lateSnaps[0].widgets?.length, 1);
+    data(await request(late, "leave"));
+    await new Promise((r) => setTimeout(r, 100));
+    assert.equal(guestSnaps.at(-1)!.widgets?.length, 2);
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();
@@ -2421,30 +2419,20 @@ test("permissões da sala: padrões, quem altera cada chave e validação de cad
       }),
     );
 
-    // Sharing: request (default), off, or direct.
+    // Room widgets: guests create only when the room allows (off by default).
     const dice = () => ({
       kind: "dice",
       title: "Dados",
       blocks: [],
       module: defaultModule("dice", () => crypto.randomUUID()),
     });
-    assert.equal(
-      data(
-        await request(guest, "widget-create", {
-          id: crypto.randomUUID(),
-          content: dice(),
-        }),
-      ).pending,
-      true,
-    );
-    data(await set(admin, { guestRequest: false }));
     await denied(
       guest,
       "widget-create",
       { id: crypto.randomUUID(), content: dice() },
-      /pedir para compartilhar/,
+      /criar widgets para a sala/,
     );
-    data(await set(admin, { guestShare: true }));
+    data(await set(admin, { guestCreate: true }));
     const directId = crypto.randomUUID();
     const direct = data(
       await request<SharedWidget>(guest, "widget-create", {
@@ -2461,7 +2449,7 @@ test("permissões da sala: padrões, quem altera cada chave e validação de cad
       admin,
       "widget-create",
       { id: crypto.randomUUID(), content: dice() },
-      /adicionar widgets coletivos/,
+      /criar widgets para a sala/,
     );
     data(await request(guest, "widget-delete", { id: directId }));
     data(await request(creator, "widget-delete", { id: timerId }));

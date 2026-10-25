@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  widgetSchemas,
-  type SharedWidget,
-  type ShareRequest,
-  type RoomNotice,
-} from "./widgets";
+import { widgetSchemas, type SharedWidget, type RoomNotice } from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
 export type Tier = "main" | "preview";
@@ -25,15 +20,13 @@ export const roomPermissions = z
     guestControl: z.boolean(),
     /** Guests edit public widgets (structure, text and score blocks). */
     guestEdit: z.boolean(),
-    /** Guests share widgets to the room without approval. */
-    guestShare: z.boolean(),
-    /** Guests ask to share widgets (creator/admin approves). */
-    guestRequest: z.boolean(),
+    /** Guests create room widgets. Personal widgets never reach the server. */
+    guestCreate: z.boolean(),
     guestChat: z.boolean(),
     guestScreen: z.boolean(),
     guestVoice: z.boolean(),
     guestCamera: z.boolean(),
-    /** Admins add collective widgets and approve share requests. Creator only. */
+    /** Admins create room widgets. Creator only. */
     adminCreate: z.boolean(),
     /** Admins close widgets created by others. Creator only. */
     adminClose: z.boolean(),
@@ -44,8 +37,7 @@ export type RoomPermission = keyof RoomPermissions;
 export const defaultPermissions: RoomPermissions = {
   guestControl: false,
   guestEdit: false,
-  guestShare: false,
-  guestRequest: true,
+  guestCreate: false,
   guestChat: true,
   guestScreen: true,
   guestVoice: true,
@@ -172,7 +164,6 @@ export interface Snapshot {
   serverTime: number;
   participants: Participant[];
   widgets?: SharedWidget[];
-  shareRequests?: ShareRequest[];
   notices?: RoomNotice[];
   creatorId?: string;
   /** Always sent by the server; absent only in old snapshots. */
