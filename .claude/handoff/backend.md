@@ -4,11 +4,14 @@ Atualizado: 2026-10-25
 
 ## Agora
 
-#104 (PR #106): servidor sem compartilhar/pedido; `guestCreate` (padrão off). Contrato
-comentado na #104; Frontend faz a interface (catálogo "Para mim"/"Para a sala", selo).
+#122 (PR #126): "Silenciar para todos" no servidor — aguardando CI → squash merge.
+Contrato comentado na #122 (Frontend: menus; Mídia: soltar o microfone ao ser bloqueado).
 
 ## Feito recentemente
 
+- #122: comando `moderate { participantId, voiceBlocked }` só do criador; encerra só a
+  `voice`; `Participant.voiceBlocked`; `publish` de voz recusado com `VOICE_BLOCKED`;
+  `transfer` limpa o bloqueio.
 - #104: removidos `widget-review`, `shareRequests`, `guestShare`, `guestRequest`.
   `widget-create` = widget da sala; convidado precisa de `guestCreate`, admin de
   `adminCreate`. Pessoal nunca vai ao servidor.

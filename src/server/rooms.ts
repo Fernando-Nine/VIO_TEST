@@ -57,6 +57,12 @@ const publishPermission = {
   voice: "guestVoice",
   camera: "guestCamera",
 } as const satisfies Record<Publication["kind"], RoomPermission>;
+function voiceBlocked(): never {
+  throw new Fault(
+    "VOICE_BLOCKED",
+    "O dono da sala silenciou sua voz para todos. Aguarde ele liberar.",
+  );
+}
 function refuse(role: RoomRole, key: RoomPermission): never {
   throw new Fault(
     "FORBIDDEN",
@@ -318,6 +324,7 @@ export class Rooms {
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
       role: 20,
+      moderate: 30,
       "room-permissions": 30,
       "chat-send": 45,
       "module-interact": 240,
@@ -543,6 +550,22 @@ export class Rooms {
       this.broadcast(room);
       return room.permissions;
     }
+    if (action === "moderate") {
+      if (m.id !== room.creatorId)
+        throw new Fault(
+          "FORBIDDEN",
+          "Só o dono da sala pode silenciar alguém para todos.",
+        );
+      const target = room.members.get(data.participantId);
+      if (!target || target.id === m.id)
+        throw new Fault("INVALID_REQUEST", "Escolha outra pessoa da sala.");
+      target.voiceBlocked = data.voiceBlocked || undefined;
+      if (target.voiceBlocked)
+        for (const p of [...target.publications])
+          if (p.kind === "voice") this.removePublication(room, p);
+      this.broadcast(room);
+      return {};
+    }
     if (action === "role") {
       if (m.id !== room.creatorId) deny();
       const target = room.members.get(data.participantId);
@@ -551,6 +574,7 @@ export class Rooms {
       if (data.action === "transfer") {
         m.role = "admin";
         target.role = "creator";
+        target.voiceBlocked = undefined;
         room.creatorId = target.id;
         room.notices.push({
           id: randomUUID(),
@@ -699,6 +723,7 @@ export class Rooms {
     }
     if (action === "publish") {
       require(publishPermission[data.kind as Publication["kind"]]);
+      if (data.kind === "voice" && m.voiceBlocked) voiceBlocked();
       if (data.kind !== "screen") m.inCall = true;
       let p = m.publications.find(
         (p) => p.kind === data.kind && p.key === data.key,

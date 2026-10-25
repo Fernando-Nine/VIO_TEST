@@ -76,6 +76,10 @@ export const schemas = {
       action: z.enum(["promote", "revoke", "transfer"]),
     })
     .strict(),
+  /** Room owner blocks or frees someone's voice for everyone (#122). */
+  moderate: z
+    .object({ participantId: uuid, voiceBlocked: z.boolean() })
+    .strict(),
   leave: z.object({}).strict(),
   call: z.object({ active: z.boolean() }).strict(),
   color: z.object({ color: participantColor }).strict(),
@@ -156,6 +160,8 @@ export interface Participant {
   pingMs?: number;
   role?: "creator" | "admin" | "guest";
   avatarUrl?: string;
+  /** Silenced for everyone by the room owner: voice publishing is refused. */
+  voiceBlocked?: boolean;
 }
 export interface Snapshot {
   epoch: string;
