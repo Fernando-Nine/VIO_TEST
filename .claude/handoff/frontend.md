@@ -4,11 +4,15 @@ Atualizado: 2026-10-25
 
 ## Agora
 
-#107 Pessoas pronta no branch `feat/107-people-panel` (sem PR): painel lateral não modal
-(`Dialog modal={false}`, classe `sheet-people`), abas Pessoas · N / Permissões, linhas de
-48 px, menu com volume (`ContextMenu` ganhou `header`), folha no celular. Falta só o
-"Silenciar para mim" (usuário vai confirmar via copiloto). #109 Transmissões não começou:
-o comportamento da etiqueta também espera resposta.
+#107 Pessoas pronta no branch `feat/107-people-panel-v2` (já sobre a #117; falta rebase
+na main atual, rc.10 e `npm run build` para o CHANGELOG). Painel não modal (`Dialog modal={false}`, `sheet-people`), abas,
+linhas 48 px, menu com volume (`ContextMenu` ganhou `header`), folha no celular.
+
+Respostas do usuário (copiloto, 2026-10-25):
+- #122 (da #107): "Silenciar para mim" para todos; "Silenciar para todos" só para o dono.
+  Servidor é do Backend: **esperar o contrato na #122**.
+- #123 (da #109): ícone "ao vivo" discreto só com as telas ativas; sino normal com
+  contador que zera ao abrir e mantém o histórico.
 
 ## Feito recentemente
 
@@ -31,8 +35,8 @@ o comportamento da etiqueta também espera resposta.
 
 - #115 cor e paleta no Cronômetro, Votação e Personalizado (precisa campo no esquema).
 - #118 (Mídia) volume por pessoa até 200%; o menu de Pessoas vai até 100%.
-- Resposta do usuário: "Silenciar para mim" (#107) e etiqueta de transmissões (#109).
 
 ## Próximo passo
 
-Com a resposta, terminar #107 (rebase, rc.10, PR) e fazer #109; depois #115.
+Rebasear e abrir a PR da #107 (rc.10) sem o silenciar; fazer #123 (#109); #122 quando o
+contrato sair; depois #115. Skills novas em `.claude/skills/` (ver o papel).
