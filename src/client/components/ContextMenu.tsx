@@ -6,6 +6,8 @@ export interface MenuItem {
   label: string;
   icon?: LucideIcon;
   danger?: boolean;
+  /** Draws a divider above this item. */
+  separated?: boolean;
   run: () => void;
 }
 
@@ -94,12 +96,16 @@ export function ContextMenu({
       onKeyDown={keys}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {items.map(({ label, icon: Icon, danger, run }) => (
+      {items.map(({ label, icon: Icon, danger, separated, run }) => (
         <button
           key={label}
           role="menuitem"
           tabIndex={-1}
-          className={danger ? "is-danger" : undefined}
+          className={
+            [danger && "is-danger", separated && "is-separated"]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
           onClick={() => {
             close();
             run();

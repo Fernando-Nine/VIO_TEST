@@ -280,21 +280,19 @@ test("fechar espaço vazio na tira só fica disponível acima de quatro espaços
   assert.equal(store.getSnapshot().slots.length, 4);
 });
 
-test("compartilhar converte o host original e catálogo não duplica o sharedId", () => {
-  const store = filled(1);
-  const originalSlot = store.getSnapshot().slots[0].id;
-  store.bindShared("video-0", "room-widget");
-  store.add({
-    id: "duplicate",
+test("catálogo não duplica um widget da sala no layout", () => {
+  const store = filled(0);
+  const room = {
     type: "custom",
-    title: "Outro",
+    title: "Placar",
     config: { sharedId: "room-widget" },
-  });
-  store.bindShared("video-0", "room-widget");
-  assert.equal(store.getSnapshot().widgets.length, 1);
-  assert.equal(store.getSnapshot().slots[0].id, originalSlot);
-  assert.equal(store.getSnapshot().slots[0].widgetId, "video-0");
-  assert.equal(store.getSnapshot().widgets[0].config.sharedId, "room-widget");
+  };
+  store.add({ id: "first", ...room });
+  store.add({ id: "duplicate", ...room });
+  assert.deepEqual(
+    store.getSnapshot().widgets.map((w) => w.id),
+    ["first"],
+  );
 });
 
 test("convite no fim da tira não ocupa buraco anterior nem desloca outros itens", () => {

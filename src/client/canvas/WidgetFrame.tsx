@@ -1,4 +1,5 @@
-import { canManageRoom } from "../../shared/permissions";
+import { canManageRoom, roleAllows, roomRole } from "../../shared/permissions";
+import { isModule } from "../../shared/room-modules";
 import { canvasShortcuts } from "./shortcuts";
 import {
   memo,
@@ -11,9 +12,24 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useDraggable } from "@dnd-kit/react";
-import { ArrowLeftRight, Ellipsis, Grip, Pencil, X } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Ellipsis,
+  Grip,
+  Pencil,
+  Power,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+import { Dialog } from "../components/Dialog";
 import { ContextMenu, type MenuItem } from "../components/ContextMenu";
-import { HeaderToolsSlot, type MenuSource, type Rename } from "./header-tools";
+import {
+  ControlBadge,
+  HeaderToolsSlot,
+  controlOf,
+  type MenuSource,
+  type Rename,
+} from "./header-tools";
 import type { Controller } from "../room/controller";
 import { participantStyle } from "../components/participant-style";
 import {
@@ -41,6 +57,8 @@ interface Props extends WidgetProps {
   navigate: (event: KeyboardEvent) => void;
   focus: () => void;
   close: () => void;
+  /** Deletes a room widget for everyone (owner or allowed manager). */
+  end: () => void;
   interaction: (busy: boolean) => void;
 }
 const Body = memo(
@@ -113,14 +131,39 @@ export function WidgetFrame(props: Props) {
     if (!rename || !next || next === title) return;
     rename(next.slice(0, 64)).catch((e) => engine.fail(e));
   }
+  const snapshot = engine.view.snapshot;
+  const shared = widget.config.sharedId
+    ? snapshot?.widgets?.find((w) => w.id === widget.config.sharedId)
+    : undefined;
+  const manages = canManageRoom(snapshot, engine.view.id);
+  const role = snapshot ? roomRole(snapshot, engine.view.id) : "guest";
   const endsForEveryone =
-    !!widget.config.sharedId &&
-    engine.view.snapshot?.widgets?.some(
-      (shared) =>
-        shared.id === widget.config.sharedId &&
-        (shared.owner === engine.view.id ||
-          canManageRoom(engine.view.snapshot, engine.view.id)),
+    !!shared &&
+    (shared.owner === engine.view.id ||
+      (manages && roleAllows(snapshot?.permissions, role, "adminClose")));
+  // Personal content widgets carry "Só você"; app views (people, call) carry none.
+  const badged =
+    !!shared ||
+    isModule(widget.type) ||
+    ["timer", "custom", "notes"].includes(widget.type);
+  const [access, setAccess] = useState(false);
+  const control = shared && controlOf(snapshot, shared);
+  // A room-wide grant already lets everyone control; nothing to choose then.
+  const choosesAccess =
+    !!shared &&
+    manages &&
+    !roleAllows(
+      snapshot?.permissions,
+      "guest",
+      shared.kind === "chat" ? "guestChat" : "guestControl",
     );
+  function setAllGuests(allowed: boolean) {
+    setAccess(false);
+    if (!shared || !!shared.allGuestsEdit === allowed) return;
+    engine
+      .request("widget-permission", { id: shared.id, allGuests: true, allowed })
+      .catch((e) => engine.fail(e));
+  }
   const def = widgetRegistry[widget.type];
   const Icon = def?.icon || Grip;
   useLayoutEffect(() => {
@@ -172,17 +215,13 @@ export function WidgetFrame(props: Props) {
           ? 3
           : 2,
   } as CSSProperties;
-  const removeLabel = endsForEveryone
-    ? "Encerrar para todos"
-    : widget.type === "screen"
+  const removeLabel =
+    widget.type === "screen"
       ? "Desconectar transmissão"
       : "Remover deste layout";
+  // Same order everywhere (docs/design/widgets-padrao.md): focus, rename,
+  // widget actions and appearance, access, then remove and end.
   const menuItems: MenuItem[] = [
-    ...(rename
-      ? [{ label: "Renomear", icon: Pencil, run: () => setRenaming(true) }]
-      : []),
-    ...(def?.menu?.(props) || []),
-    ...(bodyMenu?.() || []),
     ...(focused
       ? []
       : [
@@ -192,7 +231,31 @@ export function WidgetFrame(props: Props) {
             run: props.focus,
           },
         ]),
-    { label: removeLabel, icon: X, danger: true, run: props.close },
+    ...(rename
+      ? [{ label: "Renomear", icon: Pencil, run: () => setRenaming(true) }]
+      : []),
+    ...(def?.menu?.(props) || []),
+    ...(bodyMenu?.() || []),
+    ...(choosesAccess
+      ? [
+          {
+            label: "Quem pode controlar",
+            icon: ShieldCheck,
+            run: () => setAccess(true),
+          },
+        ]
+      : []),
+    { label: removeLabel, icon: X, separated: true, run: props.close },
+    ...(endsForEveryone
+      ? [
+          {
+            label: "Encerrar para todos",
+            icon: Power,
+            danger: true,
+            run: props.end,
+          },
+        ]
+      : []),
   ];
   function resizeTo(width: number, height: number) {
     engine.canvas.detach(widget.id, {
@@ -274,6 +337,7 @@ export function WidgetFrame(props: Props) {
         )}
         <HeaderAccessory widget={widget} engine={engine} />
         <div className="widget-tools" ref={setTools} />
+        {badged && <ControlBadge snapshot={snapshot} widget={shared} />}
         <div className="widget-actions">
           <button
             className="icon-button widget-more"
@@ -300,11 +364,9 @@ export function WidgetFrame(props: Props) {
             className="icon-button"
             onClick={props.close}
             aria-label={
-              endsForEveryone
-                ? `Encerrar ${title} para todos`
-                : widget.type === "screen"
-                  ? `Desconectar ${title}`
-                  : `Remover ${title} deste layout`
+              widget.type === "screen"
+                ? `Desconectar ${title}`
+                : `Remover ${title} deste layout`
             }
             title={removeLabel}
           >
@@ -339,6 +401,30 @@ export function WidgetFrame(props: Props) {
           close={() => setMenu(null)}
           origin={element.current}
         />
+      )}
+      {access && control && (
+        <Dialog
+          title="Quem pode controlar"
+          centered
+          close={() => setAccess(false)}
+        >
+          <div className="control-choice" role="group" aria-label={title}>
+            <button
+              aria-pressed={control.level === "all"}
+              onClick={() => setAllGuests(true)}
+            >
+              <strong>Todos</strong>
+              <span>Convidados também controlam.</span>
+            </button>
+            <button
+              aria-pressed={control.level !== "all"}
+              onClick={() => setAllGuests(false)}
+            >
+              <strong>Admins</strong>
+              <span>Só o criador e os administradores.</span>
+            </button>
+          </div>
+        </Dialog>
       )}
       {floating && (
         <button
