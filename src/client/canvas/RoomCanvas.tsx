@@ -317,7 +317,10 @@ export function RoomCanvas(props: Props) {
   const stripMode = isStrip(state);
   const stripBox = geometry.strip;
   // Lift the call dock above a bottom strip so it never covers it.
+  // Only the full-screen pill floats over the canvas; elsewhere the dock is
+  // a footer below it (docs/design/chamada.md).
   const dockLift =
+    props.isFullscreen &&
     stripMode &&
     !state.single &&
     stripBox &&
@@ -330,14 +333,15 @@ export function RoomCanvas(props: Props) {
       ?.closest<HTMLElement>(".player")
       ?.style.setProperty("--dock-lift", `${dockLift}px`);
   }, [dockLift, root]);
-  // The dock floats at the bottom centre; widgets ending right there reserve
-  // its height so their last controls (chat input, poll actions) stay usable.
+  // In full screen the dock floats at the bottom centre; widgets ending right
+  // there reserve its height so their last controls stay usable.
   const underDock = (box: {
     x: number;
     y: number;
     width: number;
     height: number;
   }) =>
+    !!props.isFullscreen &&
     Math.abs(box.y + box.height - (geometry.bounds.height - dockLift)) < 14 &&
     box.x < geometry.bounds.width / 2 + 230 &&
     box.x + box.width > geometry.bounds.width / 2 - 230;
