@@ -22,7 +22,7 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
     <>
       <fieldset className="application-volume">
         <legend>
-          <Volume2 size={17} /> Volume do aplicativo
+          <Volume2 size={17} /> Volume
         </legend>
         <label>
           Volume geral <output>{Math.round(engine.masterVolume * 100)}%</output>
@@ -40,8 +40,7 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
           />
         </label>
         <p className="field-note">
-          Controla as vozes, o áudio das telas e os sons do VIO que você ouve. O
-          volume enviado pelo seu microfone permanece o mesmo.
+          Só o que você ouve; o envio do seu microfone não muda.
         </p>
         {engine.masterVolume === 0 && (
           <p className="volume-status" role="status">
@@ -54,9 +53,7 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
         <label className="toggle">
           <span>
             Feedback sonoro
-            <small>
-              Sons curtos para confirmar ações e avisar sobre a sala.
-            </small>
+            <small>Sons curtos de ações e avisos da sala.</small>
           </span>
           <input
             type="checkbox"
@@ -118,20 +115,17 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
           ))}
         </div>
         <p className="sound-feedback" role="status">
-          {feedback || "Use o botão de reprodução para experimentar cada som."}
+          {feedback}
         </p>
       </fieldset>
       <fieldset>
         <legend>
-          <Palette size={17} /> Aparência da sala
+          <Palette size={17} /> Cores das pessoas
         </legend>
         <label className="toggle">
           <span>
             Cores das pessoas nas transmissões
-            <small>
-              Usa a cor de cada pessoa nas bordas, no indicador ao vivo e no
-              destaque de fala.
-            </small>
+            <small>Bordas, ao vivo e fala na cor de cada pessoa.</small>
           </span>
           <input
             type="checkbox"
@@ -143,10 +137,6 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
             }}
           />
         </label>
-        <p className="field-note">
-          Sua cor é escolhida em Pessoas e vale para esta sala. Desligar esta
-          opção mantém as cores apenas nos avatares, na sua visualização.
-        </p>
       </fieldset>
     </>
   );

@@ -47,11 +47,6 @@ input[type="checkbox"] {
   background: #0f111c;
   border-color: #656b8a;
 }
-.sheet .settings-tabs [aria-selected="true"] {
-  color: #a8adff;
-  background: #282d54;
-  border-color: #868df2;
-}
 .in-room {
   height: 100dvh;
   min-height: 0;

@@ -55,7 +55,7 @@
 .watched-screen .screen-caption > span > i {
   background: var(--person-accent, #a8adff);
 }
-.settings-panel legend,
+.settings-page legend,
 .color-picker legend {
   display: flex;
   align-items: center;
@@ -317,14 +317,6 @@
   line-height: 1.5;
 }
 @media (max-width: 380px) {
-  .settings-tabs {
-    gap: 3px;
-    padding: 4px;
-  }
-  .settings-tabs [role="tab"] {
-    padding: 8px 5px;
-    font-size: 0.8rem;
-  }
   .color-identity-preview {
     padding: 10px;
   }
@@ -340,5 +332,187 @@
   .sound-preview svg,
   .color-presets .color-swatch {
     transition: none;
+  }
+}
+
+/* Settings (docs/design/ajustes.md): category list beside one page. */
+.sheet.sheet-settings {
+  inset: 0;
+  margin: auto;
+  width: min(820px, calc(100% - 32px));
+  height: min(560px, calc(100dvh - 32px));
+  border-radius: 18px;
+}
+.sheet-settings .sheet-content {
+  height: 100%;
+  max-height: none;
+}
+.sheet-settings .sheet-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  height: 100%;
+}
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 10px;
+  border-right: 1px solid var(--line);
+  overflow: auto;
+}
+.settings-nav [role="tab"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  text-align: left;
+}
+.settings-nav [role="tab"] > span {
+  flex: 1;
+}
+.settings-nav [role="tab"]:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+.settings-nav [aria-selected="true"] {
+  background: #282d54;
+  color: var(--text);
+}
+.settings-nav [aria-selected="true"] svg {
+  color: var(--blue-light);
+}
+.settings-nav .is-room {
+  position: relative;
+  margin-top: 13px;
+}
+.settings-nav .is-room::before {
+  content: "";
+  position: absolute;
+  inset: -7px 8px auto;
+  height: 1px;
+  background: var(--line);
+}
+.settings-nav small,
+.settings-chevron {
+  display: none;
+}
+.settings-page {
+  padding: 20px 28px 28px;
+  overflow: auto;
+}
+.settings-page > header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.settings-page h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.settings-page legend {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font: 500 0.72rem/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.settings-page legend svg {
+  display: none;
+}
+.settings-page .field-note {
+  margin: 6px 0 12px;
+}
+.voice-meter {
+  position: relative;
+  height: 6px;
+  margin: 10px 0 4px;
+  border-radius: 999px;
+  background: #252b43;
+  overflow: hidden;
+}
+.voice-meter span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: #6b70a8;
+}
+.voice-meter span.is-open {
+  background: var(--live);
+}
+.voice-meter i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+}
+.room-invite,
+.room-transfer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.room-invite code {
+  flex: 1;
+  min-width: 140px;
+  font: 500 1rem var(--mono);
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+}
+.room-transfer select {
+  flex: 1;
+  min-width: 160px;
+}
+@media (max-width: 640px) {
+  .sheet.sheet-settings {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+  }
+  .sheet-settings .sheet-content {
+    border-radius: 0;
+  }
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-layout.has-page .settings-nav {
+    display: none;
+  }
+  .settings-nav {
+    padding: 8px 12px;
+    border: 0;
+  }
+  .settings-nav [role="tab"] {
+    min-height: 60px;
+  }
+  .settings-nav small {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+  }
+  .settings-chevron {
+    display: block;
+  }
+  .settings-page {
+    padding: 12px 16px 24px;
   }
 }
