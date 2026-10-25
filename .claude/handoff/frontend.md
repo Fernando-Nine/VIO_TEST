@@ -4,9 +4,8 @@ Atualizado: 2026-10-25
 
 ## Agora
 
-#107 Pessoas pronta no branch remoto `feat/107-people-panel` (base antiga; o rebase sobre
-a main está só no container que encerrou — refaça: conflito só no fim do `workspace.css`,
-manter os dois blocos). Painel não modal (`Dialog modal={false}`, `sheet-people`), abas,
+#107 Pessoas pronta no branch `feat/107-people-panel-v2` (já sobre a #117; falta rebase
+na main atual, rc.10 e `npm run build` para o CHANGELOG). Painel não modal (`Dialog modal={false}`, `sheet-people`), abas,
 linhas 48 px, menu com volume (`ContextMenu` ganhou `header`), folha no celular.
 
 Respostas do usuário (copiloto, 2026-10-25):
