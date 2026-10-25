@@ -21,5 +21,6 @@ menos caixas, menos botões; mais edição direta, hover e menu de botão direit
 - Não tocar em PeerConnections/streams; precisa? Combine com Mídia via issue.
 - Permissão de widget é decidida no servidor (Backend); a interface só reflete.
 
-**Skills úteis:** `design:design-critique`, `design:accessibility-review`, `design:ux-copy`,
+**Skills:** `vio-design-system` ao implementar widgets/telas; `vio-design-review` antes do
+merge de mudança visual. Outras úteis: `design:design-critique`, `design:accessibility-review`, `design:ux-copy`,
 `run` (abrir e conferir o app).
