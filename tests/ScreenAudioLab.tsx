@@ -9,6 +9,7 @@ type Scene = {
   engine: Controller;
   volume: number;
   muted: boolean;
+  voice?: number;
 };
 const pause = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -59,8 +60,8 @@ export function ScreenAudioLab() {
       host.current?.querySelector<HTMLAudioElement>(
         '[data-screen-audio="boost"]',
       );
-    const show = (volume: number, muted = false) =>
-      setScene({ stream, engine, volume, muted });
+    const show = (volume: number, muted = false, voice = 0.6) =>
+      setScene({ stream, engine, volume, muted, voice });
     const report = (message: string) =>
       setResults((old) => [...old, `PASS · ${message}`]);
     const analyser = context.createAnalyser();
@@ -273,6 +274,37 @@ export function ScreenAudioLab() {
         element === native() && element.srcObject === stream && !element.paused,
         "Troca de modo recriou ou pausou o player",
       );
+      show(0.8, false, 1.5);
+      const voiceBoost = () =>
+        host.current?.querySelector<HTMLAudioElement>(
+          '[data-voice-audio="boost"]',
+        );
+      await until(
+        () =>
+          !!voiceBoost() &&
+          !voiceBoost()!.muted &&
+          !voiceBoost()!.paused &&
+          voice.muted,
+        "Voz a 150% não ativou o ganho",
+      );
+      const voiceRatio = (await rms(graph!.stream)) / baseline;
+      assert(
+        Math.abs(voiceRatio - 1.5) < 0.15,
+        "Ganho de 150% da voz não corresponde ao sinal",
+      );
+      assert(
+        !voice.paused && voice.srcObject === stream,
+        "Ganho da voz desconectou o player original (indicador de fala)",
+      );
+      show(0.8);
+      await until(
+        () => !voiceBoost() && !voice.muted && voice.volume === 0.6,
+        "Voz não voltou a 60% sem ganho",
+      );
+      assert(voicePauses === 0, "Ganho da voz pausou o player original");
+      report(
+        `Voz por pessoa a 150%: sinal ${voiceRatio.toFixed(2)}×; o <audio> original segue tocando mudo`,
+      );
       failBoost = true;
       show(3);
       await until(
@@ -348,7 +380,9 @@ export function ScreenAudioLab() {
             <RemoteVoice
               stream={scene.stream}
               muted={scene.muted}
-              volume={0.6 * scene.engine.masterVolume}
+              volume={(scene.voice ?? 0.6) * scene.engine.masterVolume}
+              output={scene.engine.output}
+              playback={scene.engine.playback}
               label="Voz de teste"
             />
           </>

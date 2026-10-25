@@ -427,14 +427,13 @@ export function PeoplePanel({
                 <input
                   type="range"
                   min="0"
-                  max="1"
+                  max="2"
                   step=".05"
                   aria-label={`Volume de ${menuPerson.name} para você`}
                   value={volume ?? 1}
-                  onChange={(event) => {
-                    engine.volumes.set(menuPerson.id, +event.target.value);
-                    engine.bump();
-                  }}
+                  onChange={(event) =>
+                    engine.setPersonVolume(menuPerson.id, +event.target.value)
+                  }
                 />
               </label>
             )

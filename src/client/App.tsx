@@ -697,6 +697,7 @@ export default function App({ engine }: { engine: Controller }) {
                 key={p.id}
                 stream={engine.peers.stream(p.id)}
                 output={engine.output}
+                playback={engine.playback}
                 muted={
                   !engine.inCall || engine.captures.deaf || engine.remoteMute
                 }
