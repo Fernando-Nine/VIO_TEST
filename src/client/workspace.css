@@ -2488,3 +2488,178 @@ button.inline-text.is-empty {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* People (docs/design/pessoas.md): a 380 px side panel that leaves the room
+   usable, tabs for managers and 48 px rows; a bottom sheet on phones. */
+.sheet.sheet-people {
+  inset: 72px 12px 12px auto;
+  width: min(380px, calc(100% - 24px));
+  height: auto;
+  max-height: none;
+  z-index: 50;
+}
+.sheet-people .sheet-content {
+  height: 100%;
+  max-height: none;
+}
+.sheet-people .sheet-body {
+  flex: 1;
+  min-height: 0;
+  padding: 12px 14px 16px;
+}
+.people-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.people-tabs [role="tab"] {
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.people-tabs [aria-selected="true"] {
+  background: #282d54;
+  color: var(--text);
+}
+.sheet-people .people-panel-list {
+  gap: 2px;
+}
+.sheet-people .person-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 6px;
+  border-radius: 10px;
+}
+.sheet-people .person-row:hover,
+.sheet-people .person-row:focus-within {
+  background: var(--raised);
+}
+.person-avatar {
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--person-color, #2727f5);
+  color: var(--person-ink, #fff);
+  font: 600 0.7rem var(--font);
+}
+.person-row.speaking .person-avatar {
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 4px var(--live);
+}
+.person-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+.person-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.person-name small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.person-name .room-creator,
+.person-name .room-admin {
+  flex-shrink: 0;
+  margin: 0;
+}
+.person-name .room-creator {
+  color: #f2d36b;
+}
+.person-name .room-admin {
+  color: #c8ceff;
+}
+.person-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.person-state .is-speaking {
+  color: var(--live);
+}
+.person-state .is-sharing {
+  color: var(--blue-light);
+}
+.person-state .is-muted {
+  color: var(--danger);
+}
+.person-state .is-away {
+  color: #7d8099;
+}
+.sheet-people .person-row .person-more {
+  position: static;
+  flex-shrink: 0;
+}
+.person-menu-volume {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid #2f3754;
+  font-size: 13px;
+}
+.person-menu-volume span {
+  display: flex;
+  justify-content: space-between;
+}
+.person-menu-volume output {
+  font: 12px var(--mono);
+  color: #d1d4ff;
+}
+.room-permissions legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .sheet.sheet-people {
+    inset: auto 0 0;
+    width: 100%;
+    height: min(470px, 80dvh);
+  }
+  .sheet-people .sheet-content {
+    border-radius: 18px 18px 0 0;
+  }
+  .sheet-people .person-row {
+    min-height: 52px;
+  }
+  .sheet-people .person-row .person-more {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* The person menu opens as a sheet from the bottom. */
+  .context-menu.person-menu {
+    inset: auto 0 0 !important;
+    width: 100%;
+    max-width: none;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+  }
+  .context-menu.person-menu button {
+    min-height: 48px;
+  }
+}
+.person-menu-volume input {
+  min-height: 24px;
+  margin: 0;
+}
