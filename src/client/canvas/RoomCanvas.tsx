@@ -39,6 +39,11 @@ import {
   X,
 } from "lucide-react";
 import { Notifications } from "../components/Notifications";
+import {
+  LiveScreens,
+  ScreenToast,
+  type ScreenEvent,
+} from "../components/LiveScreens";
 import { canManageRoom, roleAllows, roomRole } from "../../shared/permissions";
 import type { SharedWidget } from "../../shared/widgets";
 import { contentKind } from "../../shared/widgets";
@@ -278,6 +283,9 @@ export function RoomCanvas(props: Props) {
   const keyboardDrag = useRef(false);
   const [nearTop, setNearTop] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [screenEvents, setScreenEvents] = useState<ScreenEvent[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const hideToast = useCallback(() => setToast(null), []);
   const [fullscreenIntro, setFullscreenIntro] = useState(false);
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const pendingFocus = useRef<string | null>(null);
@@ -388,9 +396,10 @@ export function RoomCanvas(props: Props) {
         })),
     ) || [];
   const publicationsKey = publications.map((p) => p.id).join("|");
-  const liveUnwatched = publications.filter(
-    (p) => !p.own && !engine.view.watching.includes(p.id),
-  );
+  const liveScreens = publications
+    .filter((p) => !p.own)
+    .map((p) => ({ ...p, watching: engine.view.watching.includes(p.id) }));
+  const toastEvent = screenEvents.find((e) => e.id === toast);
   const epoch = useRef(snapshot?.epoch);
 
   function focusHeader(id: string) {
@@ -437,6 +446,9 @@ export function RoomCanvas(props: Props) {
     );
   }
   useEffect(() => {
+    // A fresh room (or epoch) only primes what is already live: those
+    // screens are in the live icon, not news to announce.
+    const primed = epoch.current === snapshot?.epoch && seen.current.size > 0;
     if (epoch.current !== snapshot?.epoch) {
       seen.current.clear();
       epoch.current = snapshot?.epoch;
@@ -455,11 +467,25 @@ export function RoomCanvas(props: Props) {
         store.add(screenWidget(id));
       }
     }
+    // Seed with a marker so an empty room still counts as primed later.
+    if (!seen.current.size) seen.current.add("");
     for (const publication of publications) {
       if (seen.current.has(publication.id)) continue;
       seen.current.add(publication.id);
-      if (!publication.own && !engine.view.watching.includes(publication.id)) {
-        store.offer(publication);
+      if (
+        primed &&
+        !publication.own &&
+        !engine.view.watching.includes(publication.id)
+      ) {
+        const event = {
+          id: freshKey(),
+          publicationId: publication.id,
+          name: publication.title,
+          at: Date.now(),
+          read: false,
+        };
+        setScreenEvents((events) => [...events, event].slice(-30));
+        setToast(event.id);
       }
     }
     const live = new Set(publications.map((p) => p.id));
@@ -847,30 +873,10 @@ export function RoomCanvas(props: Props) {
           engine={engine}
           openWidget={(w) => openShared(w, true)}
           openScreen={showPublication}
+          screenEvents={screenEvents.filter((e) => e.id !== toast)}
           onOpenChange={setNotificationsOpen}
         />
-        {liveUnwatched.length > 0 && (
-          <button
-            className="live-chip"
-            onClick={() => {
-              if (liveUnwatched.length === 1)
-                showPublication(liveUnwatched[0].id);
-              else {
-                setCatalog(
-                  state.slots.find((s) => !s.widgetId && !s.offer)?.id ?? "new",
-                );
-                setCatalogTab("live");
-              }
-            }}
-          >
-            <i className="live-pulse" aria-hidden="true" />
-            <span>
-              {liveUnwatched.length === 1
-                ? `${liveUnwatched[0].title} ao vivo`
-                : `${liveUnwatched.length} transmissões ao vivo`}
-            </span>
-          </button>
-        )}
+        <LiveScreens screens={liveScreens} watch={showPublication} />
         <button
           className="icon-button canvas-fullscreen"
           onClick={props.fullscreen}
@@ -1235,6 +1241,21 @@ export function RoomCanvas(props: Props) {
       <span className="sr-only" role="status" aria-live="polite">
         {announcement}
       </span>
+      {toastEvent && (
+        <ScreenToast
+          event={toastEvent}
+          done={hideToast}
+          watch={() => {
+            setScreenEvents((events) =>
+              events.map((e) =>
+                e.id === toastEvent.id ? { ...e, read: true } : e,
+              ),
+            );
+            setToast(null);
+            showPublication(toastEvent.publicationId);
+          }}
+        />
+      )}
       {offer && (
         <Dialog
           title="Todos os espaços estão ocupados"

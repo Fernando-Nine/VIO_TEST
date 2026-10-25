@@ -1796,6 +1796,7 @@
 }
 
 .canvas-toolbar .text-button .notification-count { display: grid; }
+.canvas-toolbar .text-button .live-screens-count { display: inline; }
 
 .module-widget { height:100%; min-height:0; min-width:0; display:flex; flex-direction:column; gap:8px; padding:12px; box-sizing:border-box; }
 .module-content { min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#656b8a transparent; overscroll-behavior:contain; display:flex; flex-direction:column; gap:8px; }
@@ -2013,34 +2014,6 @@
   background: #0d1019;
   color: inherit;
   font: inherit;
-}
-.canvas-toolbar .live-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 30px;
-  max-width: 40vw;
-  margin-left: 4px;
-  padding: 4px 11px;
-  border: 1px solid #ff6b7d80;
-  border-radius: 999px;
-  background: #3a1520;
-  color: #ffd9de;
-  font-size: 12px;
-  font-weight: 600;
-}
-.canvas-toolbar .live-chip > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.canvas-toolbar .live-chip .live-pulse {
-  width: 8px;
-  height: 8px;
-  background: #ff4d63;
-}
-.canvas-toolbar .live-chip:hover {
-  background: #4d1a28;
 }
 .widget-host.under-dock .widget-body {
   padding-bottom: calc(var(--dock-height, 64px) + 14px);
@@ -2872,4 +2845,140 @@ button.inline-text.is-empty {
 .person-menu-volume input {
   min-height: 24px;
   margin: 0;
+}
+
+/* #123 + #109: live icon, corner label for a new screen, bell history. */
+.live-screens {
+  display: flex;
+  align-items: center;
+}
+.canvas-toolbar .live-screens-trigger {
+  gap: 5px;
+  color: #ffb3bd;
+}
+.live-screens-count {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+.live-screens-panel {
+  width: min(280px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid #454b6c;
+  border-radius: 14px;
+  background: #151722;
+  color: #f1f2fa;
+  box-shadow: 0 12px 40px #0008;
+}
+.live-screens-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.live-screens-panel li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+.live-screens-panel li + li {
+  border-top: 1px solid #303244;
+}
+.live-screens-panel li > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.live-screens-panel .live-pulse {
+  width: 8px;
+  height: 8px;
+  background: #ff4d63;
+}
+.live-screens-panel small {
+  color: #a3a7c2;
+  font-size: 12px;
+}
+.live-screens-panel button {
+  min-height: 32px;
+  padding: 4px 12px;
+}
+.notifications-panel time {
+  margin-left: 8px;
+  color: #8d91ad;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+.notifications-panel .notification-actions:has(> :only-child) {
+  justify-content: flex-end;
+}
+.screen-toast {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(460px, calc(100% - 32px));
+  min-height: 40px;
+  padding: 4px 4px 4px 6px;
+  border: 1px solid #33355a;
+  border-radius: 999px;
+  background: #14152ae6;
+  backdrop-filter: blur(8px);
+  color: #f1f2fa;
+  box-shadow: 0 10px 30px #0007;
+  animation: vio-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.screen-toast p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.screen-toast-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #2727f5;
+  font-size: 11px;
+  font-weight: 700;
+}
+.screen-toast .primary {
+  min-height: 32px;
+  padding: 4px 14px;
+  border-radius: 999px;
+}
+.screen-toast .icon-button {
+  width: 32px;
+  height: 32px;
+}
+@keyframes vio-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen-toast {
+    animation: none;
+  }
+}
+@media (max-width: 679px) {
+  .screen-toast {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    max-width: none;
+  }
 }

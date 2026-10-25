@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.10";
+export const version = "2.9.0-rc.11";
 export const currentRelease: Release = {
   version,
   date: "2026-10-25",
@@ -26,6 +26,7 @@ export const currentRelease: Release = {
         "Ajustes numa janela com lista lateral: Áudio (com medidor da sensibilidade), Vídeo, Aparência e sons e, para criador e admins, Sala (convite, quem controla cada widget e transferência de posse). No celular, lista com páginas.",
         "Controles da chamada numa doca fixa no rodapé (nada flutua sobre a sala), com quantas pessoas estão na chamada; no celular, barra de abas Microfone, Áudio, Tela e Mais. Em tela cheia, uma pílula discreta que vira a barra completa ao passar o mouse.",
         "Pessoas num painel lateral que não tranca a sala: linhas compactas com quem fala, quem está sem microfone e quem transmite (por ícone, não só por cor), abas Pessoas e Permissões para quem gerencia e, no menu de cada pessoa, volume dela para você e Assistir a tela. No celular, segurar a linha abre o mesmo menu.",
+        "Tela nova não ocupa mais um espaço do seu layout sozinha: aparece uma etiqueta no canto (\"Fulano começou a transmitir · Assistir\") que some sozinha. Um ícone ao vivo discreto mostra quantas telas estão no ar, com Assistir para cada uma, e o sino guarda o histórico com o contador de novas zerando ao abrir.",
       ],
     },
   ],
