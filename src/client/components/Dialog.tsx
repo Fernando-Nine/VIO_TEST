@@ -5,12 +5,15 @@ export function Dialog({
   close,
   children,
   centered = false,
+  modal = true,
   className,
 }: {
   title: string;
   close: () => void;
   children: ReactNode;
   centered?: boolean;
+  /** Non-modal panels leave the room usable behind them (People). */
+  modal?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -18,11 +21,13 @@ export function Dialog({
   useEffect(() => {
     const el = ref.current;
     const previous = el?.ownerDocument.activeElement as HTMLElement | null;
-    el?.showModal();
+    if (modal) el?.showModal();
+    else el?.show();
     return () => {
       el?.close();
       if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
+    // The dialog opens once; `modal` is fixed for its lifetime.
   }, []);
   return (
     <dialog
@@ -35,6 +40,13 @@ export function Dialog({
       }}
       onClick={(e) => {
         if (e.target === ref.current) close();
+      }}
+      onKeyDown={(e) => {
+        // A non-modal dialog gets no cancel event from Escape.
+        if (!modal && e.key === "Escape" && !e.defaultPrevented) {
+          e.preventDefault();
+          close();
+        }
       }}
     >
       <div className="sheet-content">

@@ -2,7 +2,7 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.9.0-rc.9] - 2026-10-25
+## [2.9.0-rc.10] - 2026-10-25
 
 Prévia · Visual novo dos widgets
 
@@ -16,6 +16,7 @@ Prévia · Visual novo dos widgets
 - Widget pessoal ou da sala, escolhido ao criar (Para mim / Para a sala); não existe mais compartilhar nem pedido de aprovação. O cabeçalho mostra quem controla (Todos, Admins ou Só você) e o menu do botão direito segue a mesma ordem em todos os widgets, com Remover deste layout separado de Encerrar para todos.
 - Ajustes numa janela com lista lateral: Áudio (com medidor da sensibilidade), Vídeo, Aparência e sons e, para criador e admins, Sala (convite, quem controla cada widget e transferência de posse). No celular, lista com páginas.
 - Controles da chamada numa doca fixa no rodapé (nada flutua sobre a sala), com quantas pessoas estão na chamada; no celular, barra de abas Microfone, Áudio, Tela e Mais. Em tela cheia, uma pílula discreta que vira a barra completa ao passar o mouse.
+- Pessoas num painel lateral que não tranca a sala: linhas compactas com quem fala, quem está sem microfone e quem transmite (por ícone, não só por cor), abas Pessoas e Permissões para quem gerencia e, no menu de cada pessoa, volume dela para você e Assistir a tela. No celular, segurar a linha abre o mesmo menu.
 
 ## [2.8.1] - 2026-10-24
 
