@@ -155,14 +155,6 @@ export interface ChatMessage {
   text: string;
   sentAt: number;
 }
-export interface ShareRequest {
-  id: string;
-  owner: string;
-  ownerName: string;
-  content: WidgetContent;
-  status: "pending" | "approved" | "denied";
-  createdAt: number;
-}
 export interface RoomNotice {
   id: string;
   text: string;
@@ -231,7 +223,6 @@ export const widgetSchemas = {
       text: z.string().trim().min(1).max(2000),
     })
     .strict(),
-  "widget-review": z.object({ id: identifier, approve: z.boolean() }).strict(),
   "widget-permission": z
     .object({
       id: identifier,

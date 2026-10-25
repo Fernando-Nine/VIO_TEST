@@ -1,14 +1,18 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-10-24
+Atualizado: 2026-10-25
 
 ## Agora
 
-#83 (segurança 2.8.1): body-parser 2.4.0 (PR #85, mesclada); zod 4.6.7 (PR #86).
-Com as duas na main, `npm audit --omit=dev` = 0. Copiloto avisado para publicar a 2.8.1.
+#104 (PR #106): servidor sem compartilhar/pedido; `guestCreate` (padrão off). Contrato
+comentado na #104; Frontend faz a interface (catálogo "Para mim"/"Para a sala", selo).
 
 ## Feito recentemente
 
+- #104: removidos `widget-review`, `shareRequests`, `guestShare`, `guestRequest`.
+  `widget-create` = widget da sala; convidado precisa de `guestCreate`, admin de
+  `adminCreate`. Pessoal nunca vai ao servidor.
+- #83: body-parser 2.4.0 (#85) e zod 4.6.7 (#86); 2.8.1 em produção.
 - #83: zod 3 → 4 sem mudança de schema; exposição era baixa (sem body parser montado,
   Socket.IO 64 KB, arrays com `max` pequeno). `freshKey` gera UUID v4 válido p/ zod 4.
 - #71 (PR #73): `RoomPermissions` em `protocol.ts` (padrões da issue), comando

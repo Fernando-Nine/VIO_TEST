@@ -5,14 +5,15 @@ Atualizado: 2026-10-24.
 
 ## Ambientes
 
-|          | Versão | Repositório                   | Endereço                       |
-| -------- | ------ | ----------------------------- | ------------------------------ |
-| Produção | 2.8.0  | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.8.0  | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+|          | Versão     | Repositório                   | Endereço                       |
+| -------- | ---------- | ----------------------------- | ------------------------------ |
+| Produção | 2.8.1      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Prévia   | 2.9.0-rc.6 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
-Produção e prévia têm o mesmo código desde a 2.8.0 (VIO PR #2, árvore de b435774).
-Tags `v2.7.2` (c249a34) e `v2.8.0` (8993afb) no VIO ainda pendentes.
+Produção 2.8.1 = 2.8.0 + correções de segurança (VIO PR #3). A prévia já tem o visual novo
+dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.8.0` e
+`v2.8.1` no VIO pendentes (push de tag recusado pela rede dos agentes).
 
 ## Validado pelo usuário
 
@@ -27,11 +28,16 @@ Tags `v2.7.2` (c249a34) e `v2.8.0` (8993afb) no VIO ainda pendentes.
 
 ## Decisões vigentes
 
+- Correções de segurança vão direto para a produção, sem aval prévio (usuário, 2026-10-24).
+- App Windows: o usuário testa já com a captura de áudio WASAPI.
+
 - Instaladores do app Windows ficam no repositório público Fernando-Nine/vio-releases (criado em 2026-10-24)
   (GitHub Releases), também usado pelo atualizador automático. Assinatura só ao abrir ao público.
 - Permissões da sala no estilo cargos do Discord (#71, antiga E12): criador e admins
   controlam widgets da sala; convidados conforme switches da sala.
 - Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
+- Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
+  a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
 - Visual novo dos widgets passa por rascunhos da área Design antes do código.
 
 - Contas, banco de dados e gravação no servidor: **adiados**, não proibidos.
@@ -47,9 +53,8 @@ Tags `v2.7.2` (c249a34) e `v2.8.0` (8993afb) no VIO ainda pendentes.
 
 - E10: grid personalizado — usuário prefere no máximo 3 linhas × 4 colunas no computador;
   celular a definir. Em discussão com o copiloto antes de ir ao Design.
-- Pauta de Design a discutir: Pessoas na sala, Ajustes, aviso de novas transmissões, cards
-  de Chamada/Compartilhar sem cobrir a tela, padrão de cores/paletas e permissões entre
-  widgets, e a tela de compartilhar widget.
+- Design leva 2 aprovada para rascunho: Pessoas na sala, Ajustes, aviso de transmissões
+  (etiqueta + sino), cards de Chamada/Compartilhar e padronização dos widgets.
 - Widget Personalizado/Comunidade: fora de escopo até haver isolamento de código.
 
 ## Referências

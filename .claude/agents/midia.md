@@ -20,4 +20,5 @@ preparar o app Windows (captura de áudio por aplicativo) e, depois, celular.
 - Toda mudança de mídia lista no PR o roteiro de teste manual para o usuário:
   duas abas; PC + celular; reinício do servidor com a sala aberta.
 
-**Skills úteis:** `run`, `code-review`.
+**Skills:** `systematic-debugging`, `verification-before-completion`,
+`github-actions-templates` (instalador), `playwright-cli` (BrowserLab), `code-review`.

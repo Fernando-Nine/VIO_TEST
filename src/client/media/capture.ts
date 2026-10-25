@@ -67,6 +67,8 @@ export class Captures {
   threshold = -55;
   manualGain = 1;
   voiceLevel = 0;
+  /** Raw input level in dB, before the gate; drives the settings meter. */
+  inputDb = -100;
   voiceSettings = {
     echoCancellation: true,
     noiseSuppression: true,
@@ -207,6 +209,7 @@ export class Captures {
         buffer.reduce((sum, v) => sum + v * v, 0) / buffer.length,
       );
       const db = 20 * Math.log10(rms + 1e-8);
+      this.inputDb = db;
       if (db > this.threshold) hold = Date.now() + 180;
       const next = Date.now() < hold && !this.micMuted && !this.deaf;
       if (next !== open) {
@@ -431,6 +434,7 @@ export class Captures {
       this.rawVoice = undefined;
       this.context = undefined;
       this.voiceLevel = 0;
+      this.inputDb = -100;
     }
     this.changed(kind, true);
   }

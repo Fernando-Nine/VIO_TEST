@@ -103,36 +103,6 @@ export function Notifications({
         ],
       });
   }
-  for (const request of snapshot?.shareRequests || []) {
-    if (request.status === "pending" && manages)
-      items.push({
-        id: `request:${request.id}:${request.createdAt}`,
-        text: `${request.ownerName} quer compartilhar ${request.content.title}`,
-        actions: [
-          {
-            label: "Aprovar",
-            run: () =>
-              engine.request("widget-review", {
-                id: request.id,
-                approve: true,
-              }),
-          },
-          {
-            label: "Negar",
-            run: () =>
-              engine.request("widget-review", {
-                id: request.id,
-                approve: false,
-              }),
-          },
-        ],
-      });
-    else if (request.owner === engine.view.id && request.status !== "pending")
-      items.push({
-        id: `result:${request.id}:${request.createdAt}:${request.status}`,
-        text: `Compartilhamento de ${request.content.title}: ${request.status === "approved" ? "aprovado" : "negado"}`,
-      });
-  }
   for (const notice of snapshot?.notices || [])
     items.push({ id: `notice:${notice.id}`, text: notice.text });
   const remaining = items.filter((item) => !dismissed.has(item.id));

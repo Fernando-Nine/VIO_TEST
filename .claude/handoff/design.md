@@ -1,33 +1,34 @@
 # design — handoff
 
-Atualizado: 2026-10-24
+Atualizado: 2026-10-25
 
 ## Agora
 
-1ª leva de widgets aprovada e especificada. Nada em andamento.
-Canvas: https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ ("Widgets VIO — leva 1").
+Leva 2 aprovada e especificada. Nada em andamento.
+Canvas leva 2: https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8 · leva 1:
+https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ. Specs em `docs/design/`.
 
 ## Feito recentemente
 
-- Escolhas do usuário viraram specs em `docs/design/` e issues `frontend`:
-  - Cronômetro A · Anel — #75.
-  - Votação A + prazo e rostos da B; resultado em barras, pizza ou sem gráfico (tela da B);
-    mais de 6 votantes = 5 rostos + `+N` — #76. Prancha "Votação · escolhida (A + B)".
-  - Dados A, mantendo o ícone ? do guia de sintaxe — #77.
-  - Sorteador A com cores por opção e paletas harmônicas (não só azul) — #78
-    (`frontend` + `backend`: `color`/`palette` no módulo). Prancha "Sorteador · escolhido".
+- Escolhas da leva 2 viraram specs e issues `frontend`:
+  - Pessoas A (painel lateral) — #107.
+  - Ajustes B (lista lateral) — #108.
+  - Transmissões A + C (etiqueta no canto, depois balão no sino) — #109.
+  - Chamada D (doca no rodapé); em tela cheia, barra fina A que some e cresce no hover —
+    #110. Prancha "4 · Escolhida".
+  - Padrão dos widgets A + selo de quem controla da B — #111.
+- Peça 5 ajustada à regra nova: sem compartilhar widget (pessoal ou da sala na criação),
+  sem botão morto, menu na ordem da skill `vio-design-system`.
 
 ## Decisões
 
-- Vencedor/crítico em destaque discreto: `#A6A9FF`, sem cor nova.
-- Animações ≤ 800 ms e desligadas em `prefers-reduced-motion`.
-- Seletor de gráfico da Votação é preferência pessoal (decidido pelo usuário); cores do
-  Sorteador são estado da sala.
+- Skills do projeto: `vio-design-system` e `vio-design-review` (`.claude/skills/`).
+- Destaque discreto `#A6A9FF`; animações ≤ 800 ms, desligadas em movimento reduzido.
 
 ## Pendente / bloqueios
 
-- Comentários do usuário no canvas, se houver.
+- Confirmar com o copiloto: "Silenciar para mim" (#107) e a leitura de A + C (#109).
 
 ## Próximo passo
 
-Aguardar a próxima leva (Tarefas, landing ou página de download) pelo copiloto.
+Aguardar a próxima leva (tela de widget, grid 3×4, landing ou página de download).

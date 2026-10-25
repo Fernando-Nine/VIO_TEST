@@ -7,10 +7,10 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.6";
+export const version = "2.9.0-rc.9";
 export const currentRelease: Release = {
   version,
-  date: "2026-10-24",
+  date: "2026-10-25",
   title: "Prévia · Visual novo dos widgets",
   sections: [
     {
@@ -22,6 +22,9 @@ export const currentRelease: Release = {
         "Sorteador em roleta: gira e para na opção sorteada para todos, com cores por opção e paletas (Índigo, Pôr do sol, Floresta, Doce e Aleatória em harmonia) compartilhadas pela sala.",
         "Sua cor fica salva neste navegador e é aplicada ao entrar em qualquer sala.",
         "Aviso de muitas ações seguidas não aparece mais com uso normal dos widgets (cliques rápidos, edição contínua, rolar logo após sortear); a proteção contra flood continua.",
+        "Widget pessoal ou da sala, escolhido ao criar (Para mim / Para a sala); não existe mais compartilhar nem pedido de aprovação. O cabeçalho mostra quem controla (Todos, Admins ou Só você) e o menu do botão direito segue a mesma ordem em todos os widgets, com Remover deste layout separado de Encerrar para todos.",
+        "Ajustes numa janela com lista lateral: Áudio (com medidor da sensibilidade), Vídeo, Aparência e sons e, para criador e admins, Sala (convite, quem controla cada widget e transferência de posse). No celular, lista com páginas.",
+        "Controles da chamada numa doca fixa no rodapé (nada flutua sobre a sala), com quantas pessoas estão na chamada; no celular, barra de abas Microfone, Áudio, Tela e Mais. Em tela cheia, uma pílula discreta que vira a barra completa ao passar o mouse.",
       ],
     },
   ],

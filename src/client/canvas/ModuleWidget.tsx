@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Settings2,
-  Share2,
   HelpCircle,
   ArrowUp,
   ArrowDown,
@@ -44,12 +43,7 @@ import {
   type ModuleResult,
 } from "../../shared/room-modules";
 import type { WidgetProps } from "./widgets";
-import {
-  HeaderTools,
-  ScopeBadge,
-  useMenuItems,
-  useRename,
-} from "./header-tools";
+import { HeaderTools, useMenuItems, useRename } from "./header-tools";
 import type { WidgetInstance } from "./model";
 import type { Controller } from "../room/controller";
 
@@ -144,9 +138,9 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
   const [editing, setEditing] = useState(false),
     [help, setHelp] = useState(false),
     [history, setHistory] = useState(false),
-    [allTasks, setAllTasks] = useState(false);
+    [allTasks, setAllTasks] = useState(false),
+    [palettes, setPalettes] = useState(false);
   const [error, setError] = useState(""),
-    [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [now, setNow] = useState(() => engine.serverNow());
   const retry = useRef({ serialized: "", id: "" });
@@ -204,15 +198,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
   useMenuItems(
     value && config
       ? [
-          ...(widget.config.sharedId
-            ? []
-            : [
-                {
-                  label: "Compartilhar",
-                  icon: Share2,
-                  run: () => void share(),
-                },
-              ]),
           ...(config.kind === "dice"
             ? [
                 {
@@ -242,19 +227,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                         run: () => setHistory(true),
                       },
                     ]
-                  : []),
-                ...(editable
-                  ? paletteIds.map((id) => ({
-                      label: `Paleta ${paletteNames[id]}`,
-                      icon: Palette,
-                      run: () =>
-                        saveConfig(
-                          withPalette(
-                            (pending.current ?? config) as typeof config,
-                            id,
-                          ),
-                        ),
-                    }))
                   : []),
               ]
             : []),
@@ -303,6 +275,16 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
                   danger: true,
                   run: () =>
                     void act({ kind: "reset", revision: value.revision }),
+                },
+              ]
+            : []),
+          // Appearance comes after the widget's own actions.
+          ...(editable && config.kind === "random"
+            ? [
+                {
+                  label: "Cor e paleta",
+                  icon: Palette,
+                  run: () => setPalettes(true),
                 },
               ]
             : []),
@@ -386,7 +368,6 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
     if (busy || !value?.module) return;
     setBusy(true);
     setError("");
-    setNotice("");
     const serialized = JSON.stringify(operation);
     if (retry.current.serialized !== serialized)
       retry.current = { serialized, id: freshKey() };
@@ -425,56 +406,8 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
       setBusy(false);
     }
   }
-  async function share() {
-    if (!value || busy) return;
-    setBusy(true);
-    setError("");
-    try {
-      const id = widget.config.pendingShareId || freshKey();
-      engine.canvas.updateWidget(widget.id, {
-        config: { ...widget.config, pendingShareId: id },
-      });
-      const result = await engine.request<SharedWidget | { pending: true }>(
-        "widget-create",
-        {
-          id,
-          content: {
-            kind: value.kind,
-            title: value.title,
-            blocks: [],
-            module: value.module,
-          },
-        },
-      );
-      if ("pending" in result)
-        setNotice(
-          "Pedido enviado aos responsáveis. Seu widget continua individual até a aprovação.",
-        );
-      else {
-        engine.receiveSharedWidget(result);
-        engine.canvas.bindShared(widget.id, result.id);
-      }
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Não foi possível compartilhar.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
   const controls = (
     <HeaderTools>
-      <ScopeBadge shared={!!widget.config.sharedId} />
-      {!widget.config.sharedId && (
-        <button
-          className="icon-button"
-          aria-label="Compartilhar widget"
-          disabled={busy}
-          onClick={() => void share()}
-        >
-          <Share2 size={14} />
-        </button>
-      )}
       {config.kind === "dice" && (
         <button
           className="icon-button"
@@ -661,16 +594,39 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           {error}
         </p>
       )}
-      {notice && (
-        <p role="status" className="field-note">
-          {notice}
-        </p>
-      )}
       <span className="sr-only" aria-live="polite">
         {state.history?.at(-1)
           ? `${state.history.at(-1)!.authorName}: ${state.history.at(-1)!.label}`
           : ""}
       </span>
+      {palettes && config.kind === "random" && (
+        <Dialog title="Cor e paleta" centered close={() => setPalettes(false)}>
+          <div className="palette-choice" role="group" aria-label="Paletas">
+            {paletteIds.map((id) => (
+              <button
+                key={id}
+                aria-pressed={config.palette === id}
+                onClick={() => {
+                  setPalettes(false);
+                  saveConfig(
+                    withPalette(
+                      (pending.current ?? config) as typeof config,
+                      id,
+                    ),
+                  );
+                }}
+              >
+                <span aria-hidden="true">
+                  {(id === "random" ? [] : paletteColors(id, [])).map((c) => (
+                    <i key={c} style={{ background: c }} />
+                  ))}
+                </span>
+                {paletteNames[id]}
+              </button>
+            ))}
+          </div>
+        </Dialog>
+      )}
       {history && (
         <Dialog title="Histórico" close={() => setHistory(false)}>
           <Results entries={state.history || []} />

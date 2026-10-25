@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { Avatar } from "../components/Avatar";
 import { EmojiPicker } from "../components/EmojiPicker";
-import { HeaderTools, ScopeBadge, useRename } from "./header-tools";
+import { useRename } from "./header-tools";
 import { freshKey } from "../id";
 import type { WidgetProps } from "./widgets";
 import {
@@ -61,9 +61,6 @@ export function ChatWidget({ widget, engine, visible }: WidgetProps) {
   let groupStart = 0;
   return (
     <div className="chat-widget">
-      <HeaderTools>
-        <ScopeBadge shared />
-      </HeaderTools>
       <div
         ref={list}
         className="chat-messages"

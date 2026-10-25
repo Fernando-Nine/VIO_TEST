@@ -21,5 +21,10 @@ menos caixas, menos botões; mais edição direta, hover e menu de botão direit
 - Não tocar em PeerConnections/streams; precisa? Combine com Mídia via issue.
 - Permissão de widget é decidida no servidor (Backend); a interface só reflete.
 
-**Skills úteis:** `design:design-critique`, `design:accessibility-review`, `design:ux-copy`,
-`run` (abrir e conferir o app).
+**Skills (carregue a que se aplica; não todas):**
+
+- Widgets e telas: `vio-design-system`; antes do merge visual: `vio-design-review`.
+- React/performance: `vercel-react-best-practices`. Tipos: `typescript-advanced-types`.
+- Polimento e animação: `impeccable`, `emil-design-eng`. Revisão de UI: `web-design-guidelines`.
+- Bug: `systematic-debugging`. Antes de dizer "pronto": `verification-before-completion`.
+- Conferir no navegador: `webapp-testing` ou `playwright-cli`.

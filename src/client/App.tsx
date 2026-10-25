@@ -22,6 +22,7 @@ import {
   Check,
   ChevronDown,
   Copy,
+  Ellipsis,
   Headphones,
   HeadphoneOff,
   LogOut,
@@ -38,6 +39,7 @@ import {
 import { Controller } from "./room/controller";
 import { RemoteVoice } from "./components/Media";
 import { Dialog } from "./components/Dialog";
+import { ContextMenu } from "./components/ContextMenu";
 import { Settings } from "./components/Settings";
 import { ColorPicker } from "./components/ColorPicker";
 import { participantStyle } from "./components/participant-style";
@@ -195,6 +197,15 @@ export default function App({ engine }: { engine: Controller }) {
         webkitEnterFullscreen?: () => void;
       }
     )?.webkitEnterFullscreen;
+  const [more, setMore] = useState<{ x: number; y: number } | null>(null);
+  const togglePip = () =>
+    void pip
+      .toggle(
+        playerHost,
+        player.current?.querySelector<HTMLVideoElement>(".is-focused video") ||
+          null,
+      )
+      .catch((e) => engine.fail(e));
   const open = (p: Panel) => {
     if (p) pip.close();
     setPanel(p);
@@ -416,163 +427,234 @@ export default function App({ engine }: { engine: Controller }) {
                 </Suspense>
                 <footer
                   ref={dock}
-                  className="dock"
+                  className={`dock ${full ? "is-fullscreen" : ""}`}
                   aria-label="Controles da sala"
                 >
+                  {full && (
+                    <div className="dock-pill" aria-hidden="true">
+                      {micMuted ? <MicOff size={14} /> : <Mic size={14} />}
+                      {engine.inCall ? (
+                        <Phone size={14} />
+                      ) : (
+                        <PhoneOff size={14} />
+                      )}
+                    </div>
+                  )}
                   <div
-                    className="control-card"
+                    className="dock-side call-controls"
                     role="group"
                     aria-label="Chamada"
                   >
-                    <span className="control-card-label">Chamada</span>
-                    <div className="dock-group call-controls">
-                      {!engine.inCall ? (
+                    {!engine.inCall ? (
+                      <button
+                        className="secondary call-join"
+                        onClick={() => engine.joinCall()}
+                        aria-label="Entrar na chamada com microfone desligado"
+                      >
+                        <Phone size={18} />
+                        <span>Entrar na chamada</span>
+                      </button>
+                    ) : (
+                      <>
+                        <span className="call-count">
+                          <i aria-hidden="true" /> Na chamada ·{" "}
+                          {people.filter((p) => p.inCall).length}
+                        </span>
                         <button
-                          className="secondary call-join"
-                          onClick={() => engine.joinCall()}
-                          aria-label="Entrar na chamada com microfone desligado"
+                          className={`dock-button ${micMuted ? "muted" : ""}`}
+                          aria-pressed={!micMuted}
+                          aria-label={
+                            hasVoice
+                              ? engine.captures.micMuted
+                                ? "Ativar microfone"
+                                : "Silenciar microfone"
+                              : "Conectar microfone"
+                          }
+                          disabled={(!canMedia || !!voiceBlocked) && !hasVoice}
+                          title={hasVoice ? undefined : voiceBlocked}
+                          onClick={() => void engine.microphone()}
                         >
-                          <Phone size={18} />
-                          <span>Entrar na chamada</span>
+                          {micMuted ? <MicOff /> : <Mic />}
+                          <span>Microfone</span>
                         </button>
-                      ) : (
-                        <>
-                          <button
-                            className={`dock-button ${micMuted ? "muted" : ""}`}
-                            aria-pressed={!micMuted}
-                            aria-label={
-                              hasVoice
-                                ? engine.captures.micMuted
-                                  ? "Ativar microfone"
-                                  : "Silenciar microfone"
-                                : "Conectar microfone"
-                            }
-                            disabled={
-                              (!canMedia || !!voiceBlocked) && !hasVoice
-                            }
-                            title={hasVoice ? undefined : voiceBlocked}
-                            onClick={() => void engine.microphone()}
-                          >
-                            {micMuted ? <MicOff /> : <Mic />}
-                            <span>Microfone</span>
-                          </button>
-                          <button
-                            className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
-                            aria-pressed={engine.captures.deaf}
-                            aria-label={
-                              engine.captures.deaf
-                                ? "Desativar ensurdecer"
-                                : "Ensurdecer"
-                            }
-                            onClick={() => engine.deafen()}
-                          >
-                            {engine.captures.deaf ? (
-                              <HeadphoneOff />
-                            ) : (
-                              <Headphones />
-                            )}
-                            <span>Áudio</span>
-                          </button>
-                          <button
-                            className={`dock-button ${hasCamera ? "enabled" : ""}`}
-                            aria-label={
-                              hasCamera ? "Desligar câmera" : "Ligar câmera"
-                            }
-                            aria-pressed={hasCamera}
-                            disabled={
-                              (!canMedia || !!cameraBlocked) && !hasCamera
-                            }
-                            title={hasCamera ? undefined : cameraBlocked}
-                            onClick={() => void engine.camera()}
-                          >
-                            {hasCamera ? <Camera /> : <CameraOff />}
-                            <span>Câmera</span>
-                          </button>
-                          <button
-                            className="dock-button leave-call"
-                            aria-label="Sair da chamada"
-                            title="Sair da chamada e continuar assistindo"
-                            onClick={() => void engine.leaveCall()}
-                          >
-                            <PhoneOff />
-                            <span>Sair da voz</span>
-                          </button>
-                        </>
-                      )}
-                    </div>
+                        <button
+                          className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
+                          aria-pressed={engine.captures.deaf}
+                          aria-label={
+                            engine.captures.deaf
+                              ? "Desativar ensurdecer"
+                              : "Ensurdecer"
+                          }
+                          onClick={() => engine.deafen()}
+                        >
+                          {engine.captures.deaf ? (
+                            <HeadphoneOff />
+                          ) : (
+                            <Headphones />
+                          )}
+                          <span>Áudio</span>
+                        </button>
+                        <button
+                          className={`dock-button dock-wide ${hasCamera ? "enabled" : ""}`}
+                          aria-label={
+                            hasCamera ? "Desligar câmera" : "Ligar câmera"
+                          }
+                          aria-pressed={hasCamera}
+                          disabled={
+                            (!canMedia || !!cameraBlocked) && !hasCamera
+                          }
+                          title={hasCamera ? undefined : cameraBlocked}
+                          onClick={() => void engine.camera()}
+                        >
+                          {hasCamera ? <Camera /> : <CameraOff />}
+                          <span>Câmera</span>
+                        </button>
+                        <button
+                          className="dock-button dock-wide leave-call"
+                          aria-label="Sair da chamada"
+                          title="Sair da chamada e continuar assistindo"
+                          onClick={() => void engine.leaveCall()}
+                        >
+                          <PhoneOff />
+                          <span>Sair</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div
-                    className="control-card"
+                    className="dock-side share-controls"
                     role="group"
                     aria-label="Compartilhamento"
                   >
-                    <span className="control-card-label">Compartilhamento</span>
-                    <div className="dock-group share-controls">
+                    {watching && (
+                      <span className="dock-wide">
+                        <VolumeControl engine={engine} />
+                      </span>
+                    )}
+                    {pip.supported && !full && (
                       <button
-                        className={`share-button ${hasScreen ? "sharing" : ""}`}
-                        aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
-                        disabled={(!canShare || !!screenBlocked) && !hasScreen}
-                        title={hasScreen ? undefined : screenBlocked}
-                        onClick={() =>
-                          hasScreen ? void engine.stop("screen") : open("share")
+                        className="dock-button dock-wide"
+                        aria-label={
+                          pip.detached
+                            ? "Voltar da janela flutuante"
+                            : pip.active
+                              ? "Fechar janela flutuante"
+                              : "Picture-in-picture"
                         }
+                        title="Janela flutuante"
+                        onClick={togglePip}
                       >
-                        {hasScreen ? (
-                          <Pause size={19} />
-                        ) : (
-                          <MonitorUp size={19} />
-                        )}
-                        <span>{hasScreen ? "Parar tela" : "Compartilhar"}</span>
+                        <PictureInPicture2 />
+                        <span>Flutuante</span>
                       </button>
-                      {(watching || pip.interactive) && (
-                        <div className="dock-group playback-controls">
-                          {watching && <VolumeControl engine={engine} />}
-                          {watching && canFullscreen && (
-                            <button
-                              className="dock-button"
-                              aria-label={
-                                full ? "Sair da tela cheia" : "Tela cheia"
-                              }
-                              title="Tela cheia"
-                              disabled={pip.detached}
-                              onClick={() => void fullscreen()}
-                            >
-                              {full ? <Minimize /> : <Maximize />}
-                              <span>
-                                {full ? "Sair da tela cheia" : "Tela cheia"}
-                              </span>
-                            </button>
-                          )}
-                          {pip.supported && (
-                            <button
-                              className="dock-button"
-                              aria-label={
-                                pip.detached
-                                  ? "Voltar da janela flutuante"
-                                  : pip.active
-                                    ? "Fechar janela flutuante"
-                                    : "Picture-in-picture"
-                              }
-                              title="Janela flutuante"
-                              onClick={() =>
-                                void pip
-                                  .toggle(
-                                    playerHost,
-                                    player.current?.querySelector<HTMLVideoElement>(
-                                      ".is-focused video",
-                                    ) || null,
-                                  )
-                                  .catch((e) => engine.fail(e))
-                              }
-                            >
-                              <PictureInPicture2 />
-                              <span>Flutuante</span>
-                            </button>
-                          )}
-                        </div>
+                    )}
+                    <button
+                      className={`share-button ${hasScreen ? "sharing" : ""}`}
+                      aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
+                      disabled={(!canShare || !!screenBlocked) && !hasScreen}
+                      title={hasScreen ? undefined : screenBlocked}
+                      onClick={() =>
+                        hasScreen ? void engine.stop("screen") : open("share")
+                      }
+                    >
+                      {hasScreen ? (
+                        <Pause size={19} />
+                      ) : (
+                        <MonitorUp size={19} />
                       )}
-                    </div>
+                      <span>
+                        <b className="dock-wide">
+                          {hasScreen ? "Parar tela" : "Compartilhar"}
+                        </b>
+                        <b className="dock-narrow">Tela</b>
+                      </span>
+                    </button>
+                    {full && (
+                      <button
+                        className="dock-button"
+                        aria-label="Sair da tela cheia"
+                        onClick={() => void fullscreen()}
+                      >
+                        <Minimize />
+                        <span>Janela</span>
+                      </button>
+                    )}
+                    {!full && (
+                      <button
+                        className="dock-credits dock-wide"
+                        onClick={() => open("history")}
+                      >
+                        NerdQuest · v{version}
+                      </button>
+                    )}
+                    <button
+                      className="dock-button dock-narrow"
+                      aria-label="Mais controles"
+                      aria-haspopup="menu"
+                      onClick={(event) => {
+                        const box = event.currentTarget.getBoundingClientRect();
+                        setMore({ x: box.right - 200, y: box.top - 8 });
+                      }}
+                    >
+                      <Ellipsis />
+                      <span>Mais</span>
+                    </button>
                   </div>
+                  {more && (
+                    <ContextMenu
+                      at={more}
+                      label="Mais controles"
+                      origin={dock.current}
+                      close={() => setMore(null)}
+                      items={[
+                        ...(engine.inCall
+                          ? [
+                              {
+                                label: hasCamera
+                                  ? "Desligar câmera"
+                                  : "Ligar câmera",
+                                icon: hasCamera ? CameraOff : Camera,
+                                run: () => void engine.camera(),
+                              },
+                            ]
+                          : []),
+                        ...(watching && canFullscreen
+                          ? [
+                              {
+                                label: "Tela cheia",
+                                icon: Maximize,
+                                run: () => void fullscreen(),
+                              },
+                            ]
+                          : []),
+                        ...(pip.supported
+                          ? [
+                              {
+                                label: "Janela flutuante",
+                                icon: PictureInPicture2,
+                                run: togglePip,
+                              },
+                            ]
+                          : []),
+                        {
+                          label: `Novidades · v${version}`,
+                          icon: ArrowUpRight,
+                          run: () => open("history"),
+                        },
+                        ...(engine.inCall
+                          ? [
+                              {
+                                label: "Sair da chamada",
+                                icon: PhoneOff,
+                                danger: true,
+                                separated: true,
+                                run: () => void engine.leaveCall(),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                  )}
                 </footer>
               </div>,
               playerHost,
@@ -629,13 +711,16 @@ export default function App({ engine }: { engine: Controller }) {
               history: "O VIO está crescendo",
             }[panel]
           }
+          className={panel === "settings" ? "sheet-settings" : undefined}
           close={() => open(null)}
         >
           {notice}
           {panel === "people" && (
             <PeoplePanel engine={engine} editColor={() => open("color")} />
           )}
-          {panel === "settings" && <Settings engine={engine} />}
+          {panel === "settings" && (
+            <Settings engine={engine} openPeople={() => open("people")} />
+          )}
           {panel === "share" && desktop && (
             <NativeShare engine={engine} close={() => open(null)} />
           )}

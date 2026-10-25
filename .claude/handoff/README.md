@@ -1,7 +1,7 @@
 # Handoffs
 
 Um arquivo por área. É o que um chat novo lê para continuar de onde o anterior parou.
-Atualize ao passar de ~60% do contexto (`/context`), ao concluir uma entrega grande ou
+Atualize ao passar de ~200 mil tokens (`/context`), ao concluir uma entrega grande ou
 antes de encerrar. Commit junto com o trabalho. Sem segredos, tokens ou dados pessoais.
 
 Máximo ~40 linhas. Reescreva, não acumule: histórico fica no Git e nas issues.

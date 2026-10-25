@@ -317,17 +317,6 @@ export class CanvasStore {
       if (index >= 0) s.widgets[index] = { ...s.widgets[index], ...patch, id };
     });
   }
-  bindShared(id: string, sharedId: string) {
-    // Sharing converts the original host in place. Retries/catalog adds cannot
-    // create a second local host for the same room-scoped widget.
-    for (const w of this.value.widgets)
-      if (w.id !== id && w.config.sharedId === sharedId) this.remove(w.id);
-    this.updateWidget(id, {
-      config: { sharedId },
-      transient: true,
-      state: undefined,
-    });
-  }
   toggleSingle() {
     this.change((s) => {
       s.focusId = focusedWidgetId(s);
