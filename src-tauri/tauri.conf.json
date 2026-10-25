@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "VIO",
+  "productName": "VIO Teste",
   "version": "../package.json",
   "identifier": "studio.nerdquest.vio.test",
   "build": {
@@ -10,25 +10,19 @@
     "withGlobalTauri": true,
     "windows": [],
     "security": {
-      "capabilities": [
-        "main"
-      ],
+      "capabilities": ["main"],
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' ipc: http://ipc.localhost https://vio-test.onrender.com wss://vio-test.onrender.com; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
     }
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "nsis"
-    ],
+    "targets": ["nsis"],
     "createUpdaterArtifacts": false,
     "publisher": "NerdQuest Studios",
     "shortDescription": "Compartilhe a tela, converse e assista junto.",
     "category": "SocialNetworking",
     "licenseFile": "../LICENSE",
-    "icon": [
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/icon-beta.ico"],
     "resources": {
       "../dist/source.tar.gz": "source.tar.gz"
     },
@@ -39,18 +33,16 @@
       },
       "nsis": {
         "installMode": "currentUser",
-        "languages": [
-          "PortugueseBR"
-        ],
+        "languages": ["PortugueseBR"],
         "displayLanguageSelector": false
       }
     }
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdENDk5RUI5MUYwQ0ExRkUKUldUK29Rd2Z1WjVKZmJLclBZY2toRk9iTkl4K20ydVlkdVNyK1BLUlNSckQ2RFVXc09PcmRheTIK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDMxMjNFMzhCQjc5M0NFMEQKUldRTnpwTzNpK01qTWMxc1FVTWFDdFU2dFBIS3FhV3ZzcWpnSFRESWMvZVc1UWJQRmMwV05ERWkK",
       "endpoints": [
-        "https://github.com/Fernando-Nine/vio-releases/releases/latest/download/latest.json"
+        "https://github.com/Fernando-Nine/vio-releases/releases/download/beta/beta.json"
       ],
       "windows": {
         "installMode": "passive"

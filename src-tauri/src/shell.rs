@@ -85,7 +85,12 @@ fn desktop_stop_audio(window: WebviewWindow, state: State<'_, Manager>, capture_
 }
 
 async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
-    let updater = app.updater_builder().timeout(Duration::from_secs(20)).build()?;
+    let mut builder = app.updater_builder().timeout(Duration::from_secs(20));
+    // VIO Teste follows whatever its feed points at, even a lower prerelease number.
+    if app.config().identifier.ends_with(".test") {
+        builder = builder.version_comparator(|current, update| update.version != current);
+    }
+    let updater = builder.build()?;
     if let Some(update) = updater.check().await? {
         // On Windows the installer closes the app and starts the new version.
         update.download_and_install(|_, _| {}, || {}).await?;
@@ -96,7 +101,7 @@ async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
 
 fn open(app: &AppHandle) -> tauri::Result<()> {
     WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-        .title("VIO")
+        .title(app.package_info().name.clone())
         .inner_size(1280.0, 800.0)
         .min_inner_size(720.0, 480.0)
         .use_https_scheme(true)

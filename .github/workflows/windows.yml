@@ -4,13 +4,34 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [src-tauri/**, src/client/**, src/shared/**, scripts/build-desktop.mjs, package.json, package-lock.json, .github/workflows/windows.yml]
+    # Stable releases: tags on the VIO repository (paths are not checked for tags).
+    tags: ["v*"]
+    paths:
+      [
+        src-tauri/**,
+        src/client/**,
+        src/shared/**,
+        scripts/build-desktop.mjs,
+        package.json,
+        package-lock.json,
+        .github/workflows/windows.yml,
+      ]
   pull_request:
-    paths: [src-tauri/**, src/client/**, src/shared/**, scripts/build-desktop.mjs, package.json, package-lock.json, .github/workflows/windows.yml]
+    paths:
+      [
+        src-tauri/**,
+        src/client/**,
+        src/shared/**,
+        scripts/build-desktop.mjs,
+        package.json,
+        package-lock.json,
+        .github/workflows/windows.yml,
+      ]
 
 concurrency:
   group: windows-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a run that may be publishing.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -19,6 +40,10 @@ jobs:
   installer:
     runs-on: windows-latest
     timeout-minutes: 40
+    env:
+      # VIO builds the stable app; VIO_TEST builds "VIO Teste" (docs/WINDOWS-RELEASE.md).
+      VIO_CHANNEL: ${{ github.repository == 'Fernando-Nine/VIO' && 'stable' || 'beta' }}
+      PUBLISH: ${{ (github.repository == 'Fernando-Nine/VIO' && startsWith(github.ref, 'refs/tags/v')) || (github.repository == 'Fernando-Nine/VIO_TEST' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,6 +58,8 @@ jobs:
       # Produces dist/source.tar.gz, shipped inside the installer (AGPL).
       - run: npm run build
       - run: npm run build:desktop
+      - name: Channel config
+        run: node scripts/desktop-channel.mjs config
       - name: Native tests
         run: cargo test --manifest-path src-tauri/Cargo.toml --locked
       - name: Build NSIS installer
@@ -43,9 +70,9 @@ jobs:
         run: |
           # Update signatures only when the key secret exists (never on forks).
           if ($env:TAURI_SIGNING_PRIVATE_KEY) {
-            npx tauri build --bundles nsis --config src-tauri/tauri.updater.json -- --locked
+            npx tauri build --bundles nsis --config src-tauri/tauri.channel.json --config src-tauri/tauri.updater.json -- --locked
           } else {
-            npx tauri build --bundles nsis -- --locked
+            npx tauri build --bundles nsis --config src-tauri/tauri.channel.json -- --locked
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
@@ -56,3 +83,43 @@ jobs:
           path: |
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/nsis/*.sig
+      - name: Publish to vio-releases
+        if: env.PUBLISH == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.VIO_RELEASES_TOKEN }}
+          REPO: Fernando-Nine/vio-releases
+        run: |
+          $exe = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          if (-not $env:GH_TOKEN -or -not (Test-Path "$($exe.FullName).sig")) {
+            Write-Output "::warning::Sem VIO_RELEASES_TOKEN ou chave de assinatura: nada publicado (docs/WINDOWS-RELEASE.md)."
+            exit 0
+          }
+          $version = node scripts/desktop-channel.mjs get $env:VIO_CHANNEL version
+          $tag = node scripts/desktop-channel.mjs get $env:VIO_CHANNEL tag
+          $name = node scripts/desktop-channel.mjs get $env:VIO_CHANNEL installer
+          $feed = node scripts/desktop-channel.mjs get $env:VIO_CHANNEL feed
+          $product = node scripts/desktop-channel.mjs get $env:VIO_CHANNEL productName
+          New-Item -ItemType Directory out | Out-Null
+          Copy-Item $exe.FullName "out/$name"
+          Copy-Item "$($exe.FullName).sig" "out/$name.sig"
+          node scripts/desktop-channel.mjs manifest $env:VIO_CHANNEL "out/$name.sig" | Set-Content -Encoding utf8NoBOM "out/$feed"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($env:VIO_CHANNEL -eq 'stable') {
+            gh release create $tag -R $env:REPO --latest --title "$product $version" --notes "$product $version" "out/$name" "out/$name.sig" "out/$feed"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } else {
+            gh release view beta -R $env:REPO *> $null
+            if ($LASTEXITCODE -ne 0) {
+              gh release create beta -R $env:REPO --prerelease --latest=false --title "$product" --notes "Canal de teste."
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+            # Installer first, feed last: the old feed keeps pointing at a valid file.
+            gh release upload beta -R $env:REPO "out/$name" "out/$name.sig" --clobber
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            gh release upload beta -R $env:REPO "out/$feed" --clobber
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            gh release edit beta -R $env:REPO --notes "$product $version"
+            $old = gh release view beta -R $env:REPO --json assets -q '.assets[].name' | Where-Object { $_ -like '*-setup.exe*' -and $_ -notlike "$name*" }
+            foreach ($asset in $old) { gh release delete-asset beta $asset -R $env:REPO -y }
+          }
