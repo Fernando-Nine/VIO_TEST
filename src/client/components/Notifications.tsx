@@ -3,11 +3,14 @@ import { Bell } from "lucide-react";
 import { AnchoredPopover } from "./AnchoredPopover";
 import type { Controller } from "../room/controller";
 import type { SharedWidget } from "../../shared/widgets";
-import { canManageRoom } from "../../shared/permissions";
+import type { ScreenEvent } from "./LiveScreens";
 
 type Item = {
   id: string;
   text: string;
+  /** Already seen elsewhere (e.g. acted on from the corner label). */
+  read?: boolean;
+  time?: number;
   onDismiss?: () => void;
   actions?: { label: string; run: () => void | Promise<unknown> }[];
 };
@@ -15,15 +18,19 @@ export function Notifications({
   engine,
   openWidget,
   openScreen,
+  screenEvents,
   onOpenChange,
 }: {
   engine: Controller;
   openWidget: (widget: SharedWidget) => void;
   openScreen: (id: string) => void;
+  /** Newest last; the one still shown in the corner is left out by the caller. */
+  screenEvents: ScreenEvent[];
   onOpenChange: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(new Set<string>());
+  const [seen, setSeen] = useState(new Set<string>());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const anchor = useRef<HTMLButtonElement>(null);
@@ -56,21 +63,22 @@ export function Notifications({
   }, [open]);
   const snapshot = engine.view.snapshot;
   const state = engine.canvas.getSnapshot();
-  const manages = canManageRoom(snapshot, engine.view.id);
   const items: Item[] = [];
-  for (const person of snapshot?.participants || [])
-    for (const screen of person.publications) {
-      if (
-        screen.kind === "screen" &&
-        person.id !== engine.view.id &&
-        !engine.view.watching.includes(screen.id)
-      )
-        items.push({
-          id: `screen:${screen.id}`,
-          text: `${person.name} compartilhou uma tela`,
-          actions: [{ label: "Aceitar", run: () => openScreen(screen.id) }],
-        });
-    }
+  const live = new Set(
+    snapshot?.participants.flatMap((p) => p.publications.map((x) => x.id)),
+  );
+  for (const event of screenEvents)
+    items.push({
+      id: `screen:${event.id}`,
+      text: `${event.name} começou a transmitir`,
+      read: event.read,
+      time: event.at,
+      actions:
+        live.has(event.publicationId) &&
+        !engine.view.watching.includes(event.publicationId)
+          ? [{ label: "Assistir", run: () => openScreen(event.publicationId) }]
+          : [],
+    });
   for (const widget of snapshot?.widgets || []) {
     if (
       widget.owner !== engine.view.id &&
@@ -105,7 +113,14 @@ export function Notifications({
   }
   for (const notice of snapshot?.notices || [])
     items.push({ id: `notice:${notice.id}`, text: notice.text });
-  const remaining = items.filter((item) => !dismissed.has(item.id));
+  // Newest first: the bell is a history, not a to-do list.
+  const remaining = items.filter((item) => !dismissed.has(item.id)).reverse();
+  const unread = remaining.filter((item) => !item.read && !seen.has(item.id));
+  // Opening the bell clears the count; the items stay as history.
+  useEffect(() => {
+    if (open && unread.length)
+      setSeen((previous) => new Set([...previous, ...unread.map((i) => i.id)]));
+  });
   const dismiss = (item: Item) => {
     item.onDismiss?.();
     setDismissed((previous) => new Set([...previous, item.id]));
@@ -121,7 +136,11 @@ export function Notifications({
       <button
         ref={anchor}
         className="text-button"
-        aria-label={`Notificações (${remaining.length})`}
+        aria-label={
+          unread.length
+            ? `Notificações, ${unread.length} ${unread.length === 1 ? "nova" : "novas"}`
+            : "Notificações"
+        }
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onFocus={() => {
@@ -134,12 +153,14 @@ export function Notifications({
         onClick={() => set(true)}
       >
         <Bell size={17} />
-        {remaining.length > 0 && (
-          <span className="notification-count">{remaining.length}</span>
+        {unread.length > 0 && (
+          <span className="notification-count">{unread.length}</span>
         )}
       </button>
       <span className="sr-only" aria-live="polite">
-        {remaining.length ? `${remaining.length} notificações disponíveis` : ""}
+        {unread.length
+          ? `${unread.length} ${unread.length === 1 ? "notificação nova" : "notificações novas"}`
+          : ""}
       </span>
       {open && (
         <AnchoredPopover
@@ -163,7 +184,17 @@ export function Notifications({
           {!remaining.length && <p>Nenhuma notificação.</p>}
           {remaining.map((item) => (
             <article key={item.id}>
-              <p>{item.text}</p>
+              <p>
+                {item.text}
+                {item.time && (
+                  <time dateTime={new Date(item.time).toISOString()}>
+                    {new Date(item.time).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </time>
+                )}
+              </p>
               <div className="notification-actions">
                 {item.actions?.map((action) => (
                   <button
@@ -175,7 +206,6 @@ export function Notifications({
                       setError("");
                       try {
                         await action.run();
-                        dismiss(item);
                         set(false);
                       } catch (e) {
                         setError(
