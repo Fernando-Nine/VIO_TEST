@@ -85,7 +85,8 @@ export default function App({ engine }: { engine: Controller }) {
   const [audio, setAudio] = useState(true);
   const [copied, setCopied] = useState(false);
   function showPeople() {
-    open("people");
+    // The icon toggles the side panel (docs/design/pessoas.md).
+    open(panel === "people" ? null : "people");
   }
   const [active, setActive] = useState(true);
   const [full, setFull] = useState(false);
@@ -699,6 +700,8 @@ export default function App({ engine }: { engine: Controller }) {
       </footer>
       {panel && (
         <Dialog
+          key={panel}
+          modal={panel !== "people"}
           title={
             {
               people: "Pessoas na sala",
@@ -709,7 +712,13 @@ export default function App({ engine }: { engine: Controller }) {
               history: "O VIO está crescendo",
             }[panel]
           }
-          className={panel === "settings" ? "sheet-settings" : undefined}
+          className={
+            panel === "settings"
+              ? "sheet-settings"
+              : panel === "people"
+                ? "sheet-people"
+                : undefined
+          }
           close={() => open(null)}
         >
           {notice}
