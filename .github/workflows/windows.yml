@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [src-tauri/**, package.json, package-lock.json, .github/workflows/windows.yml]
+    paths: [src-tauri/**, src/client/**, src/shared/**, scripts/build-desktop.mjs, package.json, package-lock.json, .github/workflows/windows.yml]
   pull_request:
-    paths: [src-tauri/**, package.json, package-lock.json, .github/workflows/windows.yml]
+    paths: [src-tauri/**, src/client/**, src/shared/**, scripts/build-desktop.mjs, package.json, package-lock.json, .github/workflows/windows.yml]
 
 concurrency:
   group: windows-${{ github.ref }}
@@ -32,6 +32,9 @@ jobs:
       - run: npm ci
       # Produces dist/source.tar.gz, shipped inside the installer (AGPL).
       - run: npm run build
+      - run: npm run build:desktop
+      - name: Native tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --locked
       - name: Build NSIS installer
         shell: pwsh
         env:

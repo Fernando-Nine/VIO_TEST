@@ -1,14 +1,19 @@
 # VIO para Windows
 
-Casca Tauri 2 (WebView2) que abre a prévia `https://vio-test.onrender.com`.
-Etapa 1: instalar, abrir e entrar numa sala. Captura WASAPI por aplicativo vem
-depois (#26, especificação em `DESKTOP-WASAPI.md`).
+Casca Tauri 2 (WebView2) com a interface do VIO empacotada no instalador,
+conversando com a prévia `https://vio-test.onrender.com`. Inclui áudio por
+aplicativo via WASAPI (#26, especificação em `DESKTOP-WASAPI.md`).
 
 ## Como funciona
 
-- A janela carrega a prévia hospedada; o código da interface é o mesmo da web.
-- Sem IPC: a página não recebe nenhuma permissão nativa (`capabilities: []`) e a
-  navegação fica presa à origem da prévia.
+- A janela carrega a interface local de `https://tauri.localhost`; o servidor da
+  prévia precisa de `ALLOWED_APP_ORIGINS=https://tauri.localhost` no Render.
+- Só essa janela local chama os comandos de captura (`capabilities/main.json` e
+  checagem de origem em Rust); a navegação não sai dela.
+- Compartilhar tela: o usuário escolhe o aplicativo do áudio no VIO e a imagem no
+  seletor do Windows. O áudio vem do loopback por processo (Windows 11, inclui
+  processos filhos), entra num AudioWorklet e vira a trilha de áudio da tela.
+  IDs de fonte são opacos; a página nunca escolhe PID.
 - Ao abrir, antes da janela, o app procura atualização em
   `Fernando-Nine/vio-releases` (`latest.json`). Se houver, instala e reabre;
   sem rede ou sem release, abre a versão atual. Nunca atualiza no meio de uma chamada.
@@ -27,6 +32,7 @@ Local (Windows, Node 24, Rust estável MSVC):
 ```powershell
 npm ci
 npm run build
+npm run build:desktop
 npx tauri build --bundles nsis
 ```
 

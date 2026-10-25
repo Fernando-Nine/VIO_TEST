@@ -48,6 +48,7 @@ const sources = [
   "docs",
   "src-tauri/src",
   "src-tauri/icons",
+  "src-tauri/capabilities",
   "src-tauri/Cargo.toml",
   "src-tauri/Cargo.lock",
   "src-tauri/build.rs",

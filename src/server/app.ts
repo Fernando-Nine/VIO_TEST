@@ -53,7 +53,8 @@ export async function createApp(config: Config = readConfig(), dev = false) {
   app.use("/api", (req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
     const o = req.headers.origin;
-    if (o && config.origins.includes(o)) {
+    // The Windows app loads its bundled interface from https://tauri.localhost.
+    if (o && (config.origins.includes(o) || config.appOrigins.includes(o))) {
       res.setHeader("Access-Control-Allow-Origin", o);
       res.setHeader("Vary", "Origin");
     }
