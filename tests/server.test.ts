@@ -2458,3 +2458,74 @@ test("permissões da sala: padrões, quem altera cada chave e validação de cad
     await app.close();
   }
 });
+
+test("silenciar para todos: só o dono, encerra a voz e bloqueia até liberar", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const sessions = await Promise.all([
+      session(app.url),
+      session(app.url),
+      session(app.url),
+    ]);
+    for (const s of sessions) sockets.push(await connect(app.url, s.token));
+    const [owner, admin, guest] = sockets;
+    const ids = sessions.map((s) => s.id);
+    for (const [i, s] of sockets.entries())
+      data(await request(s, "join", { code: "MUTEALL", name: `P${i}` }));
+    data(
+      await request(owner, "role", {
+        participantId: ids[1],
+        action: "promote",
+      }),
+    );
+    const publish = (kind: "voice" | "screen") =>
+      request<Publication>(guest, "publish", {
+        kind,
+        key: crypto.randomUUID(),
+        audio: true,
+        muted: false,
+      });
+    data(await publish("voice"));
+    const screen = data(await publish("screen"));
+    const room = app.rooms.rooms.get("MUTEALL")!;
+    const block = (s: Socket, voiceBlocked: boolean) =>
+      request(s, "moderate", { participantId: ids[2], voiceBlocked });
+
+    const byAdmin = await block(admin, true);
+    assert.equal(byAdmin.ok, false);
+    assert.equal(
+      (
+        await request(owner, "moderate", {
+          participantId: ids[0],
+          voiceBlocked: true,
+        })
+      ).ok,
+      false,
+    );
+
+    data(await block(owner, true));
+    const target = room.members.get(ids[2])!;
+    assert.equal(target.voiceBlocked, true);
+    assert.deepEqual(
+      target.publications.map((p) => p.id),
+      [screen.id],
+    );
+    const snapshot = app.rooms.snapshot(room, ids[1]);
+    assert.equal(
+      snapshot.participants.find((p) => p.id === ids[2])!.voiceBlocked,
+      true,
+    );
+    const refused = await publish("voice");
+    assert.equal(refused.ok, false);
+    assert.equal(refused.code, "VOICE_BLOCKED");
+    assert.match(refused.message!, /silenciou sua voz/);
+
+    data(await block(owner, false));
+    assert.equal(target.voiceBlocked, undefined);
+    data(await publish("voice"));
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
