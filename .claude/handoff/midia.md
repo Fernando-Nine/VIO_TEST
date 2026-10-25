@@ -2,37 +2,35 @@
 Atualizado: 2026-10-25
 
 ## Agora
-App Windows com áudio por aplicativo (WASAPI) na `main` (#120). Aguarda teste do usuário
-(roteiro no PR #120; precisa de `ALLOWED_APP_ORIGINS=https://tauri.localhost` no Render da prévia).
+Canais do app Windows (#131), voz bloqueada no cliente (#132) e volume por pessoa até
+200% (#133) entregues. Usuário precisa cadastrar secrets/token/Renders
+(`docs/WINDOWS-RELEASE.md`) para a primeira publicação.
 
 ## Feito recentemente
-- #100: casca Tauri 2 + updater + workflow `windows.yml` (artefato `VIO-Windows-x64`).
-- #120: interface empacotada (`npm run build:desktop`, `https://tauri.localhost`); WASAPI
-  em Rust (`src-tauri/src/capture.rs`, crate `windows` 0.62); 5 comandos IPC só para a
-  janela local; `src/client/desktop/` (painel, worklet PCM, ponte); CORS do `/api` para
-  `ALLOWED_APP_ORIGINS`. Valida `cargo check --target x86_64-pc-windows-msvc` num crate
-  de teste só com `windows` (o container não compila o app inteiro p/ Windows).
-- #122: comentei o que a Mídia precisa (parar o mic e não republicar quando bloqueado).
+- #131: `scripts/desktop-channel.mjs` (tabela dos canais + `tauri.channel.json` +
+  feed). **VIO** = estável, CI do VIO na tag `vX.Y.Z`, `vio-releases/vX.Y.Z` com
+  `VIO-x64-setup.exe` + `latest.json`, chave de produção (ID 7D499EB91F0CA1FE).
+  **VIO Teste** = beta, CI do VIO_TEST a cada merge, versão `<versão>.<run>`, release
+  fixo `beta` + `beta.json`, chave de teste (ID 3123E38BB793CE0D, entregue ao usuário).
+  Beta aceita qualquer versão diferente do feed (`version_comparator`). Ícone beta com
+  selo laranja (provisório, Design pode refinar). Sem secrets o workflow só avisa.
+- #132 (#122): `Controller.voiceBlocked`; bloqueio solta a captura, `syncCapture` não
+  publica, `VOICE_BLOCKED` no `publish` é tratado em silêncio. Teste `voice-block.test.ts`.
+- #133 (#118): `AudioBoost` compartilhado (tela e voz); `RemoteVoice` amplifica acima de
+  100% mantendo o `<audio>` original tocando mudo; `setPersonVolume`; menu da pessoa até
+  200%. `ScreenAudioLab` cobre 150%.
 
 ## Decisões
-- Canais (aprovados pelo copiloto): **VIO** (estável, vio-quest) sai da CI do **VIO** na tag
-  `vX.Y.Z`, chave de produção só no VIO (a chave já entregue ao usuário). **VIO Teste**
-  (beta, vio-test) sai da CI do VIO_TEST a cada merge, com chave nova de teste.
-  Identificadores diferentes, outro ícone/selo; cada um lê seu canal e nunca instala o outro.
 - Dependências aprovadas: `@tauri-apps/cli`, `tauri`, `tauri-plugin-updater`, `windows`
   (+ `windows-core`, `serde`, `serde_json`).
+- Voz liberada pelo dono não religa o microfone sozinha: a pessoa liga de novo.
+- Matar servidor local pela porta (`fuser -k PORTA/tcp`), nunca `pkill -f`.
 
 ## Pendente / bloqueios
-- **Próxima tarefa (canais):** workflow escolhe canal por repositório/evento; versão beta
-  `<versão>-rc.N.<run_number>`; release fixo `beta` em `vio-releases` com `beta.json`
-  substituído; estável em `releases/latest` → `latest.json`; URL/identificador/CSP/updater
-  por canal (hoje fixos na prévia em `tauri.conf.json`, `shell.rs`, `build-desktop.mjs`);
-  `docs/WINDOWS-RELEASE.md` com nomes exatos dos secrets: `TAURI_SIGNING_PRIVATE_KEY`,
-  `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, `VIO_RELEASES_TOKEN` (fine-grained, escrita só no
-  vio-releases). Gerar par de teste e entregar ao usuário; pubkey por canal.
-- #122: implementar no cliente após contrato do Backend (PR #126).
+- Usuário: secrets e token (`docs/WINDOWS-RELEASE.md`); depois validar 1ª publicação beta.
 - Issues da área: #23 (upload N×), #24 (AudioContext compartilhado), #25 (TURN).
 - Links externos não abrem no app; janela flutuante (PiP) do ramo antigo não portada.
+- Cartão e widget de pessoas seguem com volume até 100% (Frontend decide).
 
 ## Próximo passo
-Implementar os canais do app Windows (acima).
+Conferir a primeira publicação beta quando o usuário cadastrar os secrets; depois #24.
