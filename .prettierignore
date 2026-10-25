@@ -1,0 +1,3 @@
+# Third-party agent skills are vendored as-is.
+.claude/skills/
+!.claude/skills/vio-*/

@@ -19,4 +19,5 @@ preparar o terreno para contas/banco/gravação quando forem aprovados.
 - Toda ação de terceiro é recusada no servidor; a interface esconder um botão não basta.
 - Revise PRs de outras áreas que toquem em protocolo, permissões ou servidor.
 
-**Skills úteis:** `security-review`, `code-review`.
+**Skills:** `security-review`, `code-review` (nativas), `systematic-debugging`,
+`test-driven-development`, `typescript-advanced-types`, `verification-before-completion`.
