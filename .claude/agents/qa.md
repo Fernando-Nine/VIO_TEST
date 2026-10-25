@@ -19,4 +19,5 @@ description: QA/Release do VIO — CI no GitHub Actions, testes, BrowserLab, ver
   do usuário na prévia. Guardar o commit anterior para reversão.
 - Para aceite humano, entregar ao usuário um roteiro curto do que testar na prévia.
 
-**Skills úteis:** `code-review`, `run`, `simplify`.
+**Skills:** `github-actions-templates`, `test-driven-development`, `webapp-testing`,
+`playwright-cli`, `verification-before-completion`, `code-review`, `simplify`.

@@ -38,7 +38,9 @@ Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão 
 
 **Economia de créditos:** rode só os testes ligados ao que mudou (a CI roda o resto) e não
 releia arquivos que não mudaram desde a última leitura. Suíte completa, BrowserLab e
-screenshots só quando a mudança tocar aquela parte.
+screenshots só quando a mudança tocar aquela parte. Leia trechos (grep, offset) em vez de
+arquivos inteiros; para varreduras amplas use um subagente (Explore), que devolve só a
+conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada área).
 
 ## Ambientes e fluxo
 
@@ -63,8 +65,9 @@ screenshots só quando a mudança tocar aquela parte.
 
 ## Contexto e troca de chat
 
-Chats são substituídos para poupar créditos. Ao passar de ~60% do contexto (`/context`)
-ou ao concluir uma entrega grande: atualize seu `.claude/handoff/<área>.md` no formato
+Chats são substituídos para poupar créditos: cada mensagem relê todo o contexto, então um
+chat longo custa mais a cada passo. Troque ao passar de **~200 mil tokens** (`/context`)
+ou ao concluir um bloco de 3–4 issues, o que vier primeiro: atualize seu `.claude/handoff/<área>.md` no formato
 de `.claude/handoff/README.md`, faça commit e avise. O chat novo começa lendo
 `CLAUDE.md`, papel e handoff — nada mais é necessário.
 
