@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --import tsx src/server/index.ts --dev",
     "build": "npm run typecheck && node scripts/build.mjs",
+    "build:desktop": "node scripts/build-desktop.mjs",
     "start": "node --env-file-if-exists=.env dist/server/index.js",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",

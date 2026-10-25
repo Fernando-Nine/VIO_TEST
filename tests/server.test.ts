@@ -491,6 +491,17 @@ test("origem de casca nativa é aceita sem afrouxar a regra da web", async () =>
       200,
       "casca do Windows deve entrar",
     );
+    assert.equal(
+      (await abrir(app)).headers.get("access-control-allow-origin"),
+      app,
+      "casca nativa precisa ler a resposta (CORS)",
+    );
+    assert.equal(
+      (await abrir("https://evil.example")).headers.get(
+        "access-control-allow-origin",
+      ),
+      null,
+    );
     assert.equal((await abrir(origin)).status, 200, "web continua entrando");
     assert.equal(
       (await abrir("https://evil.example")).status,

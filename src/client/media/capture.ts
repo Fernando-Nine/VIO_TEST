@@ -4,6 +4,8 @@ import { mediaDeadline } from "./deadline";
 export interface CaptureAdapter {
   screen(audio: boolean): Promise<MediaStream>;
   device(constraints: MediaStreamConstraints): Promise<MediaStream>;
+  stopScreen?(): void;
+  screenAudioMessage?(): string;
 }
 export const browserCapture: CaptureAdapter = {
   screen: (audio) =>
@@ -150,6 +152,8 @@ export class Captures {
     if (surface === "monitor" && hasAudio)
       this.audioMessage +=
         " O som do sistema pode incluir a conversa desta sala; prefira uma aba ou use fones.";
+    if (this.adapter.screenAudioMessage)
+      this.audioMessage = this.adapter.screenAudioMessage();
     this.save("screen", stream);
     await this.applyQuality(this.quality);
   }
@@ -411,7 +415,10 @@ export class Captures {
     const source = this.sources.get(kind);
     this.sources.delete(kind);
     source?.stream.getTracks().forEach((t) => t.stop());
-    if (kind === "screen") this.stopPreview();
+    if (kind === "screen") {
+      this.adapter.stopScreen?.();
+      this.stopPreview();
+    }
     if (kind === "voice") {
       clearInterval(this.voiceTimer);
       this.rawVoice?.getTracks().forEach((t) => t.stop());

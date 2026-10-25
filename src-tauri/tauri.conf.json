@@ -4,30 +4,44 @@
   "version": "../package.json",
   "identifier": "studio.nerdquest.vio.test",
   "build": {
-    "frontendDist": "https://vio-test.onrender.com"
+    "frontendDist": "../dist/desktop"
   },
   "app": {
-    "withGlobalTauri": false,
+    "withGlobalTauri": true,
     "windows": [],
     "security": {
-      "capabilities": []
+      "capabilities": [
+        "main"
+      ],
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' ipc: http://ipc.localhost https://vio-test.onrender.com wss://vio-test.onrender.com; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'"
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "createUpdaterArtifacts": false,
     "publisher": "NerdQuest Studios",
     "shortDescription": "Compartilhe a tela, converse e assista junto.",
     "category": "SocialNetworking",
     "licenseFile": "../LICENSE",
-    "icon": ["icons/icon.ico"],
-    "resources": { "../dist/source.tar.gz": "source.tar.gz" },
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../dist/source.tar.gz": "source.tar.gz"
+    },
     "windows": {
-      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["PortugueseBR"],
+        "languages": [
+          "PortugueseBR"
+        ],
         "displayLanguageSelector": false
       }
     }
@@ -38,7 +52,9 @@
       "endpoints": [
         "https://github.com/Fernando-Nine/vio-releases/releases/latest/download/latest.json"
       ],
-      "windows": { "installMode": "passive" }
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }
