@@ -36,6 +36,8 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
 - Permissões da sala no estilo cargos do Discord (#71, antiga E12): criador e admins
   controlam widgets da sala; convidados conforme switches da sala.
 - Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
+- Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
+  a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
 - Visual novo dos widgets passa por rascunhos da área Design antes do código.
 
 - Contas, banco de dados e gravação no servidor: **adiados**, não proibidos.
@@ -53,7 +55,6 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
   celular a definir. Em discussão com o copiloto antes de ir ao Design.
 - Design leva 2 aprovada para rascunho: Pessoas na sala, Ajustes, aviso de transmissões
   (etiqueta + sino), cards de Chamada/Compartilhar e padronização dos widgets.
-- Tela de compartilhar widget: em discussão com o copiloto antes do Design.
 - Widget Personalizado/Comunidade: fora de escopo até haver isolamento de código.
 
 ## Referências
