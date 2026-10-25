@@ -48,7 +48,7 @@ export class RoomWidgets {
     )
       throw new Fault(
         "WIDGET_LIMIT",
-        "Limite de widgets compartilhados atingido: até 6 por criador e 32 na sala.",
+        "Limite de widgets da sala atingido: até 6 por criador e 32 na sala.",
       );
     if (
       content.kind === "chat" &&

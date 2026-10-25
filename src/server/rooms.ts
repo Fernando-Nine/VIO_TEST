@@ -3,7 +3,6 @@ import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
 import type {
-  ShareRequest,
   RoomNotice,
   SharedWidget,
   ChatMessageEvent,
@@ -48,7 +47,6 @@ interface Room {
   members: Map<string, Member>;
   subscriptions: Map<string, Subscription>;
   widgets: RoomWidgets;
-  shareRequests: Map<string, ShareRequest>;
   notices: RoomNotice[];
   creatorId: string;
   permissions: RoomPermissions;
@@ -147,12 +145,6 @@ export class Rooms {
       ...(widgets && {
         widgets: room.widgets.list().map((w) => this.view(w, viewerId)),
       }),
-      shareRequests: [...room.shareRequests.values()].filter(
-        (r) =>
-          r.owner === viewerId ||
-          viewerId === room.creatorId ||
-          room.members.get(viewerId || "")?.role === "admin",
-      ),
       notices: room.notices,
       creatorId: room.creatorId,
       permissions: room.permissions,
@@ -290,7 +282,6 @@ export class Rooms {
     room.widgets.forget(member.id);
     if (!room.members.size) {
       room.widgets.clear();
-      room.shareRequests.clear();
       room.notices = [];
       room.permissions = { ...defaultPermissions };
     }
@@ -310,9 +301,6 @@ export class Rooms {
       });
       room.notices = room.notices.slice(-30);
     }
-    for (const [id, request] of room.shareRequests)
-      if (request.owner === member.id && request.status === "pending")
-        room.shareRequests.delete(id);
     this.membership.delete(member.id);
     this.broadcast(room, true);
   }
@@ -333,7 +321,6 @@ export class Rooms {
       "room-permissions": 30,
       "chat-send": 45,
       "module-interact": 240,
-      "widget-review": 30,
       "widget-permission": 30,
       "widget-create": 20,
       "widget-structure": 120,
@@ -485,7 +472,6 @@ export class Rooms {
           members: new Map(),
           subscriptions: new Map(),
           widgets: new RoomWidgets(),
-          shareRequests: new Map(),
           notices: [],
           creatorId: socket.data.id,
           permissions: { ...defaultPermissions },
@@ -631,62 +617,9 @@ export class Rooms {
             "Notas foram substituídas pelo Chat.",
           );
         if (data.content.kind === "chat" && !manages) deny();
-        if (role === "admin") require("adminCreate");
-        if (role === "guest" && !room.permissions.guestShare) {
-          if (current) {
-            if (current.owner !== m.id) deny();
-            return this.view(current, m.id);
-          }
-          require("guestRequest");
-          const previous = room.shareRequests.get(data.id);
-          if (previous && previous.owner !== m.id) deny();
-          if (!previous || previous.status !== "pending") {
-            // Answered requests are only history; drop the oldest first.
-            for (const [id, r] of room.shareRequests)
-              if (room.shareRequests.size < 48) break;
-              else if (r.status !== "pending") room.shareRequests.delete(id);
-            if (
-              room.shareRequests.size >= 48 ||
-              [...room.shareRequests.values()].filter(
-                (r) => r.owner === m.id && r.status === "pending",
-              ).length >= 6
-            )
-              throw new Fault(
-                "WIDGET_LIMIT",
-                "Aguarde a resposta aos pedidos anteriores.",
-              );
-            room.shareRequests.set(data.id, {
-              id: data.id,
-              owner: m.id,
-              ownerName: m.name,
-              content: data.content,
-              status: "pending",
-              createdAt: Date.now(),
-            });
-          }
-          this.broadcast(room);
-          return { id: data.id, pending: true };
-        }
+        // Room widgets only: personal widgets stay on the device (#104).
+        require(role === "admin" ? "adminCreate" : "guestCreate");
         widget = room.widgets.create(m.id, data.id, data.content);
-      }
-      if (action === "widget-review") {
-        if (!manages) deny();
-        if (role === "admin") require("adminCreate");
-        const request = room.shareRequests.get(data.id);
-        if (!request || request.status !== "pending")
-          throw new Fault("NOT_FOUND", "Este pedido já foi respondido.");
-        if (data.approve) {
-          if (!room.members.has(request.owner))
-            throw new Fault("NOT_FOUND", "A pessoa já saiu da sala.");
-          widget = room.widgets.create(
-            request.owner,
-            request.id,
-            request.content,
-          );
-        }
-        request.status = data.approve ? "approved" : "denied";
-        this.broadcast(room, true);
-        return widget ? this.view(widget, m.id) : {};
       }
       if (action === "widget-permission") {
         if (!manages) deny();
