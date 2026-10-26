@@ -3003,12 +3003,16 @@ button.inline-text.is-empty {
   .widget-host.is-screen::after {
     transition: none;
   }
+}
+
 /* Widget bodies clip their overflow: focus rings stay inside the field. */
 .widget-host :is(input, textarea, select, [contenteditable]):focus-visible {
   outline-offset: -2px;
 }
 .widget-host :is(button, a):focus-visible {
   outline-offset: 1px;
+}
+
 /* Dragging a strip widget along the strip: where it will land. */
 .canvas-dragging .canvas-slot.is-reorder-target {
   outline: 2px solid #9fa8ff;
@@ -3039,6 +3043,8 @@ button.inline-text.is-empty {
     padding-inline-end: 0;
     padding-block-end: 6px;
   }
+}
+
 /* A chosen widget color tints the counters' buttons. */
 .custom-widget.has-accent .widget-score button {
   border-color: var(--accent);
@@ -3083,5 +3089,27 @@ button.inline-text.is-empty {
   }
   .in-room .player .dock .dock-end {
     margin-left: auto;
+  }
+}
+
+/* Full screen, idle: empty slots fade too, so only the content stays (#144). */
+.canvas-slot {
+  transition: border-color 120ms ease;
+}
+.canvas-slot > .add-widget,
+.canvas-slot > .remove-slot {
+  transition: opacity 120ms ease;
+}
+.in-room.idle .is-fullscreen .canvas-slot:not(:focus-within) {
+  border-color: transparent;
+}
+.in-room.idle .is-fullscreen .canvas-slot:not(:focus-within) > :is(.add-widget, .remove-slot) {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .canvas-slot,
+  .canvas-slot > .add-widget,
+  .canvas-slot > .remove-slot {
+    transition: none;
   }
 }
