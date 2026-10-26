@@ -68,8 +68,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          # Update signatures only when the key secret exists (never on forks).
-          if ($env:TAURI_SIGNING_PRIVATE_KEY) {
+          # Sign update artifacts only when publishing; PRs just prove the build.
+          if ($env:PUBLISH -eq 'true' -and $env:TAURI_SIGNING_PRIVATE_KEY) {
             npx tauri build --bundles nsis --config src-tauri/tauri.channel.json --config src-tauri/tauri.updater.json -- --locked
           } else {
             npx tauri build --bundles nsis --config src-tauri/tauri.channel.json -- --locked
