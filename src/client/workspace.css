@@ -2989,3 +2989,17 @@ button.inline-text.is-empty {
     max-width: none;
   }
 }
+
+/* Dragging a strip widget along the strip: where it will land. */
+.canvas-dragging .canvas-slot.is-reorder-target {
+  outline: 2px solid #9fa8ff;
+  outline-offset: -3px;
+}
+/* No label: the dragged widget covers the middle of the target. */
+.canvas-dragging .canvas-slot.is-reorder-target::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #2727f58a;
+  z-index: 80;
+}

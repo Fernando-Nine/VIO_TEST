@@ -8,6 +8,8 @@ recomendadas e os detalhes abaixo em 05/10/2026.
 ## Decisões confirmadas
 
 A tira é linear, sem voltar do último item ao primeiro, e avança um item por ação.
+Arrastar um widget da tira ao longo dela muda a ordem (o espaço de destino fica
+destacado); soltar fora da tira o deixa flutuante. Pelo teclado, espaço + setas.
 Mostra três itens no desktop, dois abaixo de 680 px e um abaixo de 380 px. Em telas
 estreitas a tira fica embaixo do foco, independentemente do lado escolhido no desktop.
 Os quatro presets com um espaço grande passam a 2 × 2 no celular para conservar
