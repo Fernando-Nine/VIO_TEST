@@ -40,6 +40,9 @@ Ordem completa em `ROADMAP.md`.
 - Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
 - Rodapé: Entrar na chamada, Compartilhar e Flutuante juntos à esquerda, nessa ordem;
   volume fica em cada tela, não no rodapé (#145).
+- Fechar widget (#146): widget da sala tem − (minimizar, só para você) e × (fechar para
+  todos) para dono da sala, admins e criador; os demais só −. Widget pessoal só ×.
+- Desativar áudio (#149): como no Discord, desliga microfone e vozes, mas não as telas.
 - Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
   a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
 - Visual novo dos widgets passa por rascunhos da área Design antes do código.
