@@ -944,6 +944,13 @@ export class Controller {
     this.peopleHidden = !this.peopleHidden;
     this.savePreferences();
   }
+  /** Personal volume for someone's voice, 0–2; above 1 uses Web Audio gain. */
+  setPersonVolume(id: string, volume: number) {
+    const next = Math.min(2, Math.max(0, volume));
+    if (next > 1) this.playback.unlock();
+    this.volumes.set(id, next);
+    this.bump();
+  }
   arrangeScreens(mode: "right" | "bottom") {
     this.screenArrangement = {
       mode,

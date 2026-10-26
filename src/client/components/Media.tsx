@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Play, VideoOff } from "lucide-react";
 import { observeVoiceActivity } from "../media/voice-activity";
 import type { AudioOutput } from "../media/audio-output";
+import type { ScreenPlayback } from "../media/screen-playback";
+import { AudioBoost, type BoostState } from "./ScreenAudio";
 export function Media({
   stream,
   muted = true,
@@ -77,21 +79,35 @@ export function Media({
     </>
   );
 }
+// The native <audio> always stays mounted and playing (muted while boosted): the
+// speaking indicator and Chromium's WebRTC renderer depend on it. Above 100% a
+// Web Audio gain (#118) plays a second, amplified copy, only on this device.
 export function RemoteVoice({
   stream,
   muted,
   volume,
   label,
   output,
+  playback,
 }: {
   stream?: MediaStream;
   muted: boolean;
   volume: number;
   label: string;
   output?: AudioOutput;
+  playback?: ScreenPlayback;
 }) {
   const ref = useRef<HTMLAudioElement>(null);
   const [blocked, setBlocked] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [boost, setBoost] = useState<BoostState>({
+    active: false,
+    failed: false,
+  });
+  const wantsBoost = !muted && volume > 1 && !!output && !!playback?.supported;
+  const boosted =
+    wantsBoost && boost.stream === stream && boost.active && !blocked;
+  const boostFailed = wantsBoost && boost.stream === stream && boost.failed;
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -120,7 +136,7 @@ export function RemoteVoice({
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    element.muted = muted || volume === 0;
+    element.muted = muted || volume === 0 || boosted;
     element.volume = Math.min(1, Math.max(0, volume));
     let active = true;
     if (stream?.getAudioTracks().some((track) => track.readyState === "live"))
@@ -131,22 +147,42 @@ export function RemoteVoice({
     return () => {
       active = false;
     };
-  }, [stream, muted, volume]);
+  }, [stream, muted, volume, boosted, retry]);
   useEffect(() => {
     if (ref.current && output?.supported) return output.register(ref.current);
   }, [output]);
   return (
     <>
       <audio ref={ref} aria-label={label} autoPlay />
-      {blocked && !muted && volume > 0 && (
+      {wantsBoost && stream && output && playback && (
+        <AudioBoost
+          stream={stream}
+          playback={playback}
+          output={output}
+          volume={volume}
+          muted={muted || !boosted}
+          label={`Voz amplificada de ${label}`}
+          marker={{ "data-voice-audio": "boost" }}
+          retry={retry}
+          onState={setBoost}
+        />
+      )}
+      {!muted && volume > 0 && ((blocked && !boosted) || boostFailed) && (
         <button
           className="audio-unlock"
-          onClick={() =>
+          title={
+            boostFailed && !blocked
+              ? "A voz continua em até 100%. Clique para tentar ativar o ganho extra."
+              : undefined
+          }
+          onClick={() => {
+            if (wantsBoost) playback?.unlock();
             void ref.current?.play().then(
               () => setBlocked(false),
               () => setBlocked(true),
-            )
-          }
+            );
+            setRetry((value) => value + 1);
+          }}
         >
           <Play size={16} /> Ouvir {label}
         </button>

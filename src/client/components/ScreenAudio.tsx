@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
 import type { Controller } from "../room/controller";
+import type { AudioOutput } from "../media/audio-output";
+import type { ScreenPlayback } from "../media/screen-playback";
 
-type BoostState = { stream?: MediaStream; active: boolean; failed: boolean };
+export type BoostState = {
+  stream?: MediaStream;
+  active: boolean;
+  failed: boolean;
+};
 
 /** Keep the original remote track playing, including while amplification is active.
  * Chromium's WebRTC renderer can otherwise feed silence into Web Audio. */
@@ -104,12 +110,14 @@ export function ScreenAudio({
         muted={muted || boosted}
       />
       {wantsBoost && stream && (
-        <ScreenBoost
+        <AudioBoost
           stream={stream}
-          engine={engine}
+          playback={engine.playback}
+          output={engine.output}
           volume={volume * masterVolume}
           muted={muted || !boosted}
-          name={name}
+          label={`Áudio amplificado da tela de ${name}`}
+          marker={{ "data-screen-audio": "boost" }}
           retry={retry}
           onState={setBoost}
         />
@@ -141,26 +149,31 @@ export function ScreenAudio({
   );
 }
 
-/** Only mounted above 100%. If unavailable, the native element remains audible. */
-function ScreenBoost({
+/** Only mounted above 100% (screens and voices). If unavailable, the native
+ * element remains audible. */
+export function AudioBoost({
   stream,
-  engine,
+  playback,
+  output,
   volume,
   muted,
-  name,
+  label,
+  marker,
   retry,
   onState,
 }: {
   stream: MediaStream;
-  engine: Controller;
+  playback: ScreenPlayback;
+  output: AudioOutput;
   volume: number;
   muted: boolean;
-  name: string;
+  label: string;
+  marker: Record<`data-${string}`, string>;
   retry: number;
   onState: (state: BoostState) => void;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
-  const graph = useRef<ReturnType<typeof engine.playback.create>>(undefined);
+  const graph = useRef<ReturnType<ScreenPlayback["create"]>>(undefined);
   useEffect(() => {
     const element = audio.current;
     if (!element) return;
@@ -174,7 +187,7 @@ function ScreenBoost({
       onState({ stream, active: ready, failed: !ready });
     };
     try {
-      const processed = engine.playback.create(stream);
+      const processed = playback.create(stream);
       if (!processed) throw new Error("Amplification unavailable");
       graph.current = processed;
       element.srcObject = processed.stream;
@@ -204,21 +217,15 @@ function ScreenBoost({
       graph.current = undefined;
       onState({ stream, active: false, failed: false });
     };
-  }, [stream, engine, onState, retry]);
+  }, [stream, playback, onState, retry]);
   useEffect(() => {
-    if (audio.current && engine.output.supported)
-      return engine.output.register(audio.current);
-  }, [engine]);
+    if (audio.current && output.supported)
+      return output.register(audio.current);
+  }, [output]);
   useEffect(() => {
     graph.current?.setVolume(volume);
   }, [volume, stream, retry]);
   return (
-    <audio
-      ref={audio}
-      autoPlay
-      muted={muted}
-      data-screen-audio="boost"
-      aria-label={`Áudio amplificado da tela de ${name}`}
-    />
+    <audio ref={audio} autoPlay muted={muted} {...marker} aria-label={label} />
   );
 }
