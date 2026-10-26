@@ -2990,6 +2990,19 @@ button.inline-text.is-empty {
   }
 }
 
+/* Full screen, idle: the screen's colored border fades with the controls. */
+.widget-host.is-screen::after {
+  transition: opacity 120ms ease;
+}
+.is-fullscreen
+  .widget-host.screen-controls-idle:not(:has(:focus-visible))::after,
+.widget-host.screen-controls-idle:fullscreen:not(:has(:focus-visible))::after {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .widget-host.is-screen::after {
+    transition: none;
+  }
 /* Widget bodies clip their overflow: focus rings stay inside the field. */
 .widget-host :is(input, textarea, select, [contenteditable]):focus-visible {
   outline-offset: -2px;
