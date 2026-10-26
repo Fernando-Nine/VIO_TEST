@@ -1,4 +1,10 @@
-import { contrast, hexToHsv, hsvToHex, luminance } from "./colors";
+import {
+  contrast,
+  hexToHsv,
+  hsvToHex,
+  luminance,
+  normalizeColor,
+} from "./colors";
 
 /** Raffle wheel palettes (docs/design/sorteador.md). */
 export const paletteIds = [
@@ -80,6 +86,53 @@ export function colorAt(base: string[], index: number) {
   return Math.floor(index / base.length) % 2
     ? hsvToHex(h, s, v * 0.62)
     : hsvToHex(h, s * 0.7, Math.min(1, v * 1.25));
+}
+
+/** Twelve choices for a one-color widget, taken from the palettes. */
+export const accentChoices = [
+  "#2727F5",
+  "#3A3DD8",
+  "#A6A9FF",
+  "#8AA8FF",
+  "#C08BF2",
+  "#F4A6C6",
+  "#E8615A",
+  "#FFB38A",
+  "#F2C94C",
+  "#8BC34A",
+  "#4CDDC3",
+  "#2A9D8F",
+];
+
+interface Colored {
+  palette?: PaletteId;
+  options: { color?: string }[];
+}
+/** Each option's color: its own, else the palette's in order. */
+export function optionColors(config: Colored) {
+  const base = paletteColors(
+    config.palette,
+    config.options.map((o) => o.color),
+  );
+  return config.options.map(
+    (o, i) => normalizeColor(o.color || "") || colorAt(base, i),
+  );
+}
+/** A poll keeps its rank shades until someone picks a palette or a color. */
+export function pollColored(config: Colored) {
+  return !!config.palette || config.options.some((o) => o.color);
+}
+/** Applies a palette to every option; "random" draws a new harmony each time. */
+export function withPalette<T extends Colored>(config: T, id: PaletteId): T {
+  const colors = id === "random" ? harmonyPalette() : palettes[id];
+  return {
+    ...config,
+    palette: id,
+    options: config.options.map((o, i) => ({
+      ...o,
+      color: colorAt(colors, i),
+    })),
+  };
 }
 
 /** Dark or light text over a slice, whichever reads better (≥ 4.5:1 when possible). */

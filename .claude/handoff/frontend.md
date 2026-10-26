@@ -1,25 +1,23 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-25
+Atualizado: 2026-10-26
 
 ## Agora
 
-Nada em andamento. Próxima issue: #115.
+PRs #138 (#115) e #139 (#81) com `check` verde, presas no `installer` (secret de
+assinatura, ver bloqueios). Ambas sobem para rc.14: a segunda a entrar junta a `main`,
+sobe para rc.15 e regenera o `CHANGELOG.md`.
 
 ## Feito recentemente
 
-- #107 (PR #127, rc.10): Pessoas em painel lateral não modal, linhas de 48 px com estado por
-  ícone, abas Pessoas/Permissões, menu com volume (`ContextMenu` `header`) e Assistir a tela.
-  Ações do menu em grupos (assistir → voz → sala) com separador automático.
-- #123 + #109 (PR #128, rc.11): tela nova não ocupa espaço sozinha; etiqueta `ScreenToast`
-  no canto (6 s, pausa no hover) → depois fica no sino. Ícone `LiveScreens` (Radio + número)
-  só com telas de outros, lista com Assistir. Sino virou histórico (mais novo primeiro,
-  horário), contador só de não lidas, zera ao abrir. Telas já no ar ao entrar não viram aviso.
-  Chip vermelho `live-chip` removido. Diálogo "espaços ocupados" só ao escolher Assistir.
-- #122 (PR #129, rc.12): "Silenciar para mim" (volume 0 local,
-  `engine.silencedVolumes` restaura) para todos; "Silenciar para todos"/"Liberar voz" só
-  para o dono via `moderate`. Linha mostra "Silenciado pelo dono" (`is-blocked`) e
-  "Silenciado para você". Quem é bloqueado vê o aviso e o microfone desabilitado com o motivo.
+- #115 (PR #138): `color` opcional no conteúdo (só Cronômetro e Personalizado: anel e
+  botões do contador) e `color` por opção + `palette` na Votação. `moduleResets` ignora
+  cores da votação. Seletor comum `canvas/ColorFields.tsx` (`ColorFields`,
+  `PaletteChoice`); `optionColors`/`withPalette`/`pollColored`/`accentChoices` em
+  `shared/palettes.ts`. Votação sem paleta mantém os tons por posição.
+- #81 (PR #139): na tira, arrastar um widget da tira dentro dela reordena (`stripDrop` no
+  `RoomCanvas`, destaque `is-reorder-target`); fora da tira, flutua. Shift/teclado iguais.
+- #107, #123/#109, #122: painel Pessoas, aviso de telas/sino, silenciar (rc.10–rc.12).
 
 ## Decisões
 
@@ -27,14 +25,13 @@ Nada em andamento. Próxima issue: #115.
 - `workspace.css` segue sem prettier; blocos novos vão no fim.
 - Sem force push (trava): branch publicado com histórico ruim → branch novo `-v3`.
 - Matar o servidor local pela porta, nunca `pkill -f` com padrão que case com o próprio shell.
+- Widget Personalizado não está no catálogo; o menu "Cor" já aparece se ele existir.
 
 ## Pendente / bloqueios
 
-- #115 cor e paleta no Cronômetro, Votação e Personalizado (precisa campo no esquema).
-- #118 (Mídia) volume por pessoa até 200%; o menu de Pessoas vai até 100%.
-- Mídia: conferir que o cliente bloqueado solta a captura sem republicar em loop (#122).
+- `installer` falha: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` vazio para a chave atual
+  (comentário na #138). Só o dono corrige o secret; depois, squash das duas PRs.
 
 ## Próximo passo
 
-#115: ler `docs/design/widgets-padrao.md`, adicionar `color`/`palette` opcionais no esquema
-e reaproveitar o seletor do Sorteador.
+Secret corrigido → squash da #138, merge da `main` na #139 (rc.15), squash.

@@ -1,5 +1,16 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
-import { Plus, Minus, Copy, X } from "lucide-react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { Plus, Minus, Copy, X, Palette } from "lucide-react";
+import { Dialog } from "../components/Dialog";
+import { ColorFields } from "./ColorFields";
+import { accentChoices } from "../../shared/palettes";
+import { colorInk, defaultColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { NoteActions } from "./NoteActions";
 import { InlineText } from "./InlineText";
@@ -57,7 +68,12 @@ export function widgetValue(
     );
   const raw = widget.state as Partial<SharedWidget> | undefined;
   const parsed = widgetContent.safeParse(
-    raw && { kind: raw.kind, title: raw.title, blocks: raw.blocks },
+    raw && {
+      kind: raw.kind,
+      title: raw.title,
+      blocks: raw.blocks,
+      color: raw.color,
+    },
   );
   if (!parsed.success) return undefined;
   return {
@@ -165,6 +181,9 @@ export function CustomWidget({
   const value = widgetValue(widget, engine);
   const [now, setNow] = useState(() => engine.serverNow());
   const [error, setError] = useState("");
+  const [coloring, setColoring] = useState(false);
+  const colorQueue = useRef(Promise.resolve());
+  const saved = useRef(0);
   const runningTimer = value?.blocks.find(
     (b) => b.kind === "timer" && b.startedAt !== null,
   );
@@ -209,6 +228,7 @@ export function CustomWidget({
   );
   const timer = value?.blocks.find((b) => b.kind === "timer");
   const addable = value?.kind === "custom" || value?.kind === "notes";
+  const colorable = value?.kind === "custom" || value?.kind === "timer";
   // Mirrors the header tools so narrow headers, which hide them, keep them.
   useMenuItems(
     value
@@ -226,6 +246,9 @@ export function CustomWidget({
                 },
               ]
             : []),
+          ...(owner && colorable
+            ? [{ label: "Cor", icon: Palette, run: () => setColoring(true) }]
+            : []),
           ...(shared
             ? [{ label: "Criar cópia individual", icon: Copy, run: copy }]
             : []),
@@ -241,11 +264,13 @@ export function CustomWidget({
   async function saveStructure(content: WidgetContent, baseRevision: number) {
     if (!value) return;
     if (shared)
-      await engine.request("widget-structure", {
-        id: value.id,
-        revision: baseRevision,
-        content,
-      });
+      saved.current = (
+        await engine.request<SharedWidget>("widget-structure", {
+          id: value.id,
+          revision: baseRevision,
+          content,
+        })
+      ).revision;
     else {
       const latest = engine.canvas
         .getSnapshot()
@@ -292,6 +317,27 @@ export function CustomWidget({
         );
       }
     }
+  }
+  /** Picks arrive in bursts (swatches, hue); each one waits for the last. */
+  function saveColor(color: string) {
+    colorQueue.current = colorQueue.current
+      .then(() => {
+        const latest = engine.canvas
+          .getSnapshot()
+          .widgets.find((w) => w.id === widget.id);
+        const current = latest && widgetValue(latest, engine);
+        if (!current || current.color === color) return;
+        return saveStructure(
+          widgetContent.parse({
+            kind: current.kind,
+            title: current.title,
+            blocks: current.blocks,
+            color,
+          }),
+          shared ? Math.max(current.revision, saved.current) : current.revision,
+        );
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }
   function copy() {
     if (!value) return;
@@ -376,7 +422,17 @@ export function CustomWidget({
     void operate(operation).catch((e) => setError(e.message));
   };
   return (
-    <div className={`custom-widget kind-${value.kind || "custom"}`}>
+    <div
+      className={`custom-widget kind-${value.kind || "custom"} ${value.color ? "has-accent" : ""}`}
+      style={
+        value.color
+          ? ({
+              "--accent": value.color,
+              "--accent-ink": colorInk(value.color),
+            } as CSSProperties)
+          : undefined
+      }
+    >
       <div className="custom-blocks">
         {widget.config.noteSender && (
           <p className="note-origin">
@@ -496,6 +552,16 @@ export function CustomWidget({
             mudar a estrutura.
           </p>
         )}
+      {coloring && (
+        <Dialog title="Cor" centered close={() => setColoring(false)}>
+          <ColorFields
+            color={value.color || defaultColor}
+            choices={accentChoices}
+            pick={saveColor}
+            done={() => setColoring(false)}
+          />
+        </Dialog>
+      )}
     </div>
   );
 }

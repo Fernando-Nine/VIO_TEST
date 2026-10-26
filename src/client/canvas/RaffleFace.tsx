@@ -10,17 +10,16 @@ import { AnchoredPopover } from "../components/AnchoredPopover";
 import type { MenuItem } from "../components/ContextMenu";
 import { HeaderTools } from "./header-tools";
 import { InlineText } from "./InlineText";
-import { hexToHsv, hsvToHex, normalizeColor } from "../../shared/colors";
+import { ColorFields } from "./ColorFields";
 import {
-  colorAt,
-  harmonyPalette,
+  optionColors,
   paletteColors,
   paletteIds,
   paletteNames,
   palettes,
   sliceInk,
   swatches,
-  type PaletteId,
+  withPalette,
 } from "../../shared/palettes";
 import type { ModuleConfig, ModuleState } from "../../shared/room-modules";
 import "./raffle.css";
@@ -62,29 +61,6 @@ export function wheelMenu(): MenuItem {
     label: shown ? "Ocultar roleta" : "Mostrar roleta",
     icon: PieChart,
     run: () => setWheel(!shown),
-  };
-}
-
-/** Each option's color: its own, else the palette's in order. */
-export function optionColors(config: Raffle) {
-  const base = paletteColors(
-    config.palette,
-    config.options.map((o) => o.color),
-  );
-  return config.options.map(
-    (o, i) => normalizeColor(o.color || "") || colorAt(base, i),
-  );
-}
-/** Applies a palette to every option; "random" draws a new harmony each time. */
-export function withPalette(config: Raffle, id: PaletteId): Raffle {
-  const colors = id === "random" ? harmonyPalette() : palettes[id];
-  return {
-    ...config,
-    palette: id,
-    options: config.options.map((o, i) => ({
-      ...o,
-      color: colorAt(colors, i),
-    })),
   };
 }
 
@@ -185,8 +161,6 @@ function ColorPop({
   pick: (color: string) => void;
   close: () => void;
 }) {
-  const [hex, setHex] = useState(color);
-  const hsv = hexToHsv(normalizeColor(hex) || color);
   return (
     <AnchoredPopover
       anchor={anchor}
@@ -195,52 +169,7 @@ function ColorPop({
       label="Cor da opção"
       close={close}
     >
-      <div className="raffle-swatches">
-        {choices.map((c) => (
-          <button
-            key={c}
-            type="button"
-            aria-label={c}
-            aria-pressed={c === normalizeColor(hex)}
-            style={{ background: c }}
-            onClick={() => {
-              setHex(c);
-              pick(c);
-            }}
-          />
-        ))}
-      </div>
-      <label className="color-hue">
-        <input
-          aria-label="Matiz da cor"
-          type="range"
-          min="0"
-          max="359"
-          value={Math.round(hsv.h)}
-          onChange={(e) =>
-            setHex(hsvToHex(+e.target.value, hsv.s || 0.6, hsv.v || 0.8))
-          }
-          onPointerUp={() => normalizeColor(hex) && pick(normalizeColor(hex)!)}
-          onKeyUp={() => normalizeColor(hex) && pick(normalizeColor(hex)!)}
-        />
-      </label>
-      <label className="raffle-hex">
-        <i style={{ background: normalizeColor(hex) || color }} />
-        <input
-          aria-label="Código HEX da cor"
-          value={hex}
-          maxLength={7}
-          spellCheck={false}
-          onChange={(e) => setHex(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && normalizeColor(hex)) {
-              pick(normalizeColor(hex)!);
-              close();
-            }
-          }}
-          onBlur={() => normalizeColor(hex) && pick(normalizeColor(hex)!)}
-        />
-      </label>
+      <ColorFields color={color} choices={choices} pick={pick} done={close} />
     </AnchoredPopover>
   );
 }
