@@ -1,15 +1,15 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-25
+Atualizado: 2026-10-26
 
 ## Agora
 
 Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
 
 - QA/Release `session_01GoaQuuAx1QX9U3Xsnr2eUx` — sem acesso ao VIO; releases de produção ficam com o copiloto.
-- Frontend/UX (4) `session_01D45oW522KhyYyuLgc4xukW` — fila: #104+#111, #108, #110, #107+#122, #109+#123.
-- Backend (2) `session_0126n1TYdGG4qzor69AKvamM` — #122 (servidor do silenciar para todos).
-- Mídia `session_01Dmf6n1sncaS6GtrMQUZGyp` — app Windows: WASAPI (#26) e canais VIO / VIO Teste.
+- Frontend/UX (5) `session_01AkdYFCsjwmModvqsA6Dyga` — fila: #107, #123+#109, #122 (UI), #115.
+- Backend: sem sessão ativa (último arquivado após #122/PR #126); abrir nova quando houver tarefa.
+- Mídia (2) `session_01Q7SGieUDumQL8PUpbo7nEM` — canais VIO/VIO Teste + docs/WINDOWS-RELEASE.md, #122 (cliente), #118.
 - Design `session_01EfQg8NxYJ35Wh2zr9q6igF` — leva 2 entregue (#107–#111); ocioso.
 - Tarefa agendada `trig_01Y6stnQYUT7NzutBNEgUzmK` (3 h) retoma agentes parados por limite.
 
@@ -31,6 +31,13 @@ Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
 - Usuário prefere respostas curtas; agentes respondem ao copiloto em ≤ 4 linhas.
 
 ## Pendente / bloqueios
+
+- App Windows com WASAPI (#120) pronto para teste: usuário precisa pôr `ALLOWED_APP_ORIGINS=https://tauri.localhost`
+  no Render da prévia (Environment → Add Environment Variable; nome digitado à mão, funciona no Free).
+- Hospedagem: ficar no Render (Vercel não serve: sem servidor WebSocket persistente). Ao abrir ao
+  público, produção no plano Starter (~US$ 7/mês) para não dormir. Alternativas: Fly.io, Railway.
+- TURN (#135, futuro): conferir ExpressTURN e avaliar Cloudflare Realtime/coturn.
+- Copiloto novo deve ser aberto pelo usuário (sessão filha não tem create_session/send_message).
 
 - Usuário cadastrar a chave privada do updater como secret (ele avisa).
 - Tags v2.7.2, v2.8.0, v2.8.1 no VIO: rede dos agentes recusa push de tag; usuário pode
