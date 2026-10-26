@@ -2990,6 +2990,12 @@ button.inline-text.is-empty {
   }
 }
 
+/* Widget bodies clip their overflow: focus rings stay inside the field. */
+.widget-host :is(input, textarea, select, [contenteditable]):focus-visible {
+  outline-offset: -2px;
+}
+.widget-host :is(button, a):focus-visible {
+  outline-offset: 1px;
 /* Dragging a strip widget along the strip: where it will land. */
 .canvas-dragging .canvas-slot.is-reorder-target {
   outline: 2px solid #9fa8ff;
