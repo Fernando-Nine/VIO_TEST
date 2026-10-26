@@ -757,6 +757,7 @@ export class Controller {
       this.intent.color = ownColor;
     }
     this.snapshotReceivedAt = performance.now();
+    if (this.voiceBlocked) this.releaseBlockedVoice();
     const present = new Set<string>();
     for (const person of snapshot.participants)
       for (const publication of person.publications)
@@ -778,8 +779,28 @@ export class Controller {
     this.bump();
     if (this.view.status === "connected") void this.reconcile();
   }
+  /** The room owner silenced this person's voice for everyone (#122). */
+  get voiceBlocked() {
+    return !!this.view.snapshot?.participants.find((p) => p.id === this.view.id)
+      ?.voiceBlocked;
+  }
+  // The server already ended the voice publication. Let the microphone go and stay
+  // off until the owner frees it and the person turns it on again; never republish.
+  private releaseBlockedVoice() {
+    this.captures.micMuted = true;
+    if (this.captures.sources.has("voice")) this.captures.stop("voice");
+  }
   private async syncCapture(kind: Kind, ended = false) {
     if (this.view.status !== "connected") return;
+    if (
+      kind === "voice" &&
+      !ended &&
+      this.voiceBlocked &&
+      this.captures.sources.has("voice")
+    ) {
+      this.releaseBlockedVoice();
+      return;
+    }
     if (kind !== "screen" && !this.inCall && this.captures.sources.has(kind)) {
       this.captures.stop(kind);
       return;
@@ -818,12 +839,21 @@ export class Controller {
       this.bump();
       return;
     }
-    const publication = await this.request<Publication>("publish", {
-      kind,
-      key: source.key,
-      audio: source.stream.getAudioTracks().length > 0,
-      muted,
-    });
+    let publication: Publication;
+    try {
+      publication = await this.request<Publication>("publish", {
+        kind,
+        key: source.key,
+        audio: source.stream.getAudioTracks().length > 0,
+        muted,
+      });
+    } catch (e) {
+      // Blocked before our snapshot said so: same outcome, no error loop.
+      if (recoveryCode(e) !== "VOICE_BLOCKED") throw e;
+      if (this.captures.sources.get(kind) === source)
+        this.releaseBlockedVoice();
+      return;
+    }
     if (
       generation !== this.generation ||
       this.captures.sources.get(kind) !== source
@@ -1162,7 +1192,7 @@ export class Controller {
     }
   }
   async microphone() {
-    if (!this.inCall || this.voicePending) return;
+    if (!this.inCall || this.voicePending || this.voiceBlocked) return;
     const generation = this.callGeneration;
     this.voicePending = true;
     if (this.sounds) this.cues.unlock();
