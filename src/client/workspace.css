@@ -2989,3 +2989,73 @@ button.inline-text.is-empty {
     max-width: none;
   }
 }
+
+/* Widget bodies clip their overflow: focus rings stay inside the field. */
+.widget-host :is(input, textarea, select, [contenteditable]):focus-visible {
+  outline-offset: -2px;
+}
+.widget-host :is(button, a):focus-visible {
+  outline-offset: 1px;
+/* Dragging a strip widget along the strip: where it will land. */
+.canvas-dragging .canvas-slot.is-reorder-target {
+  outline: 2px solid #9fa8ff;
+  outline-offset: -3px;
+}
+/* No label: the dragged widget covers the middle of the target. */
+.canvas-dragging .canvas-slot.is-reorder-target::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #2727f58a;
+  z-index: 80;
+}
+
+/* The strip's scrollbar keeps its own lane: never flush against the widgets. */
+.canvas-strip {
+  scrollbar-gutter: stable;
+  padding-inline-end: 6px;
+}
+.strip-top .canvas-strip,
+.strip-bottom .canvas-strip {
+  padding-inline-end: 0;
+  padding-block-end: 6px;
+}
+@media (max-width: 679px) {
+  .canvas-layout:is(.strip-left, .strip-right, .strip-top, .strip-bottom)
+    > .canvas-strip {
+    padding-inline-end: 0;
+    padding-block-end: 6px;
+  }
+/* A chosen widget color tints the counters' buttons. */
+.custom-widget.has-accent .widget-score button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.option-colors ul {
+  display: grid;
+  gap: 2px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.option-colors li button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #f3f3fb;
+  text-align: left;
+}
+.option-colors li button:hover,
+.option-colors li button[aria-expanded="true"] {
+  background: #1b1c29;
+}
+.option-colors .color-fields {
+  margin-top: 10px;
+}

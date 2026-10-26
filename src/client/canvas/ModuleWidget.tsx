@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   Settings2,
   HelpCircle,
@@ -15,12 +21,15 @@ import { Dialog } from "../components/Dialog";
 import { InlineText } from "./InlineText";
 import { DiceFace } from "./DiceFace";
 import { PollFace, chartMenu, useChart } from "./PollFace";
-import { RaffleFace, useWheel, wheelMenu, withPalette } from "./RaffleFace";
+import { RaffleFace, useWheel, wheelMenu } from "./RaffleFace";
+import { ColorFields, PaletteChoice } from "./ColorFields";
 import {
   colorAt,
+  optionColors,
   paletteColors,
-  paletteIds,
-  paletteNames,
+  pollColored,
+  swatches,
+  withPalette,
 } from "../../shared/palettes";
 import { clock, parseClock } from "./TimerBlock";
 import { freshKey } from "../id";
@@ -46,6 +55,57 @@ import type { WidgetProps } from "./widgets";
 import { HeaderTools, useMenuItems, useRename } from "./header-tools";
 import type { WidgetInstance } from "./model";
 import type { Controller } from "../room/controller";
+
+type Poll = Extract<ModuleConfig, { kind: "poll" }>;
+/** Each poll option's chip; choosing one opens the picker under the list. */
+function OptionColors({
+  config,
+  save,
+}: {
+  config: Poll;
+  save: (id: string, color: string) => void;
+}) {
+  const [open, setOpen] = useState<string | null>(null);
+  const colors = optionColors(config);
+  const choices = swatches(
+    paletteColors(
+      config.palette,
+      config.options.map((o) => o.color),
+    ),
+  );
+  const index = config.options.findIndex((o) => o.id === open);
+  return (
+    <div className="option-colors">
+      <ul>
+        {config.options.map((option, i) => (
+          <li key={option.id}>
+            <button
+              type="button"
+              aria-label={`Cor de ${option.label}`}
+              aria-expanded={open === option.id}
+              onClick={() => setOpen(open === option.id ? null : option.id)}
+            >
+              <span
+                className="raffle-chip"
+                style={{ "--chip": colors[i] } as CSSProperties}
+              />
+              {option.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {index >= 0 && (
+        <ColorFields
+          key={open}
+          color={colors[index]}
+          choices={choices}
+          pick={(color) => save(open!, color)}
+          done={() => setOpen(null)}
+        />
+      )}
+    </div>
+  );
+}
 
 export function createModule(kind: ModuleKind): WidgetContent {
   return {
@@ -279,7 +339,7 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
               ]
             : []),
           // Appearance comes after the widget's own actions.
-          ...(editable && config.kind === "random"
+          ...(editable && (config.kind === "random" || config.kind === "poll")
             ? [
                 {
                   label: "Cor e paleta",
@@ -599,32 +659,32 @@ export function ModuleWidget({ widget, engine, height, visible }: WidgetProps) {
           ? `${state.history.at(-1)!.authorName}: ${state.history.at(-1)!.label}`
           : ""}
       </span>
-      {palettes && config.kind === "random" && (
+      {palettes && (config.kind === "random" || config.kind === "poll") && (
         <Dialog title="Cor e paleta" centered close={() => setPalettes(false)}>
-          <div className="palette-choice" role="group" aria-label="Paletas">
-            {paletteIds.map((id) => (
-              <button
-                key={id}
-                aria-pressed={config.palette === id}
-                onClick={() => {
-                  setPalettes(false);
-                  saveConfig(
-                    withPalette(
-                      (pending.current ?? config) as typeof config,
-                      id,
-                    ),
-                  );
-                }}
-              >
-                <span aria-hidden="true">
-                  {(id === "random" ? [] : paletteColors(id, [])).map((c) => (
-                    <i key={c} style={{ background: c }} />
-                  ))}
-                </span>
-                {paletteNames[id]}
-              </button>
-            ))}
-          </div>
+          <PaletteChoice
+            current={config.palette}
+            choose={(id) => {
+              const base = pending.current ?? config;
+              if (base.kind !== "random" && base.kind !== "poll") return;
+              if (base.kind === "random") setPalettes(false);
+              saveConfig(withPalette(base, id));
+            }}
+          />
+          {config.kind === "poll" && (
+            <OptionColors
+              config={config}
+              save={(id, color) => {
+                const base = pending.current ?? config;
+                if (base.kind !== "poll") return;
+                saveConfig({
+                  ...base,
+                  options: base.options.map((o) =>
+                    o.id === id ? { ...o, color } : o,
+                  ),
+                });
+              }}
+            />
+          )}
         </Dialog>
       )}
       {history && (
@@ -722,7 +782,8 @@ function ModuleFields({
   const noun = kind === "tasks" ? "etapa" : "opção";
   const nextColor = (index: number) => {
     const base = current();
-    if (base.kind !== "random") return undefined;
+    if (base.kind !== "random" && !(base.kind === "poll" && pollColored(base)))
+      return undefined;
     const colors = paletteColors(
       base.palette,
       base.options.map((o) => o.color),
@@ -868,7 +929,11 @@ function ModuleFields({
                           // A new option takes the next color of the palette.
                           color: nextColor(list.length),
                         }
-                      : { id: freshKey(), label: `Opção ${list.length + 1}` },
+                      : {
+                          id: freshKey(),
+                          label: `Opção ${list.length + 1}`,
+                          color: nextColor(list.length),
+                        },
                 ])
               }
             >
