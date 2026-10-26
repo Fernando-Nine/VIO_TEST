@@ -35,6 +35,7 @@ import { ParticipantCard } from "../components/ParticipantCard";
 import { Spectators } from "../components/Spectators";
 import { RoomLimit } from "../components/RoomStatus";
 import { screenResolutions } from "../../shared/protocol";
+import { ScreenVolume } from "../components/ScreenVolume";
 import { CustomWidget, createContent, widgetValue } from "./CustomWidget";
 import { ChatWidget } from "./ChatWidget";
 import { ModuleWidget, createModule, moduleValue } from "./ModuleWidget";
@@ -652,6 +653,9 @@ export function HeaderAccessory({
   engine: Controller;
 }) {
   return widget.type === "screen" ? (
-    <Spectators engine={engine} publicationId={widget.config.publicationId} />
+    <>
+      <ScreenVolume engine={engine} id={widget.config.publicationId} />
+      <Spectators engine={engine} publicationId={widget.config.publicationId} />
+    </>
   ) : null;
 }

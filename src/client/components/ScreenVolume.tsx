@@ -3,7 +3,18 @@ import { AnchoredPopover } from "./AnchoredPopover";
 import { Volume2, VolumeX } from "lucide-react";
 import type { Controller } from "../room/controller";
 
-export function VolumeControl({ engine }: { engine: Controller }) {
+/**
+ * Volume of one watched screen, in its own header: click silences it, hover
+ * or keyboard focus opens the slider (tap opens it on touch). Only local
+ * playback changes; nothing that is sent.
+ */
+export function ScreenVolume({
+  engine,
+  id,
+}: {
+  engine: Controller;
+  id: string;
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -18,19 +29,17 @@ export function VolumeControl({ engine }: { engine: Controller }) {
     cancelClose();
     closing.current = true;
     setOpen(false);
-    root.current?.querySelector<HTMLButtonElement>(".volume-trigger")?.focus();
+    button.current?.focus();
     closing.current = false;
   };
   useEffect(() => () => clearTimeout(closeTimer.current), []);
-  const ids = engine.view.watching.filter(
-    (id) => engine.screenInfo(id)?.publication.owner !== engine.view.id,
-  );
-  const target = ids.includes(engine.view.selected)
-    ? engine.view.selected
-    : ids[0];
-  const level = engine.screenLevel(target || "");
+  const info = engine.screenInfo(id);
+  if (!info || info.publication.owner === engine.view.id) return null;
+  const level = engine.screenLevel(id);
   const forcedMute =
     engine.captures.deaf || engine.remoteMute || engine.masterVolume === 0;
+  const silent = forcedMute || level.muted;
+  const noAudio = !info.publication.audio;
   const leave = () => {
     cancelClose();
     closeTimer.current = setTimeout(() => setOpen(false), 600);
@@ -38,7 +47,7 @@ export function VolumeControl({ engine }: { engine: Controller }) {
   return (
     <div
       ref={root}
-      className={`dock-volume ${open ? "has-menu" : ""}`}
+      className={`screen-volume ${open ? "has-menu" : ""}`}
       onPointerEnter={(e) => {
         if (e.pointerType === "mouse") {
           cancelClose();
@@ -74,9 +83,13 @@ export function VolumeControl({ engine }: { engine: Controller }) {
     >
       <button
         ref={button}
-        className="dock-button volume-trigger"
-        aria-label="Volume das telas"
-        title="Volume das telas · clique para silenciar a tela em foco"
+        className="icon-button volume-trigger"
+        aria-label={`Volume da tela de ${info.name}`}
+        title={
+          noAudio
+            ? "Esta tela não transmite áudio"
+            : "Clique para silenciar esta tela"
+        }
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onPointerDown={(e) => {
@@ -85,20 +98,18 @@ export function VolumeControl({ engine }: { engine: Controller }) {
         onClick={() => {
           if (touch.current || matchMedia("(hover: none)").matches)
             setOpen(true);
-          else if (target && !forcedMute)
-            engine.setScreenLevel(target, { muted: !level.muted });
+          else if (!forcedMute && !noAudio)
+            engine.setScreenLevel(id, { muted: !level.muted });
         }}
       >
-        {level.muted || forcedMute ? <VolumeX /> : <Volume2 />}
-        <span>Volume</span>
+        {silent || noAudio ? <VolumeX size={15} /> : <Volume2 size={15} />}
       </button>
       {open && (
         <AnchoredPopover
           anchor={button}
           className="volume-popover"
           id={panelId}
-          label="Volume das telas assistidas"
-          side="above"
+          label={`Volume da tela de ${info.name}`}
           close={() => {
             cancelClose();
             setOpen(false);
@@ -107,54 +118,40 @@ export function VolumeControl({ engine }: { engine: Controller }) {
           onPointerLeave={leave}
         >
           <div className="volume-scroll">
-            <header>
-              <strong>Áudio das telas</strong>
-            </header>
-            {!ids.length && (
-              <p className="field-note">
-                Sua própria prévia não reproduz áudio.
-              </p>
+            <div className="screen-volume-row is-only">
+              <label htmlFor={`level-${id}`}>
+                {info.name}
+                <output>{Math.round(level.volume * 100)}%</output>
+              </label>
+              <div>
+                <button
+                  className="icon-button"
+                  disabled={forcedMute || noAudio}
+                  aria-label={`${level.muted ? "Ativar áudio" : "Silenciar tela"} de ${info.name}`}
+                  onClick={() =>
+                    engine.setScreenLevel(id, { muted: !level.muted })
+                  }
+                >
+                  {silent ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                </button>
+                <input
+                  id={`level-${id}`}
+                  aria-label={`Volume da tela de ${info.name}`}
+                  type="range"
+                  min="0"
+                  max={engine.fineAudio ? "300" : "100"}
+                  step={engine.fineAudio ? "1" : "5"}
+                  value={Math.round(level.volume * 100)}
+                  disabled={noAudio}
+                  onChange={(e) =>
+                    engine.setScreenLevel(id, { volume: +e.target.value / 100 })
+                  }
+                />
+              </div>
+            </div>
+            {noAudio && (
+              <p className="field-note">Esta tela não transmite áudio.</p>
             )}
-            {ids.map((id) => {
-              const info = engine.screenInfo(id)!;
-              const current = engine.screenLevel(id);
-              const silent = forcedMute || current.muted;
-              return (
-                <div className="screen-volume-row" key={id}>
-                  <label htmlFor={`level-${id}`}>
-                    {info.name}
-                    <output>{Math.round(current.volume * 100)}%</output>
-                  </label>
-                  <div>
-                    <button
-                      className="icon-button"
-                      disabled={forcedMute || !info.publication.audio}
-                      aria-label={`${current.muted ? "Ativar áudio" : "Silenciar tela"} de ${info.name}`}
-                      onClick={() =>
-                        engine.setScreenLevel(id, { muted: !current.muted })
-                      }
-                    >
-                      {silent ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                    </button>
-                    <input
-                      id={`level-${id}`}
-                      aria-label={`Volume da tela de ${info.name}`}
-                      type="range"
-                      min="0"
-                      max={engine.fineAudio ? "300" : "100"}
-                      step={engine.fineAudio ? "1" : "5"}
-                      value={Math.round(current.volume * 100)}
-                      disabled={!info.publication.audio}
-                      onChange={(e) =>
-                        engine.setScreenLevel(id, {
-                          volume: +e.target.value / 100,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              );
-            })}
             {forcedMute && (
               <p className="field-note">
                 {engine.masterVolume === 0

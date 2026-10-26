@@ -3023,3 +3023,16 @@ button.inline-text.is-empty {
 .option-colors .color-fields {
   margin-top: 10px;
 }
+
+/* Footer: call, share and floating together at the left; the rest at the end. */
+.in-room .player .dock .share-controls {
+  flex: 1;
+}
+@media (min-width: 761px) {
+  .in-room .player .dock {
+    justify-content: flex-start;
+  }
+  .in-room .player .dock .dock-end {
+    margin-left: auto;
+  }
+}
