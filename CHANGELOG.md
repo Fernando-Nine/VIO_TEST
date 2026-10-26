@@ -2,7 +2,7 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.9.0-rc.16] - 2026-10-26
+## [2.9.0-rc.17] - 2026-10-26
 
 Prévia · Visual novo dos widgets
 
@@ -23,6 +23,7 @@ Prévia · Visual novo dos widgets
 - Cor no Cronômetro (cor do anel) e no Personalizado, e Cor e paleta na Votação (cor por opção na pizza e nas barras), pelo menu do botão direito. Trocar a cor não reinicia o tempo nem apaga votos.
 - Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante. A barra de rolagem da tira tem espaço próprio e nenhum widget fica com a borda cortada.
 - O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.
+- Dados com muitos dados ou rolagens repetidas (10d20, 10#d6) mostram os valores em fichas compactas, com total ou soma, sem nada cortado; no histórico, os valores ficam numa linha própria.
 
 ## [2.8.1] - 2026-10-24
 
