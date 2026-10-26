@@ -1,40 +1,38 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-25
+Atualizado: 2026-10-26
 
 ## Agora
 
-Nada em andamento. Próxima issue: #115.
+Fila 2.9.0 concluída. Última PR: #156 (#145, rc.19), squash quando a CI ficar verde.
 
 ## Feito recentemente
 
-- #107 (PR #127, rc.10): Pessoas em painel lateral não modal, linhas de 48 px com estado por
-  ícone, abas Pessoas/Permissões, menu com volume (`ContextMenu` `header`) e Assistir a tela.
-  Ações do menu em grupos (assistir → voz → sala) com separador automático.
-- #123 + #109 (PR #128, rc.11): tela nova não ocupa espaço sozinha; etiqueta `ScreenToast`
-  no canto (6 s, pausa no hover) → depois fica no sino. Ícone `LiveScreens` (Radio + número)
-  só com telas de outros, lista com Assistir. Sino virou histórico (mais novo primeiro,
-  horário), contador só de não lidas, zera ao abrir. Telas já no ar ao entrar não viram aviso.
-  Chip vermelho `live-chip` removido. Diálogo "espaços ocupados" só ao escolher Assistir.
-- #122 (PR #129, rc.12): "Silenciar para mim" (volume 0 local,
-  `engine.silencedVolumes` restaura) para todos; "Silenciar para todos"/"Liberar voz" só
-  para o dono via `moderate`. Linha mostra "Silenciado pelo dono" (`is-blocked`) e
-  "Silenciado para você". Quem é bloqueado vê o aviso e o microfone desabilitado com o motivo.
+- #115 (PR #138, rc.14): `color` no Cronômetro/Personalizado, cor por opção + `palette` na
+  Votação. Seletor comum `canvas/ColorFields.tsx`; helpers em `shared/palettes.ts`.
+- #81 + #143 (PR #139, rc.15): tira reordena arrastando (`stripDrop` no `RoomCanvas`);
+  recorte ignora cortes < 2 px (snap fracionário); `scrollbar-gutter` + respiro na tira.
+- #142 (PR #151, rc.16): anel de foco interno nos campos dos widgets.
+- #141 (PR #152, rc.17): Dados em fichas para N# e mais de 3 dados; histórico truncado.
+- #144 (PR #154, rc.18): borda da tela some em tela cheia inativa.
+- #145 (PR #156, rc.19): rodapé Entrar na chamada → Compartilhar → Flutuante à esquerda;
+  volume por tela no cabeçalho (`components/ScreenVolume.tsx`, substitui `VolumeControl`).
 
 ## Decisões
 
 - Cada PR sobe um `-rc.N` e regenera o `CHANGELOG.md` com `npm run build` (a CI confere).
+- Várias PRs abertas: merge sequencial; a cada squash, juntar a `main` na próxima e subir
+  a rc (conflitos só em releases/package/CHANGELOG e CSS anexado no fim).
 - `workspace.css` segue sem prettier; blocos novos vão no fim.
-- Sem force push (trava): branch publicado com histórico ruim → branch novo `-v3`.
-- Matar o servidor local pela porta, nunca `pkill -f` com padrão que case com o próprio shell.
+- Sem force push (trava). Matar o servidor local pela porta.
+- Screenshots com duas pessoas: segundo contexto do Playwright entra pelo código da sala e
+  compartilha com `--auto-select-desktop-capture-source`.
 
 ## Pendente / bloqueios
 
-- #115 cor e paleta no Cronômetro, Votação e Personalizado (precisa campo no esquema).
-- #118 (Mídia) volume por pessoa até 200%; o menu de Pessoas vai até 100%.
-- Mídia: conferir que o cliente bloqueado solta a captura sem republicar em loop (#122).
+- Widget Personalizado não está no catálogo; o menu "Cor" aparece se ele existir.
+- Em tela cheia inativa, as bordas tracejadas dos espaços vazios continuam visíveis.
 
 ## Próximo passo
 
-#115: ler `docs/design/widgets-padrao.md`, adicionar `color`/`palette` opcionais no esquema
-e reaproveitar o seletor do Sorteador.
+Pedir ao copiloto a próxima fila.

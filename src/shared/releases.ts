@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.15";
+export const version = "2.9.0-rc.19";
 export const currentRelease: Release = {
   version,
   date: "2026-10-26",
@@ -31,6 +31,10 @@ export const currentRelease: Release = {
         "Volume de cada pessoa vai até 200% no menu dela, só no seu aparelho.",
         "Rodapé com Entrar na chamada, Compartilhar e Flutuante juntos à esquerda. O volume saiu do rodapé: cada tela tem o seu no próprio cabeçalho (clique silencia, passe o mouse para ajustar, até 300% com o ajuste fino), também em tela cheia e na janela flutuante.",
         "Cor no Cronômetro (cor do anel) e no Personalizado, e Cor e paleta na Votação (cor por opção na pizza e nas barras), pelo menu do botão direito. Trocar a cor não reinicia o tempo nem apaga votos.",
+        "Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante. A barra de rolagem da tira tem espaço próprio e nenhum widget fica com a borda cortada.",
+        "O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.",
+        "Dados com muitos dados ou rolagens repetidas (10d20, 10#d6) mostram os valores em fichas compactas, com total ou soma, sem nada cortado; no histórico, os valores ficam numa linha própria.",
+        "Em tela cheia, a borda colorida da tela some junto com os controles quando você para de mexer e volta ao mexer.",
       ],
     },
   ],
