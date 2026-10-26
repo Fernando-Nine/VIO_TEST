@@ -2989,3 +2989,11 @@ button.inline-text.is-empty {
     max-width: none;
   }
 }
+
+/* Widget bodies clip their overflow: focus rings stay inside the field. */
+.widget-host :is(input, textarea, select, [contenteditable]):focus-visible {
+  outline-offset: -2px;
+}
+.widget-host :is(button, a):focus-visible {
+  outline-offset: 1px;
+}
