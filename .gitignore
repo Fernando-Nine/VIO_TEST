@@ -8,3 +8,4 @@ test-results/
 .sites-runtime/
 src-tauri/target/
 src-tauri/gen/
+src-tauri/tauri.channel.json
