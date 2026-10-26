@@ -48,7 +48,6 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
-import { VolumeControl } from "./components/VolumeControl";
 import { usePictureInPicture } from "./media/picture-in-picture";
 import { PeoplePanel } from "./components/PeoplePanel";
 const RoomCanvas = lazy(() =>
@@ -137,7 +136,7 @@ export default function App({ engine }: { engine: Controller }) {
           !draggingCards.current &&
           !document.querySelector("dialog[open]") &&
           !document.querySelector(
-            ".widget-host textarea:focus, .widget-host input:focus, .dock-volume.has-menu, .anchored-popover",
+            ".widget-host textarea:focus, .widget-host input:focus, .screen-volume.has-menu, .anchored-popover",
           ) &&
           !document.activeElement?.matches(":focus-visible")
         )
@@ -546,28 +545,6 @@ export default function App({ engine }: { engine: Controller }) {
                     role="group"
                     aria-label="Compartilhamento"
                   >
-                    {watching && (
-                      <span className="dock-wide">
-                        <VolumeControl engine={engine} />
-                      </span>
-                    )}
-                    {pip.supported && !full && (
-                      <button
-                        className="dock-button dock-wide"
-                        aria-label={
-                          pip.detached
-                            ? "Voltar da janela flutuante"
-                            : pip.active
-                              ? "Fechar janela flutuante"
-                              : "Picture-in-picture"
-                        }
-                        title="Janela flutuante"
-                        onClick={togglePip}
-                      >
-                        <PictureInPicture2 />
-                        <span>Flutuante</span>
-                      </button>
-                    )}
                     <button
                       className={`share-button ${hasScreen ? "sharing" : ""}`}
                       aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
@@ -589,9 +566,26 @@ export default function App({ engine }: { engine: Controller }) {
                         <b className="dock-narrow">Tela</b>
                       </span>
                     </button>
+                    {pip.supported && !full && (
+                      <button
+                        className="dock-button dock-wide"
+                        aria-label={
+                          pip.detached
+                            ? "Voltar da janela flutuante"
+                            : pip.active
+                              ? "Fechar janela flutuante"
+                              : "Picture-in-picture"
+                        }
+                        title="Janela flutuante"
+                        onClick={togglePip}
+                      >
+                        <PictureInPicture2 />
+                        <span>Flutuante</span>
+                      </button>
+                    )}
                     {full && (
                       <button
-                        className="dock-button"
+                        className="dock-button dock-end"
                         aria-label="Sair da tela cheia"
                         onClick={() => void fullscreen()}
                       >
@@ -601,7 +595,7 @@ export default function App({ engine }: { engine: Controller }) {
                     )}
                     {!full && (
                       <button
-                        className="dock-credits dock-wide"
+                        className="dock-credits dock-wide dock-end"
                         onClick={() => open("history")}
                       >
                         NerdQuest · v{version}

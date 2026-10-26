@@ -4,34 +4,35 @@ Atualizado: 2026-10-26
 
 ## Agora
 
-PRs #138 (#115) e #139 (#81) com `check` verde, presas no `installer` (secret de
-assinatura, ver bloqueios). Ambas sobem para rc.14: a segunda a entrar junta a `main`,
-sobe para rc.15 e regenera o `CHANGELOG.md`.
+Fila 2.9.0 concluída. Última PR: #156 (#145, rc.19), squash quando a CI ficar verde.
 
 ## Feito recentemente
 
-- #115 (PR #138): `color` opcional no conteúdo (só Cronômetro e Personalizado: anel e
-  botões do contador) e `color` por opção + `palette` na Votação. `moduleResets` ignora
-  cores da votação. Seletor comum `canvas/ColorFields.tsx` (`ColorFields`,
-  `PaletteChoice`); `optionColors`/`withPalette`/`pollColored`/`accentChoices` em
-  `shared/palettes.ts`. Votação sem paleta mantém os tons por posição.
-- #81 (PR #139): na tira, arrastar um widget da tira dentro dela reordena (`stripDrop` no
-  `RoomCanvas`, destaque `is-reorder-target`); fora da tira, flutua. Shift/teclado iguais.
-- #107, #123/#109, #122: painel Pessoas, aviso de telas/sino, silenciar (rc.10–rc.12).
+- #115 (PR #138, rc.14): `color` no Cronômetro/Personalizado, cor por opção + `palette` na
+  Votação. Seletor comum `canvas/ColorFields.tsx`; helpers em `shared/palettes.ts`.
+- #81 + #143 (PR #139, rc.15): tira reordena arrastando (`stripDrop` no `RoomCanvas`);
+  recorte ignora cortes < 2 px (snap fracionário); `scrollbar-gutter` + respiro na tira.
+- #142 (PR #151, rc.16): anel de foco interno nos campos dos widgets.
+- #141 (PR #152, rc.17): Dados em fichas para N# e mais de 3 dados; histórico truncado.
+- #144 (PR #154, rc.18): borda da tela some em tela cheia inativa.
+- #145 (PR #156, rc.19): rodapé Entrar na chamada → Compartilhar → Flutuante à esquerda;
+  volume por tela no cabeçalho (`components/ScreenVolume.tsx`, substitui `VolumeControl`).
 
 ## Decisões
 
 - Cada PR sobe um `-rc.N` e regenera o `CHANGELOG.md` com `npm run build` (a CI confere).
+- Várias PRs abertas: merge sequencial; a cada squash, juntar a `main` na próxima e subir
+  a rc (conflitos só em releases/package/CHANGELOG e CSS anexado no fim).
 - `workspace.css` segue sem prettier; blocos novos vão no fim.
-- Sem force push (trava): branch publicado com histórico ruim → branch novo `-v3`.
-- Matar o servidor local pela porta, nunca `pkill -f` com padrão que case com o próprio shell.
-- Widget Personalizado não está no catálogo; o menu "Cor" já aparece se ele existir.
+- Sem force push (trava). Matar o servidor local pela porta.
+- Screenshots com duas pessoas: segundo contexto do Playwright entra pelo código da sala e
+  compartilha com `--auto-select-desktop-capture-source`.
 
 ## Pendente / bloqueios
 
-- `installer` falha: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` vazio para a chave atual
-  (comentário na #138). Só o dono corrige o secret; depois, squash das duas PRs.
+- Widget Personalizado não está no catálogo; o menu "Cor" aparece se ele existir.
+- Em tela cheia inativa, as bordas tracejadas dos espaços vazios continuam visíveis.
 
 ## Próximo passo
 
-Secret corrigido → squash da #138, merge da `main` na #139 (rc.15), squash.
+Pedir ao copiloto a próxima fila.

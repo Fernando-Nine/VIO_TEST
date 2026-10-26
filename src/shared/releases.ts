@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.18";
+export const version = "2.9.0-rc.19";
 export const currentRelease: Release = {
   version,
   date: "2026-10-26",
@@ -29,6 +29,7 @@ export const currentRelease: Release = {
         'Tela nova não ocupa mais um espaço do seu layout sozinha: aparece uma etiqueta no canto ("Fulano começou a transmitir · Assistir") que some sozinha. Um ícone ao vivo discreto mostra quantas telas estão no ar, com Assistir para cada uma, e o sino guarda o histórico com o contador de novas zerando ao abrir.',
         "Silenciar no menu de cada pessoa: Silenciar para mim (só no seu aparelho, desfaz com Ativar para mim) e, para o dono da sala, Silenciar para todos e Liberar voz. Quem foi silenciado vê o motivo e o microfone fica bloqueado até ser liberado.",
         "Volume de cada pessoa vai até 200% no menu dela, só no seu aparelho.",
+        "Rodapé com Entrar na chamada, Compartilhar e Flutuante juntos à esquerda. O volume saiu do rodapé: cada tela tem o seu no próprio cabeçalho (clique silencia, passe o mouse para ajustar, até 300% com o ajuste fino), também em tela cheia e na janela flutuante.",
         "Cor no Cronômetro (cor do anel) e no Personalizado, e Cor e paleta na Votação (cor por opção na pizza e nas barras), pelo menu do botão direito. Trocar a cor não reinicia o tempo nem apaga votos.",
         "Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante. A barra de rolagem da tira tem espaço próprio e nenhum widget fica com a borda cortada.",
         "O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.",

@@ -527,8 +527,8 @@
 .in-room .leave-call {
   color: #dca7b2;
 }
-.dock-volume {
-  position: relative;
+.screen-volume {
+  display: flex;
 }
 .volume-popover {
   position: absolute;
@@ -544,10 +544,11 @@
   color: #f1f2fa;
   text-align: left;
 }
+/* Hover bridge across the gap up to the header button. */
 .volume-popover::after {
   content: "";
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 0;
   right: 0;
   height: 14px;
@@ -565,6 +566,9 @@
 }
 .screen-volume-row {
   margin-top: 12px;
+}
+.screen-volume-row.is-only {
+  margin-top: 0;
 }
 .screen-volume-row label {
   display: flex;
