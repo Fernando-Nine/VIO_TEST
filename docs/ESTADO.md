@@ -1,14 +1,14 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-10-24.
+Atualizado: 2026-10-26.
 
 ## Ambientes
 
-|          | Versão     | Repositório                   | Endereço                       |
-| -------- | ---------- | ----------------------------- | ------------------------------ |
-| Produção | 2.8.1      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.9.0-rc.6 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+|          | Versão      | Repositório                   | Endereço                       |
+| -------- | ----------- | ----------------------------- | ------------------------------ |
+| Produção | 2.8.1       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Prévia   | 2.9.0-rc.13 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.8.1 = 2.8.0 + correções de segurança (VIO PR #3). A prévia já tem o visual novo
@@ -21,10 +21,12 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
 
 ## Prioridades atuais
 
-1. Estrutura da equipe, CI e diagnóstico de cada área.
-2. Interface enxuta: widgets compactos e editáveis no lugar, menos texto, hover e menu
-   de botão direito, feedback sonoro (issues `frontend`).
-3. Promover a prévia para produção quando o usuário aprovar.
+Ordem completa em `ROADMAP.md`.
+
+1. Fechar a 2.9.0: #115, #81 e bugs da prévia #141–#145; publicar após aval.
+2. Leva 3 de Design (#146–#150): cabeçalho −/×, widgets combinados, câmera, Ajustes,
+   notificações/adicionar widget/layout/volume.
+3. App Windows: secrets de assinatura para o beta publicar.
 
 ## Decisões vigentes
 
@@ -36,6 +38,8 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
 - Permissões da sala no estilo cargos do Discord (#71, antiga E12): criador e admins
   controlam widgets da sala; convidados conforme switches da sala.
 - Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
+- Rodapé: Entrar na chamada, Compartilhar e Flutuante juntos à esquerda, nessa ordem;
+  volume fica em cada tela, não no rodapé (#145).
 - Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
   a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
 - Visual novo dos widgets passa por rascunhos da área Design antes do código.
@@ -59,6 +63,7 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
 
 ## Referências
 
+Roadmap `ROADMAP.md` ·
 Arquitetura do canvas `CANVAS.md` · deploy `DEPLOY.md` · segurança `SEGURANCA.md` ·
 TURN `TURN.md` · navegadores `NAVEGADORES.md` · validações `VALIDACAO.md` ·
 histórico das rodadas C–E `arquivo/`.

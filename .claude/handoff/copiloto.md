@@ -1,16 +1,17 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-26
+Atualizado: 2026-10-26 (tarde)
 
 ## Agora
 
 Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
 
 - QA/Release `session_01GoaQuuAx1QX9U3Xsnr2eUx` — sem acesso ao VIO; releases de produção ficam com o copiloto.
-- Frontend/UX (5) `session_01AkdYFCsjwmModvqsA6Dyga` — fila: #107, #123+#109, #122 (UI), #115.
+- Frontend/UX (6) `session_01NJ7XxUbzaNDrKKwRi5QQ9U` — fila: #115, #81. (5) concluiu #107, #109, #122, #123.
 - Backend: sem sessão ativa (último arquivado após #122/PR #126); abrir nova quando houver tarefa.
-- Mídia (2) `session_01Q7SGieUDumQL8PUpbo7nEM` — canais VIO/VIO Teste + docs/WINDOWS-RELEASE.md, #122 (cliente), #118.
-- Design `session_01EfQg8NxYJ35Wh2zr9q6igF` — leva 2 entregue (#107–#111); ocioso.
+- Frontend (6): #138/#139 presas no `installer` (senha da chave vazia) → PR #140 assina só ao publicar. Depois #141–#145.
+- Design (leva 3) `session_01KPbZqEyhHpE8D8ik96V4Uh` — #146–#150.
+- Mídia (2) `session_01Q7SGieUDumQL8PUpbo7nEM` — fila concluída; ociosa até #148 sair do Design.
 - Tarefa agendada `trig_01Y6stnQYUT7NzutBNEgUzmK` (3 h) retoma agentes parados por limite.
 
 ## Feito recentemente
@@ -46,6 +47,6 @@ Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
 
 ## Próximo passo
 
-Acompanhar as filas; quando a prévia tiver #104–#111 e #122/#123, propor release 2.9.0.
+Roadmap em `docs/ROADMAP.md`. 2.9.0 = rc.13 + #115/#81 + bugs #141–#145; então pedir aval e publicar.
 Para publicar no VIO: árvore idêntica ao commit aprovado do VIO_TEST (git checkout <sha> -- .),
 PR no VIO, squash, conferir rodapé com o usuário.
