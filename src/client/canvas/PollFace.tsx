@@ -3,6 +3,7 @@ import type { MenuItem } from "../components/ContextMenu";
 import { BarChart3, Check, CircleOff, PieChart } from "lucide-react";
 import { HeaderTools } from "./header-tools";
 import { colorInk, defaultColor, normalizeColor } from "../../shared/colors";
+import { optionColors, pollColored } from "../../shared/palettes";
 import type {
   ModuleAction,
   ModuleConfig,
@@ -87,7 +88,7 @@ function Face({ person }: { person: Pick<Participant, "name" | "color"> }) {
 }
 
 /** Donut with a background-colored gap between slices. */
-function Donut({ counts, order }: { counts: number[]; order: number[] }) {
+function Donut({ counts, colors }: { counts: number[]; colors: string[] }) {
   const total = counts.reduce((a, b) => a + b, 0);
   let start = 0;
   return (
@@ -107,7 +108,7 @@ function Donut({ counts, order }: { counts: number[]; order: number[] }) {
               pathLength={100}
               strokeDasharray={`${share * 100} ${100 - share * 100}`}
               strokeDashoffset={-start * 100}
-              style={{ stroke: shades[Math.min(order[i], shades.length - 1)] }}
+              style={{ stroke: colors[i] }}
             />
           );
           start += share;
@@ -265,6 +266,11 @@ export function PollFace({
   // Rank by votes (ties share a rank) for the shade of each option.
   const ranks = [...new Set(counts)].sort((a, b) => b - a);
   const order = counts.map((c) => ranks.indexOf(c));
+  // Chosen colors win; otherwise the winner is lightest and the rest darker by rank.
+  const own = pollColored(config) ? optionColors(config) : null;
+  const colors = counts.map(
+    (_, i) => own?.[i] || shades[Math.min(order[i], shades.length - 1)],
+  );
   const winners = top ? config.options.filter((_, i) => counts[i] === top) : [];
   const ranked = config.options
     .map((option, i) => ({ option, i }))
@@ -333,7 +339,12 @@ export function PollFace({
                   · {percent(counts[i], total)}%
                 </span>
                 <span className="poll-bar">
-                  <span style={{ width: `${percent(counts[i], total)}%` }} />
+                  <span
+                    style={{
+                      width: `${percent(counts[i], total)}%`,
+                      background: own?.[i],
+                    }}
+                  />
                 </span>
               </li>
             ))}
@@ -346,7 +357,7 @@ export function PollFace({
           <div className="poll-donut-box">
             <Donut
               counts={ranked.map((r) => counts[r.i])}
-              order={ranked.map((r) => order[r.i])}
+              colors={ranked.map((r) => colors[r.i])}
             />
             <span className="poll-donut-center">
               <b>{percent(top, total)}%</b>
@@ -365,9 +376,7 @@ export function PollFace({
                 >
                   <span
                     className="poll-swatch"
-                    style={{
-                      background: shades[Math.min(order[i], shades.length - 1)],
-                    }}
+                    style={{ background: colors[i] }}
                   />
                   <span className="poll-label">{option.label}</span>
                   <span className="poll-num">
