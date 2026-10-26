@@ -29,7 +29,7 @@ export const currentRelease: Release = {
         "Tela nova não ocupa mais um espaço do seu layout sozinha: aparece uma etiqueta no canto (\"Fulano começou a transmitir · Assistir\") que some sozinha. Um ícone ao vivo discreto mostra quantas telas estão no ar, com Assistir para cada uma, e o sino guarda o histórico com o contador de novas zerando ao abrir.",
         "Silenciar no menu de cada pessoa: Silenciar para mim (só no seu aparelho, desfaz com Ativar para mim) e, para o dono da sala, Silenciar para todos e Liberar voz. Quem foi silenciado vê o motivo e o microfone fica bloqueado até ser liberado.",
         "Volume de cada pessoa vai até 200% no menu dela, só no seu aparelho.",
-        "Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante.",
+        "Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante. A barra de rolagem da tira tem espaço próprio e nenhum widget fica com a borda cortada.",
       ],
     },
   ],

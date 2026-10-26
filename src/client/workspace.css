@@ -3003,3 +3003,21 @@ button.inline-text.is-empty {
   background: #2727f58a;
   z-index: 80;
 }
+
+/* The strip's scrollbar keeps its own lane: never flush against the widgets. */
+.canvas-strip {
+  scrollbar-gutter: stable;
+  padding-inline-end: 6px;
+}
+.strip-top .canvas-strip,
+.strip-bottom .canvas-strip {
+  padding-inline-end: 0;
+  padding-block-end: 6px;
+}
+@media (max-width: 679px) {
+  .canvas-layout:is(.strip-left, .strip-right, .strip-top, .strip-bottom)
+    > .canvas-strip {
+    padding-inline-end: 0;
+    padding-block-end: 6px;
+  }
+}
