@@ -2989,3 +2989,37 @@ button.inline-text.is-empty {
     max-width: none;
   }
 }
+
+/* A chosen widget color tints the counters' buttons. */
+.custom-widget.has-accent .widget-score button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.option-colors ul {
+  display: grid;
+  gap: 2px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.option-colors li button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #f3f3fb;
+  text-align: left;
+}
+.option-colors li button:hover,
+.option-colors li button[aria-expanded="true"] {
+  background: #1b1c29;
+}
+.option-colors .color-fields {
+  margin-top: 10px;
+}

@@ -239,7 +239,12 @@ button.raffle-chip:hover {
     0 0 0 2px #14151f,
     0 0 0 4px #f3f3fb;
 }
-.raffle-colors .color-hue input[type="range"] {
+.color-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.color-fields .color-hue input[type="range"] {
   width: 100%;
   margin: 0;
 }
