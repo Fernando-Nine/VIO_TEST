@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.14";
+export const version = "2.9.0-rc.15";
 export const currentRelease: Release = {
   version,
   date: "2026-10-26",
@@ -30,6 +30,7 @@ export const currentRelease: Release = {
         "Silenciar no menu de cada pessoa: Silenciar para mim (só no seu aparelho, desfaz com Ativar para mim) e, para o dono da sala, Silenciar para todos e Liberar voz. Quem foi silenciado vê o motivo e o microfone fica bloqueado até ser liberado.",
         "Volume de cada pessoa vai até 200% no menu dela, só no seu aparelho.",
         "Cor no Cronômetro (cor do anel) e no Personalizado, e Cor e paleta na Votação (cor por opção na pizza e nas barras), pelo menu do botão direito. Trocar a cor não reinicia o tempo nem apaga votos.",
+        "Modo Tira: arrastar um widget ao longo da tira muda a ordem, com o espaço de destino destacado; soltar fora da tira o deixa flutuante. A barra de rolagem da tira tem espaço próprio e nenhum widget fica com a borda cortada.",
       ],
     },
   ],

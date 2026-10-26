@@ -106,7 +106,7 @@ const plugins = (
   Feedback.configure({ feedback: "none", dropAnimation: null }),
   Accessibility.configure({
     screenReaderInstructions: {
-      draggable: `Use espaço, setas e espaço para encaixar. Escape cancela. No mouse, arraste livremente ou segure ${canvasShortcuts.snap.label} para encaixar.`,
+      draggable: `Use espaço, setas e espaço para encaixar. Escape cancela. No mouse, arraste livremente ou segure ${canvasShortcuts.snap.label} para encaixar; na tira, arrastar ao longo dela muda a ordem.`,
     },
     announcements: {
       dragstart: () =>
@@ -151,6 +151,7 @@ function CanvasSlot({
   restore,
   dragging,
   split,
+  reorderTarget,
 }: {
   slot: Slot;
   index: number;
@@ -165,6 +166,8 @@ function CanvasSlot({
   restore: () => void;
   dragging: boolean;
   split: () => void;
+  /** A strip widget dragged along the strip lands here. */
+  reorderTarget: boolean;
 }) {
   const { ref, isDropTarget } = useDroppable({
     id: slot.id,
@@ -180,7 +183,7 @@ function CanvasSlot({
   return (
     <div
       ref={nodeRef}
-      className={`canvas-slot ${isDropTarget && !disabled ? "is-drop-target" : ""}`}
+      className={`canvas-slot ${isDropTarget && !disabled ? "is-drop-target" : ""} ${reorderTarget ? "is-reorder-target" : ""}`}
       data-slot-id={slot.id}
       data-span={slotUnits(slot)}
       style={{ "--slot-span": slotUnits(slot) } as CSSProperties}
@@ -279,6 +282,7 @@ export function RoomCanvas(props: Props) {
   const [announcement, announce] = useState("");
   const [roving, setRoving] = useState<string | null>(null);
   const [snap, setSnap] = useState(false);
+  const [stripTarget, setStripTarget] = useState<string | null>(null);
   const shift = useRef(false);
   const keyboardDrag = useRef(false);
   const [nearTop, setNearTop] = useState(false);
@@ -766,6 +770,7 @@ export function RoomCanvas(props: Props) {
     restore: () => {},
     dragging: !!drag && !keyboardDrag.current,
     split: () => store.splitSlot(slot.id),
+    reorderTarget: stripTarget === slot.id,
   });
   useLayoutEffect(() => {
     if (!highlightedSlot) return;
@@ -784,6 +789,21 @@ export function RoomCanvas(props: Props) {
     const box = geometry.slots.get(slot.id);
     return box?.visible && !slot.offer ? [{ ...box, id: slot.id }] : [];
   });
+  /**
+   * Inside the strip, a strip widget reorders (null: drops back in place);
+   * outside it, the drag floats the widget as before. Undefined: not a reorder.
+   */
+  function stripDrop(id: string, point: Point) {
+    const area = geometry.strip;
+    const base = root.current?.getBoundingClientRect();
+    if (!stripMode || state.single || !area || !base) return undefined;
+    if (state.slots.findIndex((s) => s.widgetId === id) <= 0) return undefined;
+    const local = { x: point.x - base.left, y: point.y - base.top };
+    const target = dropSlotAt(local, dropSlots, area);
+    if (!target) return undefined;
+    const index = state.slots.findIndex((s) => s.id === target.id);
+    return index > 0 && state.slots[index].widgetId !== id ? target.id : null;
+  }
 
   return (
     <div
@@ -939,6 +959,12 @@ export function RoomCanvas(props: Props) {
             manager.actions.move({ to: point, propagate: false });
           }
           origin.point = point;
+          setStripTarget(
+            keyboardDrag.current || shift.current
+              ? null
+              : stripDrop(String(event.operation.source?.id || ""), point) ||
+                  null,
+          );
           const x = point.x - origin.initial.x,
             y = point.y - origin.initial.y;
           manager.dragOperation.shape = new Rectangle(
@@ -966,7 +992,16 @@ export function RoomCanvas(props: Props) {
               dropSlots,
               geometry.bounds,
             );
-            if (
+            const along =
+              shift.current || keyboardDrag.current
+                ? undefined
+                : stripDrop(id, point);
+            if (along !== undefined) {
+              if (along) {
+                store.reorder(id, along);
+                announce("Widget movido na tira.");
+              }
+            } else if (
               target &&
               (shift.current || keyboardDrag.current) &&
               !state.single
@@ -1000,6 +1035,7 @@ export function RoomCanvas(props: Props) {
             }
           }
           dragOrigin.current = null;
+          setStripTarget(null);
           keyboardDrag.current = false;
           shift.current = false;
           setSnap(false);

@@ -83,7 +83,10 @@ export function useCanvasGeometry(state: CanvasState) {
           ? overlap(bounds, stripBox)
           : bounds;
       const intersection = overlap(box, region);
-      const clip = `inset(${Math.max(0, intersection.y - box.y)}px ${Math.max(0, box.x + box.width - intersection.x - intersection.width)}px ${Math.max(0, box.y + box.height - intersection.y - intersection.height)}px ${Math.max(0, intersection.x - box.x)}px)`;
+      // A fractional scroll (snap on sub-pixel slot sizes) must not shave a
+      // border off the first or last widget: ignore cuts under 2px.
+      const cut = (value: number) => (value < 2 ? 0 : value);
+      const clip = `inset(${cut(intersection.y - box.y)}px ${cut(box.x + box.width - intersection.x - intersection.width)}px ${cut(box.y + box.height - intersection.y - intersection.height)}px ${cut(intersection.x - box.x)}px)`;
       slots.set(id, {
         ...box,
         clip,
@@ -141,7 +144,10 @@ export function useCanvasGeometry(state: CanvasState) {
     };
   }, [measure]);
   const signature = state.slots
-    .map((s) => `${s.id}:${s.widgetId || ""}:${s.offer?.id || ""}:${s.span?.rows || 1}:${s.span?.columns || 1}`)
+    .map(
+      (s) =>
+        `${s.id}:${s.widgetId || ""}:${s.offer?.id || ""}:${s.span?.rows || 1}:${s.span?.columns || 1}`,
+    )
     .join("|");
   useLayoutEffect(measure, [
     measure,

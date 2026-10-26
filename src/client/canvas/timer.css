@@ -222,6 +222,15 @@
   white-space: nowrap;
 }
 
+/* Narrow side by side (a strip slot): a smaller ring keeps the mode switch inside. */
+@container widget-body (max-width: 480px) {
+  .timer-face {
+    --ring: clamp(96px, min(78cqh, 40cqw), 420px);
+    gap: clamp(12px, 5cqw, 72px);
+    padding: 4cqh 4cqw;
+  }
+}
+
 /* Taller than wide, or narrow like a phone: one column. */
 @container widget-body (orientation: portrait) or ((max-width: 460px) and (min-height: 280px)) {
   .timer-face {
