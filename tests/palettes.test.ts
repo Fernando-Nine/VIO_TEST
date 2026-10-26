@@ -4,12 +4,16 @@ import { contrast, luminance } from "../src/shared/colors";
 import {
   colorAt,
   harmonyPalette,
+  optionColors,
   paletteColors,
+  pollColored,
+  withPalette,
   palettes,
   sliceInk,
   swatches,
 } from "../src/shared/palettes";
 import { moduleConfig, moduleResets } from "../src/shared/room-modules";
+import { widgetContent } from "../src/shared/widgets";
 
 test("paleta aleatória é harmônica: vizinhas diferem em luminosidade", () => {
   for (let seed = 1; seed < 50; seed++) {
@@ -72,5 +76,54 @@ test("cor e paleta são validadas e não reiniciam o sorteio", () => {
   assert.equal(
     moduleConfig.safeParse({ ...base, palette: "neon" }).success,
     false,
+  );
+});
+
+test("votação aceita cor por opção e paleta sem zerar votos", () => {
+  const id = () => crypto.randomUUID();
+  const base = moduleConfig.parse({
+    kind: "poll",
+    question: "Filme?",
+    duration: 0,
+    options: [
+      { id: id(), label: "A" },
+      { id: id(), label: "B" },
+    ],
+  });
+  if (base.kind !== "poll") throw new Error();
+  assert.equal(pollColored(base), false);
+  const colored = moduleConfig.parse(withPalette(base, "sunset"));
+  if (colored.kind !== "poll") throw new Error();
+  assert.equal(pollColored(colored), true);
+  assert.deepEqual(optionColors(colored), palettes.sunset.slice(0, 2));
+  assert.equal(moduleResets(base, colored), false);
+  assert.equal(moduleResets(base, { ...base, question: "Série?" }), true);
+});
+
+test("cor de um widget só vale para cronômetro e personalizado", () => {
+  const timer = {
+    id: crypto.randomUUID(),
+    kind: "timer" as const,
+    label: "Cronômetro",
+    duration: 60,
+    elapsed: 0,
+    startedAt: null,
+  };
+  const ok = (content: object) => widgetContent.safeParse(content).success;
+  assert.ok(
+    ok({ kind: "timer", title: "T", blocks: [timer], color: "#E8615A" }),
+  );
+  assert.ok(
+    !ok({ kind: "timer", title: "T", blocks: [timer], color: "#E8615" }),
+  );
+  assert.ok(
+    !ok({
+      kind: "notes",
+      title: "N",
+      blocks: [
+        { id: crypto.randomUUID(), kind: "text", label: "A", value: "" },
+      ],
+      color: "#E8615A",
+    }),
   );
 });

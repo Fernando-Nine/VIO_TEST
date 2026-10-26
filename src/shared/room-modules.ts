@@ -4,13 +4,18 @@ import { paletteIds } from "./palettes";
 
 const id = z.string().uuid();
 const label = z.string().trim().min(1).max(120);
+export const hexColor = z.string().regex(/^#[\da-fA-F]{6}$/);
 export const moduleConfig = z.discriminatedUnion("kind", [
   z
     .object({
       kind: z.literal("poll"),
       question: label,
-      options: z.array(z.object({ id, label }).strict()).min(2).max(12),
+      options: z
+        .array(z.object({ id, label, color: hexColor.optional() }).strict())
+        .min(2)
+        .max(12),
       duration: z.number().int().min(0).max(86400),
+      palette: z.enum(paletteIds).optional(),
     })
     .strict(),
   z
@@ -29,10 +34,7 @@ export const moduleConfig = z.discriminatedUnion("kind", [
               id,
               label,
               weight: z.number().int().min(1).max(1000),
-              color: z
-                .string()
-                .regex(/^#[\da-fA-F]{6}$/)
-                .optional(),
+              color: hexColor.optional(),
             })
             .strict(),
         )
@@ -178,14 +180,14 @@ export function validModule(config: ModuleConfig) {
         : [];
   return new Set(items.map((i) => i.id)).size === items.length;
 }
-/** Colors and palette only change how the wheel looks; results are kept. */
+/** Colors and palette only change how results look; results are kept. */
 export function moduleResets(
   before: ModuleConfig | undefined,
   after: ModuleConfig,
 ) {
   const plain = (config: ModuleConfig | undefined) =>
     JSON.stringify(
-      config?.kind === "random"
+      config?.kind === "random" || config?.kind === "poll"
         ? {
             ...config,
             palette: undefined,

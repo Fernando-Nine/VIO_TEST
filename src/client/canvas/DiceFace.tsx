@@ -83,30 +83,65 @@ export function DiceFace({
   const shape = dieKind(lastGroups[0]?.faces || "20");
   const rolled = lastGroups[0]?.kept.reduce((a, b) => a + b, 0) ?? 0;
   const bonus = last && single ? Number(last.label) - rolled : 0;
+  // N#dX: one total per roll. Many dice or rolls read as chips, not a giant line.
+  const totals = last ? last.label.split(" · ") : [];
+  const repeated = totals.length > 1;
+  const kept = lastGroups.flatMap((g) =>
+    g.kept.map((value) => ({ value, crit: g.faces === "20" && value === 20 })),
+  );
+  const sum = totals.reduce((a, b) => a + (Number(b) || 0), 0);
   return (
     <div className={`dice-face ${last ? "" : "is-empty"}`}>
       <div className="dice-main">
         {last ? (
           <div className={`dice-stage ${crit ? "is-crit" : ""}`} key={last.id}>
-            <span className="dice-big" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d={outlines[shape]} />
-              </svg>
-              <b>{rolled}</b>
-            </span>
+            {!repeated && kept.length <= 3 && (
+              <span
+                className={`dice-big ${String(rolled).length > 2 ? "is-long" : ""}`}
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d={outlines[shape]} />
+                </svg>
+                <b>{rolled}</b>
+              </span>
+            )}
             {single && Number.isFinite(bonus) && bonus !== 0 && (
               <span className="dice-bonus">
                 {bonus > 0 ? "+" : "−"}
                 {Math.abs(bonus)}
               </span>
             )}
-            <span className="dice-total">
-              <b>{last.label}</b>
-              {crit && <span className="dice-crit">Crítico</span>}
-            </span>
-            <small className="dice-line">
+            {repeated ? (
+              <span className="dice-total is-repeated">
+                <span className="dice-chips" aria-label={last.label}>
+                  {totals.map((t, i) => (
+                    <span key={i}>{t}</span>
+                  ))}
+                </span>
+                <small className="dice-summary">
+                  {totals.length} rolagens · soma {sum}
+                </small>
+              </span>
+            ) : (
+              <span className="dice-total">
+                <b>{last.label}</b>
+                {crit && <span className="dice-crit">Crítico</span>}
+              </span>
+            )}
+            {!repeated && kept.length > 3 && (
+              <span className="dice-chips is-dice" aria-hidden="true">
+                {kept.map((k, i) => (
+                  <span key={i} className={k.crit ? "is-crit" : undefined}>
+                    {k.value}
+                  </span>
+                ))}
+              </span>
+            )}
+            <small className={`dice-line ${repeated ? "is-repeated" : ""}`}>
               <span className="dice-parts">
-                {last.expression} · {parts(last)}
+                {last.expression}
+                {repeated ? "" : ` · ${parts(last)}`}
               </span>
               <span className="dice-author"> · {last.authorName}</span>
             </small>
@@ -155,19 +190,31 @@ export function DiceFace({
         <strong>Histórico</strong>
         {history.length ? (
           <ol>
-            {[...history].reverse().map((r) => (
-              <li key={r.id} className={critical(r) ? "is-crit" : undefined}>
-                <Dot color={color(r.authorId)} />
-                <span className="dice-history-who">
-                  <span>{r.authorName}</span>
-                  <code>
-                    {r.expression}
-                    <span className="dice-history-parts"> · {parts(r)}</span>
-                  </code>
-                </span>
-                <b>{r.label}</b>
-              </li>
-            ))}
+            {[...history].reverse().map((r) => {
+              const many = r.label.includes(" · ");
+              return (
+                <li key={r.id} className={critical(r) ? "is-crit" : undefined}>
+                  <Dot color={color(r.authorId)} />
+                  <span className="dice-history-who">
+                    <span>{r.authorName}</span>
+                    <code
+                      title={`${r.expression} · ${many ? r.label : parts(r)}`}
+                    >
+                      {r.expression}
+                      {many ? (
+                        <span> · {r.label}</span>
+                      ) : (
+                        <span className="dice-history-parts">
+                          {" "}
+                          · {parts(r)}
+                        </span>
+                      )}
+                    </code>
+                  </span>
+                  {!many && <b>{r.label}</b>}
+                </li>
+              );
+            })}
           </ol>
         ) : (
           <p className="dice-empty">Ninguém rolou ainda.</p>

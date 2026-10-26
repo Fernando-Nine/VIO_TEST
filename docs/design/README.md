@@ -5,6 +5,7 @@ Rascunho aprovado pelo usuário vira spec aqui, mais uma issue `frontend`. A spe
 
 Canvas da 1ª leva (widgets): https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ
 Canvas da 2ª leva (interface): https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8
+Canvas da 3ª leva (rascunho, aguarda aval): https://claude.ai/artifact/3yJ4umERzwmY3vtWfxt8hJ
 
 Tamanhos de referência: pequeno (lateral, 420×240, sem rolagem), foco (960×640) e
 celular (380 de largura). Tema escuro, azul `#2727F5`, destaque `#A6A9FF`, Bricolage

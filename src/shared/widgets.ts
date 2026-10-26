@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  hexColor,
   moduleConfig,
   moduleAction,
   isModule,
@@ -64,9 +65,13 @@ export const widgetContent = z
     title: label,
     blocks: z.array(widgetBlock).max(6),
     module: moduleConfig.optional(),
+    /** Accent of a one-color widget: the timer ring, the counters' buttons. */
+    color: hexColor.optional(),
   })
   .strict()
   .refine((content) => {
+    if (content.color && !["timer", "custom"].includes(contentKind(content)))
+      return false;
     if (isModule(content.kind))
       return (
         content.blocks.length === 0 &&
