@@ -245,23 +245,8 @@
   inset: 8px;
   display: grid;
   gap: var(--canvas-gap);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   grid-template-rows: repeat(var(--grid-rows), minmax(0, 1fr));
-}
-.canvas-layout.grid-1 {
-  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
-}
-.canvas-layout.grid-2 {
-  grid-template: minmax(0, 1fr) / repeat(2, minmax(0, 1fr));
-}
-.canvas-layout.grid-3 {
-  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
-}
-.canvas-layout.grid-3 > :first-child {
-  grid-column: 1 / -1;
-}
-.canvas-layout.grid-4 {
-  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
 }
 .canvas-layout:is(.focus-left, .focus-right) {
   grid-template-columns: minmax(0, var(--focus-ratio)) minmax(0, 1fr);
@@ -940,12 +925,6 @@
 @container (min-width: 600px) {
   .custom-blocks {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-}
-@media (min-width: 680px) {
-  .canvas-layout.grid-5,
-  .canvas-layout.grid-6 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (max-width: 679px) {
@@ -1696,23 +1675,6 @@
   width: auto;
 }
 
-.canvas-layout[class*="grid-"] {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: stretch;
-}
-.canvas-layout[class*="grid-"] > .canvas-slot {
-  flex: 0 0
-    calc(
-      (100% - (var(--auto-columns) - 1) * var(--canvas-gap)) /
-        var(--auto-columns)
-    );
-  height: calc(
-    (100% - (var(--grid-rows) - 1) * var(--canvas-gap)) / var(--grid-rows)
-  );
-  box-sizing: border-box;
-}
 .canvas-strip > .canvas-slot {
   grid-row-end: span var(--slot-span, 1);
   scroll-snap-align: none;
@@ -3111,5 +3073,107 @@ button.inline-text.is-empty {
   .canvas-slot > .add-widget,
   .canvas-slot > .remove-slot {
     transition: none;
+  }
+}
+
+/* Layout (#166): grid up to 3 × 4; phones in one column, focus on top in 16:9. */
+.grid-picker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.grid-picker-cells {
+  display: grid;
+  grid-template-columns: repeat(4, 44px);
+  grid-auto-rows: 30px;
+  gap: 4px;
+}
+.grid-picker-cells > button {
+  min-height: 0;
+  padding: 0;
+  border: 1px solid #42475f;
+  border-radius: 5px;
+  background: #10121c;
+}
+.grid-picker-cells > button.is-lit {
+  background: #3a3fa8;
+  border-color: #a6a9ff;
+}
+.grid-picker-cells > button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+.grid-picker-label {
+  min-width: 48px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 15px;
+  color: #a6a9ff;
+}
+.layout-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.layout-switch > span {
+  display: grid;
+  gap: 2px;
+}
+.layout-switch > span > span {
+  color: #a3a7c2;
+  font-size: 13px;
+}
+.layout-switch input {
+  width: auto;
+}
+.canvas-toolbar .not-shown-trigger b {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  color: #a6a9ff;
+}
+.not-shown-panel h3 {
+  margin: 6px 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #a3a7c2;
+}
+.not-shown-panel li > svg {
+  flex: none;
+  color: #a6a9ff;
+}
+.not-shown-panel .not-shown-all {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+@media (max-width: 679px) {
+  .canvas-layout.grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: var(--compact-row);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .canvas-layout:is(.strip-left, .strip-right, .strip-top, .strip-bottom) {
+    grid-template-rows: var(--compact-row) minmax(0, 1fr);
+  }
+  .canvas-layout:is(.strip-left, .strip-right, .strip-top, .strip-bottom)
+    > .canvas-strip {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-auto-rows: var(--compact-row);
+    overflow: hidden auto;
+    scroll-snap-type: y mandatory;
+  }
+  .canvas-layout .canvas-strip > .canvas-slot {
+    grid-row-end: span var(--slot-span, 1);
+    grid-column-end: auto;
+  }
+  .canvas-strip .slot-snap-point {
+    left: 0;
+    top: calc(
+      var(--unit-index) * (100% + var(--canvas-gap)) / var(--slot-span)
+    );
   }
 }

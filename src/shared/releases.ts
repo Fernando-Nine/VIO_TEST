@@ -7,10 +7,10 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.20";
+export const version = "2.9.0-rc.21";
 export const currentRelease: Release = {
   version,
-  date: "2026-10-26",
+  date: "2026-10-27",
   title: "Prévia · Visual novo dos widgets",
   sections: [
     {
@@ -35,6 +35,7 @@ export const currentRelease: Release = {
         "O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.",
         "Dados com muitos dados ou rolagens repetidas (10d20, 10#d6) mostram os valores em fichas compactas, com total ou soma, sem nada cortado; no histórico, os valores ficam numa linha própria.",
         "Em tela cheia, a borda colorida da tela e os espaços vazios somem junto com os controles quando você para de mexer e voltam ao mexer.",
+        "Layout com dois modos, Grade e Foco + tira. Na Grade, escolha o tamanho numa matriz de até 3 linhas por 4 colunas (passe o mouse e clique, ou use as setas e Enter); Foco único virou a grade 1 × 1. Diminuir a grade não fecha nada: o que não cabe aparece em \"N não exibidos\", com Mostrar para cada um, e volta ao aumentar a grade. No celular, uma coluna: o foco fica fixo no topo em 16:9 e os outros rolam embaixo.",
       ],
     },
   ],
