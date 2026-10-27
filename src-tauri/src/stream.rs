@@ -37,7 +37,7 @@ use windows::{
             Direct3D11::*,
             Dxgi::Common::{
                 DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709,
-                DXGI_FORMAT_NV12, DXGI_RATIONAL, DXGI_SAMPLE_DESC,
+                DXGI_FORMAT, DXGI_FORMAT_NV12, DXGI_RATIONAL, DXGI_SAMPLE_DESC,
             },
         },
         System::{
@@ -82,6 +82,8 @@ pub struct Tick {
     /// Frames written and GPU→page milliseconds over the last full second, for the bench.
     fps: u32,
     busy_ms: f32,
+    /// False when the GPU has no video processor and NV12 is made on the CPU.
+    gpu: bool,
 }
 
 struct Frames {
@@ -109,26 +111,40 @@ pub struct Options {
     pub cursor: bool,
 }
 
-struct Pipeline {
-    gpu: Gpu,
+/// GPU path: the video processor scales and converts; only NV12 is read back.
+struct Processor {
     video: ID3D11VideoContext1,
     device: ID3D11VideoDevice,
     enumerator: ID3D11VideoProcessorEnumerator,
     processor: ID3D11VideoProcessor,
-    output: ID3D11Texture2D,
     output_view: ID3D11VideoProcessorOutputView,
+    output: ID3D11Texture2D,
     staging: ID3D11Texture2D,
+}
+
+enum Path {
+    Gpu(Processor),
+    /// No video processor (basic display driver, VMs): BGRA is read back and converted here.
+    Cpu {
+        staging: Option<(ID3D11Texture2D, u32, u32)>,
+        nv12: Vec<u8>,
+    },
+}
+
+struct Pipeline {
+    gpu: Gpu,
+    path: Path,
     width: u32,
     height: u32,
 }
 
-fn texture(gpu: &Gpu, width: u32, height: u32, staging: bool) -> windows::core::Result<ID3D11Texture2D> {
+fn texture(gpu: &Gpu, width: u32, height: u32, format: DXGI_FORMAT, staging: bool) -> windows::core::Result<ID3D11Texture2D> {
     let desc = D3D11_TEXTURE2D_DESC {
         Width: width,
         Height: height,
         MipLevels: 1,
         ArraySize: 1,
-        Format: DXGI_FORMAT_NV12,
+        Format: format,
         SampleDesc: DXGI_SAMPLE_DESC { Count: 1, Quality: 0 },
         Usage: if staging { D3D11_USAGE_STAGING } else { D3D11_USAGE_DEFAULT },
         BindFlags: if staging { 0 } else { D3D11_BIND_RENDER_TARGET.0 as u32 },
@@ -140,9 +156,8 @@ fn texture(gpu: &Gpu, width: u32, height: u32, staging: bool) -> windows::core::
     texture.ok_or(windows::core::Error::empty())
 }
 
-impl Pipeline {
-    fn new(input: SizeInt32, options: Options) -> windows::core::Result<Self> {
-        let gpu = Gpu::new()?;
+impl Processor {
+    fn new(gpu: &Gpu, input: SizeInt32, options: Options) -> windows::core::Result<Self> {
         let device: ID3D11VideoDevice = gpu.device.cast()?;
         let video: ID3D11VideoContext1 = gpu.context.cast()?;
         let rate = DXGI_RATIONAL {
@@ -161,8 +176,8 @@ impl Pipeline {
         };
         let enumerator = unsafe { device.CreateVideoProcessorEnumerator(&content) }?;
         let processor = unsafe { device.CreateVideoProcessor(&enumerator, 0) }?;
-        let output = texture(&gpu, options.width, options.height, false)?;
-        let staging = texture(&gpu, options.width, options.height, true)?;
+        let output = texture(gpu, options.width, options.height, DXGI_FORMAT_NV12, false)?;
+        let staging = texture(gpu, options.width, options.height, DXGI_FORMAT_NV12, true)?;
         let view = D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC {
             ViewDimension: D3D11_VPOV_DIMENSION_TEXTURE2D,
             Anonymous: D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC_0 {
@@ -180,73 +195,109 @@ impl Pipeline {
             video.VideoProcessorSetOutputBackgroundColor(&processor, true, &BLACK);
         }
         Ok(Self {
-            gpu,
             video,
             device,
             enumerator,
             processor,
-            output,
             output_view,
+            output,
             staging,
+        })
+    }
+}
+
+impl Pipeline {
+    fn new(input: SizeInt32, options: Options) -> windows::core::Result<Self> {
+        let gpu = Gpu::new()?;
+        let path = match Processor::new(&gpu, input, options) {
+            Ok(processor) => Path::Gpu(processor),
+            Err(_) => Path::Cpu {
+                staging: None,
+                nv12: vec![0; wire::nv12_size(options.width, options.height)],
+            },
+        };
+        Ok(Self {
+            gpu,
+            path,
             width: options.width,
             height: options.height,
         })
     }
 
-    /// Scales `source` (letterboxed, aspect kept) into the NV12 output and maps it.
-    fn convert(&self, source: &ID3D11Texture2D, content: SizeInt32, write: impl FnOnce(&[u8], usize)) -> windows::core::Result<()> {
+    fn on_gpu(&self) -> bool {
+        matches!(self.path, Path::Gpu(_))
+    }
+
+    /// Scales `source` (letterboxed, aspect kept) into NV12 and hands the planes to `write`.
+    fn convert(&mut self, source: &ID3D11Texture2D, content: SizeInt32, write: impl FnOnce(&[u8], usize)) -> windows::core::Result<()> {
         let mut desc = D3D11_TEXTURE2D_DESC::default();
         unsafe { source.GetDesc(&mut desc) };
         let (cw, ch) = (
             (content.Width.max(1) as u32).min(desc.Width),
             (content.Height.max(1) as u32).min(desc.Height),
         );
-        let scale = (self.width as f64 / cw as f64).min(self.height as f64 / ch as f64);
-        let (dw, dh) = ((cw as f64 * scale).round() as i32, (ch as f64 * scale).round() as i32);
-        let (dx, dy) = ((self.width as i32 - dw) / 2, (self.height as i32 - dh) / 2);
-        let view = D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC {
-            FourCC: 0,
-            ViewDimension: D3D11_VPIV_DIMENSION_TEXTURE2D,
-            Anonymous: D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC_0 {
-                Texture2D: D3D11_TEX2D_VPIV { MipSlice: 0, ArraySlice: 0 },
-            },
-        };
-        let mut input = None;
-        unsafe { self.device.CreateVideoProcessorInputView(source, &self.enumerator, &view, Some(&mut input)) }?;
-        let stream = D3D11_VIDEO_PROCESSOR_STREAM {
-            Enable: true.into(),
-            pInputSurface: std::mem::ManuallyDrop::new(input),
-            ..Default::default()
-        };
-        let streams = [stream];
-        let result = unsafe {
-            self.video.VideoProcessorSetStreamSourceRect(
-                &self.processor,
-                0,
-                true,
-                Some(&RECT { left: 0, top: 0, right: cw as i32, bottom: ch as i32 }),
-            );
-            self.video.VideoProcessorSetStreamDestRect(
-                &self.processor,
-                0,
-                true,
-                Some(&RECT { left: dx, top: dy, right: dx + dw, bottom: dy + dh }),
-            );
-            self.video.VideoProcessorBlt(&self.processor, &self.output_view, 0, &streams)
-        };
-        let [mut stream] = streams;
-        unsafe { std::mem::ManuallyDrop::drop(&mut stream.pInputSurface) };
-        result?;
-        unsafe { self.gpu.context.CopyResource(&self.staging, &self.output) };
-        let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
-        unsafe { self.gpu.context.Map(&self.staging, 0, D3D11_MAP_READ, 0, Some(&mut mapped)) }?;
-        let pitch = mapped.RowPitch as usize;
-        // NV12 staging: Y rows, then interleaved UV rows, both with the same pitch.
-        let planes = unsafe {
-            std::slice::from_raw_parts(mapped.pData as *const u8, pitch * (self.height as usize * 3 / 2))
-        };
-        write(planes, pitch);
-        unsafe { self.gpu.context.Unmap(&self.staging, 0) };
+        let (width, height, context) = (self.width, self.height, &self.gpu.context);
+        match &mut self.path {
+            Path::Gpu(gpu) => {
+                let scale = (width as f64 / cw as f64).min(height as f64 / ch as f64);
+                let (dw, dh) = ((cw as f64 * scale).round() as i32, (ch as f64 * scale).round() as i32);
+                let (dx, dy) = ((width as i32 - dw) / 2, (height as i32 - dh) / 2);
+                let view = D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC {
+                    FourCC: 0,
+                    ViewDimension: D3D11_VPIV_DIMENSION_TEXTURE2D,
+                    Anonymous: D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC_0 {
+                        Texture2D: D3D11_TEX2D_VPIV { MipSlice: 0, ArraySlice: 0 },
+                    },
+                };
+                let mut input = None;
+                unsafe { gpu.device.CreateVideoProcessorInputView(source, &gpu.enumerator, &view, Some(&mut input)) }?;
+                let stream = D3D11_VIDEO_PROCESSOR_STREAM {
+                    Enable: true.into(),
+                    pInputSurface: std::mem::ManuallyDrop::new(input),
+                    ..Default::default()
+                };
+                let streams = [stream];
+                let result = unsafe {
+                    gpu.video.VideoProcessorSetStreamSourceRect(
+                        &gpu.processor,
+                        0,
+                        true,
+                        Some(&RECT { left: 0, top: 0, right: cw as i32, bottom: ch as i32 }),
+                    );
+                    gpu.video.VideoProcessorSetStreamDestRect(
+                        &gpu.processor,
+                        0,
+                        true,
+                        Some(&RECT { left: dx, top: dy, right: dx + dw, bottom: dy + dh }),
+                    );
+                    gpu.video.VideoProcessorBlt(&gpu.processor, &gpu.output_view, 0, &streams)
+                };
+                let [mut stream] = streams;
+                unsafe { std::mem::ManuallyDrop::drop(&mut stream.pInputSurface) };
+                result?;
+                unsafe { context.CopyResource(&gpu.staging, &gpu.output) };
+                let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+                unsafe { context.Map(&gpu.staging, 0, D3D11_MAP_READ, 0, Some(&mut mapped)) }?;
+                let pitch = mapped.RowPitch as usize;
+                // NV12 staging: Y rows, then interleaved UV rows, both with the same pitch.
+                let planes = unsafe { std::slice::from_raw_parts(mapped.pData as *const u8, pitch * (height as usize * 3 / 2)) };
+                write(planes, pitch);
+                unsafe { context.Unmap(&gpu.staging, 0) };
+            }
+            Path::Cpu { staging, nv12 } => {
+                if !staging.as_ref().is_some_and(|(_, w, h)| (*w, *h) == (desc.Width, desc.Height)) {
+                    *staging = Some((texture(&self.gpu, desc.Width, desc.Height, desc.Format, true)?, desc.Width, desc.Height));
+                }
+                let Some((texture, _, _)) = staging.as_ref() else { unreachable!() };
+                unsafe { context.CopyResource(texture, source) };
+                let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+                unsafe { context.Map(texture, 0, D3D11_MAP_READ, 0, Some(&mut mapped)) }?;
+                let pixels = unsafe { std::slice::from_raw_parts(mapped.pData as *const u8, (mapped.RowPitch * desc.Height) as usize) };
+                wire::bgra_to_nv12(pixels, cw, ch, mapped.RowPitch, width, height, nv12);
+                unsafe { context.Unmap(texture, 0) };
+                write(nv12, width as usize);
+            }
+        }
         Ok(())
     }
 }
@@ -281,7 +332,7 @@ fn run(
     ready: mpsc::SyncSender<Result<(), String>>,
 ) -> windows::core::Result<()> {
     let mut size = item.Size()?;
-    let pipeline = Pipeline::new(size, options)?;
+    let mut pipeline = Pipeline::new(size, options)?;
     let pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
         &pipeline.gpu.winrt,
         DirectXPixelFormat::B8G8R8A8UIntNormalized,
@@ -312,7 +363,11 @@ fn run(
         Duration: interval.as_micros() as i64 * 10,
     });
     session.StartCapture()?;
-    frames.set(|t| t.state = 1);
+    let gpu = pipeline.on_gpu();
+    frames.set(|t| {
+        t.state = 1;
+        t.gpu = gpu;
+    });
     let _ = ready.send(Ok(()));
     let events = [frames.stop_event.0, frames.frame_event.0];
     let (mut sequence, mut due) = (0u32, Instant::now());
@@ -601,7 +656,7 @@ mod bench {
         });
         // Fail with the stage and HRESULT: the runner may lack a video processor (WARP).
         let size = item.Size().expect("item size");
-        drop(Pipeline::new(size, options).unwrap_or_else(|e| panic!("VideoProcessor NV12: {e:?}")));
+        let on_gpu = Pipeline::new(size, options).unwrap_or_else(|e| panic!("D3D11: {e:?}")).on_gpu();
         let worker_frames = frames.clone();
         let (ready, started) = mpsc::sync_channel(1);
         let worker = std::thread::spawn(move || {
@@ -628,7 +683,8 @@ mod bench {
         let share = used.as_secs_f64() / wall.as_secs_f64() * 100.0;
         let screen = item_size();
         println!(
-            "VIO bench: tela {}x{} -> {width}x{height}@60 | CPU {share:.1}% de um núcleo ({:.1}% do PC, {cores} núcleos) | quadros/s {:?} | ms/quadro {:?}",
+            "VIO bench ({}): tela {}x{} -> {width}x{height}@60 | CPU {share:.1}% de um núcleo ({:.1}% do PC, {cores} núcleos) | quadros/s {:?} | ms/quadro {:?}",
+            if on_gpu { "conversão na GPU" } else { "conversão na CPU" },
             screen.0,
             screen.1,
             share / cores,

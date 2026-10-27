@@ -137,6 +137,7 @@ interface Tick {
   state: number;
   fps: number;
   busyMs: number;
+  gpu: boolean;
 }
 export interface NativeVideoOptions {
   /** Output box; the app keeps the source aspect and never upscales. */
@@ -149,8 +150,9 @@ export interface NativeVideo {
   track: MediaStreamTrack;
   width: number;
   height: number;
-  /** Frames written by the app and its GPU→page time per frame, last second. */
-  stats(): { fps: number; busyMs: number };
+  /** Frames written by the app and its capture→page time per frame, last second;
+   * `gpu` is false when NV12 is made on the CPU (no video processor). */
+  stats(): { fps: number; busyMs: number; gpu: boolean };
   stop(): void;
 }
 
@@ -178,7 +180,7 @@ export async function startNativeVideo(
   const { captureId, width, height } = started;
   let buffer: ArrayBuffer | undefined;
   let stopped = false;
-  let stats = { fps: 0, busyMs: 0 };
+  let stats = { fps: 0, busyMs: 0, gpu: true };
   let maxFps: number = options.fps;
   const generator = new MediaStreamTrackGenerator({ kind: "video" });
   const writer = generator.writable.getWriter();
@@ -230,7 +232,7 @@ export async function startNativeVideo(
         });
         if (stopped) return;
         if (tick.state >= 2) return end();
-        stats = { fps: tick.fps, busyMs: tick.busyMs };
+        stats = { fps: tick.fps, busyMs: tick.busyMs, gpu: tick.gpu };
         if (tick.sequence === after) continue;
         after = tick.sequence;
         if ((writer.desiredSize ?? 1) <= 0) continue;
