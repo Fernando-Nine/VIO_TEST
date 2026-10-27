@@ -2,7 +2,41 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.9.0-rc.22] - 2026-10-27
+## [2.10.0-rc.1] - 2026-10-27
+
+Prévia · Casca da interface
+
+### Somente no vio-test
+- Layout com dois modos, Grade e Foco + tira. Na Grade, escolha o tamanho numa matriz de até 3 linhas por 4 colunas (passe o mouse e clique, ou use as setas e Enter); Foco único virou a grade 1 × 1. Diminuir a grade não fecha nada: o que não cabe aparece em "N não exibidos", com Mostrar para cada um, e volta ao aumentar a grade. No celular, uma coluna: o foco fica fixo no topo em 16:9 e os outros rolam embaixo.
+- Avisos no topo da sala, um por vez, com barra de tempo e ×: quem entrou (4 s), quem saiu (4 s) e nova tela com Assistir (6 s). A nova tela entra por cima do aviso atual; os outros esperam com "+N". Passar o mouse pausa a barra. Erros da sala ficam até você fechar.
+- Adicionar widget com busca (sem acento: "cronometro" acha Cronômetro; Enter adiciona o primeiro, setas navegam), escolha Para mim / Para a sala no próprio painel e grupos Na sala, Decidir e jogar e Tempo. Em um espaço vazio, o catálogo abre dentro do espaço, com ícones que cabem nele; Esc ou clicar fora fecha.
+
+## [2.9.0] - 2026-10-27
+
+Visual novo dos widgets, pessoas e notificações
+
+### Widgets
+- Cronômetro em anel com atalhos de 5, 10 e 25 minutos, voltas compartilhadas e alarme com Desligar para a sala.
+- Votação com linha do prazo, rostos de quem votou (nunca em quê) e resultado em barras, pizza ou só a vencedora.
+- Dados com teclado de ícones (d4 a d20), crítico no 20 natural e muitos dados em fichas compactas, sem nada cortado.
+- Sorteador em roleta que para na opção sorteada para todos, com cores e paletas compartilhadas.
+- Cor no Cronômetro e no Personalizado, e cor e paleta na Votação, pelo menu do botão direito.
+- Widget pessoal ou da sala, escolhido ao criar; o cabeçalho mostra quem controla e o menu do botão direito segue a mesma ordem em todos.
+- Modo Tira: arraste um widget ao longo da tira para mudar a ordem.
+
+### Sala e pessoas
+- Pessoas num painel lateral com quem fala, quem está sem microfone e quem transmite, e menu de cada pessoa com volume até 200% e Assistir a tela.
+- Silenciar para mim, e, para o dono da sala, Silenciar para todos e Liberar voz.
+- Tela nova aparece como etiqueta no canto, com ícone ao vivo das telas no ar e sino com histórico.
+- Ajustes numa janela com lista lateral: Áudio, Vídeo, Aparência e sons e, para criador e admins, Sala.
+
+### Chamada e telas
+- Doca fixa no rodapé com Entrar na chamada, Compartilhar e Flutuante juntos à esquerda; no celular, barra de abas.
+- Cada tela tem o seu volume no próprio cabeçalho, também em tela cheia e na janela flutuante.
+- Em tela cheia, bordas e controles somem quando você para de mexer.
+- Aviso de muitas ações seguidas não aparece mais com uso normal dos widgets.
+
+## [2.9.0-rc.20] - 2026-10-26
 
 Prévia · Visual novo dos widgets
 
@@ -26,8 +60,6 @@ Prévia · Visual novo dos widgets
 - O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.
 - Dados com muitos dados ou rolagens repetidas (10d20, 10#d6) mostram os valores em fichas compactas, com total ou soma, sem nada cortado; no histórico, os valores ficam numa linha própria.
 - Em tela cheia, a borda colorida da tela e os espaços vazios somem junto com os controles quando você para de mexer e voltam ao mexer.
-- Layout com dois modos, Grade e Foco + tira. Na Grade, escolha o tamanho numa matriz de até 3 linhas por 4 colunas (passe o mouse e clique, ou use as setas e Enter); Foco único virou a grade 1 × 1. Diminuir a grade não fecha nada: o que não cabe aparece em "N não exibidos", com Mostrar para cada um, e volta ao aumentar a grade. No celular, uma coluna: o foco fica fixo no topo em 16:9 e os outros rolam embaixo.
-- Avisos no topo da sala, um por vez, com barra de tempo e ×: quem entrou (4 s), quem saiu (4 s) e nova tela com Assistir (6 s). A nova tela entra por cima do aviso atual; os outros esperam com "+N". Passar o mouse pausa a barra. Erros da sala ficam até você fechar.
 
 ## [2.8.1] - 2026-10-24
 
