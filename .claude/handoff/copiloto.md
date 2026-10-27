@@ -6,12 +6,17 @@ Atualizado: 2026-10-27
 
 Sessões (tag `vio-team`; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonkr`):
 
-- Frontend 11 `session_01K4nnLPcatWE4bNXvrhaipt` — #160 (interface), #207, #209.
-- Mídia 4 `session_01K4nnLPBU2sPjZDCpRvt7m8` — #162, #194.
-- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — #191 (estilo Discord) primeiro; depois #195–#197.
+- Frontend 11 `session_01K4nnLPcatWE4bNXvrhaipt` — fez #160, #207, #209 (rc.4); ver se encerrou.
+- Mídia 4 `session_01K4nnLPBU2sPjZDCpRvt7m8` — fez #162; segue #194.
+- Mídia 5 `session_01K4nnLTTWHjcmDPhoVsd5N2` — #192 captura nativa (crate `webview2-com` aprovado).
+- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — canvas publicado, aguarda escolhas.
 - Encerrados: Frontend 9 e 10 (#159), Mídia 3 (#193, mídia da #160, parecer da #192).
-- Aguardam o usuário: aval da 2.10.0 (rc.8), aval do crate `webview2-com` (#192),
-  conexão do Figma/Canva (proxy da rede do ambiente recusa hoje).
+- Usuário (27 out): pula a 2.10.0; produção será a 2.11.0 após aval na prévia.
+  Figma e Canva liberados na rede e conectados (sessões novas já os recebem).
+- Quando o Design entregar o canvas da #191: o usuário escolhe; vira spec; interface pelo
+  Frontend usando a API da Mídia 5 (app) e o seletor do navegador (web).
+- Brandbook/identidade/design system (prioridade 4): abrir Design novo com Figma/Canva.
+- Jurídico: primeira tarefa sugerida = parecer de clips (#208) e base de termos/política.
 - Agentes Jurídico e Roteirista criados; primeira tarefa a definir com o usuário.
 
 ## Feito recentemente
@@ -48,6 +53,7 @@ Sessões (tag `vio-team`; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonk
 
 ## Próximo passo
 
-Acompanhar o Frontend 8 (2.10.0). Ao fechar a 2.10.0, abrir Mídia para #160/#162 e Frontend para #159. Conferir no vio-releases se o build `VIO Windows` da main publicou o `beta` (CI verde em 27 out; a API pública não respondeu daqui). Roadmap em `docs/ROADMAP.md`.
-Para publicar no VIO: árvore idêntica ao commit aprovado do VIO_TEST (git checkout <sha> -- .),
-PR no VIO, squash, conferir rodapé com o usuário.
+Coletar as escolhas do usuário no canvas da leva 4 (Design avisa) e mandar #191 para o
+Frontend com a API da Mídia 5. Ao fechar #194 e #192, pedir aval da 2.11.0 e publicar no VIO:
+árvore idêntica ao commit aprovado do VIO_TEST (`git checkout <sha> -- .`), PR no VIO,
+squash, tag `v2.11.0` pelo usuário em Releases.
