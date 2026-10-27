@@ -1,19 +1,22 @@
 # design — handoff
 
-Atualizado: 2026-10-27 (leva 4)
+Atualizado: 2026-10-27 (leva 4, escolhas)
 
 ## Agora
 
-Leva 4 publicada (27 out): canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
-aguardando escolhas por comentário nas pranchas (sessão assinada; comentários acordam o chat).
+Leva 4 fechada em parte (27 out). Canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
+com a linha "Escolhidas" no topo.
 
-- #191 Compartilhar (prioridade): 191A app com miniaturas (Main.dc.html), 191B navegador.
-- #195 Grade: 195A alça (recom.), 195B seleção, 195C mapa no painel; Foco: 195D miniaturas +
-  fantasma, 195E arrastar à borda (sugestão D + E).
-- #196 Catálogo: 196A seções sem abas (recom.), 196B abas + escolha no cartão, 196C filtros.
-- #197 Landing 197A (recom.) / 197B; início do app 197C (recentes, sugestão) / 197D mínimo.
+- #197 em aberto. **Landing**: o usuário recusou A e B (perdem o fundo animado). A ideia é
+  manter a 1ª tela e descer com rolagem com snap: Por que instalar → Funcionalidades →
+  Download. O copiloto define o conteúdo e pede a nova leva. **Início do app**: escolhida a
+  C; a criação de sala fica com o roteirista ou o copiloto.
 
 ## Feito recentemente
+
+- Leva 4: #191 A (app com suporte) + B (navegador), `compartilhar.md`. #195 A + D + E
+  (borda com Shift, sem atalho novo), `grade-foco.md`, #221. #196 B + aba Comunidade,
+  `adicionar-widget.md` reescrita, #222. #195 e #196 fechadas.
 
 - Skill `vio-design-delivery` (formato da leva 3 + edição das levas 1/2) e
   `docs/design/ideias-futuras.md` (categorias futuras de Ajustes, divergências com o plano da #168).
@@ -47,5 +50,5 @@ aguardando escolhas por comentário nas pranchas (sessão assinada; comentários
 
 ## Próximo passo
 
-Coletar escolhas da leva 4 e fechar (Escolhidas, specs, issues frontend), #191 primeiro.
+Esperar o conteúdo da landing (copiloto) e a forma de criar sala, para fechar a #197.
 Copiloto decide as divergências listadas em `ideias-futuras.md` (nome do grupo App, Atalhos).
