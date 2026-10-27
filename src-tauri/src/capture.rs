@@ -1,4 +1,5 @@
-// WASAPI process loopback (Windows 11): the audio of one application tree.
+// WASAPI process loopback (Windows 10 2004+): the audio of one application tree, or of
+// the whole PC minus VIO's own tree (the call's voices).
 // No files, network or global audio hook; the PCM only goes to the local window.
 use crate::wire;
 use serde::Serialize;
@@ -39,6 +40,10 @@ use windows::{
 const RING_FRAMES: usize = 9600;
 const LIST_COOLDOWN: Duration = Duration::from_millis(700);
 const LIST_VALID: Duration = Duration::from_secs(60);
+/// Windows 10 2004. Microsoft documents 20348, but process loopback works on updated
+/// 2004+ (as in OBS); an older or unpatched system fails the activation, not the app.
+pub const MIN_BUILD: u32 = 19041;
+const SYSTEM_TITLE: &str = "Todo o som do computador, sem o VIO";
 
 /// Owned Win32 handle, closed once.
 struct Owned(HANDLE);
@@ -125,6 +130,8 @@ struct NativeSource {
     started: u64,
     pid: u32,
     title: String,
+    /// Everything the PC plays except this process tree (WebView2 renders the call there).
+    system: bool,
 }
 
 struct Enumeration {
@@ -165,6 +172,7 @@ unsafe extern "system" fn visit(window: HWND, data: LPARAM) -> BOOL {
         started,
         pid,
         title: String::from_utf16_lossy(&title[..length as usize]),
+        system: false,
     });
     true.into()
 }
@@ -253,13 +261,17 @@ impl Shared {
         }
     }
 
-    fn run(&self, pid: u32, process: &Owned) -> WinResult<()> {
+    fn run(&self, pid: u32, system: bool, process: &Owned) -> WinResult<()> {
         let mut parameters = AUDIOCLIENT_ACTIVATION_PARAMS {
             ActivationType: AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK,
             Anonymous: AUDIOCLIENT_ACTIVATION_PARAMS_0 {
                 ProcessLoopbackParams: AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS {
                     TargetProcessId: pid,
-                    ProcessLoopbackMode: PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE,
+                    ProcessLoopbackMode: if system {
+                        PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE
+                    } else {
+                        PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE
+                    },
                 },
             },
         };
@@ -373,18 +385,23 @@ pub struct Capture {
 impl Capture {
     fn start(source: &NativeSource) -> Result<Self, String> {
         let closed = || "O aplicativo foi fechado ou não permite captura. Atualize a lista.".to_string();
-        let window = HWND(source.window as *mut _);
-        let mut current = 0u32;
-        unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
-        if !unsafe { IsWindow(Some(window)) }.as_bool() || current != source.pid {
-            return Err(closed());
-        }
-        let process = open_process(source.pid).ok_or_else(closed)?;
-        if process_started(process.0) != source.started
-            || unsafe { WaitForSingleObject(process.0, 0) } != WAIT_TIMEOUT
-        {
-            return Err(closed());
-        }
+        let process = if source.system {
+            open_process(unsafe { GetCurrentProcessId() }).ok_or_else(closed)?
+        } else {
+            let window = HWND(source.window as *mut _);
+            let mut current = 0u32;
+            unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
+            if !unsafe { IsWindow(Some(window)) }.as_bool() || current != source.pid {
+                return Err(closed());
+            }
+            let process = open_process(source.pid).ok_or_else(closed)?;
+            if process_started(process.0) != source.started
+                || unsafe { WaitForSingleObject(process.0, 0) } != WAIT_TIMEOUT
+            {
+                return Err(closed());
+            }
+            process
+        };
         let stop_event = Owned(unsafe { CreateEventW(None, true, false, None) }.map_err(|_| closed())?);
         let shared = Arc::new(Shared {
             state: Mutex::new(State::default()),
@@ -393,14 +410,14 @@ impl Capture {
             stop_event,
         });
         let worker_shared = shared.clone();
-        let pid = source.pid;
+        let (pid, system) = (source.pid, source.system);
         let worker = std::thread::spawn(move || {
             let shared = worker_shared;
             if let Err(e) = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.ok() {
                 shared.finish(Err(e));
                 return;
             }
-            let result = shared.run(pid, &process);
+            let result = shared.run(pid, system, &process);
             shared.finish(result);
             unsafe { CoUninitialize() };
         });
@@ -468,6 +485,7 @@ impl Drop for Capture {
 pub struct Source {
     id: String,
     title: String,
+    system: bool,
 }
 
 #[derive(Default)]
@@ -490,23 +508,32 @@ impl Manager {
         inner.sources.clear();
         inner.listed = Some(Instant::now());
         let mut sources = Vec::new();
-        for entry in enumerate() {
+        let system = NativeSource {
+            window: 0,
+            started: 0,
+            pid: unsafe { GetCurrentProcessId() },
+            title: SYSTEM_TITLE.into(),
+            system: true,
+        };
+        for entry in std::iter::once(system).chain(enumerate()) {
             // Opaque ids: the page never sees or chooses a PID.
             let id = key()?;
             sources.push(Source {
                 id: id.clone(),
                 title: entry.title.clone(),
+                system: entry.system,
             });
             inner.sources.insert(id, entry);
         }
-        sources.sort_by_key(|s| s.title.to_lowercase());
+        // The whole-PC option stays first; applications follow by name.
+        sources[1..].sort_by_key(|s| s.title.to_lowercase());
         Ok(sources)
     }
 
     pub fn start(&self, source_id: &str) -> Result<String, String> {
         let mut inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
-        if windows_build() < 22000 {
-            return Err("O áudio por aplicativo precisa do Windows 11.".into());
+        if windows_build() < MIN_BUILD {
+            return Err("O som da janela precisa do Windows 10 versão 2004 ou mais recente.".into());
         }
         if inner.active.is_some() {
             return Err("Encerre o compartilhamento atual antes de iniciar outro.".into());

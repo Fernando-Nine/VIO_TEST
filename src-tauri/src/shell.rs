@@ -40,7 +40,7 @@ fn desktop_capabilities(window: WebviewWindow) -> Result<Capabilities, String> {
     Ok(Capabilities {
         protocol: 1,
         windows_build: build,
-        process_audio: build >= 22000,
+        process_audio: build >= capture::MIN_BUILD,
     })
 }
 
