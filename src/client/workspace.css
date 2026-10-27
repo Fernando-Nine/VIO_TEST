@@ -644,23 +644,6 @@
   margin: 0;
   font-family: var(--mono);
 }
-.widget-time {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: #c0c8e4;
-}
-.widget-time output {
-  font: clamp(18px, 8cqw, 54px) var(--mono);
-  color: #eef1ff;
-}
-.widget-time output:last-child {
-  font-size: clamp(12px, 5cqw, 28px);
-}
 .widget-quick {
   display: grid;
   gap: 12px;
@@ -2161,15 +2144,6 @@
     min-height: 2.2em;
   }
 }
-.widget-time output {
-  font-size: clamp(18px, min(10cqw, 18cqh), 96px);
-}
-.widget-time output:last-child {
-  font-size: clamp(12px, min(6cqw, 10cqh), 48px);
-}
-.widget-time {
-  font-size: clamp(12px, min(2.4cqw, 4cqh), 18px);
-}
 .module-widget:is(.kind-dice, .kind-random) .module-content > * {
   max-width: 32em;
 }
@@ -3407,4 +3381,24 @@ button.inline-text.is-empty {
   .catalog.is-compact .widget-empty {
     grid-column: 1 / -1;
   }
+}
+
+/* #161: how long each screen has been live, right after its title. */
+.screen-duration {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  margin-right: 4px;
+  color: #c5cdea;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.screen-duration .live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--live);
 }

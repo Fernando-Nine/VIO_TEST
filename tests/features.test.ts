@@ -4,7 +4,11 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { runInNewContext } from "node:vm";
 import { AudioOutput } from "../src/client/media/audio-output";
-import { connectionMetric, formatDuration } from "../src/client/room/status";
+import {
+  connectionMetric,
+  formatDuration,
+  spokenDuration,
+} from "../src/client/room/status";
 import { releases, version } from "../src/shared/releases";
 
 test("ping distingue sinalização e tela, latência e conexão interrompida", () => {
@@ -33,6 +37,11 @@ test("ping distingue sinalização e tela, latência e conexão interrompida", (
   );
   assert.equal(formatDuration(3661.9), "01:01:01");
   assert.equal(formatDuration(86400), "24:00:00");
+  assert.equal(formatDuration(100 * 3600 - 1), "99:59:59");
+  assert.equal(formatDuration(100 * 3600), "99:59:59+");
+  assert.equal(spokenDuration(59), "0 min");
+  assert.equal(spokenDuration(5040), "1 h 24 min");
+  assert.equal(spokenDuration(7200), "2 h");
 });
 
 test("saída muda voz, tela e elementos futuros; falha reverte a seleção", async () => {

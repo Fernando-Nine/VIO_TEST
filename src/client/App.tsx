@@ -337,6 +337,7 @@ export default function App({ engine }: { engine: Controller }) {
                 <span>{view.snapshot.code}</span>
                 <Copy size={14} />
               </button>
+              <RoomTimer engine={engine} />
             </>
           )}
         </div>

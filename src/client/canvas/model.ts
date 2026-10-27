@@ -575,7 +575,8 @@ export function restoreCanvas(raw: unknown): CanvasState {
       w &&
       typeof w.id === "string" &&
       typeof w.type === "string" &&
-      w.type !== "notes" &&
+      // Retired widgets: their slots come back empty.
+      !["notes", "time"].includes(w.type) &&
       typeof w.title === "string" &&
       w.config &&
       typeof w.config === "object" &&

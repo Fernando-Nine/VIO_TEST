@@ -121,10 +121,13 @@ input[type="checkbox"] {
   letter-spacing: -0.015em;
 }
 .in-room .room-duration {
+  flex-shrink: 0;
   margin: 0;
+  gap: 5px;
   white-space: nowrap;
-  color: var(--muted);
-  font-size: 0.6875rem;
+  color: #c5cdea;
+  font-family: var(--mono);
+  font-size: 0.75rem;
 }
 .in-room .room-capacity {
   flex-shrink: 0;
@@ -588,15 +591,25 @@ input[type="checkbox"] {
     flex-basis: 58px;
   }
   .in-room .header-left {
-    gap: 10px;
+    gap: 8px;
+    overflow: hidden;
   }
   .in-room .header-actions {
     gap: 7px;
+  }
+  /* The reserved width would push the actions over the room clock. */
+  .in-room .connection {
+    min-width: 0;
   }
   .in-room .header-actions .invite {
     padding: 8px;
   }
   .in-room .invite > span {
+    display: none;
+  }
+  /* #161: the room clock sits by the logo; the divider and icon make room. */
+  .in-room .header-left > .header-divider,
+  .in-room .room-duration > svg {
     display: none;
   }
   /* A truncated code is useless: keep only the copy button. */
