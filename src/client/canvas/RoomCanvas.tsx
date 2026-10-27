@@ -57,9 +57,10 @@ import {
   canRemoveSlot,
   isStrip,
   slotUnits,
-  presetNames,
+  autoGrid,
+  gridPreset,
+  gridSize,
   type Offer,
-  type Preset,
   type Slot,
   type WidgetInstance,
 } from "./model";
@@ -67,6 +68,8 @@ import { floatingBox, useCanvasGeometry } from "./geometry";
 import { wheelTarget } from "./strip-wheel";
 import { useStripInput, stripStops } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
+import { GridPicker } from "./GridPicker";
+import { NotShown } from "./NotShown";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
 import { createModule } from "./ModuleWidget";
@@ -783,8 +786,25 @@ export function RoomCanvas(props: Props) {
       ?.focus({ preventScroll: true });
     setHighlightedSlot(null);
   }, [highlightedSlot, state.slots, root]);
-  const visibleSlots =
-    geometry.bounds.width < 380 ? 1 : geometry.bounds.width < 680 ? 2 : 3;
+  // Phones use one column: the focus on top in 16:9, the rest below.
+  const compact = geometry.bounds.width < 680;
+  const horizontalStrip =
+    !compact && ["strip-top", "strip-bottom"].includes(state.preset);
+  const grid = gridSize(state.preset);
+  // Switching to the grid picks the smallest one that shows everything.
+  const gridToFit = autoGrid(
+    state.slots.filter((t) => t.widgetId || t.offer).length +
+      state.hidden.length,
+  );
+  const visibleSlots = compact
+    ? Math.max(
+        1,
+        Math.floor(
+          (geometry.bounds.height - (geometry.bounds.width * 9) / 16) /
+            ((geometry.bounds.width * 9) / 16),
+        ),
+      )
+    : 3;
   const dropSlots = state.slots.flatMap((slot) => {
     const box = geometry.slots.get(slot.id);
     return box?.visible && !slot.offer ? [{ ...box, id: slot.id }] : [];
@@ -880,15 +900,22 @@ export function RoomCanvas(props: Props) {
           <Plus size={16} />
           <span>Widget</span>
         </button>
-        <button
-          className="text-button"
-          aria-pressed={state.single}
-          disabled={!state.widgets.length}
-          onClick={() => store.toggleSingle()}
-        >
-          <Columns3 size={16} />
-          <span>{state.single ? "Voltar ao conjunto" : "Foco único"}</span>
-        </button>
+        {state.hidden.length > 0 && (
+          <NotShown
+            widgets={state.hidden.flatMap((id) => {
+              const widget = state.widgets.find((w) => w.id === id);
+              return widget ? [widget] : [];
+            })}
+            title={(widget) => titleOf(widget, engine)}
+            show={(id) => store.show(id)}
+          />
+        )}
+        {state.single && (
+          <button className="text-button" onClick={() => store.toggleSingle()}>
+            <Columns3 size={16} />
+            <span>Voltar ao conjunto</span>
+          </button>
+        )}
         <Notifications
           engine={engine}
           openWidget={(w) => openShared(w, true)}
@@ -1048,31 +1075,15 @@ export function RoomCanvas(props: Props) {
           ref={root}
         >
           <div
-            className={`canvas-layout ${state.preset} ${state.single ? "single-focus" : ""}`}
+            className={`canvas-layout ${grid ? "grid" : state.preset} ${state.single ? "single-focus" : ""}`}
+            onScroll={compact && grid ? measure : undefined}
             style={
               {
                 "--focus-ratio": `${state.ratio * 100}%`,
                 "--strip-visible": visibleSlots,
-                "--grid-count": state.slots.length,
-                "--auto-columns": Math.min(
-                  state.slots.length,
-                  geometry.bounds.width < 680
-                    ? 2
-                    : state.preset === "grid-4" || state.preset === "grid-2"
-                      ? 2
-                      : 3,
-                ),
-                "--grid-rows": Math.ceil(
-                  state.slots.length /
-                    Math.min(
-                      state.slots.length,
-                      geometry.bounds.width < 680
-                        ? 2
-                        : state.preset === "grid-4" || state.preset === "grid-2"
-                          ? 2
-                          : 3,
-                    ),
-                ),
+                "--grid-rows": grid?.rows ?? 1,
+                "--grid-columns": grid?.columns ?? 1,
+                "--compact-row": `${Math.round(((geometry.bounds.width - 8) * 9) / 16)}px`,
               } as CSSProperties
             }
           >
@@ -1119,9 +1130,7 @@ export function RoomCanvas(props: Props) {
                   slotUnits(slot) + slotUnits(next) > Math.min(3, visibleSlots)
                 )
                   return null;
-                const horizontal =
-                  geometry.bounds.width < 680 ||
-                  ["strip-top", "strip-bottom"].includes(state.preset);
+                const horizontal = horizontalStrip;
                 if (
                   horizontal
                     ? a.x < area.x - 2 ||
@@ -1157,7 +1166,7 @@ export function RoomCanvas(props: Props) {
             state.slots.slice(1).reduce((n, s) => n + slotUnits(s), 0) >
               visibleSlots && (
               <div
-                className={`strip-controls ${geometry.bounds.width < 680 || ["strip-top", "strip-bottom"].includes(state.preset) ? "is-horizontal" : "is-vertical"}`}
+                className={`strip-controls ${horizontalStrip ? "is-horizontal" : "is-vertical"}`}
                 role="group"
                 aria-label="Navegar pela tira"
                 style={{
@@ -1172,8 +1181,7 @@ export function RoomCanvas(props: Props) {
                   onClick={() => scrollStep(-1)}
                   aria-label="Voltar um item da tira"
                 >
-                  {geometry.bounds.width < 680 ||
-                  ["strip-top", "strip-bottom"].includes(state.preset) ? (
+                  {horizontalStrip ? (
                     <ArrowLeft size={16} />
                   ) : (
                     <ArrowUp size={16} />
@@ -1184,8 +1192,7 @@ export function RoomCanvas(props: Props) {
                   onClick={() => scrollStep(1)}
                   aria-label="Avançar um item da tira"
                 >
-                  {geometry.bounds.width < 680 ||
-                  ["strip-top", "strip-bottom"].includes(state.preset) ? (
+                  {horizontalStrip ? (
                     <ArrowRight size={16} />
                   ) : (
                     <ArrowDown size={16} />
@@ -1237,8 +1244,7 @@ export function RoomCanvas(props: Props) {
                   !!slot &&
                   slot !== state.slots[0] &&
                   !state.single
-                    ? geometry.bounds.width < 680 ||
-                      ["strip-top", "strip-bottom"].includes(state.preset)
+                    ? horizontalStrip
                       ? "x"
                       : "y"
                     : undefined
@@ -1329,92 +1335,101 @@ export function RoomCanvas(props: Props) {
       )}
       {layoutOpen && (
         <Dialog title="Organizar seu espaço" close={() => setLayoutOpen(false)}>
-          <fieldset className="layout-modes">
-            <legend>Modo layout</legend>
-            <div className="layout-choices">
-              <button
-                className="layout-choice"
-                aria-pressed={!stripMode}
-                onClick={() =>
-                  store.preset(
-                    `grid-${Math.min(6, state.slots.length)}` as Preset,
-                  )
+          {compact ? (
+            <label className="layout-switch">
+              <span>
+                <strong>Foco no topo</strong>
+                <span>Um widget fixo em cima; os outros rolam embaixo.</span>
+              </span>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={stripMode}
+                onChange={(e) =>
+                  store.preset(e.target.checked ? "strip-left" : gridToFit)
                 }
-              >
-                <LayoutGrid />
-                <strong>Grid automático</strong>
-                <span>Todos os espaços fazem parte da grade.</span>
-              </button>
-              <button
-                className="layout-choice"
-                aria-pressed={stripMode}
-                onClick={() => store.preset("strip-left")}
-              >
-                <Columns3 />
-                <strong>Foco + tira</strong>
-                <span>Um espaço grande e uma tira linear.</span>
-              </button>
-            </div>
-          </fieldset>
-          <fieldset className="layout-details">
-            <legend>{stripMode ? "Posição do foco" : "Disposição"}</legend>
-            {stripMode ? (
-              <div
-                className="layout-directions"
-                role="group"
-                aria-label="Posição do foco"
-              >
-                {(["left", "right", "top", "bottom"] as const).map(
-                  (side, i) => (
-                    <button
-                      key={side}
-                      aria-pressed={state.preset === `strip-${side}`}
-                      onClick={() => store.preset(`strip-${side}`)}
+              />
+            </label>
+          ) : (
+            <>
+              <fieldset className="layout-modes">
+                <legend>Modo</legend>
+                <div className="layout-choices">
+                  <button
+                    className="layout-choice"
+                    aria-pressed={!stripMode}
+                    onClick={() => !grid && store.preset(gridToFit)}
+                  >
+                    <LayoutGrid />
+                    <strong>Grade</strong>
+                    <span>Todos do mesmo tamanho.</span>
+                  </button>
+                  <button
+                    className="layout-choice"
+                    aria-pressed={stripMode}
+                    onClick={() => !stripMode && store.preset("strip-left")}
+                  >
+                    <Columns3 />
+                    <strong>Foco + tira</strong>
+                    <span>Um grande e uma fileira.</span>
+                  </button>
+                </div>
+              </fieldset>
+              <fieldset className="layout-details">
+                <legend>{stripMode ? "Posição do foco" : "Tamanho"}</legend>
+                {stripMode ? (
+                  <>
+                    <div
+                      className="layout-directions"
+                      role="group"
+                      aria-label="Posição do foco"
                     >
-                      {["Esquerda", "Direita", "Em cima", "Embaixo"][i]}
-                    </button>
-                  ),
+                      {(["left", "right", "top", "bottom"] as const).map(
+                        (side, i) => (
+                          <button
+                            key={side}
+                            aria-pressed={state.preset === `strip-${side}`}
+                            onClick={() => store.preset(`strip-${side}`)}
+                          >
+                            {["Esquerda", "Direita", "Em cima", "Embaixo"][i]}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                    <label>
+                      Tamanho do foco{" "}
+                      <output>{Math.round(state.ratio * 100)}%</output>
+                      <input
+                        aria-label="Proporção do espaço de foco"
+                        type="range"
+                        min=".4"
+                        max=".8"
+                        step=".05"
+                        value={state.ratio}
+                        onChange={(e) =>
+                          store.change((s) => {
+                            s.ratio = +e.target.value;
+                          })
+                        }
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <GridPicker
+                      value={grid}
+                      pick={(size) =>
+                        store.preset(gridPreset(size.rows, size.columns))
+                      }
+                    />
+                    <p className="field-note">
+                      De 1×1 (um widget só) até 3 linhas por 4 colunas.
+                    </p>
+                  </>
                 )}
-              </div>
-            ) : (
-              <div
-                className="layout-choices grid-presets"
-                role="group"
-                aria-label="Disposição do grid"
-              >
-                {Object.entries(presetNames)
-                  .filter(([id]) => !id.startsWith("strip-"))
-                  .map(([id, label]) => (
-                    <button
-                      key={id}
-                      aria-pressed={state.preset === id}
-                      onClick={() => store.preset(id as Preset)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-              </div>
-            )}
-            {!state.preset.startsWith("grid-") && (
-              <label>
-                Tamanho do foco{" "}
-                <output>{Math.round(state.ratio * 100)}%</output>
-                <input
-                  aria-label="Proporção do espaço de foco"
-                  type="range"
-                  min=".4"
-                  max=".8"
-                  step=".05"
-                  value={state.ratio}
-                  onChange={(e) =>
-                    store.change((s) => {
-                      s.ratio = +e.target.value;
-                    })
-                  }
-                />
-              </label>
-            )}
-          </fieldset>
+              </fieldset>
+            </>
+          )}
         </Dialog>
       )}
       {catalog && (
