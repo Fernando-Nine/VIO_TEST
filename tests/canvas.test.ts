@@ -493,7 +493,7 @@ test("#159: Pessoas na sala, na chamada e Mixer viram um só Pessoas no mesmo es
     { id: "call", type: "call", title: "Pessoas na chamada", config: {} },
     { id: "mixer", type: "mixer", title: "Mixer de volume", config: {} },
     { id: "room", type: "people", title: "Pessoas na sala", config: {} },
-    { id: "chat", type: "connection", title: "Conexão", config: {} },
+    { id: "chat", type: "chat", title: "Chat", config: {} },
   ];
   state.slots[0].widgetId = "mixer";
   state.slots[1].widgetId = "call";
@@ -504,11 +504,37 @@ test("#159: Pessoas na sala, na chamada e Mixer viram um só Pessoas no mesmo es
     restored.widgets.map((w) => [w.id, w.type, w.title]),
     [
       ["call", "people", "Pessoas"],
-      ["chat", "connection", "Conexão"],
+      ["chat", "chat", "Chat"],
     ],
   );
   assert.deepEqual(
     restored.slots.map((s) => s.widgetId),
     [undefined, "call", undefined, "chat"],
+  );
+});
+
+test("#160: Meus espectadores, Conexão e Minha tela viram uma só Minha transmissão", () => {
+  const state = newCanvas();
+  state.widgets = [
+    { id: "a", type: "connection", title: "Conexão", config: {} },
+    { id: "b", type: "viewers", title: "Meus espectadores", config: {} },
+    { id: "c", type: "quick", title: "Minha tela", config: {} },
+    { id: "d", type: "people", title: "Pessoas", config: {} },
+  ];
+  state.slots[0].widgetId = "b";
+  state.slots[1].widgetId = "a";
+  state.slots[2].widgetId = "c";
+  state.slots[3].widgetId = "d";
+  const restored = restoreCanvas(state);
+  assert.deepEqual(
+    restored.widgets.map((w) => [w.id, w.type, w.title]),
+    [
+      ["a", "stream", "Minha transmissão"],
+      ["d", "people", "Pessoas"],
+    ],
+  );
+  assert.deepEqual(
+    restored.slots.map((s) => s.widgetId),
+    [undefined, "a", undefined, "d"],
   );
 });

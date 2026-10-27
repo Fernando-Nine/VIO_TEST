@@ -69,6 +69,7 @@ type Panel =
   | "color"
   | "about"
   | "share"
+  | "replace"
   | "history"
   | null;
 const ownerBlockedText =
@@ -457,6 +458,14 @@ export default function App({ engine }: { engine: Controller }) {
                     people={() => open("color")}
                     diagnostics={() => open("about")}
                     share={() => open("share")}
+                    replaceShare={() =>
+                      desktop
+                        ? open("replace")
+                        : void engine.startScreen(
+                            engine.publications.get("screen")?.audio ?? true,
+                            true,
+                          )
+                    }
                     fullscreen={() => void fullscreen()}
                     isFullscreen={full}
                     interaction={(busy) => {
@@ -764,6 +773,7 @@ export default function App({ engine }: { engine: Controller }) {
               color: "Minha cor na sala",
               about: "Sobre a sala",
               share: "Compartilhar sua tela",
+              replace: "Trocar o que transmito",
               history: "O VIO está crescendo",
             }[panel]
           }
@@ -789,6 +799,9 @@ export default function App({ engine }: { engine: Controller }) {
           )}
           {panel === "share" && desktop && (
             <NativeShare engine={engine} close={() => open(null)} />
+          )}
+          {panel === "replace" && desktop && (
+            <NativeShare engine={engine} close={() => open(null)} replace />
           )}
           {panel === "share" && !desktop && (
             <>
