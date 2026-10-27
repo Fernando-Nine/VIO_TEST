@@ -7,6 +7,9 @@ Canvas da 1ª leva (widgets): https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ
 Canvas da 2ª leva (interface): https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8
 Canvas da 3ª leva: https://claude.ai/artifact/3yJ4umERzwmY3vtWfxt8hJ (seção "Escolhidas")
 
+Formato de cada leva: skill `vio-design-delivery`. O que ficou para depois:
+[ideias-futuras.md](ideias-futuras.md).
+
 Tamanhos de referência: pequeno (lateral, 420×240, sem rolagem), foco (960×640) e
 celular (380 de largura). Tema escuro, azul `#2727F5`, destaque `#A6A9FF`, Bricolage
 Grotesque na interface e IBM Plex Mono em tempos e números. Animações curtas (≤ 800 ms) e
