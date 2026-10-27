@@ -17,12 +17,15 @@ import {
   Ellipsis,
   Grip,
   Pencil,
+  PictureInPicture2,
   Power,
   ShieldCheck,
   X,
 } from "lucide-react";
 import { Dialog } from "../components/Dialog";
 import { ContextMenu, type MenuItem } from "../components/ContextMenu";
+import { ScreenVolumeSlider } from "../components/ScreenVolume";
+import { VolumeNumber } from "../components/VolumeSlider";
 import {
   ControlBadge,
   HeaderToolsSlot,
@@ -231,6 +234,15 @@ export function WidgetFrame(props: Props) {
             run: props.focus,
           },
         ]),
+    ...(widget.type === "screen" && !floating
+      ? [
+          {
+            label: "Janela flutuante",
+            icon: PictureInPicture2,
+            run: () => engine.canvas.detach(widget.id),
+          },
+        ]
+      : []),
     ...(rename
       ? [{ label: "Renomear", icon: Pencil, run: () => setRenaming(true) }]
       : []),
@@ -400,6 +412,31 @@ export function WidgetFrame(props: Props) {
           label={`Ações de ${title}`}
           close={() => setMenu(null)}
           origin={element.current}
+          header={
+            widget.type === "screen" &&
+            person &&
+            person.publication.owner !== engine.view.id && (
+              <label className="person-menu-volume">
+                <span>
+                  Volume desta tela
+                  <VolumeNumber
+                    value={
+                      engine.screenLevel(widget.config.publicationId).volume
+                    }
+                    reset={() =>
+                      engine.setScreenLevel(widget.config.publicationId, {
+                        volume: 1,
+                      })
+                    }
+                  />
+                </span>
+                <ScreenVolumeSlider
+                  engine={engine}
+                  id={widget.config.publicationId}
+                />
+              </label>
+            )
+          }
         />
       )}
       {access && control && (

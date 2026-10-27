@@ -696,3 +696,131 @@
     transition: none;
   }
 }
+
+/* #167: one volume track for screens and people (docs/design/volume.md).
+   Stops follow the thumb centre, which travels 7px in from each end. */
+.volume-slider {
+  --at-fill: calc(7px + (100% - 14px) * var(--fill));
+  --at-unity: calc(7px + (100% - 14px) * var(--unity));
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+.volume-slider input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  min-height: 0;
+  margin: 14px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: none;
+  background: linear-gradient(
+    to right,
+    #a6a9ff 0 min(var(--at-fill), var(--at-unity)),
+    #f2d36b 0 var(--at-fill),
+    #343a55 0
+  );
+}
+.volume-slider input[type="range"]:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.volume-slider input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #eef0ff;
+  border: 2px solid #101320;
+}
+.volume-slider input::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #eef0ff;
+  border: 2px solid #101320;
+}
+.volume-slider.has-boost::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--at-unity) - 1px);
+  top: 50%;
+  width: 2px;
+  height: 10px;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  background: #c5cdea;
+  pointer-events: none;
+}
+.volume-slider.is-vertical {
+  --at-fill: calc(7px + (130px - 14px) * var(--fill));
+  --at-unity: calc(7px + (130px - 14px) * var(--unity));
+  flex: none;
+  justify-content: center;
+  width: 28px;
+  height: 130px;
+}
+.volume-slider.is-vertical input[type="range"] {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 4px;
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(
+    to top,
+    #a6a9ff 0 min(var(--at-fill), var(--at-unity)),
+    #f2d36b 0 var(--at-fill),
+    #343a55 0
+  );
+}
+.volume-slider.is-vertical.has-boost::after {
+  left: 50%;
+  top: auto;
+  bottom: calc(var(--at-unity) - 1px);
+  width: 10px;
+  height: 2px;
+  transform: translateX(-50%);
+}
+.volume-number {
+  font: 0.6875rem var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: #c3c8ff;
+  user-select: none;
+}
+.volume-number.is-boost {
+  color: #f2d36b;
+}
+.fullscreen-volume {
+  position: relative;
+  display: flex;
+}
+.fullscreen-volume-card {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 52px;
+  padding: 10px 0 8px;
+  background: #171c2bf5;
+  border: 1px solid #707aa8;
+  border-radius: 12px;
+  box-shadow: 0 12px 35px #0008;
+}
+/* Hover bridge down to the button. */
+.fullscreen-volume-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 14px;
+}

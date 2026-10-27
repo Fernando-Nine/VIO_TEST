@@ -32,6 +32,7 @@ import { Dialog } from "./Dialog";
 import { useSpeaking } from "./Media";
 import { participantStyle } from "./participant-style";
 import { RoomLimit } from "./RoomStatus";
+import { VolumeNumber, VolumeSlider } from "./VolumeSlider";
 
 /** One 48 px row: avatar, name, role and call state (never by color alone). */
 function PersonRow({
@@ -422,17 +423,18 @@ export function PeoplePanel({
             menuPerson.id !== engine.view.id && (
               <label className="person-menu-volume">
                 <span>
-                  Volume <output>{Math.round((volume ?? 1) * 100)}%</output>
+                  Volume
+                  <VolumeNumber
+                    value={volume ?? 1}
+                    reset={() => engine.setPersonVolume(menuPerson.id, 1)}
+                  />
                 </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step=".05"
-                  aria-label={`Volume de ${menuPerson.name} para você`}
+                <VolumeSlider
+                  max={2}
+                  label={`Volume de ${menuPerson.name} para você`}
                   value={volume ?? 1}
-                  onChange={(event) =>
-                    engine.setPersonVolume(menuPerson.id, +event.target.value)
+                  onChange={(value) =>
+                    engine.setPersonVolume(menuPerson.id, value)
                   }
                 />
               </label>

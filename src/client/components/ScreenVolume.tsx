@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnchoredPopover } from "./AnchoredPopover";
 import { Volume2, VolumeX } from "lucide-react";
 import type { Controller } from "../room/controller";
+import { VolumeNumber, VolumeSlider } from "./VolumeSlider";
 
 /**
  * Volume of one watched screen, in its own header: click silences it, hover
@@ -121,7 +122,10 @@ export function ScreenVolume({
             <div className="screen-volume-row is-only">
               <label htmlFor={`level-${id}`}>
                 {info.name}
-                <output>{Math.round(level.volume * 100)}%</output>
+                <VolumeNumber
+                  value={level.volume}
+                  reset={() => engine.setScreenLevel(id, { volume: 1 })}
+                />
               </label>
               <div>
                 <button
@@ -134,19 +138,7 @@ export function ScreenVolume({
                 >
                   {silent ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
-                <input
-                  id={`level-${id}`}
-                  aria-label={`Volume da tela de ${info.name}`}
-                  type="range"
-                  min="0"
-                  max={engine.fineAudio ? "300" : "100"}
-                  step={engine.fineAudio ? "1" : "5"}
-                  value={Math.round(level.volume * 100)}
-                  disabled={noAudio}
-                  onChange={(e) =>
-                    engine.setScreenLevel(id, { volume: +e.target.value / 100 })
-                  }
-                />
+                <ScreenVolumeSlider engine={engine} id={id} />
               </div>
             </div>
             {noAudio && (
@@ -164,6 +156,105 @@ export function ScreenVolume({
             )}
           </div>
         </AnchoredPopover>
+      )}
+    </div>
+  );
+}
+
+/** The track alone: header popover, right-click menu and full screen. */
+export function ScreenVolumeSlider({
+  engine,
+  id,
+  vertical,
+}: {
+  engine: Controller;
+  id: string;
+  vertical?: boolean;
+}) {
+  const info = engine.screenInfo(id);
+  const level = engine.screenLevel(id);
+  return (
+    <VolumeSlider
+      id={vertical ? undefined : `level-${id}`}
+      label={`Volume da tela de ${info?.name || "Participante"}`}
+      value={level.volume}
+      max={engine.fineAudio ? 3 : 1}
+      step={engine.fineAudio ? 0.01 : 0.05}
+      disabled={!info?.publication.audio}
+      vertical={vertical}
+      onChange={(volume) => engine.setScreenLevel(id, { volume })}
+    />
+  );
+}
+
+/**
+ * Full screen: the thin bar's Volume button opens the track upright, above
+ * itself. Inline, not a popover, so hovering it keeps the bar expanded.
+ */
+export function FullscreenVolume({
+  engine,
+  id,
+}: {
+  engine: Controller;
+  id: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
+  const cardId = useId();
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  const info = engine.screenInfo(id);
+  if (!info || info.publication.owner === engine.view.id) return null;
+  const level = engine.screenLevel(id);
+  return (
+    <div
+      className="fullscreen-volume"
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "mouse") return;
+        clearTimeout(closeTimer.current);
+        setOpen(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType !== "mouse") return;
+        closeTimer.current = setTimeout(() => setOpen(false), 300);
+      }}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) {
+          e.stopPropagation();
+          setOpen(false);
+          button.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={button}
+        className="dock-button"
+        aria-label={`Volume da tela de ${info.name}`}
+        aria-expanded={open}
+        aria-controls={open ? cardId : undefined}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {level.muted || !info.publication.audio ? <VolumeX /> : <Volume2 />}
+        <span>Volume</span>
+      </button>
+      {open && (
+        <div
+          className="fullscreen-volume-card"
+          id={cardId}
+          role="group"
+          aria-label={`Volume da tela de ${info.name}`}
+        >
+          <VolumeNumber
+            value={level.volume}
+            reset={() => engine.setScreenLevel(id, { volume: 1 })}
+          />
+          <ScreenVolumeSlider engine={engine} id={id} vertical />
+        </div>
       )}
     </div>
   );
