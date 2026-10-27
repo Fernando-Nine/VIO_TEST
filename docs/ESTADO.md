@@ -1,18 +1,18 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-10-26.
+Atualizado: 2026-10-27.
 
 ## Ambientes
 
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
 | Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.9.0-rc.20 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.10.0-rc.1 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
-Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia já tem o visual novo
-dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.8.0`, `v2.8.1` e
+Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
+tem grade 3×4 (#166), avisos no topo (#164) e catálogo novo (#165). Tags `v2.7.2`, `v2.8.0`, `v2.8.1` e
 `v2.9.0` no VIO pendentes (push de tag recusado pela rede dos agentes).
 
 ## Validado pelo usuário
@@ -23,10 +23,9 @@ dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.
 
 Ordem completa em `ROADMAP.md`.
 
-1. Fechar a 2.9.0: #115, #81 e bugs da prévia #141–#145; publicar após aval.
-2. Leva 3 de Design (#146–#150): cabeçalho −/×, widgets combinados, câmera, Ajustes,
-   notificações/adicionar widget/layout/volume.
-3. App Windows: secrets de assinatura para o beta publicar.
+1. 2.10.0: #161, #167, #163, #158 (Frontend 8 em andamento).
+2. 2.11.0: #159, #160 e #162 (Frontend + Mídia). Ajustes futuros na #168.
+3. App Windows: conferir publicação do `beta` no vio-releases.
 
 ## Decisões vigentes
 
