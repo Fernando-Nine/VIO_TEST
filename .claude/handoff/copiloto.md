@@ -15,7 +15,7 @@ Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, 
 
 ## Feito recentemente
 
-- **2.9.0 em produção** (VIO PR #4 = VIO_TEST bbb5c23); registro estável 2.9.0 já no `releases.ts`. Falta a tag `v2.9.0` (usuário cria em Releases).
+- **2.9.0 em produção** (VIO PR #4 = VIO_TEST bbb5c23); registro estável 2.9.0 já no `releases.ts`. Tag `v2.9.0` criada pelo usuário.
 - #83 fechada (zod 4 e `npm audit` na CI já estavam feitos).
 
 - Produção 2.8.1 (VIO PR #3, hotfix body-parser/zod). Prévia 2.9.0-rc.x com widgets novos.
@@ -35,16 +35,14 @@ Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, 
 
 ## Pendente / bloqueios
 
-- App Windows com WASAPI (#120) pronto para teste: usuário precisa pôr `ALLOWED_APP_ORIGINS=https://tauri.localhost`
-  no Render da prévia (Environment → Add Environment Variable; nome digitado à mão, funciona no Free).
+- App Windows com WASAPI (#120) pronto para teste; `ALLOWED_APP_ORIGINS` já está nos dois Render.
 - Hospedagem: ficar no Render (Vercel não serve: sem servidor WebSocket persistente). Ao abrir ao
   público, produção no plano Starter (~US$ 7/mês) para não dormir. Alternativas: Fly.io, Railway.
 - TURN (#135, futuro): conferir ExpressTURN e avaliar Cloudflare Realtime/coturn.
 - Copiloto novo deve ser aberto pelo usuário (sessão filha não tem create_session/send_message).
 
 - Usuário cadastrar a chave privada do updater como secret (ele avisa).
-- Tags v2.7.2, v2.8.0, v2.8.1 no VIO: rede dos agentes recusa push de tag; usuário pode
-  criar em Releases (commits c249a34, 8993afb, 246aea1).
+- Tags v2.7.2, v2.8.0, v2.8.1: não criar (decisão antiga). Próximas tags o usuário cria em Releases.
 - Grid celular e pauta futura de Design (landing/página de download).
 
 ## Próximo passo

@@ -12,8 +12,8 @@ Atualizado: 2026-10-27.
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
-tem grade 3×4 (#166), avisos no topo (#164) e catálogo novo (#165). Tags `v2.7.2`, `v2.8.0`, `v2.8.1` e
-`v2.9.0` no VIO pendentes (push de tag recusado pela rede dos agentes).
+tem grade 3×4 (#166), avisos no topo (#164) e catálogo novo (#165). Tag `v2.9.0` criada pelo usuário; as
+anteriores não serão criadas (decisão antiga). `ALLOWED_APP_ORIGINS` já está nos dois Render.
 
 ## Validado pelo usuário
 
