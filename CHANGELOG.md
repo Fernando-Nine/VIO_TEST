@@ -2,7 +2,7 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.10.0-rc.5] - 2026-10-27
+## [2.10.0-rc.6] - 2026-10-27
 
 Prévia · Casca da interface
 
@@ -15,6 +15,7 @@ Prévia · Casca da interface
 - Ajustes reorganizados com busca no topo: Configurações (Áudio, Vídeo, Notificações, Aparência, Acessibilidade, Aplicativo) e Esta sala. Em Notificações, uma tabela liga ou desliga o balão e o som de cada tipo de aviso; tudo continua indo para o sino. Reduzir movimento pode seguir o sistema ou valer sempre.
 - Desativar áudio (o fone na doca) desliga seu microfone e as vozes, mas as telas continuam tocando. Ao reativar, o microfone volta como estava. Silenciar vozes e transmissões saiu dos Ajustes.
 - Cabeçalho do widget da sala com − (fecha só para você; continua aberto para os outros) e, para quem pode, × (fecha para todos). Fechar para todos não pede confirmação: o aviso no topo traz Desfazer por 8 s, que devolve o widget com o mesmo estado e no mesmo espaço; os outros recebem no sino quem fechou. Widget pessoal só tem ×. "N não exibidos" agora também lista os widgets da sala que você fechou ou que ainda não abriu, com o motivo em cada linha; sem espaço livre, Mostrar acende os espaços para você escolher qual substituir (Esc cancela).
+- A tira só reserva a faixa da barra de rolagem quando rola; sem rolagem, as margens ficam iguais dos dois lados.
 
 ## [2.9.0] - 2026-10-27
 
