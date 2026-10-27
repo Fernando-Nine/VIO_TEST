@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.10.0-rc.8";
+export const version = "2.10.0-rc.9";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -27,6 +27,7 @@ export const currentRelease: Release = {
         "A tira só reserva a faixa da barra de rolagem quando rola; sem rolagem, as margens ficam iguais dos dois lados.",
         "Adicionar widget: em Para a sala só aparecem widgets que a sala compartilha. As telas transmitidas e a sua prévia aparecem no topo do catálogo, também no espaço vazio, para você colocar no espaço.",
         "Ajustes: a linha Erros saiu de Notificações (não podia ser alterada) e Acessibilidade ganhou o ícone de pessoa de braços abertos.",
+        "App Windows: o som da janela agora funciona também no Windows 10 (versão 2004 ou mais recente). Na lista de áudio, a primeira opção é Todo o som do computador, sem o VIO: transmite tudo o que toca no PC, menos as vozes da chamada, para não haver eco.",
       ],
     },
   ],

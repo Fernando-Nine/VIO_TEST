@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppWindow, ArrowUpRight, RefreshCw } from "lucide-react";
+import { AppWindow, ArrowUpRight, Monitor, RefreshCw } from "lucide-react";
 import {
   nativeInvoke,
   type DesktopCapabilities,
@@ -33,7 +33,7 @@ export function NativeShare({
       setAvailable(caps.protocol === 1 && caps.processAudio);
       if (!caps.processAudio || caps.protocol !== 1)
         throw new Error(
-          "O áudio por aplicativo precisa do Windows 11 e de uma versão compatível do VIO.",
+          "O som da janela precisa do Windows 10 versão 2004 ou mais recente.",
         );
       const list = await nativeInvoke<DesktopSource[]>("desktop_sources");
       if (!signal?.aborted) setSources(list);
@@ -110,7 +110,11 @@ export function NativeShare({
                     checked={chosen === source.id}
                     onChange={() => setChosen(source.id)}
                   />
-                  <AppWindow size={19} aria-hidden="true" />
+                  {source.system ? (
+                    <Monitor size={19} aria-hidden="true" />
+                  ) : (
+                    <AppWindow size={19} aria-hidden="true" />
+                  )}
                   <span>{source.title}</span>
                 </label>
               ))
