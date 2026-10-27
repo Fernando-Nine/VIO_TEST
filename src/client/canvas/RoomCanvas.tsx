@@ -135,6 +135,7 @@ interface Props {
   people: () => void;
   diagnostics: () => void;
   share: () => void;
+  replaceShare: () => void;
   fullscreen: () => void;
   isFullscreen?: boolean;
 }

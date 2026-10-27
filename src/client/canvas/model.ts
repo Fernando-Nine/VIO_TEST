@@ -579,15 +579,25 @@ export function restoreCanvas(raw: unknown): CanvasState {
     !Array.isArray(s.floating)
   )
     return newCanvas();
-  // #159: People in the room, in the call and the volume mixer became one
-  // People widget; the first one found keeps its spot, the others close.
-  let merged = false;
+  // Widgets that became one: the first one found keeps its spot as the new
+  // type, the others close. #159: People in the room, in the call and the
+  // volume mixer are Pessoas; #160: Meus espectadores, Conexão and Minha tela
+  // are Minha transmissão.
+  const mergers = [
+    { from: ["people", "call", "mixer"], type: "people", title: "Pessoas" },
+    {
+      from: ["stream", "viewers", "connection", "quick"],
+      type: "stream",
+      title: "Minha transmissão",
+    },
+  ].map((m) => ({ ...m, done: false }));
   const widgets = s.widgets
     .flatMap((w) => {
-      if (!w || !["people", "call", "mixer"].includes(w.type)) return [w];
-      if (merged) return [];
-      merged = true;
-      return [{ ...w, type: "people", title: "Pessoas" }];
+      const merger = w && mergers.find((m) => m.from.includes(w.type));
+      if (!merger) return [w];
+      if (merger.done) return [];
+      merger.done = true;
+      return [{ ...w, type: merger.type, title: merger.title }];
     })
     .filter(
       (w) =>

@@ -1,0 +1,333 @@
+/* #160: Minha transmissão (docs/design/minha-transmissao.md). Side 420×240 by
+   default: preview and controls on the left, who watches and numbers on the
+   right. The strip shows only the preview; narrow bodies stack. */
+.widget-body > .my-stream {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.my-stream .stream-mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.my-stream.is-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.my-stream.is-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+.stream-preview {
+  position: relative;
+  grid-column: 1;
+  min-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #07080d;
+}
+.stream-preview .stream-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.stream-live,
+.stream-source,
+.stream-overlay {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #0b0c13cc;
+  font: 600 0.625rem var(--mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.stream-live {
+  top: 6px;
+  left: 6px;
+}
+.stream-live .live-pulse {
+  background: var(--live);
+}
+.stream-live.is-paused {
+  color: #f2d36b;
+}
+.stream-source {
+  right: 6px;
+  bottom: 6px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.stream-overlay {
+  left: 6px;
+  bottom: 6px;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.stream-controls {
+  grid-column: 1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.stream-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--raised);
+  color: var(--text);
+  font: 600 0.75rem var(--font);
+  cursor: pointer;
+}
+.stream-control:hover {
+  border-color: #525b80;
+}
+.stream-control.is-active {
+  background: #303b60;
+  border-color: #4b5788;
+}
+.stream-control.is-stop {
+  margin-left: auto;
+  color: var(--danger);
+}
+.stream-control-text {
+  display: none;
+}
+.stream-side {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+.stream-audience {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stream-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.stream-stack {
+  display: inline-flex;
+}
+.stream-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--person-color, #2727f5);
+  color: var(--person-ink, #fff);
+  font: 650 0.5625rem var(--font);
+  box-shadow: 0 0 0 2px var(--panel);
+}
+.stream-stack .stream-avatar + .stream-avatar {
+  margin-left: -6px;
+}
+.stream-viewers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stream-viewer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+}
+.stream-viewer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stream-viewer .stream-mono {
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+.stream-quality {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--live);
+}
+.stream-quality.is-unstable {
+  color: #f2d36b;
+}
+.stream-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.stream-numbers > div {
+  min-width: 0;
+}
+.stream-numbers dt {
+  font: 600 0.5625rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stream-numbers dd {
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stream-numbers dd .stream-mono {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.stream-numbers small {
+  font: 0.6875rem var(--mono);
+  color: var(--muted);
+}
+.stream-chart {
+  width: 100%;
+  height: 56px;
+  border-radius: 6px;
+  background: #10121c;
+}
+.stream-chart polyline {
+  fill: none;
+  stroke: var(--live);
+  stroke-width: 1.5;
+}
+.stream-quality-pick {
+  display: flex;
+  gap: 6px;
+}
+.my-stream .stream-quality-pick select {
+  flex: 1;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 0.8125rem;
+}
+.stream-resolution {
+  display: none;
+}
+.stream-picker {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--raised);
+  font-size: 0.6875rem;
+}
+.stream-picker button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Strip: the preview alone; controls are in the right-click menu. */
+.widget-body > .my-stream.is-strip {
+  display: block;
+}
+.my-stream.is-strip .stream-preview {
+  height: 100%;
+}
+.my-stream.is-strip .stream-video {
+  object-fit: cover;
+}
+
+/* Focus (large body): big 16:9 preview, labelled controls, big numbers, the
+   list of who watches, the chart and the quality. Smaller sizes hide those. */
+.my-stream :is(.stream-viewers, .stream-chart, .stream-quality-pick) {
+  display: none;
+}
+@container widget-body (min-width: 640px) and (min-height: 400px) {
+  .widget-body > .my-stream:not(.is-strip) {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 12px 18px;
+  }
+  .my-stream .stream-preview {
+    align-self: center;
+    max-height: 100%;
+    width: 100%;
+  }
+  .my-stream .stream-control {
+    height: 34px;
+    padding: 0 12px;
+  }
+  .my-stream .stream-control-text {
+    display: inline;
+  }
+  .my-stream .stream-numbers dd .stream-mono {
+    font-size: 1.5rem;
+  }
+  .my-stream .stream-viewers,
+  .my-stream .stream-quality-pick {
+    display: flex;
+  }
+  .my-stream .stream-chart,
+  .my-stream .stream-resolution {
+    display: block;
+  }
+}
+
+/* Narrow and tall (phone 380): preview on top, labelled controls, four
+   numbers in a row, then who watches. */
+@container widget-body (max-width: 420px) and (min-height: 320px) {
+  .widget-body > .my-stream:not(.is-strip) {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .my-stream .stream-preview {
+    flex: none;
+    aspect-ratio: 16 / 9;
+  }
+  .my-stream .stream-controls {
+    flex-wrap: wrap;
+  }
+  .my-stream .stream-control-text {
+    display: inline;
+  }
+  .my-stream .stream-side {
+    overflow: visible;
+  }
+  .my-stream .stream-numbers {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    order: -1;
+  }
+}
