@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.5";
+export const version = "2.11.0-rc.6";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
