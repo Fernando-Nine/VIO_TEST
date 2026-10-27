@@ -15,7 +15,8 @@ Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, 
 
 ## Feito recentemente
 
-- **2.9.0 em produção** (VIO PR #4 = VIO_TEST bbb5c23). Falta a tag `v2.9.0` (usuário cria em Releases; rede dos agentes recusa) e o VIO_TEST receber o registro estável 2.9.0 em `releases.ts` (pedido ao Frontend 7).
+- **2.9.0 em produção** (VIO PR #4 = VIO_TEST bbb5c23); registro estável 2.9.0 já no `releases.ts`. Falta a tag `v2.9.0` (usuário cria em Releases).
+- #83 fechada (zod 4 e `npm audit` na CI já estavam feitos).
 
 - Produção 2.8.1 (VIO PR #3, hotfix body-parser/zod). Prévia 2.9.0-rc.x com widgets novos.
 - Skills de terceiros + próprias em `.claude/skills/` (PR #121); papéis dizem quais usar.
@@ -48,6 +49,6 @@ Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, 
 
 ## Próximo passo
 
-2.9.0 pronta na prévia (rc.20): aguardando aval do usuário para publicar no VIO + tag. `VIO_RELEASES_TOKEN` cadastrado nos dois (27 out): conferir que o próximo build da main publicou no release `beta` do vio-releases. Roadmap em `docs/ROADMAP.md`.
+Acompanhar o Frontend 8 (2.10.0). Ao fechar a 2.10.0, abrir Mídia para #160/#162 e Frontend para #159. Conferir no vio-releases se o build `VIO Windows` da main publicou o `beta` (CI verde em 27 out; a API pública não respondeu daqui). Roadmap em `docs/ROADMAP.md`.
 Para publicar no VIO: árvore idêntica ao commit aprovado do VIO_TEST (git checkout <sha> -- .),
 PR no VIO, squash, conferir rodapé com o usuário.
