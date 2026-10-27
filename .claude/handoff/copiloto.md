@@ -6,7 +6,7 @@ Atualizado: 2026-10-27
 
 Sessões (tag `vio-team`; `create_session` com source VIO_TEST; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonkr`):
 
-- Frontend 9 `session_01K4nnLS6Zh7oxAgqJZjSEyh` — #158, depois #189, #190, #198.
+- Frontend 9 encerrado (#158, #189, #190, #198; rc.8). Frontend 10 `session_01K4nnLP2psRpXnRTFWKT7fm` — #159.
 - Mídia 3 `session_01K4nnLT2nWAPz2xquf7KdDq` — #192 (parecer primeiro), #193, #160 + #191.
 - Design (`session_01K4nnLRKbUq1b5jSQGCg46V`) e Backend ociosos. Leva 4 de Design (#195–#197)
   aguarda vaga; brandbook é prioridade 4.
