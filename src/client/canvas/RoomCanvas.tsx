@@ -77,7 +77,9 @@ import { isModule } from "../../shared/room-modules";
 
 // dnd-kit starts a mouse drag on the handle at pointerdown, so a plain click
 // (or double click to rename) would already detach the widget. Require a
-// small movement first; touch and other pointers keep the library defaults.
+// small movement first. Touch too: holding still is the long press that
+// opens the widget menu (#209); the handle has touch-action none, so moving
+// never scrolls. Other pointers keep the library defaults.
 const sensors = (
   defaults: Parameters<
     NonNullable<
@@ -89,6 +91,8 @@ const sensors = (
     activationConstraints: (event, source) => {
       if (event.pointerType === "mouse")
         return [new PointerActivationConstraints.Distance({ value: 4 })];
+      if (event.pointerType === "touch")
+        return [new PointerActivationConstraints.Distance({ value: 8 })];
       const fallback = PointerSensor.defaults.activationConstraints;
       return typeof fallback === "function"
         ? fallback(event, source)

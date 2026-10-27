@@ -5,7 +5,7 @@ Pranchas "4D · Controles no rodapé" e "4 · Escolhida: D + tela cheia com A" (
 ## Fora da tela cheia — doca no rodapé (D)
 
 - O rodapé vira uma doca de 56 px; nada flutua sobre o canvas.
-- Esquerda: "Na chamada · N" (ponto `#4CDDC3`), Microfone, Áudio, Câmera, Sair da voz
+- Esquerda: "Na chamada · N" (ponto `#4CDDC3`), Microfone, Áudio, Câmera, Sair da chamada
   (ícones 40 px; desligado/sair em `#FF8A96`).
 - Direita: Flutuante e **Compartilhar** (azul); créditos "NerdQuest · versão" no fim.
 - Celular: doca fixa de 72 px como barra de abas — Microfone, Áudio, Tela, Mais.

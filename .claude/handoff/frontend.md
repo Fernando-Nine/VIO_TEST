@@ -1,12 +1,29 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-27 (Frontend 10)
+Atualizado: 2026-10-27 (Frontend 11)
 
 ## Agora
 
-#159 (Pessoas) entregue na 2.11.0-rc.1 (PR #205). Próximas da 2.11.0: #162 Câmeras, #194.
+Bloco do Frontend 11: #160 (rc.2, PR #212), #207 (rc.3, PR #214), #209 (rc.4). Próximas da
+2.11.0: #162 Câmeras, #194.
 
 ## Feito recentemente
+
+- #160 (PR #212, rc.2): widget `stream` "Minha transmissão" (`canvas/MyStreamWidget.tsx`,
+  `my-stream.css`). Ações em `streamActions` (botões e menu via `useMenuItems`); pausa =
+  `track.enabled` + `state` (verdade local em `streamPaused`), congela o `<video>`. Trocar =
+  prop `replaceShare` (navegador: `startScreen(audio, true)`; app: painel `replace` com
+  `NativeShare replace`). Tamanhos por container query: foco ≥ 640×400, empilhado ≤ 420 de
+  largura e ≥ 320 de altura; tira = corpo < 170 px (JS). `restoreCanvas` tem `mergers`
+  (Pessoas e Minha transmissão). Seletor ‹ 1/N › usa as publicações de tela próprias do
+  snapshot; os controles agem na captura única (`publications.get("screen")`) — revisar na #194.
+- #207 (PR #214, rc.3): avatar do chat usa `.ring-avatar` (colidia com `.person-avatar` do
+  PeoplePanel, que pintava o vão de azul).
+- #209 (rc.4): sino com grupos Agora/Antes, Limpar e ponto de não lida (`fresh`, só enquanto
+  aberto); cronômetro mostra "Em andamento"/"Pausado"/"Parado"/"Concluído" a quem não
+  controla; toque longo no cabeçalho abre o menu do widget (folha no celular, `.widget-menu`);
+  arrasto por toque agora exige 8 px de movimento (antes: segurar 250 ms). "Sair da chamada"
+  ficou; a spec `chamada.md` foi alinhada. Erro já tem "Reconectar" no aviso.
 
 - #159 (PR #205, 2.11.0-rc.1): widget Pessoas (`canvas/PeopleWidget.tsx`, `people.css`) no
   tipo `people`; `call`/`mixer` saíram e migram em `restoreCanvas` (o primeiro vira Pessoas).
@@ -63,4 +80,4 @@ Atualizado: 2026-10-27 (Frontend 10)
 
 ## Próximo passo
 
-#162 Câmeras (2.11.0-rc.2), ligando o selo/menu do Pessoas.
+#162 Câmeras, ligando o selo/menu do Pessoas.

@@ -304,3 +304,10 @@
     height: 16px;
   }
 }
+/* #209: what someone who cannot control the timer sees instead of buttons. */
+.timer-state {
+  font: 600 0.75em var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
