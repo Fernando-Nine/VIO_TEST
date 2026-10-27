@@ -7,10 +7,10 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.9.0-rc.20";
+export const version = "2.9.0-rc.22";
 export const currentRelease: Release = {
   version,
-  date: "2026-10-26",
+  date: "2026-10-27",
   title: "Prévia · Visual novo dos widgets",
   sections: [
     {
@@ -35,6 +35,7 @@ export const currentRelease: Release = {
         "O contorno de foco dos campos de texto nos widgets fica inteiro, sem ser cortado pela borda.",
         "Dados com muitos dados ou rolagens repetidas (10d20, 10#d6) mostram os valores em fichas compactas, com total ou soma, sem nada cortado; no histórico, os valores ficam numa linha própria.",
         "Em tela cheia, a borda colorida da tela e os espaços vazios somem junto com os controles quando você para de mexer e voltam ao mexer.",
+        "Avisos no topo da sala, um por vez, com barra de tempo e ×: quem entrou (4 s), quem saiu (4 s) e nova tela com Assistir (6 s). A nova tela entra por cima do aviso atual; os outros esperam com \"+N\". Passar o mouse pausa a barra. Erros da sala ficam até você fechar.",
       ],
     },
   ],
