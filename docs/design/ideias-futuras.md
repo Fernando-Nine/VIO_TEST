@@ -27,16 +27,17 @@ Usuário e "Sair".
 
 ### Divergências entre o plano (#168) e a spec `ajustes.md`
 
-- **Nome do grupo**: o plano diz **App**; a spec diz "Configurações". Proposta: usar
-  **App** (mais curto, combina com Sala/Usuário) e corrigir a spec quando a #163 sair.
+- **Nome do grupo** (**decisão** do copiloto, 27 out): **Configurações**, como na spec
+  aprovada; evita "App" em inglês e o choque com a categoria Aplicativo. "App" na tabela
+  acima é só o rótulo interno do grupo.
 - **Vídeo separado de Áudio**: os dois concordam (Vídeo é categoria própria). Áudio fica
   com os grupos internos Voz e Saída.
 - **"Aparência e sons"**: o plano ainda usa esse nome; a spec já separou (sons foram para
   Notificações). Vale a spec.
 - **Atalhos**: o plano lista como categoria do App; a #168 põe dentro de **Aplicativo**.
-  Proposta (**ideia**): seção "Atalhos" dentro de Aplicativo até passar de ~6 atalhos.
-- **Acessibilidade** e **Aplicativo**: estão na spec e não no plano. Proposta: entram no
-  grupo App.
+  **Decisão**: seção "Atalhos" dentro de Aplicativo; vira categoria própria só quando
+  passar de ~6 atalhos.
+- **Acessibilidade** e **Aplicativo**: **decisão**: entram no grupo Configurações.
 - **Sair**: o plano põe em Usuário; a spec, no rodapé da lateral. Compatível: o rodapé
   é a parte de baixo do grupo Usuário.
 
