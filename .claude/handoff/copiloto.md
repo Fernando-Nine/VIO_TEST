@@ -1,23 +1,22 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-27
+Atualizado: 2026-10-27 (noite)
 
 ## Agora
 
-Sessões (tag `vio-team`; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonkr`):
+Copiloto atual: `session_01K4nnLTF5gUKwkjx99XxmGX` (pode criar sessões e mandar mensagens).
+Sessões (tag `vio-team`):
 
-- Frontend 11 `session_01K4nnLPcatWE4bNXvrhaipt` — fez #160, #207, #209 (rc.4); ver se encerrou.
-- Mídia 4 `session_01K4nnLPBU2sPjZDCpRvt7m8` — fez #162; segue #194.
-- Mídia 5 `session_01K4nnLTTWHjcmDPhoVsd5N2` — #192 captura nativa (crate `webview2-com` aprovado).
-- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — canvas publicado, aguarda escolhas.
-- Encerrados: Frontend 9 e 10 (#159), Mídia 3 (#193, mídia da #160, parecer da #192).
+- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — usuário já escolheu (191, 195, 196);
+  Design monta "Escolhidas", specs e issues frontend; avisa o copiloto com os números.
+- Mídia 6 `session_01K4nnLPUq3rQi1LBmFJscYX` — #194 até 3 telas (plano no handoff da Mídia).
+- Encerradas: Frontend 11 (#160, #207, #209), Mídia 4 (#162), Mídia 5 (#192 nativo:
+  `listVideoSources`, `videoThumbnail`, `startNativeShare` em `desktop/share.ts`).
+- Próximo: abrir Frontend 12 com a spec da #191 (seletor estilo Discord; app usa a API
+  nativa, web usa o seletor do navegador). Depois pedir medida de CPU 1080p60 no PC do usuário.
 - Usuário (27 out): pula a 2.10.0; produção será a 2.11.0 após aval na prévia.
-  Figma e Canva liberados na rede e conectados (sessões novas já os recebem).
-- Quando o Design entregar o canvas da #191: o usuário escolhe; vira spec; interface pelo
-  Frontend usando a API da Mídia 5 (app) e o seletor do navegador (web).
 - Brandbook/identidade/design system (prioridade 4): abrir Design novo com Figma/Canva.
 - Jurídico: primeira tarefa sugerida = parecer de clips (#208) e base de termos/política.
-- Agentes Jurídico e Roteirista criados; primeira tarefa a definir com o usuário.
 
 ## Feito recentemente
 
@@ -45,7 +44,6 @@ Sessões (tag `vio-team`; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonk
 - Hospedagem: ficar no Render (Vercel não serve: sem servidor WebSocket persistente). Ao abrir ao
   público, produção no plano Starter (~US$ 7/mês) para não dormir. Alternativas: Fly.io, Railway.
 - TURN (#135, futuro): conferir ExpressTURN e avaliar Cloudflare Realtime/coturn.
-- Copiloto novo deve ser aberto pelo usuário (sessão filha não tem create_session/send_message).
 
 - Usuário cadastrar a chave privada do updater como secret (ele avisa).
 - Tags v2.7.2, v2.8.0, v2.8.1: não criar (decisão antiga). Próximas tags o usuário cria em Releases.
