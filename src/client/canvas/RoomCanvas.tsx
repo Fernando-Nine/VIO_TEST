@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
   type CSSProperties,
+  type ReactNode,
   type KeyboardEvent,
 } from "react";
 import {
@@ -34,8 +35,6 @@ import {
   MonitorUp,
   Plus,
   SlidersHorizontal,
-  User,
-  Users,
   X,
 } from "lucide-react";
 import { Notifications } from "../components/Notifications";
@@ -68,6 +67,7 @@ import { floatingBox, useCanvasGeometry } from "./geometry";
 import { wheelTarget } from "./strip-wheel";
 import { useStripInput, stripStops } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
+import { WidgetCatalog, type Scope } from "./WidgetCatalog";
 import { GridPicker } from "./GridPicker";
 import { NotShown } from "./NotShown";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
@@ -145,6 +145,7 @@ function CanvasSlot({
   index,
   register,
   add,
+  catalog,
   accept,
   decline,
   remove,
@@ -160,6 +161,7 @@ function CanvasSlot({
   index: number;
   register: (id: string, node: HTMLElement | null) => void;
   add: () => void;
+  catalog?: ReactNode;
   accept: (id: string, destination: "slot" | "float") => void;
   decline: (id: string) => void;
   remove: () => void;
@@ -238,7 +240,8 @@ function CanvasSlot({
           </button>
         </div>
       ) : (
-        !slot.widgetId && (
+        !slot.widgetId &&
+        (catalog || (
           <>
             <button className="add-widget" onClick={add}>
               <Plus size={20} />
@@ -258,7 +261,7 @@ function CanvasSlot({
               </button>
             )}
           </>
-        )
+        ))
       )}
     </div>
   );
@@ -270,9 +273,14 @@ export function RoomCanvas(props: Props) {
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const { geometry, root, strip, register, measure } = useCanvasGeometry(state);
   const [catalog, setCatalog] = useState<string | null>(null);
-  const [catalogTab, setCatalogTab] = useState("native");
+  // The catalog inside an empty slot (the panel uses `catalog`).
+  const [slotCatalog, setSlotCatalog] = useState<string | null>(null);
   const [communityNotice, setCommunityNotice] = useState(false);
-  const [scopeChoice, setScopeChoice] = useState<string | null>(null);
+  const target = slotCatalog ?? catalog;
+  const closeCatalog = () => {
+    setCatalog(null);
+    setSlotCatalog(null);
+  };
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(
     null,
@@ -560,8 +568,7 @@ export function RoomCanvas(props: Props) {
     }
     const id = freshKey();
     const destination =
-      state.slots.find((s) => s.id === catalog && !s.widgetId && !s.offer)
-        ?.id ||
+      state.slots.find((s) => s.id === target && !s.widgetId && !s.offer)?.id ||
       state.slots.find((s) => !s.widgetId && !s.offer)?.id ||
       store.addSlot();
     store.add(
@@ -576,7 +583,7 @@ export function RoomCanvas(props: Props) {
     );
     if (bringToFocus) focus(id);
     focusHeader(id);
-    setCatalog(null);
+    closeCatalog();
   }
   // "Para a sala" only for whoever the room lets create (#104).
   const createsForRoom =
@@ -588,12 +595,8 @@ export function RoomCanvas(props: Props) {
         ? "adminCreate"
         : "guestCreate",
     );
-  async function addWidget(type: string, scope?: "room" | "individual") {
+  async function addWidget(type: string, scope: Scope) {
     const scoped = isModule(type) || type === "timer";
-    if (scoped && !scope && createsForRoom) {
-      setScopeChoice(type);
-      return;
-    }
     if (type === "chat" || (scoped && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
@@ -617,18 +620,18 @@ export function RoomCanvas(props: Props) {
       store.getSnapshot().widgets.find((w) => w.type === type);
     if (existing) {
       focus(existing.id);
-      setCatalog(null);
+      closeCatalog();
       return;
     }
     const widget = createWidget(type);
     const destination =
       store
         .getSnapshot()
-        .slots.find((s) => s.id === catalog && !s.widgetId && !s.offer)?.id ||
+        .slots.find((s) => s.id === target && !s.widgetId && !s.offer)?.id ||
       store.getSnapshot().slots.find((s) => !s.widgetId && !s.offer)?.id ||
       store.addSlot();
     store.add(widget, destination);
-    setCatalog(null);
+    closeCatalog();
     focusHeader(widget.id);
     announce(`${widget.title} adicionado ao seu layout.`);
   }
@@ -639,18 +642,18 @@ export function RoomCanvas(props: Props) {
     if (existing) focus(existing.id);
     else {
       store.decline(id);
-      const target = store
+      const free = store
         .getSnapshot()
-        .slots.find((s) => s.id === catalog && !s.widgetId && !s.offer);
-      if (target) {
-        store.add(screenWidget(id), target.id);
+        .slots.find((s) => s.id === target && !s.widgetId && !s.offer);
+      if (free) {
+        store.add(screenWidget(id), free.id);
         engine.watch(id, true, true);
-      } else if (catalog === "floating") {
+      } else if (target === "floating") {
         store.add(screenWidget(id), undefined, true);
         engine.watch(id, true, true);
       } else engine.watch(id, true);
     }
-    setCatalog(null);
+    closeCatalog();
   }
   async function remove(widget: WidgetInstance, forEveryone = false) {
     const slotId = store
@@ -744,7 +747,7 @@ export function RoomCanvas(props: Props) {
   }
   useEffect(() => {
     const id = pendingFocus.current;
-    if (!id || catalog || layoutOpen) return;
+    if (!id || target || layoutOpen) return;
     const host = [
       ...(root.current?.querySelectorAll<HTMLElement>("[data-widget-id]") ||
         []),
@@ -755,15 +758,22 @@ export function RoomCanvas(props: Props) {
         ?.focus({ preventScroll: true });
       pendingFocus.current = null;
     }
-  }, [geometry, roving, root, catalog, layoutOpen]);
+  }, [geometry, roving, root, target, layoutOpen]);
   const slotProps = (slot: Slot, index: number) => ({
     slot,
     index,
     register,
-    add: () => {
-      setCatalog(slot.id);
-      setCatalogTab("native");
-    },
+    add: () => setSlotCatalog(slot.id),
+    catalog:
+      slotCatalog === slot.id ? (
+        <WidgetCatalog
+          compact
+          canRoom={createsForRoom}
+          chatAllowed={canManageRoom(snapshot, engine.view.id)}
+          add={(type, scope) => void addWidget(type, scope)}
+          close={() => setSlotCatalog(null)}
+        />
+      ) : undefined,
     accept,
     decline: (id: string) => store.decline(id),
     remove: () => store.removeSlot(slot.id),
@@ -891,10 +901,10 @@ export function RoomCanvas(props: Props) {
             store.change((s) => {
               s.single = false;
             });
+            setSlotCatalog(null);
             setCatalog(
               state.slots.find((s) => !s.widgetId && !s.offer)?.id ?? "new",
             );
-            setCatalogTab("native");
           }}
         >
           <Plus size={16} />
@@ -1434,151 +1444,114 @@ export function RoomCanvas(props: Props) {
       )}
       {catalog && (
         <Dialog title="Adicionar widget" close={() => setCatalog(null)}>
-          <div
-            className="catalog-tabs"
-            role="group"
-            aria-label="Origem dos widgets"
-          >
-            {[
-              ["native", "VIO"],
-              ["live", "Telas"],
-              ["room", "Sala"],
-              ["community", "Comunidade"],
-            ].map(([id, label]) => (
-              <button
-                key={id}
-                aria-pressed={catalogTab === id}
-                onClick={() => setCatalogTab(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {catalogTab === "native" && (
-            <>
-              <div className="widget-catalog">
-                {Object.values(widgetRegistry)
-                  .filter((w) => !["screen", "custom", "canvas"].includes(w.id))
-                  .map((w) => (
-                    <button
-                      className="catalog-item"
-                      key={w.id}
-                      disabled={
-                        w.id === "canvas" ||
-                        (w.id === "chat" &&
-                          !canManageRoom(snapshot, engine.view.id))
-                      }
-                      onClick={() => void addWidget(w.id)}
-                    >
-                      <w.icon size={20} aria-hidden="true" />
-                      <strong>{w.title}</strong>
-                      <span>
-                        {w.id === "chat" &&
-                        !canManageRoom(snapshot, engine.view.id)
-                          ? "Só o criador e administradores adicionam. Chats existentes ficam em Sala."
-                          : w.description}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            </>
-          )}
-          {catalogTab === "live" && (
-            <>
-              <div className="widget-catalog live-catalog">
-                {!publications.length && (
-                  <p className="widget-empty">
-                    Ninguém está compartilhando tela. As transmissões aparecerão
-                    aqui quando começarem.
-                  </p>
-                )}
-                {publications.map((p) => (
+          <WidgetCatalog
+            canRoom={createsForRoom}
+            chatAllowed={canManageRoom(snapshot, engine.view.id)}
+            add={(type, scope) => void addWidget(type, scope)}
+            close={() => setCatalog(null)}
+            notShown={
+              state.hidden.length > 0 && (
+                <section className="catalog-group">
+                  <h3>Não exibidos</h3>
+                  <div className="widget-catalog">
+                    {state.hidden.flatMap((id) => {
+                      const widget = state.widgets.find((w) => w.id === id);
+                      if (!widget) return [];
+                      const Icon = widgetRegistry[widget.type]?.icon;
+                      return [
+                        <button
+                          className="catalog-item"
+                          key={id}
+                          onClick={() => {
+                            store.show(id);
+                            setCatalog(null);
+                          }}
+                        >
+                          {Icon && <Icon size={20} aria-hidden="true" />}
+                          <span className="catalog-text">
+                            <strong>{titleOf(widget, engine)}</strong>
+                            <span>Mostrar</span>
+                          </span>
+                        </button>,
+                      ];
+                    })}
+                  </div>
+                </section>
+              )
+            }
+            tabs={[
+              [
+                "Telas",
+                <>
+                  <div className="widget-catalog live-catalog">
+                    {!publications.length && (
+                      <p className="widget-empty">
+                        Ninguém está compartilhando tela. As transmissões
+                        aparecerão aqui quando começarem.
+                      </p>
+                    )}
+                    {publications.map((p) => (
+                      <button
+                        className="catalog-item"
+                        key={p.id}
+                        onClick={() => showPublication(p.id)}
+                      >
+                        <MonitorUp size={19} />
+                        <strong>
+                          {p.own ? "Minha prévia" : `Tela de ${p.title}`}
+                        </strong>
+                        <span>
+                          {engine.view.watching.includes(p.id)
+                            ? "Já está conectada · trazer para o foco"
+                            : "Conecta somente quando você escolher"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>,
+              ],
+              [
+                "Sala",
+                <>
+                  {!snapshot?.widgets?.length ? (
+                    <p className="widget-empty">
+                      Nenhum widget da sala ainda. Crie um em Widgets, Para a
+                      sala.
+                    </p>
+                  ) : (
+                    <div className="widget-catalog">
+                      {snapshot.widgets.map((w) => (
+                        <button
+                          className="catalog-item"
+                          key={w.id}
+                          onClick={() => openShared(w)}
+                        >
+                          <strong>{w.title}</strong>
+                          <span>
+                            Criado por{" "}
+                            {snapshot.participants.find((p) => p.id === w.owner)
+                              ?.name || "alguém que saiu da sala"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>,
+              ],
+              [
+                "Comunidade",
+                <>
                   <button
                     className="catalog-item"
-                    key={p.id}
-                    onClick={() => showPublication(p.id)}
+                    onClick={() => setCommunityNotice(true)}
                   >
-                    <MonitorUp size={19} />
-                    <strong>
-                      {p.own ? "Minha prévia" : `Tela de ${p.title}`}
-                    </strong>
-                    <span>
-                      {engine.view.watching.includes(p.id)
-                        ? "Já está conectada · trazer para o foco"
-                        : "Conecta somente quando você escolher"}
-                    </span>
+                    <Blocks size={20} aria-hidden="true" />
+                    <strong>Widget personalizado</strong>
                   </button>
-                ))}
-              </div>
-            </>
-          )}
-          {catalogTab === "room" && (
-            <>
-              {!snapshot?.widgets?.length ? (
-                <p className="widget-empty">
-                  Nenhum widget da sala ainda. Crie um na aba VIO.
-                </p>
-              ) : (
-                <div className="widget-catalog">
-                  {snapshot.widgets.map((w) => (
-                    <button
-                      className="catalog-item"
-                      key={w.id}
-                      onClick={() => openShared(w)}
-                    >
-                      <strong>{w.title}</strong>
-                      <span>
-                        Criado por{" "}
-                        {snapshot.participants.find((p) => p.id === w.owner)
-                          ?.name || "alguém que saiu da sala"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-          {catalogTab === "community" && (
-            <>
-              <button
-                className="catalog-item"
-                onClick={() => setCommunityNotice(true)}
-              >
-                <Blocks size={20} aria-hidden="true" />
-                <strong>Widget personalizado</strong>
-              </button>
-            </>
-          )}
-        </Dialog>
-      )}
-      {catalog && scopeChoice && (
-        <Dialog
-          title={widgetRegistry[scopeChoice].title}
-          centered
-          close={() => setScopeChoice(null)}
-        >
-          <div className="module-scope">
-            <button
-              className="primary"
-              onClick={() => {
-                const type = scopeChoice;
-                setScopeChoice(null);
-                void addWidget(type, "room");
-              }}
-            >
-              <Users size={16} aria-hidden="true" /> Para a sala
-            </button>
-            <button
-              className="secondary"
-              onClick={() => {
-                const type = scopeChoice;
-                setScopeChoice(null);
-                void addWidget(type, "individual");
-              }}
-            >
-              <User size={16} aria-hidden="true" /> Para mim
-            </button>
-          </div>
+                </>,
+              ],
+            ]}
+          />
         </Dialog>
       )}
       {catalog && communityNotice && (
