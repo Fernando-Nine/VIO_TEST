@@ -117,6 +117,10 @@ export function WidgetFrame(props: Props) {
   const title = titleOf(widget, engine);
   const [tools, setTools] = useState<HTMLElement | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  // Touch long press on the header opens the same menu (iOS has no contextmenu).
+  const press = useRef(0);
+  const pressAt = useRef({ x: 0, y: 0 });
+  const cancelPress = () => clearTimeout(press.current);
   const [rename, setRenameState] = useState<Rename>();
   const [bodyMenu, setBodyMenu] = useState<MenuSource>();
   const [renaming, setRenaming] = useState(false);
@@ -308,6 +312,31 @@ export function WidgetFrame(props: Props) {
               : { x: box.left + 12, y: box.bottom },
           );
         }}
+        onPointerDown={(event) => {
+          if (
+            event.pointerType !== "touch" ||
+            (event.target as HTMLElement).closest(
+              "input, textarea, .widget-actions, .widget-tools",
+            )
+          )
+            return;
+          const at = { x: event.clientX, y: event.clientY };
+          pressAt.current = at;
+          press.current = window.setTimeout(() => setMenu(at), 500);
+        }}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        onPointerMove={(event) => {
+          // A finger never holds perfectly still; only a drag cancels.
+          if (
+            event.pointerType === "touch" &&
+            Math.hypot(
+              event.clientX - pressAt.current.x,
+              event.clientY - pressAt.current.y,
+            ) > 8
+          )
+            cancelPress();
+        }}
       >
         {renaming ? (
           <label className="widget-handle widget-rename">
@@ -437,6 +466,7 @@ export function WidgetFrame(props: Props) {
           at={menu}
           items={menuItems}
           label={`Ações de ${title}`}
+          className="widget-menu"
           close={() => setMenu(null)}
           origin={element.current}
           header={

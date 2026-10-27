@@ -370,6 +370,18 @@ export function TimerBlock({
                   ))}
           </div>
         )}
+        {!controllable && !ringing && (
+          // Who cannot control sees the state, never a dead button.
+          <small className="timer-state" role="status">
+            {finished
+              ? "Concluído"
+              : running
+                ? "Em andamento"
+                : block.elapsed > 0
+                  ? "Pausado"
+                  : "Parado"}
+          </small>
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.3";
+export const version = "2.11.0-rc.4";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -20,6 +20,9 @@ export const currentRelease: Release = {
         "Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.",
         "Widget Minha transmissão no lugar de Meus espectadores, Conexão e Minha tela: prévia da sua tela com AO VIVO e a fonte, Pausar, Silenciar o som (quem assiste vê a tela, sem som; o microfone não muda), Trocar o que transmito (a nova fonte entra sem derrubar quem assiste) e Parar. Ao lado, quem assiste e Envio, Quadros, Ping e Perda. Em foco, a conexão de cada pessoa, o gráfico do envio do último minuto e a qualidade; na tira, só a prévia, com os controles no botão direito. Quem já tinha um dos três widgets abertos fica com Minha transmissão no mesmo espaço.",
         "Chat: entre o contorno colorido e o avatar volta a ficar um espaço vazio, sem o anel azul.",
+        "Sino com os grupos Agora (última hora) e Antes, botão Limpar e um ponto nas notificações ainda não lidas.",
+        "No celular, segurar o cabeçalho de um widget abre o menu dele por baixo da tela; para mover, arraste.",
+        "Quem não controla o Cronômetro da sala vê o estado (Em andamento, Pausado, Parado ou Concluído) no lugar dos botões.",
       ],
     },
   ],

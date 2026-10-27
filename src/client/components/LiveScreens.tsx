@@ -3,7 +3,7 @@ import { Radio } from "lucide-react";
 import { AnchoredPopover } from "./AnchoredPopover";
 
 export type LiveScreen = { id: string; title: string; watching: boolean };
-/** Someone started a screen: shown once in the corner, then kept in the bell. */
+/** Someone started a screen: a toast at the top, then kept in the bell. */
 export type ScreenEvent = {
   id: string;
   publicationId: string;

@@ -2729,14 +2729,16 @@ button.inline-text.is-empty {
     min-height: 44px;
   }
   /* The person menu opens as a sheet from the bottom. */
-  .context-menu.person-menu {
+  .context-menu.person-menu,
+  .context-menu.widget-menu {
     inset: auto 0 0 !important;
     width: 100%;
     max-width: none;
     padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
     border-radius: 16px 16px 0 0;
   }
-  .context-menu.person-menu button {
+  .context-menu.person-menu button,
+  .context-menu.widget-menu button {
     min-height: 48px;
   }
 }
@@ -2745,7 +2747,7 @@ button.inline-text.is-empty {
   margin: 0;
 }
 
-/* #123 + #109: live icon, corner label for a new screen, bell history. */
+/* #123 + #109: live icon and bell history. */
 .live-screens {
   display: flex;
   align-items: center;
@@ -3415,4 +3417,26 @@ button.inline-text.is-empty {
   font-size: 14px;
   white-space: nowrap;
   pointer-events: auto;
+}
+
+/* #209: bell groups (Agora / Antes) and the unread dot. */
+.notifications-panel .notification-group {
+  margin: 14px 0 0;
+  font: 600 0.625rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.notifications-panel article.is-unread {
+  position: relative;
+  padding-left: 14px;
+}
+.notification-dot {
+  position: absolute;
+  left: 0;
+  top: 21px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a6a9ff;
 }

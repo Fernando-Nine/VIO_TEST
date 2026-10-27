@@ -8,7 +8,7 @@ import type { ScreenEvent } from "./LiveScreens";
 type Item = {
   id: string;
   text: string;
-  /** Already seen elsewhere (e.g. acted on from the corner label). */
+  /** Already acted on elsewhere (e.g. Assistir on the toast). */
   read?: boolean;
   time?: number;
   onDismiss?: () => void;
@@ -26,7 +26,7 @@ export function Notifications({
   engine: Controller;
   openWidget: (widget: SharedWidget) => void;
   openScreen: (id: string) => void;
-  /** Newest last; the one still shown in the corner is left out by the caller. */
+  /** Newest last. */
   screenEvents: ScreenEvent[];
   /** "Nine fechou o Cronômetro." for closes made by someone else. */
   closeEvents: { id: string; text: string; at: number }[];
@@ -37,6 +37,8 @@ export function Notifications({
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(new Set<string>());
   const [seen, setSeen] = useState(new Set<string>());
+  /** Unread when the bell opened: they keep the dot until it closes. */
+  const [fresh, setFresh] = useState(new Set<string>());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const anchor = useRef<HTMLButtonElement>(null);
@@ -45,6 +47,7 @@ export function Notifications({
   const suppressFocus = useRef(false);
   const set = (value: boolean) => {
     clearTimeout(timer.current);
+    if (!value) setFresh(new Set());
     setOpen(value);
     onOpenChange(value);
   };
@@ -127,13 +130,29 @@ export function Notifications({
   const unread = remaining.filter((item) => !item.read && !seen.has(item.id));
   // Opening the bell clears the count; the items stay as history.
   useEffect(() => {
-    if (open && unread.length)
-      setSeen((previous) => new Set([...previous, ...unread.map((i) => i.id)]));
+    if (!open || !unread.length) return;
+    const ids = unread.map((i) => i.id);
+    setSeen((previous) => new Set([...previous, ...ids]));
+    setFresh((previous) => new Set([...previous, ...ids]));
   });
-  const dismiss = (item: Item) => {
-    item.onDismiss?.();
-    setDismissed((previous) => new Set([...previous, item.id]));
+  const dismiss = (...list: Item[]) => {
+    for (const item of list) item.onDismiss?.();
+    setDismissed(
+      (previous) => new Set([...previous, ...list.map((i) => i.id)]),
+    );
   };
+  // "Agora" is the last hour; items without a time are current state.
+  const hourAgo = Date.now() - 3600000;
+  const groups = [
+    {
+      title: "Agora",
+      items: remaining.filter((i) => !i.time || i.time >= hourAgo),
+    },
+    {
+      title: "Antes",
+      items: remaining.filter((i) => i.time && i.time < hourAgo),
+    },
+  ].filter((g) => g.items.length);
   return (
     <div
       className="notifications-trigger"
@@ -189,56 +208,79 @@ export function Notifications({
         >
           <header>
             <strong>Notificações</strong>
+            {!!remaining.length && (
+              <button
+                className="text-button"
+                onClick={() => dismiss(...remaining)}
+              >
+                Limpar
+              </button>
+            )}
           </header>
           {!remaining.length && <p>Nenhuma notificação.</p>}
-          {remaining.map((item) => (
-            <article key={item.id}>
-              <p>
-                {item.text}
-                {item.time && (
-                  <time dateTime={new Date(item.time).toISOString()}>
-                    {new Date(item.time).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </time>
-                )}
-              </p>
-              <div className="notification-actions">
-                {item.actions?.map((action) => (
-                  <button
-                    key={action.label}
-                    className="secondary"
-                    disabled={!!busy}
-                    onClick={async () => {
-                      setBusy(item.id);
-                      setError("");
-                      try {
-                        await action.run();
-                        set(false);
-                      } catch (e) {
-                        setError(
-                          e instanceof Error
-                            ? e.message
-                            : "Não foi possível concluir.",
-                        );
-                      } finally {
-                        setBusy("");
-                      }
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-                <button
-                  className="text-button"
-                  aria-label={`Excluir da lista: ${item.text}`}
-                  onClick={() => dismiss(item)}
+          {groups.map((group) => (
+            <section key={group.title} aria-label={group.title}>
+              <h3 className="notification-group">{group.title}</h3>
+              {group.items.map((item) => (
+                <article
+                  key={item.id}
+                  className={fresh.has(item.id) ? "is-unread" : undefined}
                 >
-                  Excluir
-                </button>
-              </div>
-            </article>
+                  {fresh.has(item.id) && (
+                    <i
+                      className="notification-dot"
+                      role="img"
+                      aria-label="Não lida"
+                    />
+                  )}
+                  <p>
+                    {item.text}
+                    {item.time && (
+                      <time dateTime={new Date(item.time).toISOString()}>
+                        {new Date(item.time).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </time>
+                    )}
+                  </p>
+                  <div className="notification-actions">
+                    {item.actions?.map((action) => (
+                      <button
+                        key={action.label}
+                        className="secondary"
+                        disabled={!!busy}
+                        onClick={async () => {
+                          setBusy(item.id);
+                          setError("");
+                          try {
+                            await action.run();
+                            set(false);
+                          } catch (e) {
+                            setError(
+                              e instanceof Error
+                                ? e.message
+                                : "Não foi possível concluir.",
+                            );
+                          } finally {
+                            setBusy("");
+                          }
+                        }}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                    <button
+                      className="text-button"
+                      aria-label={`Excluir da lista: ${item.text}`}
+                      onClick={() => dismiss(item)}
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
           ))}
           {error && <p role="alert">{error}</p>}
         </AnchoredPopover>
