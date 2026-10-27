@@ -76,9 +76,7 @@ export function NotificationSettings({ engine }: { engine: Controller }) {
                     {hint && <small>{hint}</small>}
                   </th>
                   <td>
-                    {balloon === "always" ? (
-                      <span className="notification-none">Sempre</span>
-                    ) : balloon ? (
+                    {balloon ? (
                       <input
                         type="checkbox"
                         role="switch"

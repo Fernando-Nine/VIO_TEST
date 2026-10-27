@@ -4,10 +4,18 @@ Atualizado: 2026-10-27
 
 ## Agora
 
-Fila 2.10.0 do Frontend concluída (#161, #167, #163, #158). Aguardando o copiloto/QA para a
-próxima fila (2.11.0: #159, #160, #162).
+Fila 2.10.0 do Frontend concluída (#161, #167, #163, #158, #189, #190, #198). Aguardando o
+copiloto/QA para a próxima fila (2.11.0: #159, #160, #162).
 
 ## Feito recentemente
+
+- #189 (PR #200, rc.6): `scrollbar-gutter` e recuo da tira só com `.canvas-strip.is-scrollable`
+  (`stripScrolls`, mesma condição das setas da tira).
+- #190 (PR #202, rc.7): "Para a sala" só lista `roomKind` (módulos, timer, chat); selo
+  "Só para você" removido. Grupo Telas (props `screens`/`showScreen`) no topo do catálogo,
+  também no espaço vazio; a aba Telas saiu.
+- #198 (rc.8): sem linha Erros em Notificações (`balloon: "always"` removido); ícone
+  `PersonStanding` em Acessibilidade.
 
 - #158 (rc.5): cabeçalho com − (widget da sala, só para mim) e × (fechar para todos, para quem
   pode: `endsForEveryone` em `WidgetFrame`); pessoal só ×. Menu: "Fechar só para mim" /
