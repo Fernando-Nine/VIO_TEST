@@ -3,6 +3,8 @@ import {
   trimMessages,
   type ChatMessageEvent,
   type SharedWidget,
+  type WidgetClosed,
+  type WidgetUpdatedEvent,
 } from "../../shared/widgets";
 import { io, type Socket } from "socket.io-client";
 import type {
@@ -69,6 +71,8 @@ export class Controller {
     this.bump();
   }
   watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
+  /** Runs before a room widget closed for everyone leaves the snapshot. */
+  widgetClosed?: (widget: SharedWidget, closed: WidgetClosed) => void;
   private desiredVideo = new Map<string, VideoDemand>();
   private sentVideo = new Map<string, string>();
   config?: RuntimeConfig;
@@ -533,29 +537,28 @@ export class Controller {
         this.view.snapshot = { ...this.view.snapshot, screenViewers };
         this.bump();
       });
-      socket.on(
-        "widget-updated",
-        (event: { id: string; widget: SharedWidget | null }) => {
-          if (!current() || !this.view.snapshot) return;
-          const before = this.view.snapshot.widgets?.find(
-            (w) => w.id === event.id,
-          );
-          const last = event.widget?.messages?.at(-1);
-          if (
-            before &&
-            last &&
-            last.authorId !== this.view.id &&
-            last.id !== before.messages?.at(-1)?.id
-          )
-            this.chatCue();
-          const widgets = (this.view.snapshot.widgets || []).filter(
-            (w) => w.id !== event.id,
-          );
-          if (event.widget) widgets.push(event.widget);
-          this.view.snapshot = { ...this.view.snapshot, widgets };
-          this.bump();
-        },
-      );
+      socket.on("widget-updated", (event: WidgetUpdatedEvent) => {
+        if (!current() || !this.view.snapshot) return;
+        const before = this.view.snapshot.widgets?.find(
+          (w) => w.id === event.id,
+        );
+        if (before && !event.widget && event.closed)
+          this.widgetClosed?.(before, event.closed);
+        const last = event.widget?.messages?.at(-1);
+        if (
+          before &&
+          last &&
+          last.authorId !== this.view.id &&
+          last.id !== before.messages?.at(-1)?.id
+        )
+          this.chatCue();
+        const widgets = (this.view.snapshot.widgets || []).filter(
+          (w) => w.id !== event.id,
+        );
+        if (event.widget) widgets.push(event.widget);
+        this.view.snapshot = { ...this.view.snapshot, widgets };
+        this.bump();
+      });
       socket.on("chat-message", (event: ChatMessageEvent) => {
         if (!current() || !this.view.snapshot) return;
         const chat = this.view.snapshot.widgets?.find((w) => w.id === event.id);

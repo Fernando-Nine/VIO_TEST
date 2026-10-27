@@ -41,7 +41,7 @@ import { Notifications } from "../components/Notifications";
 import { LiveScreens, type ScreenEvent } from "../components/LiveScreens";
 import { canManageRoom, roleAllows, roomRole } from "../../shared/permissions";
 import type { SharedWidget } from "../../shared/widgets";
-import { contentKind } from "../../shared/widgets";
+import { closedWidgetHold, contentKind } from "../../shared/widgets";
 import { Dialog } from "../components/Dialog";
 import { ScreenAudio } from "../components/ScreenAudio";
 import type { Controller } from "../room/controller";
@@ -66,7 +66,8 @@ import { useStripInput, stripStops } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
 import { WidgetCatalog, type Scope } from "./WidgetCatalog";
 import { GridPicker } from "./GridPicker";
-import { NotShown } from "./NotShown";
+import { NotShown, type NotShownEntry } from "./NotShown";
+import { loadClosed, saveClosed } from "./closed-widgets";
 import { toasts } from "../components/Toasts";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
@@ -297,6 +298,20 @@ export function RoomCanvas(props: Props) {
   const [nearTop, setNearTop] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [screenEvents, setScreenEvents] = useState<ScreenEvent[]>([]);
+  // Room widgets you closed with − and closes by others for the bell (#158).
+  const [closedIds, setClosedIds] = useState(loadClosed);
+  const [closeEvents, setCloseEvents] = useState<
+    { id: string; text: string; at: number }[]
+  >([]);
+  // Where each widget closed for everyone was, so Undo puts it back there.
+  const restoreSpots = useRef(
+    new Map<string, { slotId?: string; until: number }>(),
+  );
+  // "Mostrar" with no free cell: the cells light up to pick one; Esc cancels.
+  const [picking, setPicking] = useState<{
+    name: string;
+    place: (slotId: string) => void;
+  } | null>(null);
   const [fullscreenIntro, setFullscreenIntro] = useState(false);
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const pendingFocus = useRef<string | null>(null);
@@ -456,6 +471,80 @@ export function RoomCanvas(props: Props) {
     );
   }
   useEffect(() => () => toasts.clear(), []);
+  useEffect(() => {
+    engine.widgetClosed = (widget, closed) => {
+      const instance = store
+        .getSnapshot()
+        .widgets.find((w) => w.config.sharedId === widget.id);
+      const slotId = instance
+        ? store.getSnapshot().slots.find((s) => s.widgetId === instance.id)?.id
+        : undefined;
+      if (instance)
+        restoreSpots.current.set(widget.id, {
+          slotId,
+          until: Date.now() + closedWidgetHold + 2000,
+        });
+      if (closed.by !== engine.view.id) {
+        setCloseEvents((events) =>
+          [
+            ...events,
+            {
+              id: freshKey(),
+              text: `${closed.byName} fechou o ${widget.title}.`,
+              at: Date.now(),
+            },
+          ].slice(-30),
+        );
+        return;
+      }
+      const toast = `closed:${widget.id}`;
+      toasts.push({
+        id: toast,
+        kind: "important",
+        label: `Você fechou o ${widget.title} para todos`,
+        text: (
+          <>
+            Você fechou o <strong>{widget.title}</strong> para todos.
+          </>
+        ),
+        duration: closedWidgetHold,
+        action: {
+          label: "Desfazer",
+          run: () => {
+            toasts.close(toast, false);
+            engine
+              .request("widget-restore", { id: widget.id })
+              .catch((e) => engine.fail(e));
+          },
+        },
+      });
+    };
+    return () => {
+      engine.widgetClosed = undefined;
+    };
+  });
+  // Undo brings the widget back to the cell it had, for everyone who had it.
+  useEffect(() => {
+    const now = Date.now();
+    for (const [id, spot] of restoreSpots.current) {
+      const widget = snapshot?.widgets?.find((w) => w.id === id);
+      if (!widget && spot.until > now) continue;
+      restoreSpots.current.delete(id);
+      if (!widget) continue;
+      const state = store.getSnapshot();
+      if (state.widgets.some((w) => w.config.sharedId === id)) continue;
+      const free = state.slots.find(
+        (s) => s.id === spot.slotId && !s.widgetId && !s.offer,
+      );
+      const instance = sharedInstance(widget);
+      if (free) store.add(instance, free.id);
+      else
+        store.change((s) => {
+          s.widgets.push(instance);
+          s.hidden.push(instance.id);
+        });
+    }
+  }, [snapshot?.widgets, store]);
   const screenToasts = useRef(new Map<string, string>());
   // Who entered or left since the last snapshot; the first one only primes.
   const people = useRef<Map<string, string> | null>(null);
@@ -631,28 +720,36 @@ export function RoomCanvas(props: Props) {
       engine.watchRequest = undefined;
     };
   });
+  function sharedInstance(widget: SharedWidget): WidgetInstance {
+    return {
+      id: freshKey(),
+      type: contentKind(widget),
+      title: widget.title,
+      config: { sharedId: widget.id },
+      transient: true,
+    };
+  }
+  function reopen(sharedId: string) {
+    if (!closedIds.includes(sharedId)) return;
+    const next = closedIds.filter((id) => id !== sharedId);
+    setClosedIds(next);
+    saveClosed(next);
+  }
   function openShared(widget: SharedWidget, bringToFocus = false) {
     const state = store.getSnapshot();
     const existing = state.widgets.find((w) => w.config.sharedId === widget.id);
+    reopen(widget.id);
     if (existing) {
       focus(existing.id);
       return;
     }
-    const id = freshKey();
     const destination =
       state.slots.find((s) => s.id === target && !s.widgetId && !s.offer)?.id ||
       state.slots.find((s) => !s.widgetId && !s.offer)?.id ||
       store.addSlot();
-    store.add(
-      {
-        id,
-        type: contentKind(widget),
-        title: widget.title,
-        config: { sharedId: widget.id },
-        transient: true,
-      },
-      destination,
-    );
+    const instance = sharedInstance(widget);
+    const id = instance.id;
+    store.add(instance, destination);
     if (bringToFocus) focus(id);
     focusHeader(id);
     closeCatalog();
@@ -707,6 +804,82 @@ export function RoomCanvas(props: Props) {
     focusHeader(widget.id);
     announce(`${widget.title} adicionado ao seu layout.`);
   }
+  const hasFreeSlot = () => {
+    const current = store.getSnapshot();
+    return (
+      isStrip(current) || current.slots.some((t) => !t.widgetId && !t.offer)
+    );
+  };
+  /** First free cell; with none, the cells light up to pick one. */
+  function reveal(
+    name: string,
+    direct: () => void,
+    place: (id: string) => void,
+  ) {
+    if (hasFreeSlot()) {
+      direct();
+      return;
+    }
+    store.change((s) => {
+      s.single = false;
+    });
+    setPicking({ name, place });
+    announce(`Escolha o espaço para ${name}. Esc cancela.`);
+  }
+  const notShown: (NotShownEntry & { direct: () => void })[] = [
+    ...state.hidden.flatMap((id) => {
+      const widget = state.widgets.find((w) => w.id === id);
+      if (!widget) return [];
+      const name = titleOf(widget, engine);
+      const direct = () => store.show(id);
+      return [
+        {
+          id,
+          name,
+          icon: widgetRegistry[widget.type]?.icon,
+          reason: "Sem espaço na grade",
+          direct,
+          show: () => reveal(name, direct, (slotId) => store.move(id, slotId)),
+        },
+      ];
+    }),
+    ...(snapshot?.widgets || [])
+      .filter((w) => !state.widgets.some((i) => i.config.sharedId === w.id))
+      .map((widget) => {
+        const owner = snapshot?.participants.find((p) => p.id === widget.owner);
+        const direct = () => openShared(widget);
+        return {
+          id: widget.id,
+          name: widget.title,
+          icon: widgetRegistry[contentKind(widget)]?.icon,
+          reason: closedIds.includes(widget.id)
+            ? "Você fechou"
+            : widget.owner === engine.view.id
+              ? "Criado por você"
+              : owner
+                ? `Novo, de ${owner.name}`
+                : "Novo",
+          direct,
+          show: () =>
+            reveal(widget.title, direct, (slotId) => {
+              reopen(widget.id);
+              const instance = sharedInstance(widget);
+              store.replace(instance, slotId);
+              focusHeader(instance.id);
+            }),
+        };
+      }),
+  ];
+  useEffect(() => {
+    if (!picking) return;
+    const key = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setPicking(null);
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [picking]);
   function showPublication(id: string) {
     const existing = store
       .getSnapshot()
@@ -748,12 +921,20 @@ export function RoomCanvas(props: Props) {
     }
     if (widget.type === "screen")
       engine.stopWatching(widget.config.publicationId);
+    const sharedId = widget.config.sharedId;
+    if (sharedId && !endedForEveryone && !closedIds.includes(sharedId)) {
+      const next = [...closedIds, sharedId];
+      setClosedIds(next);
+      saveClosed(next);
+    }
     store.remove(widget.id);
     if (slotId) setHighlightedSlot(slotId);
     announce(
       endedForEveryone
-        ? `${titleOf(widget, engine)} encerrado para todos na sala.`
-        : `${titleOf(widget, engine)} removido do seu layout.`,
+        ? `${titleOf(widget, engine)} fechado para todos.`
+        : sharedId
+          ? `${titleOf(widget, engine)} fechado só para você.`
+          : `${titleOf(widget, engine)} fechado.`,
     );
   }
   function scrollStep(direction: number) {
@@ -980,14 +1161,12 @@ export function RoomCanvas(props: Props) {
           <Plus size={16} />
           <span>Widget</span>
         </button>
-        {state.hidden.length > 0 && (
+        {notShown.length > 0 && (
           <NotShown
-            widgets={state.hidden.flatMap((id) => {
-              const widget = state.widgets.find((w) => w.id === id);
-              return widget ? [widget] : [];
-            })}
-            title={(widget) => titleOf(widget, engine)}
-            show={(id) => store.show(id)}
+            entries={notShown}
+            showAll={() => {
+              for (const entry of notShown) if (hasFreeSlot()) entry.direct();
+            }}
           />
         )}
         {state.single && (
@@ -1001,6 +1180,8 @@ export function RoomCanvas(props: Props) {
           openWidget={(w) => openShared(w, true)}
           openScreen={showPublication}
           screenEvents={screenEvents}
+          closeEvents={closeEvents}
+          closedIds={closedIds}
           onOpenChange={setNotificationsOpen}
         />
         <LiveScreens screens={liveScreens} watch={showPublication} />
@@ -1341,6 +1522,53 @@ export function RoomCanvas(props: Props) {
               />
             );
           })}
+          {picking && (
+            <div
+              className="slot-picker"
+              role="group"
+              aria-label={`Escolha o espaço para ${picking.name}`}
+            >
+              {state.slots.map((slot, index) => {
+                const box = geometry.slots.get(slot.id);
+                if (!box?.visible) return null;
+                const current = state.widgets.find(
+                  (w) => w.id === slot.widgetId,
+                );
+                return (
+                  <button
+                    key={slot.id}
+                    className="slot-pick"
+                    autoFocus={index === 0}
+                    style={{
+                      left: box.x,
+                      top: box.y,
+                      width: box.width,
+                      height: box.height,
+                    }}
+                    onClick={() => {
+                      setPicking(null);
+                      picking.place(slot.id);
+                    }}
+                  >
+                    <span>
+                      {current
+                        ? `Substituir ${titleOf(current, engine)}`
+                        : "Colocar aqui"}
+                    </span>
+                  </button>
+                );
+              })}
+              <div className="slot-picker-hint" role="status">
+                <span>Escolha o espaço para {picking.name}</span>
+                <button
+                  className="text-button"
+                  onClick={() => setPicking(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </DragDropProvider>
       <div className="canvas-audio">
@@ -1505,30 +1733,28 @@ export function RoomCanvas(props: Props) {
             add={(type, scope) => void addWidget(type, scope)}
             close={() => setCatalog(null)}
             notShown={
-              state.hidden.length > 0 && (
+              notShown.length > 0 && (
                 <section className="catalog-group">
                   <h3>Não exibidos</h3>
                   <div className="widget-catalog">
-                    {state.hidden.flatMap((id) => {
-                      const widget = state.widgets.find((w) => w.id === id);
-                      if (!widget) return [];
-                      const Icon = widgetRegistry[widget.type]?.icon;
-                      return [
+                    {notShown.map((entry) => {
+                      const Icon = entry.icon;
+                      return (
                         <button
                           className="catalog-item"
-                          key={id}
+                          key={entry.id}
                           onClick={() => {
-                            store.show(id);
                             setCatalog(null);
+                            entry.show();
                           }}
                         >
                           {Icon && <Icon size={20} aria-hidden="true" />}
                           <span className="catalog-text">
-                            <strong>{titleOf(widget, engine)}</strong>
-                            <span>Mostrar</span>
+                            <strong>{entry.name}</strong>
+                            <span>{entry.reason} · Mostrar</span>
                           </span>
-                        </button>,
-                      ];
+                        </button>
+                      );
                     })}
                   </div>
                 </section>
