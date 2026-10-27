@@ -1,10 +1,10 @@
 import { browserCapture, type CaptureAdapter } from "../media/capture";
-import { decodePacket, nativeInvoke } from "./bridge";
+import { decodePacket, nativeInvoke, type DesktopSource } from "./bridge";
 
-let selected: { id: string; title: string } | undefined;
+let selected: DesktopSource | undefined;
 let active: { stop: () => void } | undefined;
 let description = "";
-export function selectProcess(source?: { id: string; title: string }) {
+export function selectProcess(source?: DesktopSource) {
   selected = source;
 }
 
@@ -91,7 +91,7 @@ export const windowsCapture: CaptureAdapter = {
           check();
           if (packet.state >= 2)
             throw new Error(
-              "O Windows não conseguiu iniciar o áudio deste aplicativo. Escolha novamente a fonte.",
+              "O Windows não liberou este áudio. Escolha novamente a fonte ou atualize o Windows.",
             );
           if (performance.now() - startedAt > 7000)
             throw new Error(
@@ -106,7 +106,9 @@ export const windowsCapture: CaptureAdapter = {
           );
         const track = destination.stream.getAudioTracks()[0];
         stream.addTrack(track);
-        description = `Áudio de ${source.title} via WASAPI, incluindo os processos filhos desse aplicativo.`;
+        description = source.system
+          ? "Todo o som do computador via WASAPI, sem as vozes da chamada."
+          : `Áudio de ${source.title} via WASAPI, incluindo os processos filhos desse aplicativo.`;
         let dropped = packet.dropped;
         const push = (pcm: Float32Array) => {
           if (pcm.length && node && context.state === "running") {
