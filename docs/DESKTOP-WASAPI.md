@@ -30,9 +30,13 @@ host. Essa prova decide o transporte local de frames/PCM; não presumir que um
 buffer nativo já é uma MediaStreamTrack.
 
 O loopback por processo com ActivateAudioInterfaceAsync exige Windows build 20348
-ou posterior segundo a amostra oficial da Microsoft. Para o produto, começar com
-Windows 11 x64. Detectar capacidade em runtime; não anunciar áudio isolado em
-versões que ofereçam apenas loopback do dispositivo inteiro.
+ou posterior segundo a amostra oficial da Microsoft, mas funciona no Windows 10
+2004 (19041) atualizado, como no OBS. O app libera a partir de 19041 (`MIN_BUILD`);
+se a ativação falhar num Windows desatualizado, a interface pede para atualizar.
+"Todo o som do computador, sem o VIO" usa o mesmo loopback com
+`PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE` sobre o próprio processo: os
+processos do WebView2 são filhos do VIO, então as vozes da chamada ficam de fora (#193).
+O loopback do dispositivo inteiro (que incluiria as vozes e causaria eco) não é usado.
 
 ## Contrato da captura nativa
 

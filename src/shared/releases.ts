@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.10.0-rc.5";
+export const version = "2.10.0-rc.10";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -24,6 +24,11 @@ export const currentRelease: Release = {
         "Ajustes reorganizados com busca no topo: Configurações (Áudio, Vídeo, Notificações, Aparência, Acessibilidade, Aplicativo) e Esta sala. Em Notificações, uma tabela liga ou desliga o balão e o som de cada tipo de aviso; tudo continua indo para o sino. Reduzir movimento pode seguir o sistema ou valer sempre.",
         "Desativar áudio (o fone na doca) desliga seu microfone e as vozes, mas as telas continuam tocando. Ao reativar, o microfone volta como estava. Silenciar vozes e transmissões saiu dos Ajustes.",
         'Cabeçalho do widget da sala com − (fecha só para você; continua aberto para os outros) e, para quem pode, × (fecha para todos). Fechar para todos não pede confirmação: o aviso no topo traz Desfazer por 8 s, que devolve o widget com o mesmo estado e no mesmo espaço; os outros recebem no sino quem fechou. Widget pessoal só tem ×. "N não exibidos" agora também lista os widgets da sala que você fechou ou que ainda não abriu, com o motivo em cada linha; sem espaço livre, Mostrar acende os espaços para você escolher qual substituir (Esc cancela).',
+        "A tira só reserva a faixa da barra de rolagem quando rola; sem rolagem, as margens ficam iguais dos dois lados.",
+        "Adicionar widget: em Para a sala só aparecem widgets que a sala compartilha. As telas transmitidas e a sua prévia aparecem no topo do catálogo, também no espaço vazio, para você colocar no espaço.",
+        "Ajustes: a linha Erros saiu de Notificações (não podia ser alterada) e Acessibilidade ganhou o ícone de pessoa de braços abertos.",
+        "App Windows: o som da janela agora funciona também no Windows 10 (versão 2004 ou mais recente). Na lista de áudio, a primeira opção é Todo o som do computador, sem o VIO: transmite tudo o que toca no PC, menos as vozes da chamada, para não haver eco.",
+        "Trocar o que transmito e silenciar o som da transmissão já funcionam por baixo: a nova fonte entra na mesma transmissão, sem derrubar quem assiste, e o silêncio vale para todos sem mexer no microfone. Os botões chegam com o widget Minha transmissão.",
       ],
     },
   ],

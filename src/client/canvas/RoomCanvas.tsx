@@ -1023,6 +1023,13 @@ export function RoomCanvas(props: Props) {
           chatAllowed={canManageRoom(snapshot, engine.view.id)}
           add={(type, scope) => void addWidget(type, scope)}
           close={() => setSlotCatalog(null)}
+          screens={publications.map((p) => ({
+            id: p.id,
+            name: p.title,
+            own: p.own,
+            watching: engine.view.watching.includes(p.id),
+          }))}
+          showScreen={showPublication}
         />
       ) : undefined,
     accept,
@@ -1066,6 +1073,9 @@ export function RoomCanvas(props: Props) {
         ),
       )
     : 3;
+  // Only a strip that scrolls reserves the scrollbar lane (#189).
+  const stripScrolls =
+    state.slots.slice(1).reduce((n, s) => n + slotUnits(s), 0) > visibleSlots;
   const dropSlots = state.slots.flatMap((slot) => {
     const box = geometry.slots.get(slot.id);
     return box?.visible && !slot.offer ? [{ ...box, id: slot.id }] : [];
@@ -1355,7 +1365,7 @@ export function RoomCanvas(props: Props) {
                   {...slotProps(state.slots[0], 0)}
                 />
                 <div
-                  className="canvas-strip"
+                  className={`canvas-strip ${stripScrolls ? "is-scrollable" : ""}`}
                   ref={strip}
                   onScroll={measure}
                   aria-label="Tira de widgets"
@@ -1422,45 +1432,42 @@ export function RoomCanvas(props: Props) {
               })}
             </div>
           )}
-          {stripMode &&
-            !state.single &&
-            state.slots.slice(1).reduce((n, s) => n + slotUnits(s), 0) >
-              visibleSlots && (
-              <div
-                className={`strip-controls ${horizontalStrip ? "is-horizontal" : "is-vertical"}`}
-                role="group"
-                aria-label="Navegar pela tira"
-                style={{
-                  top: geometry.strip?.y || 8,
-                  height: geometry.strip?.height || "auto",
-                  left: geometry.strip?.x || 8,
-                  width: geometry.strip?.width || "auto",
-                }}
+          {stripMode && !state.single && stripScrolls && (
+            <div
+              className={`strip-controls ${horizontalStrip ? "is-horizontal" : "is-vertical"}`}
+              role="group"
+              aria-label="Navegar pela tira"
+              style={{
+                top: geometry.strip?.y || 8,
+                height: geometry.strip?.height || "auto",
+                left: geometry.strip?.x || 8,
+                width: geometry.strip?.width || "auto",
+              }}
+            >
+              <button
+                className="icon-button"
+                onClick={() => scrollStep(-1)}
+                aria-label="Voltar um item da tira"
               >
-                <button
-                  className="icon-button"
-                  onClick={() => scrollStep(-1)}
-                  aria-label="Voltar um item da tira"
-                >
-                  {horizontalStrip ? (
-                    <ArrowLeft size={16} />
-                  ) : (
-                    <ArrowUp size={16} />
-                  )}
-                </button>
-                <button
-                  className="icon-button"
-                  onClick={() => scrollStep(1)}
-                  aria-label="Avançar um item da tira"
-                >
-                  {horizontalStrip ? (
-                    <ArrowRight size={16} />
-                  ) : (
-                    <ArrowDown size={16} />
-                  )}
-                </button>
-              </div>
-            )}
+                {horizontalStrip ? (
+                  <ArrowLeft size={16} />
+                ) : (
+                  <ArrowUp size={16} />
+                )}
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => scrollStep(1)}
+                aria-label="Avançar um item da tira"
+              >
+                {horizontalStrip ? (
+                  <ArrowRight size={16} />
+                ) : (
+                  <ArrowDown size={16} />
+                )}
+              </button>
+            </div>
+          )}
           {state.widgets.map((widget) => {
             const slot = state.slots.find((s) => s.widgetId === widget.id),
               floating = state.floating.find((f) => f.widgetId === widget.id);
@@ -1732,6 +1739,13 @@ export function RoomCanvas(props: Props) {
             chatAllowed={canManageRoom(snapshot, engine.view.id)}
             add={(type, scope) => void addWidget(type, scope)}
             close={() => setCatalog(null)}
+            screens={publications.map((p) => ({
+              id: p.id,
+              name: p.title,
+              own: p.own,
+              watching: engine.view.watching.includes(p.id),
+            }))}
+            showScreen={showPublication}
             notShown={
               notShown.length > 0 && (
                 <section className="catalog-group">
@@ -1761,36 +1775,6 @@ export function RoomCanvas(props: Props) {
               )
             }
             tabs={[
-              [
-                "Telas",
-                <>
-                  <div className="widget-catalog live-catalog">
-                    {!publications.length && (
-                      <p className="widget-empty">
-                        Ninguém está compartilhando tela. As transmissões
-                        aparecerão aqui quando começarem.
-                      </p>
-                    )}
-                    {publications.map((p) => (
-                      <button
-                        className="catalog-item"
-                        key={p.id}
-                        onClick={() => showPublication(p.id)}
-                      >
-                        <MonitorUp size={19} />
-                        <strong>
-                          {p.own ? "Minha prévia" : `Tela de ${p.title}`}
-                        </strong>
-                        <span>
-                          {engine.view.watching.includes(p.id)
-                            ? "Já está conectada · trazer para o foco"
-                            : "Conecta somente quando você escolher"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </>,
-              ],
               [
                 "Sala",
                 <>
