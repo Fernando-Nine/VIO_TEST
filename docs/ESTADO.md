@@ -8,7 +8,7 @@ Atualizado: 2026-10-27.
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
 | Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.10.0-rc.1 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.10.0-rc.8 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
@@ -26,9 +26,9 @@ Ordem completa em `ROADMAP.md`.
 Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
 planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
 
-1. 2.10.0: #158 (× fecha para todos), bugs #189, #190, #198 — Frontend 9.
+1. 2.10.0 pronta na prévia (rc.8: #158, #189, #190, #198 feitas): aguarda aval do usuário.
 2. Compartilhar e app Windows: #192 seletor próprio, #193 Windows 10, #160 + #191 — Mídia 3.
-3. 2.11.0: #159 Pessoas, #162 Câmeras, #194 até 3 telas por pessoa.
+3. 2.11.0: #159 Pessoas (Frontend 10), #162 Câmeras, #194 até 3 telas por pessoa.
 4. Design leva 4: #195 grade/fantasma do foco, #196 categorias do catálogo, #197 landing.
 
 ## Decisões vigentes
