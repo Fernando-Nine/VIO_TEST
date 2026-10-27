@@ -1,7 +1,14 @@
 import { browserCapture, type CaptureAdapter } from "../media/capture";
 import { decodePacket, nativeInvoke, type DesktopSource } from "./bridge";
+import {
+  startNativeVideo,
+  type NativeVideo,
+  type NativeVideoOptions,
+} from "./native-video";
+import type { VideoSource } from "./video";
 
 let selected: DesktopSource | undefined;
+let video: { source: VideoSource; options: NativeVideoOptions } | undefined;
 let active: { stop: () => void } | undefined;
 let pending: { stop: () => void } | undefined;
 let description = "";
@@ -9,6 +16,13 @@ let description = "";
 let released: Promise<unknown> = Promise.resolve();
 export function selectProcess(source?: DesktopSource) {
   selected = source;
+}
+/** With a source, the next share uses native capture instead of the WebView2 picker. */
+export function selectVideo(
+  source?: VideoSource,
+  options?: NativeVideoOptions,
+) {
+  video = source && options ? { source, options } : undefined;
 }
 
 export const windowsCapture: CaptureAdapter = {
@@ -23,13 +37,22 @@ export const windowsCapture: CaptureAdapter = {
     pending?.stop();
     const previous = active;
     const source = selected;
+    const chosen = video;
+    video = undefined;
     if (audio && !source)
       throw new Error("Escolha o aplicativo cujo áudio deseja transmitir.");
+    let native: NativeVideo | undefined;
     // Invoke the system video picker before the first await, within user activation.
-    const videoPromise = navigator.mediaDevices.getDisplayMedia({
-      video: true,
-      audio: false,
-    });
+    const videoPromise = chosen
+      ? startNativeVideo(chosen.source, chosen.options).then((started) => {
+          native = started;
+          if (stopped) started.stop();
+          return new MediaStream([started.track]);
+        })
+      : navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false,
+        });
     const context = audio
       ? new AudioContext({ sampleRate: 48000, latencyHint: "interactive" })
       : undefined;
@@ -45,6 +68,7 @@ export const windowsCapture: CaptureAdapter = {
       if (pending?.stop === stop) pending = undefined;
       if (active?.stop === stop) active = undefined;
       stream?.getTracks().forEach((track) => track.stop());
+      native?.stop();
       destination?.stream.getTracks().forEach((track) => track.stop());
       node?.port.postMessage("stop");
       node?.port.close();
@@ -68,7 +92,9 @@ export const windowsCapture: CaptureAdapter = {
       if (!video)
         throw new Error("O Windows não retornou a imagem selecionada.");
       video.addEventListener("ended", stop, { once: true });
-      description = "Compartilhando somente a imagem escolhida.";
+      description = native
+        ? `Imagem capturada pelo VIO em ${native.width}×${native.height}.`
+        : "Compartilhando somente a imagem escolhida.";
       if (audio && context && source) {
         await context.audioWorklet.addModule(
           new URL("./pcm-worklet.js", import.meta.url),
