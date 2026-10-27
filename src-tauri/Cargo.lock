@@ -4055,6 +4055,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-updater",
+ "webview2-com",
  "windows",
  "windows-core",
 ]

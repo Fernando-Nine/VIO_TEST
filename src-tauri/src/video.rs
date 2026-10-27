@@ -248,9 +248,9 @@ impl NativeVideo {
 }
 
 /// MTA for the current blocking thread; undone only if this call set it.
-struct Apartment(bool);
+pub(crate) struct Apartment(bool);
 impl Apartment {
-    fn enter() -> Self {
+    pub fn enter() -> Self {
         Self(unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.is_ok())
     }
 }
@@ -292,7 +292,7 @@ impl Gpu {
 }
 
 /// Windows 11 lets an unpackaged app drop the yellow capture border; older builds keep it.
-fn borderless() {
+pub(crate) fn borderless() {
     static ASKED: Once = Once::new();
     ASKED.call_once(|| {
         if let Ok(operation) = GraphicsCaptureAccess::RequestAccessAsync(GraphicsCaptureAccessKind::Borderless) {
@@ -404,6 +404,17 @@ impl VideoManager {
             .get(id)
             .cloned()
             .ok_or_else(|| "Escolha uma tela ou janela da lista atual.".into())
+    }
+
+    /// Listed size of a source, for picking the output resolution.
+    pub fn size(&self, id: &str) -> Result<(u32, u32), String> {
+        let source = self.source(id)?;
+        Ok((source.width, source.height))
+    }
+
+    /// The capture item of a listed source; call inside an MTA [`Apartment`].
+    pub fn item(&self, id: &str) -> Result<GraphicsCaptureItem, String> {
+        self.source(id)?.item()
     }
 
     /// Blocking: call from a worker thread.

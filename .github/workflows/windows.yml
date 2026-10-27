@@ -62,6 +62,11 @@ jobs:
         run: node scripts/desktop-channel.mjs config
       - name: Native tests
         run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+      # #192: primary screen -> NV12 1080p60 for 10 s. The runner has no GPU (WARP), so
+      # this is a ceiling; the real number comes from the user's PC.
+      - name: Native capture CPU (1080p60)
+        continue-on-error: true
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture native_capture_cpu
       - name: Build NSIS installer
         shell: pwsh
         env:

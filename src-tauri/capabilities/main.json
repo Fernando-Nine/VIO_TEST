@@ -11,6 +11,9 @@
     "allow-desktop-read-audio",
     "allow-desktop-stop-audio",
     "allow-desktop-video-sources",
-    "allow-desktop-video-thumbnail"
+    "allow-desktop-video-thumbnail",
+    "allow-desktop-video-start",
+    "allow-desktop-video-wait",
+    "allow-desktop-video-stop"
   ]
 }

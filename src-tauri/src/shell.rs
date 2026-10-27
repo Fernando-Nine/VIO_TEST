@@ -1,4 +1,5 @@
 use crate::capture::{self, Manager, Source};
+use crate::stream::{Options, Started, StreamManager, Tick};
 use crate::video::{VideoManager, VideoSource};
 use serde::Serialize;
 use std::time::Duration;
@@ -105,6 +106,51 @@ async fn desktop_video_thumbnail(
     Ok(tauri::ipc::Response::new(bytes))
 }
 
+#[tauri::command]
+async fn desktop_video_start(
+    window: WebviewWindow,
+    source_id: String,
+    width: u32,
+    height: u32,
+    fps: u32,
+    cursor: bool,
+) -> Result<Started, String> {
+    trusted(&window)?;
+    valid_id(&source_id)?;
+    let options = Options { width, height, fps, cursor };
+    tauri::async_runtime::spawn_blocking(move || {
+        window.state::<StreamManager>().start(&window, &source_id, options)
+    })
+    .await
+    .map_err(|_| "Não foi possível iniciar a captura da imagem.")?
+}
+
+#[tauri::command]
+async fn desktop_video_wait(
+    window: WebviewWindow,
+    state: State<'_, StreamManager>,
+    capture_id: String,
+    after: u32,
+) -> Result<Tick, String> {
+    trusted(&window)?;
+    valid_id(&capture_id)?;
+    let stream = state.stream(&capture_id)?;
+    tauri::async_runtime::spawn_blocking(move || stream.wait(after))
+        .await
+        .map_err(|_| "A captura da imagem parou.")?
+}
+
+#[tauri::command]
+async fn desktop_video_stop(window: WebviewWindow, capture_id: String) -> Result<(), String> {
+    trusted(&window)?;
+    valid_id(&capture_id)?;
+    let app = window.app_handle().clone();
+    tauri::async_runtime::spawn_blocking(move || app.state::<StreamManager>().stop(&app, Some(&capture_id)))
+        .await
+        .map_err(|_| "Não foi possível encerrar a captura.")?;
+    Ok(())
+}
+
 async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
     let mut builder = app.updater_builder().timeout(Duration::from_secs(20));
     // VIO Teste follows whatever its feed points at, even a lower prerelease number.
@@ -136,6 +182,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Manager::default())
         .manage(VideoManager::default())
+        .manage(StreamManager::default())
         .invoke_handler(tauri::generate_handler![
             desktop_capabilities,
             desktop_sources,
@@ -143,7 +190,10 @@ pub fn run() {
             desktop_read_audio,
             desktop_stop_audio,
             desktop_video_sources,
-            desktop_video_thumbnail
+            desktop_video_thumbnail,
+            desktop_video_start,
+            desktop_video_wait,
+            desktop_video_stop
         ])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -160,6 +210,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             if matches!(event, tauri::WindowEvent::Destroyed | tauri::WindowEvent::CloseRequested { .. }) {
                 window.state::<Manager>().stop(None);
+                window.state::<StreamManager>().stop(window.app_handle(), None);
             }
         })
         .run(tauri::generate_context!())

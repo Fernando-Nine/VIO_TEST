@@ -67,9 +67,59 @@ pub fn thumbnail(bgra: &[u8], width: u32, height: u32, stride: u32) -> Vec<u8> {
     bytes
 }
 
+/// Shared video buffer (#192): a 64-byte header, then `VIDEO_SLOTS` NV12 slots.
+/// Header u32 LE: `VIOV`, version, width, height, slots, slot size.
+/// Each slot: u32 sequence before, u32 sequence after, u64 timestamp µs, then Y and UV
+/// planes packed (no row padding). The page drops a frame whose two sequences differ.
+pub const VIDEO_HEADER: usize = 64;
+pub const VIDEO_SLOT_HEADER: usize = 16;
+pub const VIDEO_SLOTS: u32 = 3;
+
+pub fn nv12_size(width: u32, height: u32) -> usize {
+    (width * height + width * height / 2) as usize
+}
+
+pub fn video_slot_size(width: u32, height: u32) -> usize {
+    (VIDEO_SLOT_HEADER + nv12_size(width, height)).next_multiple_of(64)
+}
+
+pub fn video_header(width: u32, height: u32) -> [u8; 24] {
+    let mut bytes = [0u8; 24];
+    for (i, value) in [0x56494f56, 1, width, height, VIDEO_SLOTS, video_slot_size(width, height) as u32]
+        .into_iter()
+        .enumerate()
+    {
+        bytes[i * 4..i * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    bytes
+}
+
+/// Largest even size with the source aspect that fits the requested box, never upscaled.
+pub fn fit(width: u32, height: u32, max_width: u32, max_height: u32) -> (u32, u32) {
+    let (width, height) = (width.max(2), height.max(2));
+    let scale = (max_width as f64 / width as f64)
+        .min(max_height as f64 / height as f64)
+        .min(1.0);
+    let even = |v: f64| ((v.round() as u32) & !1).max(2);
+    (even(width as f64 * scale), even(height as f64 * scale))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn video_fits_even_without_upscaling() {
+        assert_eq!(fit(2560, 1440, 1920, 1080), (1920, 1080));
+        assert_eq!(fit(3440, 1440, 1920, 1080), (1920, 804));
+        assert_eq!(fit(1280, 720, 1920, 1080), (1280, 720));
+        assert_eq!(fit(801, 601, 1920, 1080), (800, 600));
+        assert_eq!(fit(0, 0, 1920, 1080), (2, 2));
+        assert_eq!(video_slot_size(1920, 1080) % 64, 0);
+        assert!(video_slot_size(1920, 1080) >= 16 + 1920 * 1080 * 3 / 2);
+        let header = video_header(1920, 1080);
+        assert_eq!(&header[0..4], &0x56494f56u32.to_le_bytes());
+        assert_eq!(&header[16..20], &3u32.to_le_bytes());
+    }
     #[test]
     fn thumbnails_fit_the_box_and_swap_to_rgba() {
         // 1920×1080 BGRA with 64 bytes of row padding, pure blue-ish.
