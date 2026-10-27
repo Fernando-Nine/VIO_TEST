@@ -17,14 +17,16 @@ O resto de `docs/` é referência técnica; `docs/arquivo/` é histórico e **n�
 
 ## Equipe
 
-| Área              | Papel                                                              | Handoff       |
-| ----------------- | ------------------------------------------------------------------ | ------------- |
-| Copiloto          | Chat central: decisões, prioridades, escopo, revisão e coordenação | `copiloto.md` |
-| Frontend/UX       | Interface, canvas, widgets, sons de interface, acessibilidade      | `frontend.md` |
-| Mídia             | WebRTC, captura, áudio, TURN, futuro app Windows/celular           | `midia.md`    |
-| Backend/Segurança | Servidor, protocolo, permissões, limites, revisão de segurança     | `backend.md`  |
-| QA/Release        | CI, testes, BrowserLab, versões, promoção para o VIO               | `qa.md`       |
-| Design/Produto    | Rascunhos visuais, landing, página de download, identidade         | `design.md`   |
+| Área              | Papel                                                              | Handoff         |
+| ----------------- | ------------------------------------------------------------------ | --------------- |
+| Copiloto          | Chat central: decisões, prioridades, escopo, revisão e coordenação | `copiloto.md`   |
+| Frontend/UX       | Interface, canvas, widgets, sons de interface, acessibilidade      | `frontend.md`   |
+| Mídia             | WebRTC, captura, áudio, TURN, futuro app Windows/celular           | `midia.md`      |
+| Backend/Segurança | Servidor, protocolo, permissões, limites, revisão de segurança     | `backend.md`    |
+| QA/Release        | CI, testes, BrowserLab, versões, promoção para o VIO               | `qa.md`         |
+| Design/Produto    | Rascunhos visuais, landing, página de download, identidade         | `design.md`     |
+| Jurídico          | LGPD, menores, direitos autorais, termos e política de privacidade | `juridico.md`   |
+| Roteirista        | Ideias novas e crítica de funções antigas; propõe, não implementa  | `roteirista.md` |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
