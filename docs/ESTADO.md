@@ -7,13 +7,13 @@ Atualizado: 2026-10-26.
 
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
-| Produção | 2.8.1       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
 | Prévia   | 2.9.0-rc.20 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
-Produção 2.8.1 = 2.8.0 + correções de segurança (VIO PR #3). A prévia já tem o visual novo
-dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.8.0` e
-`v2.8.1` no VIO pendentes (push de tag recusado pela rede dos agentes).
+Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia já tem o visual novo
+dos widgets (#75–#78) e o instalador Windows na CI (#100). Tags `v2.7.2`, `v2.8.0`, `v2.8.1` e
+`v2.9.0` no VIO pendentes (push de tag recusado pela rede dos agentes).
 
 ## Validado pelo usuário
 

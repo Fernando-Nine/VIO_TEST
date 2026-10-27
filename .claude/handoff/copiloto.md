@@ -15,6 +15,8 @@ Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, 
 
 ## Feito recentemente
 
+- **2.9.0 em produção** (VIO PR #4 = VIO_TEST bbb5c23). Falta a tag `v2.9.0` (usuário cria em Releases; rede dos agentes recusa) e o VIO_TEST receber o registro estável 2.9.0 em `releases.ts` (pedido ao Frontend 7).
+
 - Produção 2.8.1 (VIO PR #3, hotfix body-parser/zod). Prévia 2.9.0-rc.x com widgets novos.
 - Skills de terceiros + próprias em `.claude/skills/` (PR #121); papéis dizem quais usar.
 - Regra de contexto: trocar chat em ~200 mil tokens ou a cada 3–4 issues.
