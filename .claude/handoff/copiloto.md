@@ -4,15 +4,15 @@ Atualizado: 2026-10-27
 
 ## Agora
 
-Sessões (tag `vio-team`; `create_session` com source VIO_TEST; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonkr`):
+Sessões (tag `vio-team`; filhas deste copiloto `session_01K4nnLQJbC6BuMckjZyonkr`):
 
-- Frontend 9 encerrado (#158, #189, #190, #198; rc.8). Frontend 10 `session_01K4nnLP2psRpXnRTFWKT7fm` — #159.
-- Mídia 3 `session_01K4nnLT2nWAPz2xquf7KdDq` — #192 (parecer primeiro), #193, #160 + #191.
-- Design (`session_01K4nnLRKbUq1b5jSQGCg46V`) e Backend ociosos. Leva 4 de Design (#195–#197)
-  aguarda vaga; brandbook é prioridade 4.
-- Frontend 8 encerrado (fez #161, #167, #163). Beta do app Windows publicando (usuário conferiu).
-- Propostas ao usuário (27 out), aguardando resposta: agentes Jurídico/Privacidade e Roteirista;
-  plano de clips no aparelho; sugestões de Ajustes (#168).
+- Frontend 11 `session_01K4nnLPcatWE4bNXvrhaipt` — #160 (interface), #207, #209.
+- Mídia 4 `session_01K4nnLPBU2sPjZDCpRvt7m8` — #162, #194.
+- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — #191 (estilo Discord) primeiro; depois #195–#197.
+- Encerrados: Frontend 9 e 10 (#159), Mídia 3 (#193, mídia da #160, parecer da #192).
+- Aguardam o usuário: aval da 2.10.0 (rc.8), aval do crate `webview2-com` (#192),
+  conexão do Figma/Canva (proxy da rede do ambiente recusa hoje).
+- Agentes Jurídico e Roteirista criados; primeira tarefa a definir com o usuário.
 
 ## Feito recentemente
 
