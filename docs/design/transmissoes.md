@@ -1,5 +1,8 @@
 # Novas transmissões — spec (escolha A + C)
 
+> Leva 3: a etiqueta no canto passa a ser o aviso no topo de [notificacoes.md](notificacoes.md).
+> O sino segue igual.
+
 Pranchas "3A · Etiqueta no canto do canvas" e "3C · Etiqueta presa ao sino" (https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8).
 
 ## Comportamento

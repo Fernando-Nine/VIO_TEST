@@ -16,8 +16,8 @@ Pranchas "5A", "5B" e "5 · Onde cada padrão se aplica" (https://claude.ai/arti
 ## Menu do botão direito (A)
 
 Mesma ordem em todos: Trazer para o foco → Renomear → Cor e paleta → Quem pode
-controlar → separador → Remover deste layout → Encerrar para todos (vermelho; só sala e
-só para quem pode). Widget pessoal não tem "Quem pode controlar" nem "Encerrar para
+controlar → separador → Fechar só para mim → Fechar para todos (vermelho; só sala e
+só para quem pode; ver [cabecalho-widget.md](cabecalho-widget.md)). Widget pessoal não tem "Quem pode controlar" nem "Fechar para
 todos". No celular, toque longo abre o mesmo menu como folha.
 
 ## Cor e paleta (A)
