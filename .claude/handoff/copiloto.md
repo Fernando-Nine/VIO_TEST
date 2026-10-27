@@ -1,16 +1,17 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-26 (tarde)
+Atualizado: 2026-10-27
 
 ## Agora
 
-Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
+Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, filhas do copiloto):
 
-- Frontend (7) `session_01K4nnLSbs45xu6Fcti7xXJH` — 2.10.0: #166, #164, #165, #161, #167, #163, depois #158.
-- Backend `session_01K4nnLRjAKXcLnbTJWeqTjN` — servidor da #158 (criador fecha, Desfazer 8 s).
-- Design (leva 3) `session_01KPbZqEyhHpE8D8ik96V4Uh` — specs entregues (#169); ocioso.
+- Frontend (7) `session_01K4nnLSbs45xu6Fcti7xXJH` — 2.10.0: #166, #164, #165, #161, #167, #163, #158.
+- Backend `session_01K4nnLRjAKXcLnbTJWeqTjN` — servidor da #158 feito (PR #171); ocioso.
+- Design `session_01K4nnLRKbUq1b5jSQGCg46V` — skill `vio-design-delivery` e `ideias-futuras.md` feitos (PR #173/#174); ocioso.
 - Mídia: abrir sessão nova para #160/#162 (2.11.0) quando o Frontend chegar lá.
-- Frontend (6) e Mídia (2) passaram de 200 mil tokens: não reutilizar.
+- Não reutilizar sessões acima de 200 mil tokens (Frontend 6, Mídia 2, Design leva 3).
+- Limite semanal de uso em aviso (`allowed_warning`, 27 out): evitar sessões paralelas desnecessárias.
 
 ## Feito recentemente
 
@@ -45,6 +46,6 @@ Sessões ativas (tag `vio-team`; criar com `create_session`, source VIO_TEST):
 
 ## Próximo passo
 
-2.9.0 pronta na prévia (rc.20): aguardando aval do usuário para publicar no VIO + tag. Usuário também deve cadastrar `VIO_RELEASES_TOKEN` (VIO e VIO_TEST). Roadmap em `docs/ROADMAP.md`.
+2.9.0 pronta na prévia (rc.20): aguardando aval do usuário para publicar no VIO + tag. `VIO_RELEASES_TOKEN` cadastrado nos dois (27 out): conferir que o próximo build da main publicou no release `beta` do vio-releases. Roadmap em `docs/ROADMAP.md`.
 Para publicar no VIO: árvore idêntica ao commit aprovado do VIO_TEST (git checkout <sha> -- .),
 PR no VIO, squash, conferir rodapé com o usuário.

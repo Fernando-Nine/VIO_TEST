@@ -160,6 +160,22 @@ export interface ChatMessage {
   text: string;
   sentAt: number;
 }
+/** How long a widget closed for everyone can still be restored (#158). */
+export const closedWidgetHold = 8000;
+/** Sent with `widget-updated` (widget: null) when someone closes a room widget. */
+export interface WidgetClosed {
+  /** Who closed it; only they or someone allowed to close it may restore. */
+  by: string;
+  byName: string;
+  /** Server time after which `widget-restore` fails with NOT_FOUND. */
+  until: number;
+}
+/** `widget-updated`: widget null means gone; `closed` marks an undoable close. */
+export interface WidgetUpdatedEvent {
+  id: string;
+  widget: SharedWidget | null;
+  closed?: WidgetClosed;
+}
 export interface RoomNotice {
   id: string;
   text: string;
@@ -248,6 +264,8 @@ export const widgetSchemas = {
     })
     .strict(),
   "widget-delete": z.object({ id: identifier }).strict(),
+  /** Brings back a widget closed less than `closedWidgetHold` ago (#158). */
+  "widget-restore": z.object({ id: identifier }).strict(),
   "widget-operate": z
     .object({
       id: identifier,
