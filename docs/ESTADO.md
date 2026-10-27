@@ -23,9 +23,13 @@ anteriores não serão criadas (decisão antiga). `ALLOWED_APP_ORIGINS` já est�
 
 Ordem completa em `ROADMAP.md`.
 
-1. 2.10.0: #161, #167, #163, #158 (Frontend 8 em andamento).
-2. 2.11.0: #159, #160 e #162 (Frontend + Mídia). Ajustes futuros na #168.
-3. App Windows: conferir publicação do `beta` no vio-releases.
+Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
+planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
+
+1. 2.10.0: #158 (× fecha para todos), bugs #189, #190, #198 — Frontend 9.
+2. Compartilhar e app Windows: #192 seletor próprio, #193 Windows 10, #160 + #191 — Mídia 3.
+3. 2.11.0: #159 Pessoas, #162 Câmeras, #194 até 3 telas por pessoa.
+4. Design leva 4: #195 grade/fantasma do foco, #196 categorias do catálogo, #197 landing.
 
 ## Decisões vigentes
 
