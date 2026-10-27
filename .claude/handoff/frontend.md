@@ -1,38 +1,44 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-26
+Atualizado: 2026-10-27
 
 ## Agora
 
-Fila 2.9.0 concluída. Última PR: #156 (#145, rc.19), squash quando a CI ficar verde.
+Fila do milestone 2.10.0 (ordem do copiloto): ~~#166~~ ~~#164~~ ~~#165~~ → #161 (tempos nos
+cabeçalhos) → #167 (volume da tela) → #163 (Ajustes + Desativar áudio) → #158 (cabeçalho
+−/×/Desfazer; servidor pronto na main, PR #171, contrato comentado na #158).
+Specs em `docs/design/`; canvas da leva 3 na seção "Escolhidas".
 
 ## Feito recentemente
 
-- #115 (PR #138, rc.14): `color` no Cronômetro/Personalizado, cor por opção + `palette` na
-  Votação. Seletor comum `canvas/ColorFields.tsx`; helpers em `shared/palettes.ts`.
-- #81 + #143 (PR #139, rc.15): tira reordena arrastando (`stripDrop` no `RoomCanvas`);
-  recorte ignora cortes < 2 px (snap fracionário); `scrollbar-gutter` + respiro na tira.
-- #142 (PR #151, rc.16): anel de foco interno nos campos dos widgets.
-- #141 (PR #152, rc.17): Dados em fichas para N# e mais de 3 dados; histórico truncado.
-- #144 (PR #154, rc.18): borda da tela some em tela cheia inativa.
-- #145 (PR #156, rc.19): rodapé Entrar na chamada → Compartilhar → Flutuante à esquerda;
-  volume por tela no cabeçalho (`components/ScreenVolume.tsx`, substitui `VolumeControl`).
+- #166 (PR #175, rc.21): presets `grid-RxC` + `autoGrid`/`gridSize` em `canvas/model.ts`
+  (migra `grid-N`/`focus-*`); matriz `canvas/GridPicker.tsx`; Foco único saiu da barra.
+  Diminuir a grade manda o excesso para `state.hidden` ("N não exibidos",
+  `canvas/NotShown.tsx`, `store.show(id)`); aumentar traz de volta; a tira mostra todos.
+  Celular: uma coluna, foco 16:9 no topo (`--compact-row`), painel só "Foco no topo".
+- #164 (PR #177, rc.22): fila global `components/Toasts.tsx` (`toasts.push/close`,
+  kinds info/important/error). Entrou/saiu e nova tela no `RoomCanvas`; erro/aviso da
+  sala via `App.tsx`. `ScreenToast` removido. O Desfazer da #158 usa `kind: "important"`,
+  `duration: 8000`.
+- #165 (PR #178, rc.23): `canvas/WidgetCatalog.tsx` (painel e dentro do espaço vazio),
+  busca sem acento em `canvas/catalog-search.ts`; escolha Mim/Sala no segmentado
+  (`vio:widget-scope`), o diálogo de escopo saiu. Seção "Não exibidos" no painel.
 
 ## Decisões
 
-- Cada PR sobe um `-rc.N` e regenera o `CHANGELOG.md` com `npm run build` (a CI confere).
-- Várias PRs abertas: merge sequencial; a cada squash, juntar a `main` na próxima e subir
-  a rc (conflitos só em releases/package/CHANGELOG e CSS anexado no fim).
-- `workspace.css` segue sem prettier; blocos novos vão no fim.
-- Sem force push (trava). Matar o servidor local pela porta.
-- Screenshots com duas pessoas: segundo contexto do Playwright entra pelo código da sala e
-  compartilha com `--auto-select-desktop-capture-source`.
+- Versões seguem `2.9.0-rc.N` até o QA separar 2.9/2.10 nas notas (avisado ao copiloto).
+- Cada PR sobe uma rc e regenera o `CHANGELOG.md` com `npm run build`; merge sequencial,
+  juntando a `main` na próxima (conflitos em releases/package/CHANGELOG).
+- `workspace.css` sem prettier; blocos novos no fim. Conferir chaves balanceadas.
+- Screenshots: dev em :3000 e worktree da `main` em :3001 (`.env` com PORT/ALLOWED_ORIGINS
+  próprios); scripts Playwright no scratchpad (duas pessoas: segundo contexto pela URL).
 
 ## Pendente / bloqueios
 
-- Widget Personalizado não está no catálogo; o menu "Cor" aparece se ele existir.
-- Em tela cheia inativa, as bordas tracejadas dos espaços vazios continuam visíveis.
+- #158 ainda precisa: botões − / × no cabeçalho, motivo nas linhas de "não exibidos"
+  ("Você fechou" / "Novo, de Lia") e separar ocultos por − dos ocultos pela grade.
+- Balão desligado em Ajustes › Notificações (spec de avisos) entra com a #163.
 
 ## Próximo passo
 
-Pedir ao copiloto a próxima fila.
+#161: ler `docs/design/tempos.md` e a issue.
