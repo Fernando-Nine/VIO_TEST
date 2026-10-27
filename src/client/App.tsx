@@ -48,6 +48,7 @@ import {
   RoomTimer,
   RoomLimit,
 } from "./components/RoomStatus";
+import { FullscreenVolume } from "./components/ScreenVolume";
 import { usePictureInPicture } from "./media/picture-in-picture";
 import { PeoplePanel } from "./components/PeoplePanel";
 const RoomCanvas = lazy(() =>
@@ -605,6 +606,12 @@ export default function App({ engine }: { engine: Controller }) {
                         <PictureInPicture2 />
                         <span>Flutuante</span>
                       </button>
+                    )}
+                    {full && (view.selected || view.watching[0]) && (
+                      <FullscreenVolume
+                        engine={engine}
+                        id={view.selected || view.watching[0]}
+                      />
                     )}
                     {full && (
                       <button

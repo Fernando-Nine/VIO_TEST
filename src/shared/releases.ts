@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.10.0-rc.2";
+export const version = "2.10.0-rc.3";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -20,6 +20,7 @@ export const currentRelease: Release = {
         'Avisos no topo da sala, um por vez, com barra de tempo e ×: quem entrou (4 s), quem saiu (4 s) e nova tela com Assistir (6 s). A nova tela entra por cima do aviso atual; os outros esperam com "+N". Passar o mouse pausa a barra. Erros da sala ficam até você fechar.',
         'Adicionar widget com busca (sem acento: "cronometro" acha Cronômetro; Enter adiciona o primeiro, setas navegam), escolha Para mim / Para a sala no próprio painel e grupos Na sala, Decidir e jogar e Tempo. Em um espaço vazio, o catálogo abre dentro do espaço, com ícones que cabem nele; Esc ou clicar fora fecha.',
         "Tempo da sala no topo, ao lado do código (passe o mouse para ver há quanto tempo está aberta), e o tempo de cada tela no cabeçalho dela, com o ponto ao vivo. Os dois vêm do relógio do servidor. O widget Tempo da sala saiu do catálogo; quem o tinha aberto fica com o espaço livre.",
+        "Volume das telas e das pessoas com o mesmo controle: marca em 100% e, acima disso, trecho e número dourados. Setas mudam 5%, Page Up/Down 25% e clique duplo no número volta a 100%. O botão direito na tela começa com Volume desta tela e ganhou Janela flutuante; em tela cheia, o botão Volume na barra abre o controle na vertical.",
       ],
     },
   ],
