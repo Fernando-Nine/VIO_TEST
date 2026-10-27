@@ -3027,19 +3027,20 @@ button.inline-text.is-empty {
   z-index: 80;
 }
 
-/* The strip's scrollbar keeps its own lane: never flush against the widgets. */
-.canvas-strip {
+/* A scrolling strip keeps its scrollbar in its own lane, never flush against
+   the widgets; without scrolling the margins stay symmetric (#189). */
+.canvas-strip.is-scrollable {
   scrollbar-gutter: stable;
   padding-inline-end: 6px;
 }
-.strip-top .canvas-strip,
-.strip-bottom .canvas-strip {
+.strip-top .canvas-strip.is-scrollable,
+.strip-bottom .canvas-strip.is-scrollable {
   padding-inline-end: 0;
   padding-block-end: 6px;
 }
 @media (max-width: 679px) {
   .canvas-layout:is(.strip-left, .strip-right, .strip-top, .strip-bottom)
-    > .canvas-strip {
+    > .canvas-strip.is-scrollable {
     padding-inline-end: 0;
     padding-block-end: 6px;
   }
