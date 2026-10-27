@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import {
-  Accessibility,
+  PersonStanding,
   ArrowUpRight,
   Bell,
   ChevronLeft,
@@ -66,7 +66,7 @@ const categories: {
     id: "accessibility",
     label: "Acessibilidade",
     hint: "Movimento",
-    icon: Accessibility,
+    icon: PersonStanding,
   },
   { id: "app", label: "Aplicativo", hint: "Versão, código-fonte", icon: Info },
   { id: "room", label: "Sala", hint: "Convite, edição, posse", icon: Crown },
@@ -88,7 +88,6 @@ const searchable: { label: string; category: Category; text?: string }[] = [
   { label: "Alguém entrou ou saiu", category: "notifications" },
   { label: "Nova tela", category: "notifications" },
   { label: "Widgets", category: "notifications" },
-  { label: "Erros", category: "notifications" },
   { label: "Sons do VIO", category: "notifications" },
   { label: "Volume dos efeitos", category: "notifications" },
   { label: "Minha cor", category: "appearance" },

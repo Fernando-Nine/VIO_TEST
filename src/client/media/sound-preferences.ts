@@ -102,8 +102,7 @@ export type Motion = "system" | "reduce";
 export const notificationRows: {
   label: string;
   hint?: string;
-  /** "always": errors need an answer, so their balloon cannot go away. */
-  balloon?: BalloonKind | "always";
+  balloon?: BalloonKind;
   cues: Cue[];
 }[] = [
   {
@@ -122,5 +121,4 @@ export const notificationRows: {
     hint: "Microfone, áudio e tela.",
     cues: ["share-on", "share-off", "unmute", "mute", "deafen", "undeafen"],
   },
-  { label: "Erros", balloon: "always", cues: [] },
 ];
