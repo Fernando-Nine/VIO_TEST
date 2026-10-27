@@ -3,17 +3,25 @@ import { decodePacket, nativeInvoke } from "./bridge";
 
 let selected: { id: string; title: string } | undefined;
 let active: { stop: () => void } | undefined;
+let pending: { stop: () => void } | undefined;
 let description = "";
+// The native side holds one audio capture; a replacement waits for the old one to end.
+let released: Promise<unknown> = Promise.resolve();
 export function selectProcess(source?: { id: string; title: string }) {
   selected = source;
 }
 
 export const windowsCapture: CaptureAdapter = {
   device: browserCapture.device,
-  stopScreen: () => active?.stop(),
+  stopScreen: () => {
+    pending?.stop();
+    active?.stop();
+  },
   screenAudioMessage: () => description,
   async screen(audio) {
-    active?.stop();
+    // A replacement keeps the current share until the new image is chosen (#160).
+    pending?.stop();
+    const previous = active;
     const source = selected;
     if (audio && !source)
       throw new Error("Escolha o aplicativo cujo áudio deseja transmitir.");
@@ -34,6 +42,7 @@ export const windowsCapture: CaptureAdapter = {
     const stop = () => {
       if (stopped) return;
       stopped = true;
+      if (pending?.stop === stop) pending = undefined;
       if (active?.stop === stop) active = undefined;
       stream?.getTracks().forEach((track) => track.stop());
       destination?.stream.getTracks().forEach((track) => track.stop());
@@ -43,9 +52,11 @@ export const windowsCapture: CaptureAdapter = {
       if (context && context.state !== "closed")
         void context.close().catch(() => {});
       if (captureId)
-        void nativeInvoke("desktop_stop_audio", { captureId }).catch(() => {});
+        released = nativeInvoke("desktop_stop_audio", { captureId }).catch(
+          () => {},
+        );
     };
-    active = { stop };
+    pending = { stop };
     const check = () => {
       if (stopped) throw new DOMException("Captura cancelada.", "AbortError");
     };
@@ -72,6 +83,9 @@ export const windowsCapture: CaptureAdapter = {
         });
         destination = context.createMediaStreamDestination();
         node.connect(destination); // Never route the captured audio to local speakers.
+        previous?.stop();
+        await released;
+        check();
         captureId = await nativeInvoke<string>("desktop_start_audio", {
           sourceId: source.id,
         });
@@ -142,6 +156,9 @@ export const windowsCapture: CaptureAdapter = {
         })().catch(end);
       }
       check();
+      previous?.stop();
+      pending = undefined;
+      active = { stop };
       return stream;
     } catch (error) {
       stop();

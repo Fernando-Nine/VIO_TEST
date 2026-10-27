@@ -11,9 +11,12 @@ import type { Controller } from "../room/controller";
 export function NativeShare({
   engine,
   close,
+  replace = false,
 }: {
   engine: Controller;
   close: () => void;
+  /** Swap the source of the current share instead of starting a new one (#160). */
+  replace?: boolean;
 }) {
   const [sources, setSources] = useState<DesktopSource[]>([]);
   const [chosen, setChosen] = useState("");
@@ -132,7 +135,7 @@ export function NativeShare({
         disabled={audio && (loading || !available || !selected)}
         onClick={() => {
           selectProcess(audio ? selected : undefined);
-          void engine.startScreen(audio);
+          void engine.startScreen(audio, replace);
           close();
         }}
       >
