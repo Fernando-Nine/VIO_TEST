@@ -530,6 +530,40 @@ impl Manager {
         Ok(sources)
     }
 
+    /// Audio for a native screen share (#192): the application of a listed window, or the
+    /// whole PC without VIO when `window` is `None`. Returns a source id for [`start`].
+    pub fn link(&self, window: Option<(isize, u32, u64, String)>) -> Result<Source, String> {
+        let mut inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
+        let entry = match window {
+            Some((window, pid, started, title)) => NativeSource {
+                window,
+                started,
+                pid,
+                title,
+                system: false,
+            },
+            None => NativeSource {
+                window: 0,
+                started: 0,
+                pid: unsafe { GetCurrentProcessId() },
+                title: SYSTEM_TITLE.into(),
+                system: true,
+            },
+        };
+        if !inner.listed.is_some_and(|t| t.elapsed() < LIST_VALID) {
+            inner.sources.clear();
+            inner.listed = Some(Instant::now());
+        }
+        let id = key()?;
+        let source = Source {
+            id: id.clone(),
+            title: entry.title.clone(),
+            system: entry.system,
+        };
+        inner.sources.insert(id, entry);
+        Ok(source)
+    }
+
     pub fn start(&self, source_id: &str) -> Result<String, String> {
         let mut inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
         if windows_build() < MIN_BUILD {

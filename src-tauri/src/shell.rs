@@ -151,6 +151,24 @@ async fn desktop_video_stop(window: WebviewWindow, capture_id: String) -> Result
     Ok(())
 }
 
+/// Audio source matching a native video source: its application, or the whole PC.
+#[tauri::command]
+fn desktop_share_audio(
+    window: WebviewWindow,
+    audio: State<'_, Manager>,
+    video: State<'_, VideoManager>,
+    source_id: String,
+    system: bool,
+) -> Result<Source, String> {
+    trusted(&window)?;
+    valid_id(&source_id)?;
+    if system {
+        audio.link(None)
+    } else {
+        audio.link(Some(video.audio_target(&source_id)?))
+    }
+}
+
 async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
     let mut builder = app.updater_builder().timeout(Duration::from_secs(20));
     // VIO Teste follows whatever its feed points at, even a lower prerelease number.
@@ -193,7 +211,8 @@ pub fn run() {
             desktop_video_thumbnail,
             desktop_video_start,
             desktop_video_wait,
-            desktop_video_stop
+            desktop_video_stop,
+            desktop_share_audio
         ])
         .setup(|app| {
             let handle = app.handle().clone();

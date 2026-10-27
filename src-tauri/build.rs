@@ -15,6 +15,7 @@ fn main() {
             "desktop_video_start",
             "desktop_video_wait",
             "desktop_video_stop",
+            "desktop_share_audio",
         ]),
     ))
     .expect("Tauri configuration must be valid");

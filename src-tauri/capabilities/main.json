@@ -14,6 +14,7 @@
     "allow-desktop-video-thumbnail",
     "allow-desktop-video-start",
     "allow-desktop-video-wait",
-    "allow-desktop-video-stop"
+    "allow-desktop-video-stop",
+    "allow-desktop-share-audio"
   ]
 }
