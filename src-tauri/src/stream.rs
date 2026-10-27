@@ -599,13 +599,19 @@ mod bench {
             stop_event: Owned(unsafe { CreateEventW(None, true, false, None) }.unwrap()),
             frame_event: Owned(unsafe { CreateEventW(None, false, false, None) }.unwrap()),
         });
+        // Fail with the stage and HRESULT: the runner may lack a video processor (WARP).
+        let size = item.Size().expect("item size");
+        drop(Pipeline::new(size, options).unwrap_or_else(|e| panic!("VideoProcessor NV12: {e:?}")));
         let worker_frames = frames.clone();
         let (ready, started) = mpsc::sync_channel(1);
         let worker = std::thread::spawn(move || {
             let _apartment = Apartment::enter();
-            run(&worker_frames, item, options, mapping, ready).map_err(|e| e.message())
+            run(&worker_frames, item, options, mapping, ready).map_err(|e| format!("{e:?}"))
         });
-        started.recv_timeout(Duration::from_secs(5)).expect("capture start").unwrap();
+        match started.recv_timeout(Duration::from_secs(5)) {
+            Ok(Ok(())) => {}
+            other => panic!("captura não iniciou: {other:?} / {:?}", worker.join()),
+        }
         let (cpu0, wall0) = (cpu(), Instant::now());
         let mut samples = Vec::new();
         while wall0.elapsed() < Duration::from_secs(10) {
