@@ -1,13 +1,19 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-27
+Atualizado: 2026-10-27 (Frontend 10)
 
 ## Agora
 
-Fila 2.10.0 do Frontend concluída (#161, #167, #163, #158, #189, #190, #198). Aguardando o
-copiloto/QA para a próxima fila (2.11.0: #159, #160, #162).
+#159 (Pessoas) entregue na 2.11.0-rc.1 (PR #205). Próximas da 2.11.0: #162 Câmeras, #194.
 
 ## Feito recentemente
+
+- #159 (PR #205, 2.11.0-rc.1): widget Pessoas (`canvas/PeopleWidget.tsx`, `people.css`) no
+  tipo `people`; `call`/`mixer` saíram e migram em `restoreCanvas` (o primeiro vira Pessoas).
+  Menu da pessoa em `components/PersonMenu.tsx` (`usePersonMenu`, `menuPoint`), usado também
+  pelo PeoplePanel (`volume: true` põe o controle no topo do menu). Tira = corpo < 150 px
+  (`height`); foco por container query; celular por `@media (max-width: 679px)`.
+  `ParticipantCard` removido. 2.10.0 no histórico com `date: null` ("prevista" no CHANGELOG).
 
 - #189 (PR #200, rc.6): `scrollbar-gutter` e recuo da tira só com `.canvas-strip.is-scrollable`
   (`stripScrolls`, mesma condição das setas da tira).
@@ -52,8 +58,9 @@ copiloto/QA para a próxima fila (2.11.0: #159, #160, #162).
 
 ## Pendente / bloqueios
 
-- Widget Pessoas (bolha com volume, `docs/design/widget-pessoas.md`) não está na fila.
+- #162: o selo de câmera e "Abrir câmera" do Pessoas devem abrir o widget Câmeras fixado.
+- Roda do mouse ±5% na Tira (sugestão da spec) não feita: brigaria com a rolagem da tira.
 
 ## Próximo passo
 
-Pegar a próxima issue com etiqueta `frontend` no Milestone 2.11.0 (#159, #160 ou #162).
+#162 Câmeras (2.11.0-rc.2), ligando o selo/menu do Pessoas.
