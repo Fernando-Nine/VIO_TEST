@@ -5,9 +5,10 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { Search, User, Users } from "lucide-react";
+import { MonitorUp, Search, User, Users } from "lucide-react";
 import { widgetRegistry, type WidgetDefinition } from "./widgets";
 import { searchWidgets } from "./catalog-search";
+import { isModule } from "../../shared/room-modules";
 
 export type Scope = "individual" | "room";
 const groups: { title: string; ids: string[] }[] = [
@@ -27,8 +28,8 @@ const shortNames: Record<string, string> = {
   quick: "Minha tela",
   tasks: "Tarefas",
 };
-/** Widgets about your own stream: always yours, whatever the choice. */
-const onlyYours = new Set(["quick", "viewers"]);
+/** What "Para a sala" can create; the rest is only yours (#190). */
+const roomKind = (id: string) => isModule(id) || ["timer", "chat"].includes(id);
 const SCOPE_KEY = "vio:widget-scope";
 
 function readScope(): Scope {
@@ -48,7 +49,10 @@ export function WidgetCatalog(props: {
   close: () => void;
   /** The "Not shown" section, already rendered by the caller. */
   notShown?: ReactNode;
-  /** Other tabs (Telas, Sala, Comunidade), by label. */
+  /** Live screens, your own preview included, to put in the slot (#190). */
+  screens?: { id: string; name: string; own: boolean; watching: boolean }[];
+  showScreen?: (id: string) => void;
+  /** Other tabs (Sala, Comunidade), by label. */
   tabs?: [string, ReactNode][];
 }) {
   const [query, setQuery] = useState("");
@@ -81,11 +85,11 @@ export function WidgetCatalog(props: {
     g.ids.flatMap((id) => (widgetRegistry[id] ? [widgetRegistry[id]] : [])),
   );
   const available = (w: WidgetDefinition) =>
-    w.id !== "chat" || props.chatAllowed;
+    (w.id !== "chat" || props.chatAllowed) && (!room || roomKind(w.id));
   const results = searchWidgets(query, all).filter(available);
   const searching = !!query.trim();
   function pick(w: WidgetDefinition) {
-    props.add(w.id, room && !onlyYours.has(w.id) ? "room" : "individual");
+    props.add(w.id, room ? "room" : "individual");
   }
   function keys(event: KeyboardEvent) {
     if (event.key === "Escape" && props.compact) {
@@ -113,7 +117,6 @@ export function WidgetCatalog(props: {
     else items[Math.min(items.length - 1, index + step)].focus();
   }
   const card = (w: WidgetDefinition, rows: boolean) => {
-    const yours = onlyYours.has(w.id);
     return (
       <button
         className={`catalog-item ${rows ? "is-row" : ""}`}
@@ -134,8 +137,34 @@ export function WidgetCatalog(props: {
             {shortNames[w.id] || w.title}
           </span>
         )}
-        {yours && room && (rows || !props.compact) && (
-          <small className="catalog-badge">Só para você</small>
+      </button>
+    );
+  };
+  const screens = props.screens || [];
+  const screenCard = (screen: (typeof screens)[number]) => {
+    const name = screen.own ? "Minha prévia" : `Tela de ${screen.name}`;
+    return (
+      <button
+        className="catalog-item"
+        key={`screen:${screen.id}`}
+        title={props.compact ? name : undefined}
+        aria-label={props.compact ? name : undefined}
+        onClick={() => props.showScreen?.(screen.id)}
+      >
+        <MonitorUp size={20} aria-hidden="true" />
+        {props.compact ? (
+          <span className="catalog-short" aria-hidden="true">
+            {screen.own ? "Minha prévia" : screen.name}
+          </span>
+        ) : (
+          <span className="catalog-text">
+            <strong>{name}</strong>
+            <span>
+              {screen.watching
+                ? "Já está conectada · trazer para o foco"
+                : "Conecta somente quando você escolher"}
+            </span>
+          </span>
         )}
       </button>
     );
@@ -150,15 +179,23 @@ export function WidgetCatalog(props: {
     )
   ) : props.compact ? (
     <div className="catalog-results is-icons">
+      {screens.map(screenCard)}
       {all.filter(available).map((w) => card(w, false))}
     </div>
   ) : (
     <div className="catalog-results">
       {props.notShown}
+      {screens.length > 0 && (
+        <section className="catalog-group">
+          <h3>Telas</h3>
+          <div className="widget-catalog">{screens.map(screenCard)}</div>
+        </section>
+      )}
       {groups.map((group) => {
         const items = group.ids
           .map((id) => widgetRegistry[id])
           .filter((w) => w && available(w));
+        if (!items.length) return null;
         return (
           <section key={group.title} className="catalog-group">
             <h3>{group.title}</h3>

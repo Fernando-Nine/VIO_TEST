@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.10.0-rc.6";
+export const version = "2.10.0-rc.7";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -25,6 +25,7 @@ export const currentRelease: Release = {
         "Desativar áudio (o fone na doca) desliga seu microfone e as vozes, mas as telas continuam tocando. Ao reativar, o microfone volta como estava. Silenciar vozes e transmissões saiu dos Ajustes.",
         'Cabeçalho do widget da sala com − (fecha só para você; continua aberto para os outros) e, para quem pode, × (fecha para todos). Fechar para todos não pede confirmação: o aviso no topo traz Desfazer por 8 s, que devolve o widget com o mesmo estado e no mesmo espaço; os outros recebem no sino quem fechou. Widget pessoal só tem ×. "N não exibidos" agora também lista os widgets da sala que você fechou ou que ainda não abriu, com o motivo em cada linha; sem espaço livre, Mostrar acende os espaços para você escolher qual substituir (Esc cancela).',
         "A tira só reserva a faixa da barra de rolagem quando rola; sem rolagem, as margens ficam iguais dos dois lados.",
+        "Adicionar widget: em Para a sala só aparecem widgets que a sala compartilha. As telas transmitidas e a sua prévia aparecem no topo do catálogo, também no espaço vazio, para você colocar no espaço.",
       ],
     },
   ],
