@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Radio, X } from "lucide-react";
+import { Radio } from "lucide-react";
 import { AnchoredPopover } from "./AnchoredPopover";
 
 export type LiveScreen = { id: string; title: string; watching: boolean };
@@ -89,53 +89,6 @@ export function LiveScreens({
           </ul>
         </AnchoredPopover>
       )}
-    </div>
-  );
-}
-
-const TOAST_MS = 6000;
-
-/** Corner label for the latest new screen; hides itself and the bell keeps it. */
-export function ScreenToast({
-  event,
-  watch,
-  done,
-}: {
-  event: ScreenEvent;
-  watch: () => void;
-  done: () => void;
-}) {
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (paused) return;
-    const timer = setTimeout(done, TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [event.id, paused, done]);
-  return (
-    <div
-      className="screen-toast"
-      role="status"
-      onPointerEnter={() => setPaused(true)}
-      onPointerLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-    >
-      <span className="screen-toast-avatar" aria-hidden="true">
-        {[...event.name].slice(0, 2).join("").toUpperCase()}
-      </span>
-      <p>
-        <strong>{event.name}</strong> começou a transmitir
-      </p>
-      <button className="primary" onClick={watch}>
-        Assistir
-      </button>
-      <button
-        className="icon-button"
-        aria-label="Dispensar aviso"
-        onClick={done}
-      >
-        <X size={15} />
-      </button>
     </div>
   );
 }
