@@ -76,7 +76,7 @@ function WatchedScreen({
   const stats = engine.peers
     .infos()
     .find((p) => !p.sending && p.publicationId === id && p.tier === "main");
-  const muted = own || silent || engine.remoteMute || engine.captures.deaf;
+  const muted = own || silent;
   function start(event: PointerEvent<HTMLButtonElement>, resize = false) {
     if (event.button !== 0 || focused) return;
     front();

@@ -776,3 +776,10 @@ input[type="checkbox"] {
     transition: none !important;
   }
 }
+
+/* #163: Desativar áudio (docs/design/ajustes.md). */
+.in-room .dock-button.audio-off.is-off {
+  border: 1px solid #6b2f3a;
+  background: #3a1e2a;
+  color: #ff8a96;
+}

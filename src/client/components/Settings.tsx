@@ -7,11 +7,16 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Accessibility,
+  ArrowUpRight,
+  Bell,
   ChevronLeft,
   ChevronRight,
   Crown,
+  Info,
   Mic,
   Palette,
+  Search,
   Video,
   type LucideIcon,
 } from "lucide-react";
@@ -22,13 +27,26 @@ import {
   type Quality,
 } from "../../shared/protocol";
 import { canManageRoom } from "../../shared/permissions";
-import { ApplicationSettings } from "./ApplicationSettings";
+import {
+  MasterVolume,
+  NotificationSettings,
+  ParticipantColors,
+} from "./ApplicationSettings";
+import { applyMotion } from "./motion";
+import { version } from "../../shared/releases";
 import { ColorPicker } from "./ColorPicker";
 import { Dialog } from "./Dialog";
 import { outputError } from "../media/audio-output";
-import { invite } from "../endpoint";
+import { api, invite } from "../endpoint";
 
-type Category = "audio" | "video" | "appearance" | "room";
+type Category =
+  | "audio"
+  | "video"
+  | "notifications"
+  | "appearance"
+  | "accessibility"
+  | "app"
+  | "room";
 const categories: {
   id: Category;
   label: string;
@@ -38,13 +56,57 @@ const categories: {
   { id: "audio", label: "Áudio", hint: "Microfone, saída, voz", icon: Mic },
   { id: "video", label: "Vídeo", hint: "Câmera, prévias, tela", icon: Video },
   {
-    id: "appearance",
-    label: "Aparência e sons",
-    hint: "Cor, volume, efeitos",
-    icon: Palette,
+    id: "notifications",
+    label: "Notificações",
+    hint: "Balões e sons",
+    icon: Bell,
   },
+  { id: "appearance", label: "Aparência", hint: "Minha cor", icon: Palette },
+  {
+    id: "accessibility",
+    label: "Acessibilidade",
+    hint: "Movimento",
+    icon: Accessibility,
+  },
+  { id: "app", label: "Aplicativo", hint: "Versão, código-fonte", icon: Info },
   { id: "room", label: "Sala", hint: "Convite, edição, posse", icon: Crown },
 ];
+/** What the search finds; `text` is how the item starts on its page. */
+const searchable: { label: string; category: Category; text?: string }[] = [
+  { label: "Microfone", category: "audio" },
+  { label: "Sensibilidade", category: "audio" },
+  { label: "Reduzir ruído", category: "audio" },
+  { label: "Cancelar eco", category: "audio" },
+  { label: "Ganho automático", category: "audio" },
+  { label: "Saída de áudio", category: "audio", text: "Reproduzir em" },
+  { label: "Volume geral", category: "audio" },
+  { label: "Ajuste fino das telas", category: "audio" },
+  { label: "Câmera", category: "video" },
+  { label: "Prévias ao vivo", category: "video" },
+  { label: "Qualidade da tela", category: "video", text: "Compartilhamento" },
+  { label: "Balões", category: "notifications", text: "Avisos" },
+  { label: "Alguém entrou ou saiu", category: "notifications" },
+  { label: "Nova tela", category: "notifications" },
+  { label: "Widgets", category: "notifications" },
+  { label: "Erros", category: "notifications" },
+  { label: "Sons do VIO", category: "notifications" },
+  { label: "Volume dos efeitos", category: "notifications" },
+  { label: "Minha cor", category: "appearance" },
+  { label: "Cores das pessoas", category: "appearance" },
+  { label: "Reduzir movimento", category: "accessibility" },
+  { label: "Versão", category: "app" },
+  { label: "Novidades", category: "app" },
+  { label: "Código-fonte", category: "app" },
+  { label: "Convite", category: "room" },
+  { label: "Permissões", category: "room" },
+  { label: "Transferir posse", category: "room", text: "Posse da sala" },
+];
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 const narrowQuery = "(max-width: 640px)";
 function useNarrow() {
@@ -128,14 +190,18 @@ function Toggle({
 export function Settings({
   engine,
   openPeople,
+  openHistory,
 }: {
   engine: Controller;
   openPeople: () => void;
+  openHistory: () => void;
 }) {
   const narrow = useNarrow();
   const manages = canManageRoom(engine.view.snapshot, engine.view.id);
   const shownCategories = categories.filter((c) => c.id !== "room" || manages);
   const [chosen, setChosen] = useState<Category | null>(null);
+  const [query, setQuery] = useState("");
+  const [found, setFound] = useState<string | null>(null);
   // Wide screens always show a page; narrow ones start on the list.
   const category =
     chosen && shownCategories.some((c) => c.id === chosen)
@@ -144,10 +210,39 @@ export function Settings({
         ? null
         : "audio";
   const page = useRef<HTMLDivElement>(null);
+  const results = query.trim()
+    ? searchable.filter(
+        (item) =>
+          shownCategories.some((c) => c.id === item.category) &&
+          fold(item.label).includes(fold(query)),
+      )
+    : null;
   function choose(next: Category) {
     setChosen(next);
+    setFound(null);
     page.current?.scrollTo({ top: 0 });
   }
+  function open(item: (typeof searchable)[number]) {
+    setChosen(item.category);
+    setFound(item.text || item.label);
+  }
+  // Scroll to the found item and flash it once its page is on screen.
+  useEffect(() => {
+    if (!found || !page.current) return;
+    const target = [
+      ...page.current.querySelectorAll<HTMLElement>(
+        "legend, label, .toggle > span, th, h4, p, a",
+      ),
+    ].find((el) => fold(el.textContent || "").startsWith(fold(found)));
+    if (!target) return;
+    target.scrollIntoView({ block: "center" });
+    target.classList.add("is-found");
+    const timer = setTimeout(() => target.classList.remove("is-found"), 1600);
+    return () => {
+      clearTimeout(timer);
+      target.classList.remove("is-found");
+    };
+  }, [found, category]);
   function keys(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
@@ -160,44 +255,92 @@ export function Settings({
           : (index + (event.key === "ArrowDown" ? 1 : last)) %
             shownCategories.length;
     choose(shownCategories[next].id);
-    event.currentTarget.parentElement
+    event.currentTarget
+      .closest(".settings-nav")
       ?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
       [next]?.focus();
   }
   const current = categories.find((c) => c.id === category);
+  const tab = (
+    { id, label, hint, icon: Icon }: (typeof categories)[number],
+    index: number,
+  ) => (
+    <button
+      key={id}
+      id={`settings-tab-${id}`}
+      type="button"
+      role="tab"
+      aria-selected={category === id}
+      aria-controls="settings-page"
+      tabIndex={category === id || (!category && index === 0) ? 0 : -1}
+      onClick={() => choose(id)}
+      onKeyDown={(e) => keys(e, index)}
+    >
+      <Icon size={18} aria-hidden="true" />
+      <span>
+        {label}
+        <small>{hint}</small>
+      </span>
+      <ChevronRight className="settings-chevron" size={18} aria-hidden="true" />
+    </button>
+  );
+  const personal = shownCategories.filter((c) => c.id !== "room");
   return (
     <div className={`settings-layout ${category ? "has-page" : ""}`}>
-      <div
-        className="settings-nav"
-        role="tablist"
-        aria-orientation="vertical"
-        aria-label="Categorias dos ajustes"
-      >
-        {shownCategories.map(({ id, label, hint, icon: Icon }, index) => (
-          <button
-            key={id}
-            id={`settings-tab-${id}`}
-            type="button"
-            role="tab"
-            className={id === "room" ? "is-room" : undefined}
-            aria-selected={category === id}
-            aria-controls="settings-page"
-            tabIndex={category === id || (!category && index === 0) ? 0 : -1}
-            onClick={() => choose(id)}
-            onKeyDown={(e) => keys(e, index)}
+      <div className="settings-nav">
+        <label className="settings-search">
+          <Search size={15} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar ajuste"
+            aria-label="Buscar ajuste"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && results?.[0]) open(results[0]);
+              if (e.key === "Escape" && query) {
+                e.stopPropagation();
+                setQuery("");
+              }
+            }}
+          />
+        </label>
+        {results ? (
+          <ul className="settings-results" aria-label="Resultados da busca">
+            {results.map((item) => (
+              <li key={item.label}>
+                <button type="button" onClick={() => open(item)}>
+                  {item.label}
+                  <small>
+                    {categories.find((c) => c.id === item.category)?.label}
+                  </small>
+                </button>
+              </li>
+            ))}
+            {!results.length && (
+              <li className="settings-empty">Nenhum ajuste com esse nome.</li>
+            )}
+          </ul>
+        ) : (
+          <div
+            role="tablist"
+            aria-orientation="vertical"
+            aria-label="Categorias dos ajustes"
           >
-            <Icon size={18} aria-hidden="true" />
-            <span>
-              {label}
-              <small>{hint}</small>
-            </span>
-            <ChevronRight
-              className="settings-chevron"
-              size={18}
-              aria-hidden="true"
-            />
-          </button>
-        ))}
+            <p className="settings-nav-group" aria-hidden="true">
+              Configurações
+            </p>
+            {personal.map(tab)}
+            {manages && (
+              <>
+                <p className="settings-nav-group" aria-hidden="true">
+                  Esta sala
+                </p>
+                {tab(categories.find((c) => c.id === "room")!, personal.length)}
+              </>
+            )}
+          </div>
+        )}
       </div>
       {current && (
         <div
@@ -222,18 +365,78 @@ export function Settings({
           </header>
           {current.id === "audio" && <AudioPage engine={engine} />}
           {current.id === "video" && <VideoPage engine={engine} />}
+          {current.id === "notifications" && (
+            <NotificationSettings engine={engine} />
+          )}
           {current.id === "appearance" && (
             <>
               <ColorPicker engine={engine} />
-              <ApplicationSettings engine={engine} />
+              <ParticipantColors engine={engine} />
             </>
           )}
+          {current.id === "accessibility" && (
+            <AccessibilityPage engine={engine} />
+          )}
+          {current.id === "app" && <AppPage openHistory={openHistory} />}
           {current.id === "room" && (
             <RoomPage engine={engine} openPeople={openPeople} />
           )}
         </div>
       )}
     </div>
+  );
+}
+
+function AccessibilityPage({ engine }: { engine: Controller }) {
+  return (
+    <Group title="Movimento">
+      <fieldset className="settings-choice">
+        <legend>Reduzir movimento</legend>
+        {(
+          [
+            ["system", "Seguir o sistema"],
+            ["reduce", "Sempre"],
+          ] as const
+        ).map(([value, label]) => (
+          <label key={value}>
+            <input
+              type="radio"
+              name="motion"
+              checked={engine.motion === value}
+              onChange={() => {
+                engine.motion = value;
+                applyMotion(value);
+                engine.savePreferences();
+                engine.bump();
+              }}
+            />
+            {label}
+          </label>
+        ))}
+      </fieldset>
+      <p className="field-note">
+        Sempre: animações e transições ficam instantâneas, mesmo que o sistema
+        permita movimento.
+      </p>
+    </Group>
+  );
+}
+
+function AppPage({ openHistory }: { openHistory: () => void }) {
+  return (
+    <Group title="VIO">
+      <p className="settings-version">
+        Versão <output>{version}</output>
+      </p>
+      <div className="room-invite">
+        <button type="button" className="secondary" onClick={openHistory}>
+          Novidades
+        </button>
+        <a className="text-button" href={api("/source.tar.gz")} download>
+          Código-fonte · AGPLv3 <ArrowUpRight size={15} />
+        </a>
+      </div>
+    </Group>
   );
 }
 
@@ -308,7 +511,7 @@ function AudioPage({ engine }: { engine: Controller }) {
   };
   return (
     <>
-      <Group title="Microfone">
+      <Group title="Voz">
         <label>
           Microfone
           <select
@@ -396,55 +599,47 @@ function AudioPage({ engine }: { engine: Controller }) {
           </button>
         )}
       </Group>
-      {engine.output.supported && (
-        <Group title="Saída de áudio">
-          {engine.output.restoreMessage && (
-            <p className="field-note" role="status">
-              {engine.output.restoreMessage}
-            </p>
-          )}
-          <label>
-            Reproduzir em
-            <select
-              value={engine.output.deviceId}
-              disabled={savingOutput}
-              onChange={(e) => void chooseOutput(e.target.value)}
-            >
-              <option value="">Padrão do sistema</option>
-              {options("audiooutput")}
-            </select>
-          </label>
-          {typeof outputDevices?.selectAudioOutput === "function" && (
-            <button
-              className="text-button"
-              disabled={savingOutput}
-              onClick={() =>
-                void chooseOutput(engine.output.pendingDeviceId || undefined)
-              }
-            >
-              {engine.output.pendingDeviceId
-                ? "Confirmar saída salva no navegador"
-                : "Escolher outra saída no navegador"}
-            </button>
-          )}
-        </Group>
-      )}
-      <Group title="Telas e vozes">
+      <Group title="Saída">
+        {engine.output.supported && (
+          <>
+            {engine.output.restoreMessage && (
+              <p className="field-note" role="status">
+                {engine.output.restoreMessage}
+              </p>
+            )}
+            <label>
+              Reproduzir em
+              <select
+                value={engine.output.deviceId}
+                disabled={savingOutput}
+                onChange={(e) => void chooseOutput(e.target.value)}
+              >
+                <option value="">Padrão do sistema</option>
+                {options("audiooutput")}
+              </select>
+            </label>
+            {typeof outputDevices?.selectAudioOutput === "function" && (
+              <button
+                className="text-button"
+                disabled={savingOutput}
+                onClick={() =>
+                  void chooseOutput(engine.output.pendingDeviceId || undefined)
+                }
+              >
+                {engine.output.pendingDeviceId
+                  ? "Confirmar saída salva no navegador"
+                  : "Escolher outra saída no navegador"}
+              </button>
+            )}
+          </>
+        )}
+        <MasterVolume engine={engine} />
         <Toggle
           label="Ajuste fino das telas"
           note="Volume das telas até 300%, só para você."
           checked={engine.fineAudio}
           disabled={!engine.playback.supported}
           change={(checked) => engine.setFineAudio(checked)}
-        />
-        <Toggle
-          label="Silenciar vozes e transmissões"
-          note="Sua voz continua sendo enviada."
-          checked={engine.remoteMute}
-          change={(checked) => {
-            engine.remoteMute = checked;
-            engine.bump();
-          }}
         />
       </Group>
     </>

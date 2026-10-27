@@ -147,3 +147,20 @@ test("som de transmissão nova só para telas de outras pessoas", () => {
   const live = snapshot([person("self"), screen("friend", "s1")]);
   assert.deepEqual(presenceCues(live, live, "self"), []);
 });
+
+test("#163: tabela de notificações cobre cada som uma vez e balões padrão ligados", async () => {
+  const { notificationRows, readBalloons, soundEvents } = await import(
+    "../src/client/media/sound-preferences"
+  );
+  const cues = notificationRows.flatMap((row) => row.cues);
+  assert.equal(new Set(cues).size, cues.length);
+  assert.deepEqual(
+    [...cues].sort(),
+    soundEvents.map((event) => event.cue).sort(),
+  );
+  assert.deepEqual(readBalloons(undefined), { people: true, screens: true });
+  assert.deepEqual(readBalloons({ people: false, other: false }), {
+    people: false,
+    screens: true,
+  });
+});

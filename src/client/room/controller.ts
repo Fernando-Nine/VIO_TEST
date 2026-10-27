@@ -21,7 +21,9 @@ import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
 import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
 import {
+  readBalloons,
   readSoundEvents,
+  type Motion,
   volumePreference,
   type Cue,
 } from "../media/sound-preferences";
@@ -123,7 +125,8 @@ export class Controller {
   masterVolume = 1;
   participantColors = true;
   previewsEnabled = false;
-  remoteMute = false;
+  balloons = readBalloons(undefined);
+  motion: Motion = "system";
   screenVolume = 0.8;
   volumes = new Map<string, number>();
   /** Volume to restore when "Silenciar para mim" is undone. */
@@ -196,6 +199,8 @@ export class Controller {
         this.peopleHidden = p.peopleHidden === true;
         this.fineAudio = p.fineAudio === true && this.playback.supported;
         this.previewsEnabled = p.previewsEnabled === true;
+        this.balloons = readBalloons(p.balloons);
+        this.motion = p.motion === "reduce" ? "reduce" : "system";
         this.savedColor =
           (typeof p.color === "string" && normalizeColor(p.color)) || "";
         if (this.output.supported && typeof p.outputDevice === "string")
@@ -261,6 +266,8 @@ export class Controller {
             peopleHidden: this.peopleHidden,
             fineAudio: this.fineAudio,
             previewsEnabled: this.previewsEnabled,
+            balloons: this.balloons,
+            motion: this.motion,
             color: this.savedColor || undefined,
             outputDevice: this.output.pendingDeviceId || this.output.deviceId,
             manualGain: this.captures.manualGain,

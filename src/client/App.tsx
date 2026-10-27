@@ -60,6 +60,7 @@ import { Landing } from "./components/Landing";
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
+import { applyMotion } from "./components/motion";
 import { desktop } from "./desktop/bridge";
 import { NativeShare } from "./desktop/NativeShare";
 type Panel =
@@ -95,6 +96,7 @@ export default function App({ engine }: { engine: Controller }) {
   }
   const [active, setActive] = useState(true);
   const [full, setFull] = useState(false);
+  useEffect(() => applyMotion(engine.motion), [engine.motion]);
   const player = useRef<HTMLDivElement>(null);
   const playerMount = useRef<HTMLDivElement>(null);
   const dock = useRef<HTMLElement>(null);
@@ -521,12 +523,17 @@ export default function App({ engine }: { engine: Controller }) {
                           <span>Microfone</span>
                         </button>
                         <button
-                          className={`dock-button ${engine.captures.deaf ? "muted" : ""}`}
+                          className={`dock-button audio-off ${engine.captures.deaf ? "is-off" : ""}`}
                           aria-pressed={engine.captures.deaf}
                           aria-label={
                             engine.captures.deaf
-                              ? "Desativar ensurdecer"
-                              : "Ensurdecer"
+                              ? "Reativar áudio"
+                              : "Desativar áudio"
+                          }
+                          title={
+                            engine.captures.deaf
+                              ? "Reativar áudio"
+                              : "Desativar áudio\nDesliga seu microfone e as vozes. As telas continuam."
                           }
                           onClick={() => engine.deafen()}
                         >
@@ -535,7 +542,11 @@ export default function App({ engine }: { engine: Controller }) {
                           ) : (
                             <Headphones />
                           )}
-                          <span>Áudio</span>
+                          <span>
+                            {engine.captures.deaf
+                              ? "Áudio desativado"
+                              : "Áudio"}
+                          </span>
                         </button>
                         <button
                           className={`dock-button dock-wide ${hasCamera ? "enabled" : ""}`}
@@ -722,9 +733,7 @@ export default function App({ engine }: { engine: Controller }) {
                 stream={engine.peers.stream(p.id)}
                 output={engine.output}
                 playback={engine.playback}
-                muted={
-                  !engine.inCall || engine.captures.deaf || engine.remoteMute
-                }
+                muted={!engine.inCall || engine.captures.deaf}
                 volume={
                   (engine.volumes.get(p.owner) ?? 1) * engine.masterVolume
                 }
@@ -772,7 +781,11 @@ export default function App({ engine }: { engine: Controller }) {
             <PeoplePanel engine={engine} editColor={() => open("color")} />
           )}
           {panel === "settings" && (
-            <Settings engine={engine} openPeople={() => open("people")} />
+            <Settings
+              engine={engine}
+              openPeople={() => open("people")}
+              openHistory={() => open("history")}
+            />
           )}
           {panel === "share" && desktop && (
             <NativeShare engine={engine} close={() => open(null)} />

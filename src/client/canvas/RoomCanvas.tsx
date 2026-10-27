@@ -45,6 +45,7 @@ import { contentKind } from "../../shared/widgets";
 import { Dialog } from "../components/Dialog";
 import { ScreenAudio } from "../components/ScreenAudio";
 import type { Controller } from "../room/controller";
+import { reducedMotion } from "../components/motion";
 import { freshKey } from "../id";
 import {
   fitted,
@@ -472,32 +473,34 @@ export function RoomCanvas(props: Props) {
     if (!before) return;
     for (const [id, name] of now)
       if (!before.has(id))
-        toasts.push({
-          id: `enter:${id}:${Date.now()}`,
-          kind: "info",
-          avatar: name,
-          label: `${name} entrou na sala`,
-          text: (
-            <>
-              <strong>{name}</strong> entrou na sala.
-            </>
-          ),
-          duration: 4000,
-        });
+        if (engine.balloons.people)
+          toasts.push({
+            id: `enter:${id}:${Date.now()}`,
+            kind: "info",
+            avatar: name,
+            label: `${name} entrou na sala`,
+            text: (
+              <>
+                <strong>{name}</strong> entrou na sala.
+              </>
+            ),
+            duration: 4000,
+          });
     for (const [id, name] of before)
       if (!now.has(id))
-        toasts.push({
-          id: `leave:${id}:${Date.now()}`,
-          kind: "info",
-          avatar: name,
-          label: `${name} saiu`,
-          text: (
-            <>
-              <strong>{name}</strong> saiu.
-            </>
-          ),
-          duration: 4000,
-        });
+        if (engine.balloons.people)
+          toasts.push({
+            id: `leave:${id}:${Date.now()}`,
+            kind: "info",
+            avatar: name,
+            label: `${name} saiu`,
+            text: (
+              <>
+                <strong>{name}</strong> saiu.
+              </>
+            ),
+            duration: 4000,
+          });
   }, [peopleKey, engine]);
   useEffect(() => {
     // A fresh room (or epoch) only primes what is already live: those
@@ -539,6 +542,7 @@ export function RoomCanvas(props: Props) {
           read: false,
         };
         setScreenEvents((events) => [...events, event].slice(-30));
+        if (!engine.balloons.screens) continue;
         screenToasts.current.set(publication.id, `screen:${event.id}`);
         toasts.push({
           id: `screen:${event.id}`,
@@ -769,9 +773,7 @@ export function RoomCanvas(props: Props) {
     );
     el.scrollTo({
       [horizontal ? "left" : "top"]: target,
-      behavior: el.ownerDocument.defaultView?.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches
+      behavior: reducedMotion(el.ownerDocument.defaultView || window)
         ? "instant"
         : "smooth",
     });
@@ -1353,7 +1355,7 @@ export function RoomCanvas(props: Props) {
               stream={engine.peers.stream(id)}
               name={info.name}
               volume={level.volume}
-              muted={level.muted || engine.captures.deaf || engine.remoteMute}
+              muted={level.muted}
             />
           );
         })}
