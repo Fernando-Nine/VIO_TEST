@@ -6,7 +6,7 @@ Atualizado: 2026-10-27
 
 Sessões (tag `vio-team`; `create_session` com source VIO_TEST; todas na nuvem, filhas do copiloto):
 
-- Frontend (7) `session_01K4nnLSbs45xu6Fcti7xXJH` — 2.10.0: #166, #164, #165, #161, #167, #163, #158.
+- Frontend (8) `session_01K4nnLPSzfxm1FqPAnwJg1T` — 2.10.0: #161, #167, #163, #158 (Frontend 7 fez #166, #164, #165; prévia 2.10.0-rc.1).
 - Backend `session_01K4nnLRjAKXcLnbTJWeqTjN` — servidor da #158 feito (PR #171); ocioso.
 - Design `session_01K4nnLRKbUq1b5jSQGCg46V` — skill `vio-design-delivery` e `ideias-futuras.md` feitos (PR #173/#174); ocioso.
 - Mídia: abrir sessão nova para #160/#162 (2.11.0) quando o Frontend chegar lá.
