@@ -1,41 +1,43 @@
 # design — handoff
 
-Atualizado: 2026-10-26
+Atualizado: 2026-10-27
 
 ## Agora
 
-Leva 3 entregue para escolha (#146–#150), aguardando o aval do usuário.
-Canvas leva 3: https://claude.ai/artifact/3yJ4umERzwmY3vtWfxt8hJ (seções `#cabecalho`,
-`#combinados`, `#camera`, `#ajustes`, `#telas`). Resumo comentado em cada issue.
-Leva 2: https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8 · leva 1:
+Leva 3 aprovada e especificada. Nada em andamento.
+Canvas leva 3: https://claude.ai/artifact/3yJ4umERzwmY3vtWfxt8hJ (seção `#escolhidas` =
+versão final; o resto são as alternativas). Leva 2:
+https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8 · leva 1:
 https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ. Specs em `docs/design/`.
 
 ## Feito recentemente
 
-- Leva 3, um só sistema visual tirado da sala rc.13 (cabeçalho 38 px, raio 10):
-  - #146 cabeçalho: A dois botões (rec.), B × que pergunta, C só − e fechar no menu;
-    Desfazer 8 s (rec.) ou confirmar; botão "Escondidos" para reabrir.
-  - #147 Pessoas A/B/C, Minha transmissão A/B (+ vazio), tempo da sala no cabeçalho do
-    site, tempo da tela 1 (na tela, rec.) ou 2 (no site); tabela de migração dos antigos.
-  - #148 Câmeras A grade (rec.), B uma pessoa, C destaque; nota para Mídia.
-  - #149 mapa do menu + Voz (lista A) e Notificações (lista B); fone no rodapé.
-  - #150 balões e sino; adicionar widget A/B/C; layout A/B + celular; volume A/B.
-- Volume: trilho com marca em 100% e trecho amplificado dourado (sugestão).
-- Prévia do Render inacessível pela rede do contêiner: olhar a sala com build local
-  (`npm run dev` + Playwright).
+- Escolhas do usuário (27 out) viraram specs e issues `frontend`:
+  - Cabeçalho − / × + Desfazer + "N não exibidos" — `cabecalho-widget.md`, #158 (+backend).
+  - Widget Pessoas C, volume sempre à vista, menu só no botão direito — `widget-pessoas.md`, #159.
+  - Minha transmissão A + silenciar, trocar, seletor 1/2 — `minha-transmissao.md`, #160 (+midia).
+  - Tempo da sala no site, tempo da tela na tela — `tempos.md`, #161.
+  - Câmeras C + B (destaque, uma na Tira, fixar; sem amassar) — `cameras.md`, #162 (+midia).
+  - Ajustes em grupos com busca + Desativar áudio na doca — `ajustes.md` (reescrita), #163.
+  - Avisos B no topo com barra de tempo — `notificacoes.md`, #164.
+  - Adicionar widget A + B + C — `adicionar-widget.md`, #165.
+  - Layout A sem Foco único + celular — `layout.md`, #166.
+  - Volume: dourado, botão direito, vertical em tela cheia — `volume.md`, #167.
+  - Itens novos de Ajustes, para depois — #168.
+- `widgets-padrao.md` (nomes do menu) e `transmissoes.md` (etiqueta vira aviso no topo) ajustados.
+- Prévia do Render inacessível pela rede do contêiner: olhar a sala com build local.
 
 ## Decisões
 
 - Skills do projeto: `vio-design-system` e `vio-design-review` (`.claude/skills/`).
-- Destaque discreto `#A6A9FF`; animações ≤ 800 ms, desligadas em movimento reduzido.
+- Destaque discreto `#A6A9FF`; volume acima de 100% em `#F2D36B`.
+- Animações ≤ 800 ms, desligadas em movimento reduzido.
 
 ## Pendente / bloqueios
 
-- Usuário: ícone do convidado em #146 (× ou −; recomendei −) e uma alternativa por peça.
-- Confirmar com o copiloto: "Silenciar para mim" (#107) e a leitura de A + C (#109).
+- Copiloto: milestone das issues #158–#168; categorias futuras de Ajustes com o usuário.
+- Confirmar com o copiloto: "Silenciar para mim" (#107).
 
 ## Próximo passo
 
-Após o aval: specs em `docs/design/` (cabecalho, pessoas v2, transmissao, cameras,
-ajustes v2, notificacoes, adicionar-widget, layout, volume) + issues `frontend`; itens
-novos de Ajustes viram issues separadas.
+Aguardar a próxima leva (landing, página de download ou categorias futuras de Ajustes).
