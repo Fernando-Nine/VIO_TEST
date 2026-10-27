@@ -5,10 +5,8 @@ Ordem = prioridade. Estado atual e decisões: `ESTADO.md`.
 
 ## 2.9.0 — fechar a prévia e publicar
 
-- Widgets novos, pessoas, notificações, silenciar, volume até 200% (feito, rc.13).
-- Cor nos widgets #115 e reordenar na Tira #81 (PRs prontas).
-- Bugs vistos na prévia: #141 Dados, #142 anel de foco, #143 Tira, #144 tela cheia,
-  #145 rodapé e volume por tela.
+- Pronta na prévia (rc.20): widgets novos, pessoas, notificações, silenciar, volume até
+  200%, cores (#115), reordenar na Tira (#81) e bugs #141–#145.
 - Aval do usuário → release no VIO + tag `v2.9.0` → app Windows estável.
 
 ## 2.10.0 — leva 3: casca da interface
