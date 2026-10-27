@@ -2884,35 +2884,53 @@ button.inline-text.is-empty {
 .notifications-panel .notification-actions:has(> :only-child) {
   justify-content: flex-end;
 }
-.screen-toast {
+/* Toasts (#164): top of the canvas, one at a time, time bar at the base. */
+.toast-stack {
   position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 30;
+  top: calc(
+    var(--canvas-toolbar-height, 50px) + 8px + env(safe-area-inset-top, 0px)
+  );
+  left: 50%;
+  translate: -50% 0;
+  z-index: 80;
+  display: grid;
+  gap: 8px;
+  width: min(340px, calc(100% - 16px));
+  pointer-events: none;
+}
+.toast {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: min(460px, calc(100% - 32px));
-  min-height: 40px;
-  padding: 4px 4px 4px 6px;
+  min-height: 44px;
+  padding: 6px 6px 6px 12px;
   border: 1px solid #33355a;
-  border-radius: 999px;
+  border-radius: 12px;
   background: #14152ae6;
   backdrop-filter: blur(8px);
   color: #f1f2fa;
   box-shadow: 0 10px 30px #0007;
-  animation: vio-toast-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+  pointer-events: auto;
+  animation: vio-toast-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.screen-toast p {
+.toast:has(.toast-avatar) {
+  padding-left: 7px;
+}
+.toast.is-error {
+  background: #241520f2;
+  border-color: #6b2f3a;
+}
+.toast p {
   flex: 1;
   min-width: 0;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font-size: 14px;
+  line-height: 1.35;
 }
-.screen-toast-avatar {
+.toast-avatar {
   display: grid;
   flex: none;
   place-items: center;
@@ -2923,32 +2941,78 @@ button.inline-text.is-empty {
   font-size: 11px;
   font-weight: 700;
 }
-.screen-toast .primary {
+.toast .primary {
+  flex: none;
   min-height: 32px;
-  padding: 4px 14px;
-  border-radius: 999px;
+  padding: 4px 12px;
 }
-.screen-toast .icon-button {
+.toast .icon-button {
+  flex: none;
   width: 32px;
   height: 32px;
+}
+.toast-more {
+  position: absolute;
+  top: 22px;
+  left: calc(100% + 8px);
+  translate: 0 -50%;
+  padding: 2px 8px;
+  border: 1px solid #33355a;
+  border-radius: 999px;
+  background: #14152ae6;
+  color: #a6a9ff;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: #a6a9ff;
+  transform-origin: left;
+  animation: vio-toast-bar var(--toast-duration, 4s) linear forwards;
+}
+.toast:is(:hover, :focus-within) .toast-bar {
+  animation-play-state: paused;
 }
 @keyframes vio-toast-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(-8px);
+  }
+}
+@keyframes vio-toast-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* Same timing, no motion: the bar stays full while the toast waits. */
+@keyframes vio-toast-hold {
+  from {
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .screen-toast {
+  .toast {
     animation: none;
+  }
+  .toast-bar {
+    animation-name: vio-toast-hold;
   }
 }
 @media (max-width: 679px) {
-  .screen-toast {
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-    max-width: none;
+  .toast-stack {
+    width: calc(100% - 16px);
+  }
+  .toast-more {
+    left: auto;
+    right: 6px;
+    top: -8px;
+    translate: none;
+    z-index: 1;
   }
 }
 

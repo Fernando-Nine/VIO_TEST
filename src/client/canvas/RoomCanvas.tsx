@@ -38,11 +38,7 @@ import {
   X,
 } from "lucide-react";
 import { Notifications } from "../components/Notifications";
-import {
-  LiveScreens,
-  ScreenToast,
-  type ScreenEvent,
-} from "../components/LiveScreens";
+import { LiveScreens, type ScreenEvent } from "../components/LiveScreens";
 import { canManageRoom, roleAllows, roomRole } from "../../shared/permissions";
 import type { SharedWidget } from "../../shared/widgets";
 import { contentKind } from "../../shared/widgets";
@@ -70,6 +66,7 @@ import { WidgetFrame } from "./WidgetFrame";
 import { WidgetCatalog, type Scope } from "./WidgetCatalog";
 import { GridPicker } from "./GridPicker";
 import { NotShown } from "./NotShown";
+import { toasts } from "../components/Toasts";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
 import { createModule } from "./ModuleWidget";
@@ -299,8 +296,6 @@ export function RoomCanvas(props: Props) {
   const [nearTop, setNearTop] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [screenEvents, setScreenEvents] = useState<ScreenEvent[]>([]);
-  const [toast, setToast] = useState<string | null>(null);
-  const hideToast = useCallback(() => setToast(null), []);
   const [fullscreenIntro, setFullscreenIntro] = useState(false);
   const [highlightedSlot, setHighlightedSlot] = useState<string | null>(null);
   const pendingFocus = useRef<string | null>(null);
@@ -414,7 +409,6 @@ export function RoomCanvas(props: Props) {
   const liveScreens = publications
     .filter((p) => !p.own)
     .map((p) => ({ ...p, watching: engine.view.watching.includes(p.id) }));
-  const toastEvent = screenEvents.find((e) => e.id === toast);
   const epoch = useRef(snapshot?.epoch);
 
   function focusHeader(id: string) {
@@ -460,6 +454,51 @@ export function RoomCanvas(props: Props) {
       `Transmissão aceita. ${destination === "float" ? "Janela flutuante aberta." : "Conectando no espaço escolhido."}`,
     );
   }
+  useEffect(() => () => toasts.clear(), []);
+  const screenToasts = useRef(new Map<string, string>());
+  // Who entered or left since the last snapshot; the first one only primes.
+  const people = useRef<Map<string, string> | null>(null);
+  const peopleKey = snapshot?.participants
+    .map((p) => `${p.id}:${p.name}`)
+    .join("|");
+  useEffect(() => {
+    const now = new Map(
+      snapshot?.participants
+        .filter((p) => p.id !== engine.view.id)
+        .map((p) => [p.id, p.name]) || [],
+    );
+    const before = people.current;
+    people.current = snapshot ? now : null;
+    if (!before) return;
+    for (const [id, name] of now)
+      if (!before.has(id))
+        toasts.push({
+          id: `enter:${id}:${Date.now()}`,
+          kind: "info",
+          avatar: name,
+          label: `${name} entrou na sala`,
+          text: (
+            <>
+              <strong>{name}</strong> entrou na sala.
+            </>
+          ),
+          duration: 4000,
+        });
+    for (const [id, name] of before)
+      if (!now.has(id))
+        toasts.push({
+          id: `leave:${id}:${Date.now()}`,
+          kind: "info",
+          avatar: name,
+          label: `${name} saiu`,
+          text: (
+            <>
+              <strong>{name}</strong> saiu.
+            </>
+          ),
+          duration: 4000,
+        });
+  }, [peopleKey, engine]);
   useEffect(() => {
     // A fresh room (or epoch) only primes what is already live: those
     // screens are in the live icon, not news to announce.
@@ -500,10 +539,39 @@ export function RoomCanvas(props: Props) {
           read: false,
         };
         setScreenEvents((events) => [...events, event].slice(-30));
-        setToast(event.id);
+        screenToasts.current.set(publication.id, `screen:${event.id}`);
+        toasts.push({
+          id: `screen:${event.id}`,
+          kind: "important",
+          avatar: event.name,
+          label: `${event.name} começou a transmitir`,
+          text: (
+            <>
+              <strong>{event.name}</strong> começou a transmitir.
+            </>
+          ),
+          duration: 6000,
+          action: {
+            label: "Assistir",
+            run: () => {
+              setScreenEvents((events) =>
+                events.map((e) =>
+                  e.id === event.id ? { ...e, read: true } : e,
+                ),
+              );
+              showPublication(event.publicationId);
+            },
+          },
+        });
       }
     }
     const live = new Set(publications.map((p) => p.id));
+    // "Assistir" on a screen that already ended would do nothing.
+    for (const [id, toast] of screenToasts.current)
+      if (!live.has(id) || engine.view.watching.includes(id)) {
+        toasts.close(toast, false);
+        screenToasts.current.delete(id);
+      }
     const latest = store.getSnapshot();
     for (const item of [
       ...latest.pending,
@@ -930,7 +998,7 @@ export function RoomCanvas(props: Props) {
           engine={engine}
           openWidget={(w) => openShared(w, true)}
           openScreen={showPublication}
-          screenEvents={screenEvents.filter((e) => e.id !== toast)}
+          screenEvents={screenEvents}
           onOpenChange={setNotificationsOpen}
         />
         <LiveScreens screens={liveScreens} watch={showPublication} />
@@ -1293,21 +1361,6 @@ export function RoomCanvas(props: Props) {
       <span className="sr-only" role="status" aria-live="polite">
         {announcement}
       </span>
-      {toastEvent && (
-        <ScreenToast
-          event={toastEvent}
-          done={hideToast}
-          watch={() => {
-            setScreenEvents((events) =>
-              events.map((e) =>
-                e.id === toastEvent.id ? { ...e, read: true } : e,
-              ),
-            );
-            setToast(null);
-            showPublication(toastEvent.publicationId);
-          }}
-        />
-      )}
       {offer && (
         <Dialog
           title="Todos os espaços estão ocupados"

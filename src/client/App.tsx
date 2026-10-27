@@ -56,6 +56,7 @@ const RoomCanvas = lazy(() =>
   })),
 );
 import { Landing } from "./components/Landing";
+import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
 import { desktop } from "./desktop/bridge";
@@ -267,6 +268,27 @@ export default function App({ engine }: { engine: Controller }) {
       engine.fail(e);
     }
   }
+  // In the room, errors and notices use the toast stack; the landing and
+  // open sheets keep the inline notice.
+  const inRoom = !!view.snapshot;
+  const failed = view.status === "failed";
+  useEffect(() => {
+    const text = inRoom && !panel ? view.error || view.notice : "";
+    if (!text) {
+      toasts.close("engine", false);
+      return;
+    }
+    toasts.push({
+      id: "engine",
+      kind: view.error ? "error" : "important",
+      label: text,
+      text,
+      action: failed
+        ? { label: "Reconectar", run: () => void engine.retry() }
+        : undefined,
+      onClose: () => engine.dismiss(),
+    });
+  }, [inRoom, panel, view.error, view.notice, failed, engine]);
   const notice = (view.error || view.notice) && (
     <div
       className={`notice ${view.error ? "error" : ""}`}
@@ -416,7 +438,7 @@ export default function App({ engine }: { engine: Controller }) {
                 onPointerLeave={wake}
                 data-idle={!active && !panel && watching}
               >
-                {!panel && notice}
+                <ToastStack />
                 <Suspense
                   fallback={
                     <div className="player-empty" role="status">
