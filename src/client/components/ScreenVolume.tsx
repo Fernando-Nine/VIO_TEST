@@ -37,8 +37,8 @@ export function ScreenVolume({
   const info = engine.screenInfo(id);
   if (!info || info.publication.owner === engine.view.id) return null;
   const level = engine.screenLevel(id);
-  const forcedMute =
-    engine.captures.deaf || engine.remoteMute || engine.masterVolume === 0;
+  // Desativar áudio silences voices only; screens keep playing.
+  const forcedMute = engine.masterVolume === 0;
   const silent = forcedMute || level.muted;
   const noAudio = !info.publication.audio;
   const leave = () => {
@@ -146,9 +146,7 @@ export function ScreenVolume({
             )}
             {forcedMute && (
               <p className="field-note">
-                {engine.masterVolume === 0
-                  ? "O volume geral está zerado em Ajustes → Aplicativo."
-                  : "A reprodução está silenciada nos controles da sala."}
+                O volume geral está zerado em Ajustes → Áudio.
               </p>
             )}
             {engine.fineAudio && (

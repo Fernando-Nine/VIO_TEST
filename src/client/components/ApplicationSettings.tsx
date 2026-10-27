@@ -1,9 +1,41 @@
 import { useState } from "react";
-import { Play, Volume2, Palette } from "lucide-react";
+import { Play } from "lucide-react";
 import type { Controller } from "../room/controller";
-import { soundEvents, type Cue } from "../media/sound-preferences";
+import { notificationRows, type Cue } from "../media/sound-preferences";
 
-export function ApplicationSettings({ engine }: { engine: Controller }) {
+/** Ajustes › Áudio › Saída. */
+export function MasterVolume({ engine }: { engine: Controller }) {
+  return (
+    <>
+      <label className="application-volume">
+        Volume geral <output>{Math.round(engine.masterVolume * 100)}%</output>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step=".01"
+          value={engine.masterVolume}
+          aria-label="Volume geral do aplicativo"
+          onChange={(e) => {
+            engine.masterVolume = +e.target.value;
+            engine.savePreferences();
+          }}
+        />
+      </label>
+      <p className="field-note">
+        Só o que você ouve; o envio do seu microfone não muda.
+      </p>
+      {engine.masterVolume === 0 && (
+        <p className="volume-status" role="status">
+          O áudio do aplicativo está silenciado.
+        </p>
+      )}
+    </>
+  );
+}
+
+/** Ajustes › Notificações: Balão × Som by kind, then the effects volume. */
+export function NotificationSettings({ engine }: { engine: Controller }) {
   const [feedback, setFeedback] = useState("");
   const [playing, setPlaying] = useState<Cue | null>(null);
   const canPreview =
@@ -18,41 +50,103 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
     );
     setPlaying(null);
   }
+  const save = () => {
+    engine.savePreferences();
+    engine.bump();
+  };
   return (
     <>
-      <fieldset className="application-volume">
-        <legend>
-          <Volume2 size={17} /> Volume
-        </legend>
-        <label>
-          Volume geral <output>{Math.round(engine.masterVolume * 100)}%</output>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step=".01"
-            value={engine.masterVolume}
-            aria-label="Volume geral do aplicativo"
-            onChange={(e) => {
-              engine.masterVolume = +e.target.value;
-              engine.savePreferences();
-            }}
-          />
-        </label>
+      <fieldset className="settings-group">
+        <legend>Avisos</legend>
+        <table className="notification-table">
+          <thead>
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col">Balão</th>
+              <th scope="col">Som</th>
+            </tr>
+          </thead>
+          <tbody>
+            {notificationRows.map(({ label, hint, balloon, cues }) => {
+              const on = cues.some((cue) => engine.soundEvents[cue]);
+              return (
+                <tr key={label}>
+                  <th scope="row">
+                    {label}
+                    {hint && <small>{hint}</small>}
+                  </th>
+                  <td>
+                    {balloon === "always" ? (
+                      <span className="notification-none">Sempre</span>
+                    ) : balloon ? (
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        aria-label={`Balão: ${label}`}
+                        checked={engine.balloons[balloon]}
+                        onChange={(e) => {
+                          engine.balloons[balloon] = e.target.checked;
+                          save();
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="notification-none"
+                        aria-label="Sem balão"
+                      >
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {cues.length ? (
+                      <span className="notification-sound">
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          aria-label={`Som: ${label}`}
+                          checked={on}
+                          disabled={!engine.sounds}
+                          onChange={(e) => {
+                            for (const cue of cues)
+                              engine.soundEvents[cue] = e.target.checked;
+                            save();
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="icon-button sound-preview"
+                          aria-label={`Ouvir som: ${label}`}
+                          title={`Ouvir som: ${label}`}
+                          disabled={!canPreview || playing !== null}
+                          onClick={() => void preview(cues[0])}
+                        >
+                          <Play size={15} />
+                        </button>
+                      </span>
+                    ) : (
+                      <span className="notification-none" aria-label="Sem som">
+                        —
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
         <p className="field-note">
-          Só o que você ouve; o envio do seu microfone não muda.
+          Tudo vai para o sino, mesmo com o balão desligado.
         </p>
-        {engine.masterVolume === 0 && (
-          <p className="volume-status" role="status">
-            O áudio do aplicativo está silenciado.
-          </p>
-        )}
+        <p className="sound-feedback" role="status">
+          {feedback}
+        </p>
       </fieldset>
-      <fieldset>
+      <fieldset className="settings-group">
         <legend>Sons do VIO</legend>
         <label className="toggle">
           <span>
-            Feedback sonoro
+            Sons do VIO
             <small>Sons curtos de ações e avisos da sala.</small>
           </span>
           <input
@@ -61,7 +155,7 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
             checked={engine.sounds}
             onChange={(e) => {
               engine.sounds = e.target.checked;
-              engine.savePreferences();
+              save();
             }}
           />
         </label>
@@ -78,66 +172,36 @@ export function ApplicationSettings({ engine }: { engine: Controller }) {
             value={engine.soundVolume}
             onChange={(e) => {
               engine.soundVolume = +e.target.value;
-              engine.savePreferences();
-            }}
-          />
-        </label>
-        <div className="sound-event-list">
-          {soundEvents.map(({ cue, label, description }) => (
-            <div className="sound-event" key={cue}>
-              <label className="toggle">
-                <span>
-                  {label}
-                  <small>{description}</small>
-                </span>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={engine.soundEvents[cue]}
-                  disabled={!engine.sounds}
-                  onChange={(e) => {
-                    engine.soundEvents[cue] = e.target.checked;
-                    engine.savePreferences();
-                  }}
-                />
-              </label>
-              <button
-                type="button"
-                className="icon-button sound-preview"
-                aria-label={`Ouvir som: ${label}`}
-                title={`Ouvir som: ${label}`}
-                disabled={!canPreview || playing !== null}
-                onClick={() => void preview(cue)}
-              >
-                <Play size={15} />
-              </button>
-            </div>
-          ))}
-        </div>
-        <p className="sound-feedback" role="status">
-          {feedback}
-        </p>
-      </fieldset>
-      <fieldset>
-        <legend>
-          <Palette size={17} /> Cores das pessoas
-        </legend>
-        <label className="toggle">
-          <span>
-            Cores das pessoas nas transmissões
-            <small>Bordas, ao vivo e fala na cor de cada pessoa.</small>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={engine.participantColors}
-            onChange={(e) => {
-              engine.participantColors = e.target.checked;
-              engine.savePreferences();
+              save();
             }}
           />
         </label>
       </fieldset>
     </>
+  );
+}
+
+/** Ajustes › Aparência, under Minha cor. */
+export function ParticipantColors({ engine }: { engine: Controller }) {
+  return (
+    <fieldset className="settings-group">
+      <legend>Cores das pessoas</legend>
+      <label className="toggle">
+        <span>
+          Cores das pessoas nas transmissões
+          <small>Bordas, ao vivo e fala na cor de cada pessoa.</small>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={engine.participantColors}
+          onChange={(e) => {
+            engine.participantColors = e.target.checked;
+            engine.savePreferences();
+            engine.bump();
+          }}
+        />
+      </label>
+    </fieldset>
   );
 }

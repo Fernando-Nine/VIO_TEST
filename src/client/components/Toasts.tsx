@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { X } from "lucide-react";
+import { reducedMotion } from "./motion";
 
 /**
  * info waits its turn; important (new screen, Undo) enters on top and pushes
@@ -88,7 +89,7 @@ export function ToastStack({ queue = toasts }: { queue?: ToastQueue }) {
   const tops = useRef(new Map<string, number>());
   // FLIP: a toast pushed down by a newer one slides instead of jumping.
   useLayoutEffect(() => {
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = reducedMotion();
     for (const [id, node] of nodes.current) {
       const before = tops.current.get(id);
       const after = node.offsetTop;

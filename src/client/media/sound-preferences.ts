@@ -31,13 +31,13 @@ export const soundEvents = [
   },
   {
     cue: "deafen",
-    label: "Ensurdecer",
-    description: "Ao silenciar o que você ouve na sala.",
+    label: "Desativar áudio",
+    description: "Ao desligar seu microfone e as vozes.",
   },
   {
     cue: "undeafen",
-    label: "Voltar a ouvir",
-    description: "Ao reativar o áudio da sala.",
+    label: "Reativar áudio",
+    description: "Ao voltar a ouvir as vozes.",
   },
   {
     cue: "screen-new",
@@ -81,3 +81,46 @@ export function volumePreference(value: unknown, fallback: number): number {
     ? Math.max(0, Math.min(1, value))
     : fallback;
 }
+
+/** Balloons (toasts) by kind; everything still goes to the bell. */
+export const balloonKinds = ["people", "screens"] as const;
+export type BalloonKind = (typeof balloonKinds)[number];
+export type Balloons = Record<BalloonKind, boolean>;
+export function readBalloons(value: unknown): Balloons {
+  const saved =
+    value && typeof value === "object"
+      ? (value as Record<string, unknown>)
+      : {};
+  return Object.fromEntries(
+    balloonKinds.map((kind) => [kind, saved[kind] !== false]),
+  ) as Balloons;
+}
+/** "system" follows prefers-reduced-motion; "reduce" always reduces. */
+export type Motion = "system" | "reduce";
+
+/** Rows of the Balão × Som table in Ajustes › Notificações. */
+export const notificationRows: {
+  label: string;
+  hint?: string;
+  /** "always": errors need an answer, so their balloon cannot go away. */
+  balloon?: BalloonKind | "always";
+  cues: Cue[];
+}[] = [
+  {
+    label: "Alguém entrou ou saiu",
+    balloon: "people",
+    cues: ["room-enter", "room-leave"],
+  },
+  { label: "Nova tela", balloon: "screens", cues: ["screen-new"] },
+  {
+    label: "Widgets",
+    hint: "Chat, votação e cronômetro.",
+    cues: ["chat-message", "poll-open", "poll-end", "timer-end"],
+  },
+  {
+    label: "Suas ações",
+    hint: "Microfone, áudio e tela.",
+    cues: ["share-on", "share-off", "unmute", "mute", "deafen", "undeafen"],
+  },
+  { label: "Erros", balloon: "always", cues: [] },
+];

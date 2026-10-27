@@ -410,7 +410,7 @@
 }
 
 /* Native semantics, enhanced styling where the browser supports it. */
-.toggle input[type="checkbox"] {
+:is(.toggle, .notification-table) input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   position: relative;
@@ -423,7 +423,7 @@
   background: #292d42;
   cursor: var(--cursor-hand, pointer);
 }
-.toggle input[type="checkbox"]::before {
+:is(.toggle, .notification-table) input[type="checkbox"]::before {
   content: "";
   position: absolute;
   width: 18px;
@@ -434,14 +434,14 @@
   background: #f1f2fa;
   transition: transform 160ms ease;
 }
-.toggle input[type="checkbox"]:checked {
+:is(.toggle, .notification-table) input[type="checkbox"]:checked {
   background: #2727f5;
   border-color: #9298ff;
 }
-.toggle input[type="checkbox"]:checked::before {
+:is(.toggle, .notification-table) input[type="checkbox"]:checked::before {
   transform: translateX(18px);
 }
-.toggle input[type="checkbox"]:disabled {
+:is(.toggle, .notification-table) input[type="checkbox"]:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -691,7 +691,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .toggle input[type="checkbox"]::before,
+  :is(.toggle, .notification-table) input[type="checkbox"]::before,
   .sheet select::picker-icon {
     transition: none;
   }

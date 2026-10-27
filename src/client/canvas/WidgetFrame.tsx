@@ -34,6 +34,7 @@ import {
   type Rename,
 } from "./header-tools";
 import type { Controller } from "../room/controller";
+import { reducedMotion } from "../components/motion";
 import { participantStyle } from "../components/participant-style";
 import {
   HeaderAccessory,
@@ -183,11 +184,7 @@ export function WidgetFrame(props: Props) {
       box.height < 1
     )
       return;
-    if (
-      element.current.ownerDocument.defaultView?.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches
-    )
+    if (reducedMotion(element.current.ownerDocument.defaultView || window))
       return;
     element.current.animate(
       [
