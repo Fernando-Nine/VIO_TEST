@@ -23,6 +23,7 @@ conceitos de cada widget, landing page, página de download e identidade visual.
 **Skills (carregue a que se aplica; não todas):**
 
 - Sempre: `vio-design-system`; antes de entregar: `vio-design-review`.
+- Sempre ao entregar uma leva: `vio-design-delivery` (canvas, escolhas, specs e issues).
 - Escolher estilo, paleta, fontes: `ui-ux-pro-max`. Direção visual nova: `frontend-design`.
 - Refinar/auditar o existente: `impeccable`. Animação e microinteração: `emil-design-eng`.
 - Crítica e acessibilidade a fundo: `design-critique`, `design-accessibility-review`.
