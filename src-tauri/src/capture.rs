@@ -38,15 +38,15 @@ use windows::{
 };
 
 const RING_FRAMES: usize = 9600;
-const LIST_COOLDOWN: Duration = Duration::from_millis(700);
-const LIST_VALID: Duration = Duration::from_secs(60);
+pub(crate) const LIST_COOLDOWN: Duration = Duration::from_millis(700);
+pub(crate) const LIST_VALID: Duration = Duration::from_secs(60);
 /// Windows 10 2004. Microsoft documents 20348, but process loopback works on updated
 /// 2004+ (as in OBS); an older or unpatched system fails the activation, not the app.
 pub const MIN_BUILD: u32 = 19041;
 const SYSTEM_TITLE: &str = "Todo o som do computador, sem o VIO";
 
 /// Owned Win32 handle, closed once.
-struct Owned(HANDLE);
+pub(crate) struct Owned(pub(crate) HANDLE);
 // Kernel handles may be used and closed from any thread.
 unsafe impl Send for Owned {}
 unsafe impl Sync for Owned {}
@@ -72,7 +72,7 @@ pub fn windows_build() -> u32 {
     }
 }
 
-fn key() -> Result<String, String> {
+pub(crate) fn key() -> Result<String, String> {
     let mut bytes = [0u8; 16];
     unsafe { BCryptGenRandom(None, &mut bytes, BCRYPT_USE_SYSTEM_PREFERRED_RNG) }
         .ok()
@@ -80,7 +80,7 @@ fn key() -> Result<String, String> {
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }
 
-fn process_started(process: HANDLE) -> u64 {
+pub(crate) fn process_started(process: HANDLE) -> u64 {
     let (mut created, mut exited, mut kernel, mut user) = (
         FILETIME::default(),
         FILETIME::default(),
@@ -93,14 +93,14 @@ fn process_started(process: HANDLE) -> u64 {
     }
 }
 
-fn open_process(pid: u32) -> Option<Owned> {
+pub(crate) fn open_process(pid: u32) -> Option<Owned> {
     unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SYNCHRONIZE, false, pid) }
         .ok()
         .map(Owned)
 }
 
 /// This host and all of its WebView2 subprocesses.
-fn own_tree() -> HashSet<u32> {
+pub(crate) fn own_tree() -> HashSet<u32> {
     let mut excluded = HashSet::from([unsafe { GetCurrentProcessId() }]);
     let Ok(snapshot) = (unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }) else {
         return excluded;

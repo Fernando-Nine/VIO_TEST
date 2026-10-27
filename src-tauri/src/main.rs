@@ -3,6 +3,8 @@
 mod capture;
 #[cfg(windows)]
 mod shell;
+#[cfg(windows)]
+mod video;
 mod wire;
 #[cfg(windows)]
 fn main() {
