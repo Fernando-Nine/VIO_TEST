@@ -53,75 +53,7 @@
 .player.live-previews .people-strip {
   grid-template-columns: minmax(0, 1fr);
 }
-.participant-card {
-  min-width: 0;
-  align-self: start;
-  border: 1px solid #373e58;
-  border-radius: 7px;
-  padding: 8px;
-  background: #1a1e30;
-  transition: border-color 150ms ease;
-}
-.participant-card.speaking {
-  border-color: #959bff;
-  box-shadow: inset 0 0 0 1px #959bff;
-}
-.participant-card.offline {
-  opacity: 0.65;
-}
-.participant-identity {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.participant-identity > div:nth-child(2) {
-  flex: 1;
-  min-width: 0;
-}
-.participant-identity strong {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #e9ecff;
-  font-size: 0.75rem;
-  font-weight: 550;
-}
-.participant-identity strong small {
-  font-size: 0.625rem;
-  color: #aeb5d3;
-}
-.participant-avatar {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  border-radius: 5px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: #2b3052;
-  color: #dce0ff;
-  font-size: 0.7rem;
-}
-.participant-avatar video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.participant-status,
-.participant-sharing {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #b2bad6;
-  font-size: 0.625rem;
-  line-height: 1.5;
-}
-.participant-sharing {
-  color: #b6b9ff;
-  margin-top: 7px;
-}
+
 .participant-screen-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

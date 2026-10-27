@@ -14,7 +14,7 @@ export type Scope = "individual" | "room";
 const groups: { title: string; ids: string[] }[] = [
   {
     title: "Na sala",
-    ids: ["people", "call", "viewers", "mixer", "connection", "quick", "chat"],
+    ids: ["people", "viewers", "connection", "quick", "chat"],
   },
   { title: "Decidir e jogar", ids: ["poll", "dice", "random"] },
   { title: "Tempo", ids: ["timer", "tasks"] },
@@ -22,9 +22,7 @@ const groups: { title: string; ids: string[] }[] = [
 /** Labels for the in-slot icons, where only one or two words fit. */
 const shortNames: Record<string, string> = {
   people: "Pessoas",
-  call: "Chamada",
   viewers: "Público",
-  mixer: "Mixer",
   quick: "Minha tela",
   tasks: "Tarefas",
 };

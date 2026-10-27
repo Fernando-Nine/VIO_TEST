@@ -1,20 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
-import { HeaderTools } from "./header-tools";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
   MonitorUp,
   Settings2,
   Volume2,
   VolumeX,
   Users,
-  Headphones,
   Eye,
-  SlidersHorizontal,
   Activity,
   MessageCircle,
   PencilRuler,
@@ -30,9 +21,9 @@ import {
 import type { MenuItem } from "../components/ContextMenu";
 import type { Controller } from "../room/controller";
 import { Media } from "../components/Media";
-import { ParticipantCard } from "../components/ParticipantCard";
+import { PeopleWidget } from "./PeopleWidget";
 import { Spectators } from "../components/Spectators";
-import { RoomLimit, ScreenTimer } from "../components/RoomStatus";
+import { ScreenTimer } from "../components/RoomStatus";
 import { screenResolutions } from "../../shared/protocol";
 import { ScreenVolume } from "../components/ScreenVolume";
 import { CustomWidget, createContent, widgetValue } from "./CustomWidget";
@@ -154,130 +145,6 @@ function ScreenWidget({
           </span>
         )}
       </div>
-    </div>
-  );
-}
-function PeopleWidget({ engine, visible, people, widget }: WidgetProps) {
-  const ids = useRef(new Set<string>());
-  const preview = useCallback(
-    (id: string, state: boolean) => {
-      if (state) ids.current.add(id);
-      else ids.current.delete(id);
-      engine.previews([...ids.current], widget.id);
-    },
-    [engine, widget.id],
-  );
-  useEffect(() => () => engine.previews([], widget.id), [engine, widget.id]);
-  const members =
-    engine.view.snapshot?.participants.filter(
-      (p) => widget.type !== "call" || p.inCall,
-    ) || [];
-  const total = engine.view.snapshot?.participants.length || 0;
-  return (
-    <div className="widget-people">
-      <HeaderTools>
-        <span
-          className="widget-count"
-          aria-label={`${members.length} ${members.length === 1 ? "pessoa" : "pessoas"}`}
-        >
-          {members.length}
-        </span>
-        {total >= 6 && <RoomLimit count={total} threshold={6} />}
-      </HeaderTools>
-      <div className="widget-people-grid">
-        {members.map((person) => (
-          <ParticipantCard
-            key={person.id}
-            person={person}
-            engine={engine}
-            visible={visible}
-            onVisible={preview}
-            onEditColor={people}
-          />
-        ))}
-      </div>
-      {!members.length && <p className="widget-empty">Ninguém na chamada.</p>}
-    </div>
-  );
-}
-function MixerWidget({ engine }: WidgetProps) {
-  const screens = engine.view.watching.filter(
-    (id) => engine.screenInfo(id)?.publication.owner !== engine.view.id,
-  );
-  const voices =
-    engine.view.snapshot?.participants.filter(
-      (p) => p.id !== engine.view.id && p.inCall,
-    ) || [];
-  return (
-    <div className="widget-mixer">
-      {screens.map((id) => {
-        const level = engine.screenLevel(id);
-        const name = engine.screenInfo(id)?.name || "Participante";
-        return (
-          <div className="mixer-row" key={id}>
-            <label>
-              Tela · {name}
-              <output>{Math.round(level.volume * 100)}%</output>
-              <input
-                aria-label={`Volume da tela de ${name}`}
-                type="range"
-                min={0}
-                max={engine.fineAudio ? 3 : 1}
-                step={0.05}
-                value={level.volume}
-                onChange={(e) =>
-                  engine.setScreenLevel(id, { volume: +e.target.value })
-                }
-              />
-            </label>
-            <button
-              className="icon-button"
-              aria-label={`${level.muted ? "Ativar" : "Silenciar"} tela de ${name}`}
-              onClick={() => engine.setScreenLevel(id, { muted: !level.muted })}
-            >
-              {level.muted ? <VolumeX /> : <Volume2 />}
-            </button>
-          </div>
-        );
-      })}
-      {voices.map((person) => (
-        <div className="mixer-row" key={person.id}>
-          <label>
-            Voz · {person.name}
-            <output>
-              {Math.round((engine.volumes.get(person.id) ?? 1) * 100)}%
-            </output>
-            <input
-              aria-label={`Volume da voz de ${person.name}`}
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={engine.volumes.get(person.id) ?? 1}
-              onChange={(e) => {
-                engine.volumes.set(person.id, +e.target.value);
-                engine.bump();
-              }}
-            />
-          </label>
-          <button
-            className="icon-button"
-            aria-label={`Alternar silêncio da voz de ${person.name}`}
-            onClick={() => {
-              engine.volumes.set(
-                person.id,
-                (engine.volumes.get(person.id) ?? 1) === 0 ? 1 : 0,
-              );
-              engine.bump();
-            }}
-          >
-            {engine.volumes.get(person.id) === 0 ? <VolumeX /> : <Volume2 />}
-          </button>
-        </div>
-      ))}
-      {!screens.length && !voices.length && (
-        <p className="widget-empty">Nenhuma voz ou tela para ajustar.</p>
-      )}
     </div>
   );
 }
@@ -463,9 +330,7 @@ const definition = (
     {
       screen: MonitorUp,
       people: Users,
-      call: Headphones,
       viewers: Eye,
-      mixer: SlidersHorizontal,
       connection: Activity,
       quick: Settings2,
       chat: MessageCircle,
@@ -494,16 +359,8 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
   ),
   people: definition(
     "people",
-    "Pessoas na sala",
-    "Quem está aqui, compartilha e participa da chamada.",
-    PeopleWidget,
-    true,
-    colorItem,
-  ),
-  call: definition(
-    "call",
-    "Pessoas na chamada",
-    "Voz, câmera e indicadores de fala.",
+    "Pessoas",
+    "Quem está na chamada e na sala, com o volume de cada voz.",
     PeopleWidget,
     true,
     colorItem,
@@ -513,12 +370,6 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     "Meus espectadores",
     "Quem mantém sua transmissão conectada.",
     ViewersWidget,
-  ),
-  mixer: definition(
-    "mixer",
-    "Mixer de volume",
-    "Vozes e transmissões num só lugar.",
-    MixerWidget,
   ),
   connection: definition(
     "connection",

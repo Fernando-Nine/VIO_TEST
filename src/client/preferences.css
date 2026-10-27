@@ -1,50 +1,10 @@
 /* Personal identity stays separate from network, warning and error semantics. */
-.participant-avatar,
 .participant-setting .small-avatar,
 .color-identity-preview .small-avatar {
   background: var(--person-color, #2727f5);
   color: var(--person-ink, #fff);
 }
-.participant-avatar {
-  position: relative;
-}
-.participant-card.speaking {
-  border-color: var(--person-accent, #a8adff);
-  box-shadow: inset 0 0 0 1px var(--person-accent, #a8adff);
-}
-.participant-sharing,
-.participant-card.speaking .participant-status {
-  color: var(--person-accent, #a8adff);
-}
-.edit-person-color {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: inherit;
-  background: #101326;
-  color: #f1f2ff;
-  opacity: 0;
-  transition: opacity 140ms ease;
-}
-.edit-person-color:hover,
-.edit-person-color:focus-visible {
-  opacity: 1;
-}
-.edit-person-color:focus-visible {
-  outline-offset: -3px;
-}
-@media (hover: none) {
-  .edit-person-color {
-    opacity: 1;
-    background: transparent;
-    color: var(--person-ink);
-  }
-  .participant-avatar:has(.edit-person-color) > span {
-    visibility: hidden;
-  }
-}
+
 .screen-window-area > .watched-screen {
   border-color: var(--person-accent, #a8adff);
 }
@@ -328,7 +288,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .edit-person-color,
   .sound-preview svg,
   .color-presets .color-swatch {
     transition: none;
