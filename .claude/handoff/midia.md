@@ -2,16 +2,18 @@
 Atualizado: 2026-10-27 (noite)
 
 ## Agora
-#192 captura nativa (aval do `webview2-com` em 27 out), em 3 PRs empilhadas:
-1. PR #217 `midia/192-fontes-nativas`: `video.rs` lista telas/janelas (regras do Alt+Tab,
+#192 captura nativa (aval do `webview2-com` em 27 out), em 3 PRs:
+1. #217 (mergeada): `video.rs` lista telas/janelas (regras do Alt+Tab,
    sem cloak) + miniaturas WGC 320×180; `desktop/video.ts`. rc.5.
-2. `midia/192-quadros`: `stream.rs` WGC → VideoProcessor (NV12 BT.709 na GPU) → staging →
-   SharedBuffer (3 slots, seqlock); IPC só `desktop_video_wait` (tick). Página:
+2. #218 (mergeada): `stream.rs` WGC → VideoProcessor (NV12 BT.709 na GPU) → staging →
+   SharedBuffer (3 slots, seqlock); sem `ID3D11VideoDevice` (WARP, VM) converte na CPU
+   (`wire::bgra_to_nv12`; `tick.gpu` diz o caminho); IPC só `desktop_video_wait` (tick). Página:
    `desktop/native-video.ts` → `MediaStreamTrackGenerator`; `getSettings`/`applyConstraints`
    simulados na trilha. Bench `native_capture_cpu` (passo opcional no windows.yml).
 3. `midia/192-api`: `desktop_share_audio` + `desktop/share.ts` (`startNativeShare`) para a #191.
-Depois do squash de cada uma: `git rebase --onto origin/main <anterior> <branch>` e subir o rc.
-Falta: CPU real 1080p60 no PC do usuário; seletor visual (Frontend, após spec da #191);
+Bench no runner (WARP, caminho CPU): 6,4 ms/quadro em 1080p (≈38% de um núcleo a 60 fps,
+pior caso); a tela parada do runner só gera 2–3 quadros/s, então o % de CPU de lá não vale.
+Falta: CPU real 1080p60 no PC do usuário (caminho GPU); seletor visual (Frontend, após spec da #191);
 borda amarela no Win10 continua (só o Win11 permite tirar). #194 (3 telas) já cabe:
 `MAX_STREAMS = 3` no nativo.
 

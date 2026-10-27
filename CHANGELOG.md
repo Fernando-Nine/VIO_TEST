@@ -2,7 +2,7 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.6] - 2026-10-27
+## [2.11.0-rc.7] - 2026-10-27
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
