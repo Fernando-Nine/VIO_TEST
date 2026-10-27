@@ -412,6 +412,15 @@ impl VideoManager {
         Ok((source.width, source.height))
     }
 
+    /// The window, PID, process start and title behind a window source, for its audio.
+    pub fn audio_target(&self, id: &str) -> Result<(isize, u32, u64, String), String> {
+        let source = self.source(id)?;
+        match source.target {
+            Target::Window { window, pid, started } => Ok((window, pid, started, source.title)),
+            Target::Screen { .. } => Err("Uma tela não tem o som de um só aplicativo.".into()),
+        }
+    }
+
     /// The capture item of a listed source; call inside an MTA [`Apartment`].
     pub fn item(&self, id: &str) -> Result<GraphicsCaptureItem, String> {
         self.source(id)?.item()

@@ -9,6 +9,7 @@ import {
   readSlot,
   slotSize,
 } from "../src/client/desktop/native-video";
+import { captureRate } from "../src/client/desktop/share";
 
 function tone(frames: number, rate = 48000) {
   const data = new Float32Array(frames * 2);
@@ -119,5 +120,12 @@ test("imagem nativa: cabeÃ§alho VIOV validado e quadro sobrescrito no meio da cÃ
   assert.equal(
     readSlot(buffer, size, 1, 7, width, height, () => {}),
     false,
+  );
+});
+
+test("captura nativa usa 15, 30 ou 60 quadros e a trilha limita o resto", () => {
+  assert.deepEqual(
+    [10, 15, 24, 30, 45, 60, 120].map(captureRate),
+    [15, 15, 30, 30, 60, 60, 60],
   );
 });
