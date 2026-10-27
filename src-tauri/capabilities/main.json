@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Only the bundled VIO window may control its own audio capture.",
+  "description": "Only the bundled VIO window may control its own audio and screen capture.",
   "local": true,
   "windows": ["main"],
   "permissions": [
@@ -9,6 +9,8 @@
     "allow-desktop-sources",
     "allow-desktop-start-audio",
     "allow-desktop-read-audio",
-    "allow-desktop-stop-audio"
+    "allow-desktop-stop-audio",
+    "allow-desktop-video-sources",
+    "allow-desktop-video-thumbnail"
   ]
 }

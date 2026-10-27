@@ -22,9 +22,76 @@ pub fn packet(state: u32, sequence: u32, dropped: u32, error: u32, pcm: &[f32]) 
     bytes
 }
 
+pub const THUMB_WIDTH: u32 = 320;
+pub const THUMB_HEIGHT: u32 = 180;
+const THUMB_HEADER: usize = 16;
+
+/// Fits a BGRA frame into the thumbnail box and returns `VIOT` + RGBA pixels.
+/// Each output pixel averages up to 4×4 samples of its source cell.
+pub fn thumbnail(bgra: &[u8], width: u32, height: u32, stride: u32) -> Vec<u8> {
+    assert!(width > 0 && height > 0 && stride >= width * 4);
+    assert!(bgra.len() >= (stride * (height - 1) + width * 4) as usize);
+    let scale = (THUMB_WIDTH as f64 / width as f64)
+        .min(THUMB_HEIGHT as f64 / height as f64)
+        .min(1.0);
+    let w = ((width as f64 * scale).round() as u32).max(1);
+    let h = ((height as f64 * scale).round() as u32).max(1);
+    let mut bytes = Vec::with_capacity(THUMB_HEADER + (w * h * 4) as usize);
+    for value in [0x56494f54u32, 1, w, h] {
+        bytes.extend_from_slice(&value.to_le_bytes());
+    }
+    for y in 0..h {
+        let (y0, y1) = (y * height / h, ((y + 1) * height / h).max(y * height / h + 1));
+        for x in 0..w {
+            let (x0, x1) = (x * width / w, ((x + 1) * width / w).max(x * width / w + 1));
+            let (sx, sy) = ((x1 - x0).div_ceil(4), (y1 - y0).div_ceil(4));
+            let mut sum = [0u32; 3];
+            let mut count = 0u32;
+            for py in (y0..y1).step_by(sy as usize) {
+                for px in (x0..x1).step_by(sx as usize) {
+                    let i = (py * stride + px * 4) as usize;
+                    sum[0] += bgra[i + 2] as u32;
+                    sum[1] += bgra[i + 1] as u32;
+                    sum[2] += bgra[i] as u32;
+                    count += 1;
+                }
+            }
+            bytes.extend_from_slice(&[
+                (sum[0] / count) as u8,
+                (sum[1] / count) as u8,
+                (sum[2] / count) as u8,
+                255,
+            ]);
+        }
+    }
+    bytes
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn thumbnails_fit_the_box_and_swap_to_rgba() {
+        // 1920×1080 BGRA with 64 bytes of row padding, pure blue-ish.
+        let (width, height, stride) = (1920u32, 1080u32, 1920 * 4 + 64);
+        let mut frame = vec![0u8; (stride * height) as usize];
+        for row in frame.chunks_mut(stride as usize) {
+            for pixel in row[..(width * 4) as usize].chunks_mut(4) {
+                pixel.copy_from_slice(&[200, 100, 10, 0]);
+            }
+        }
+        let bytes = thumbnail(&frame, width, height, stride);
+        assert_eq!(&bytes[0..4], &0x56494f54u32.to_le_bytes());
+        assert_eq!(&bytes[8..12], &320u32.to_le_bytes());
+        assert_eq!(&bytes[12..16], &180u32.to_le_bytes());
+        assert_eq!(bytes.len(), 16 + 320 * 180 * 4);
+        assert_eq!(&bytes[16..20], &[10, 100, 200, 255]);
+        // Tall windows keep their aspect; tiny ones are never upscaled.
+        let tall = thumbnail(&vec![0; 600 * 1200 * 4], 600, 1200, 600 * 4);
+        assert_eq!((&tall[8..12], &tall[12..16]), (&90u32.to_le_bytes()[..], &180u32.to_le_bytes()[..]));
+        let tiny = thumbnail(&[1, 2, 3, 4], 1, 1, 4);
+        assert_eq!(&tiny[16..], &[3, 2, 1, 255]);
+    }
     #[test]
     fn pcm_packet_is_little_endian_stereo_with_bounded_header() {
         let bytes = packet(1, 7, 12, 0, &[0.5, -0.25]);

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { StereoQueue } from "../src/client/desktop/pcm-worklet.js";
 import { decodePacket } from "../src/client/desktop/bridge";
+import { decodeThumbnail } from "../src/client/desktop/video";
 
 function tone(frames: number, rate = 48000) {
   const data = new Float32Array(frames * 2);
@@ -56,4 +57,25 @@ test("ponte WASAPI recusa pacote truncado, formato desconhecido e tamanho excess
   assert.throws(() => decodePacket(new ArrayBuffer(38440)));
   view.setUint32(4, 2, true);
   assert.throws(() => decodePacket(buffer));
+});
+
+test("miniatura nativa: aceita VIOT 320×180 e recusa cabeçalho, tamanho ou caixa inválidos", () => {
+  const thumb = (
+    width: number,
+    height: number,
+    magic = 0x56494f54,
+    extra = 0,
+  ) => {
+    const buffer = new ArrayBuffer(16 + width * height * 4 + extra);
+    const view = new DataView(buffer);
+    [magic, 1, width, height].forEach((v, i) => view.setUint32(i * 4, v, true));
+    return buffer;
+  };
+  const image = decodeThumbnail(thumb(320, 180));
+  assert.equal(image.width, 320);
+  assert.equal(image.rgba.length, 320 * 180 * 4);
+  assert.throws(() => decodeThumbnail(thumb(321, 180)));
+  assert.throws(() => decodeThumbnail(thumb(2, 2, 0x56494f41)));
+  assert.throws(() => decodeThumbnail(thumb(2, 2, undefined, 4)));
+  assert.throws(() => decodeThumbnail(new ArrayBuffer(8)));
 });

@@ -10,6 +10,8 @@ fn main() {
             "desktop_start_audio",
             "desktop_read_audio",
             "desktop_stop_audio",
+            "desktop_video_sources",
+            "desktop_video_thumbnail",
         ]),
     ))
     .expect("Tauri configuration must be valid");

@@ -1,4 +1,5 @@
 use crate::capture::{self, Manager, Source};
+use crate::video::{VideoManager, VideoSource};
 use serde::Serialize;
 use std::time::Duration;
 use tauri::{AppHandle, Manager as _, State, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -84,6 +85,26 @@ fn desktop_stop_audio(window: WebviewWindow, state: State<'_, Manager>, capture_
     Ok(())
 }
 
+#[tauri::command]
+fn desktop_video_sources(window: WebviewWindow, state: State<'_, VideoManager>) -> Result<Vec<VideoSource>, String> {
+    trusted(&window)?;
+    state.sources()
+}
+
+#[tauri::command]
+async fn desktop_video_thumbnail(
+    window: WebviewWindow,
+    app: AppHandle,
+    source_id: String,
+) -> Result<tauri::ipc::Response, String> {
+    trusted(&window)?;
+    valid_id(&source_id)?;
+    let bytes = tauri::async_runtime::spawn_blocking(move || app.state::<VideoManager>().thumbnail(&source_id))
+        .await
+        .map_err(|_| "Não foi possível gerar a miniatura.")??;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
     let mut builder = app.updater_builder().timeout(Duration::from_secs(20));
     // VIO Teste follows whatever its feed points at, even a lower prerelease number.
@@ -114,12 +135,15 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Manager::default())
+        .manage(VideoManager::default())
         .invoke_handler(tauri::generate_handler![
             desktop_capabilities,
             desktop_sources,
             desktop_start_audio,
             desktop_read_audio,
-            desktop_stop_audio
+            desktop_stop_audio,
+            desktop_video_sources,
+            desktop_video_thumbnail
         ])
         .setup(|app| {
             let handle = app.handle().clone();
