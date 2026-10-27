@@ -35,8 +35,8 @@ Usuário e "Sair".
 - **"Aparência e sons"**: o plano ainda usa esse nome; a spec já separou (sons foram para
   Notificações). Vale a spec.
 - **Atalhos**: o plano lista como categoria do App; a #168 põe dentro de **Aplicativo**.
-  **Decisão**: seção "Atalhos" dentro de Aplicativo; vira categoria própria só quando
-  passar de ~6 atalhos.
+  **Decisão** (usuário, 27 out): "Atalhos" é sempre uma seção dentro de Aplicativo,
+  mesmo com muitos atalhos; não vira categoria.
 - **Acessibilidade** e **Aplicativo**: **decisão**: entram no grupo Configurações.
 - **Sair**: o plano põe em Usuário; a spec, no rodapé da lateral. Compatível: o rodapé
   é a parte de baixo do grupo Usuário.
