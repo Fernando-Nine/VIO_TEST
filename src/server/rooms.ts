@@ -6,6 +6,8 @@ import type {
   RoomNotice,
   SharedWidget,
   ChatMessageEvent,
+  WidgetClosed,
+  WidgetUpdatedEvent,
 } from "../shared/widgets";
 import { pollOpen, viewModuleState } from "../shared/room-modules";
 import { defaultColor } from "../shared/colors";
@@ -190,9 +192,18 @@ export class Rooms {
         }
       : widget;
   }
-  private emitWidget(room: Room, id: string, widget: SharedWidget | null) {
+  private emitWidget(
+    room: Room,
+    id: string,
+    widget: SharedWidget | null,
+    closed?: WidgetClosed,
+  ) {
     if (!widget?.module || widget.module.kind !== "poll") {
-      this.io.to(room.code).emit("widget-updated", { id, widget });
+      this.io.to(room.code).emit("widget-updated", {
+        id,
+        widget,
+        ...(closed && { closed }),
+      } satisfies WidgetUpdatedEvent);
       return;
     }
     for (const member of room.members.values())
@@ -332,6 +343,7 @@ export class Rooms {
       "widget-create": 20,
       "widget-structure": 120,
       "widget-delete": 30,
+      "widget-restore": 30,
       "widget-operate": 300,
       demand: 360,
       join: 12,
@@ -677,14 +689,24 @@ export class Rooms {
           data.operation,
         );
       }
+      // Room owner, admins (if allowed) and the widget's creator close for all.
+      const mayClose = (target: SharedWidget) => {
+        if (target.owner === m.id) return;
+        if (!manages) deny();
+        if (role === "admin") require("adminClose");
+      };
+      let closed: WidgetClosed | undefined;
       if (action === "widget-delete") {
-        if (current && current.owner !== m.id) {
-          if (!manages) deny();
-          if (role === "admin") require("adminClose");
-        }
-        room.widgets.remove(m.id, data.id, true);
+        if (current) mayClose(current);
+        closed = room.widgets.close(data.id, m.id, m.name);
       }
-      this.emitWidget(room, data.id, widget || null);
+      if (action === "widget-restore") {
+        const held = room.widgets.held(data.id);
+        if (held.by !== m.id) mayClose(held.widget);
+        widget = room.widgets.restore(data.id);
+        this.scheduleReveal(room, widget);
+      }
+      this.emitWidget(room, data.id, widget || null, closed);
       return widget ? this.view(widget, m.id) : {};
     }
     if (action === "demand") {

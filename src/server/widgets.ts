@@ -18,17 +18,28 @@ import {
   type WidgetContent,
   type WidgetOperation,
   type ChatMessage,
+  type WidgetClosed,
+  closedWidgetHold,
 } from "../shared/widgets";
+
+interface ClosedWidget extends WidgetClosed {
+  widget: SharedWidget;
+  timer: NodeJS.Timeout;
+}
 
 export { trimToBudget, chatBudget, historyBudget };
 
 /** Room-scoped ephemeral state. Only Rooms supplies the authenticated actor. */
 export class RoomWidgets {
   readonly entries = new Map<string, SharedWidget>();
+  /** Widgets closed for everyone, kept briefly for "Desfazer" (#158). */
+  readonly closed = new Map<string, ClosedWidget>();
   private operations = new Map<string, number>();
   private lastMessages = new Map<string, number>();
   clear() {
     this.entries.clear();
+    for (const entry of this.closed.values()) clearTimeout(entry.timer);
+    this.closed.clear();
     this.operations.clear();
     this.lastMessages.clear();
   }
@@ -42,22 +53,7 @@ export class RoomWidgets {
         throw new Fault("FORBIDDEN", "Este widget pertence a outra pessoa.");
       return existing;
     }
-    if (
-      this.entries.size >= 32 ||
-      this.list().filter((w) => w.owner === owner).length >= 6
-    )
-      throw new Fault(
-        "WIDGET_LIMIT",
-        "Limite de widgets da sala atingido: até 6 por criador e 32 na sala.",
-      );
-    if (
-      content.kind === "chat" &&
-      this.list().filter((w) => w.kind === "chat").length >= chatBudget.widgets
-    )
-      throw new Fault(
-        "WIDGET_LIMIT",
-        `A sala já tem ${chatBudget.widgets} chats. Use um dos existentes.`,
-      );
+    this.capacity(owner, content.kind);
     if (!validContent(content))
       throw new Fault(
         "INVALID_REQUEST",
@@ -72,6 +68,24 @@ export class RoomWidgets {
     };
     this.entries.set(id, widget);
     return widget;
+  }
+  private capacity(owner: string, kind: WidgetContent["kind"]) {
+    if (
+      this.entries.size >= 32 ||
+      this.list().filter((w) => w.owner === owner).length >= 6
+    )
+      throw new Fault(
+        "WIDGET_LIMIT",
+        "Limite de widgets da sala atingido: até 6 por criador e 32 na sala.",
+      );
+    if (
+      kind === "chat" &&
+      this.list().filter((w) => w.kind === "chat").length >= chatBudget.widgets
+    )
+      throw new Fault(
+        "WIDGET_LIMIT",
+        `A sala já tem ${chatBudget.widgets} chats. Use um dos existentes.`,
+      );
   }
   private owned(owner: string, id: string, authorized = false) {
     const widget = this.entries.get(id);
@@ -121,6 +135,42 @@ export class RoomWidgets {
   remove(owner: string, id: string, authorized = false) {
     this.owned(owner, id, authorized);
     this.entries.delete(id);
+  }
+  /** Removes the widget and holds it for `closedWidgetHold` ms. */
+  close(id: string, by: string, byName: string): WidgetClosed {
+    const widget = this.owned(by, id, true);
+    this.entries.delete(id);
+    this.drop(id);
+    // Bounded: at most one held copy per widget slot in the room.
+    while (this.closed.size >= 32) this.drop(this.closed.keys().next().value!);
+    const until = Date.now() + closedWidgetHold;
+    const timer = setTimeout(() => {
+      if (this.closed.get(id)?.until === until) this.closed.delete(id);
+    }, closedWidgetHold);
+    timer.unref();
+    this.closed.set(id, { widget, by, byName, until, timer });
+    return { by, byName, until };
+  }
+  /** The held widget, if it can still be restored. */
+  held(id: string) {
+    const entry = this.closed.get(id);
+    if (!entry || entry.until < Date.now())
+      throw new Fault("NOT_FOUND", "Não dá mais para desfazer.");
+    return entry;
+  }
+  restore(id: string) {
+    const { widget } = this.held(id);
+    if (this.entries.has(id))
+      throw new Fault("WIDGET_CONFLICT", "Este widget já está aberto.");
+    this.capacity(widget.owner, widget.kind);
+    this.drop(id);
+    this.entries.set(id, widget);
+    return widget;
+  }
+  private drop(id: string) {
+    const entry = this.closed.get(id);
+    if (entry) clearTimeout(entry.timer);
+    this.closed.delete(id);
   }
   /** Returns the chat and whether the message is new (false for a retry). */
   message(id: string, message: ChatMessage): [SharedWidget, boolean] {
