@@ -93,6 +93,7 @@ export class Captures {
   };
   private generation = { screen: 0, voice: 0, camera: 0 };
   private thumbnailPending?: Promise<MediaStream>;
+  screenAudioMuted = false;
   constructor(
     private adapter: CaptureAdapter = browserCapture,
     private changed: (kind: Kind, ended?: boolean) => void = () => {},
@@ -105,8 +106,20 @@ export class Captures {
   }
   private save(kind: Kind, stream: MediaStream) {
     const previous = this.sources.get(kind);
+    // Same key = same publication: peers swap tracks and viewers stay connected.
     const source = { kind, key: previous?.key || freshKey(), stream };
     this.sources.set(kind, source);
+    if (kind === "screen") {
+      for (const track of stream.getAudioTracks())
+        track.enabled = !this.screenAudioMuted;
+      const paused = previous?.stream.getVideoTracks()[0]?.enabled === false;
+      const video = stream.getVideoTracks()[0];
+      if (paused && video) video.enabled = false;
+      if (this.thumbnail) {
+        this.thumbnail.video.srcObject = stream;
+        void this.thumbnail.video.play().catch(() => {});
+      }
+    }
     for (const track of stream.getTracks())
       track.addEventListener(
         "ended",
@@ -119,8 +132,16 @@ export class Captures {
     this.changed(kind);
     return source;
   }
-  async startScreen(audio: boolean) {
-    if (this.sources.has("screen")) return;
+  /** Silences the shared sound for everyone; the track keeps flowing, so nothing renegotiates. */
+  setScreenAudioMuted(muted: boolean) {
+    this.screenAudioMuted = muted;
+    for (const track of this.sources.get("screen")?.stream.getAudioTracks() ??
+      [])
+      track.enabled = !muted;
+  }
+  /** With `replace`, a new source takes over the same publication (#160). */
+  async startScreen(audio: boolean, replace = false) {
+    if (this.sources.has("screen") && !replace) return;
     const generation = ++this.generation.screen;
     const stream = await this.adapter.screen(audio);
     if (generation !== this.generation.screen) {
@@ -421,6 +442,7 @@ export class Captures {
     if (kind === "screen") {
       this.adapter.stopScreen?.();
       this.stopPreview();
+      this.screenAudioMuted = false;
     }
     if (kind === "voice") {
       clearInterval(this.voiceTimer);

@@ -1,36 +1,41 @@
 # Mídia — handoff
-Atualizado: 2026-10-25
+Atualizado: 2026-10-27
 
 ## Agora
-Canais do app Windows (#131), voz bloqueada no cliente (#132) e volume por pessoa até
-200% (#133) entregues. Usuário precisa cadastrar secrets/token/Renders
-(`docs/WINDOWS-RELEASE.md`) para a primeira publicação.
+Bloco #192 → #193 → #160 entregue do lado da Mídia. #192 aguarda decisão (aval de
+dependência). #160/#191: interface com o Frontend (API combinada na #160).
 
 ## Feito recentemente
-- #131: `scripts/desktop-channel.mjs` (tabela dos canais + `tauri.channel.json` +
-  feed). **VIO** = estável, CI do VIO na tag `vX.Y.Z`, `vio-releases/vX.Y.Z` com
-  `VIO-x64-setup.exe` + `latest.json`, chave de produção (ID 7D499EB91F0CA1FE).
-  **VIO Teste** = beta, CI do VIO_TEST a cada merge, versão `<versão>.<run>`, release
-  fixo `beta` + `beta.json`, chave de teste (ID 3123E38BB793CE0D, entregue ao usuário).
-  Beta aceita qualquer versão diferente do feed (`version_comparator`). Ícone beta com
-  selo laranja (provisório, Design pode refinar). Sem secrets o workflow só avisa.
-- #132 (#122): `Controller.voiceBlocked`; bloqueio solta a captura, `syncCapture` não
-  publica, `VOICE_BLOCKED` no `publish` é tratado em silêncio. Teste `voice-block.test.ts`.
-- #133 (#118): `AudioBoost` compartilhado (tela e voz); `RemoteVoice` amplifica acima de
-  100% mantendo o `<audio>` original tocando mudo; `setPersonVolume`; menu da pessoa até
-  200%. `ScreenAudioLab` cobre 150%.
+- #192 (parecer na issue): WebView2 não troca o próprio seletor nem esconde a barra
+  "tauri.localhost está compartilhando"; `ScreenCaptureStarting` só cancela. Único
+  caminho: captura nativa (Windows.Graphics.Capture + `SharedBuffer` do WebView2 +
+  `MediaStreamTrackGenerator`), custo alto (1–2 semanas), precisa do crate
+  `webview2-com` (aval). Nada de código.
+- #193 (PR #201, rc.9): process loopback a partir do build 19041 (`MIN_BUILD`);
+  fonte "Todo o som do computador, sem o VIO" = `EXCLUDE_TARGET_PROCESS_TREE` sobre o
+  próprio PID (WebView2 é filho do VIO). Loopback do dispositivo inteiro não é usado.
+- #160 (PR #206, rc.10): `engine.startScreen(audio, true)` troca a fonte na mesma
+  publicação (mesma chave; `replaceTrack`; renegocia só se ganhar som);
+  `engine.setScreenAudioMuted`. App Windows só solta a captura anterior depois da
+  nova imagem escolhida (`pending`/`active` em `desktop/capture.ts`).
 
 ## Decisões
 - Dependências aprovadas: `@tauri-apps/cli`, `tauri`, `tauri-plugin-updater`, `windows`
-  (+ `windows-core`, `serde`, `serde_json`).
-- Voz liberada pelo dono não religa o microfone sozinha: a pessoa liga de novo.
+  (+ `windows-core`, `serde`, `serde_json`). `webview2-com` **não** aprovado ainda.
+- "muted" da publicação de tela = vídeo pausado. Silêncio do som é só local ao
+  publicador; mostrar "sem som" a quem assiste pede campo novo no protocolo (Backend).
 - Matar servidor local pela porta (`fuser -k PORTA/tcp`), nunca `pkill -f`.
 
 ## Pendente / bloqueios
-- Usuário: secrets e token (`docs/WINDOWS-RELEASE.md`); depois validar 1ª publicação beta.
+- Usuário: testar #193 no Windows 10 e 11 (roteiro na PR #201).
+- Aval para `webview2-com` se quiser o seletor próprio (#192).
 - Issues da área: #23 (upload N×), #24 (AudioContext compartilhado), #25 (TURN).
-- Links externos não abrem no app; janela flutuante (PiP) do ramo antigo não portada.
-- Cartão e widget de pessoas seguem com volume até 100% (Frontend decide).
+
+## Dicas
+- BrowserLab headless: `PORT=3100 ALLOWED_ORIGINS=http://localhost:3100 npm run
+  test:media` + Playwright clicando "Executar testes de mídia" (passa inteiro).
+- Rust só compila no job `installer` da CI (sem `lib.exe` aqui).
+- A `main` anda rápido: o número `-rc.N` costuma colidir; refaça merge e suba o N.
 
 ## Próximo passo
-Conferir a primeira publicação beta quando o usuário cadastrar os secrets; depois #24.
+Acompanhar #206 até o merge; depois #191 com o Frontend ou #24.

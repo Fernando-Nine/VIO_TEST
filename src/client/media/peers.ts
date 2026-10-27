@@ -412,12 +412,26 @@ export class Peers {
       ) {
         await this.serial(peer, async () => {
           const source = this.captures.sources.get(peer.sub.publication.kind);
-          for (const sender of peer.pc.getSenders()) {
+          const senders = peer.pc.getSenders();
+          for (const sender of senders) {
             const track = source?.stream
               .getTracks()
               .find((t) => t.kind === sender.track?.kind);
             if (track && sender.track !== track)
               await sender.replaceTrack(track);
+            // The new source has no sound: send nothing instead of a stopped track.
+            else if (source && !track && sender.track?.kind === "audio")
+              await sender.replaceTrack(null);
+          }
+          const audio = source?.stream.getAudioTracks()[0];
+          // A publication has at most one video and one audio sender.
+          const audioSender = senders.find((s) => s !== peer.videoSender);
+          if (audio && audioSender && !audioSender.track)
+            await audioSender.replaceTrack(audio);
+          else if (audio && !audioSender && source) {
+            // A replaced source gained sound: one more m-line, renegotiated by us.
+            peer.pc.addTrack(audio, source.stream);
+            await this.offer(peer, false);
           }
           await this.parameters(peer);
         });

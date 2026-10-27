@@ -841,6 +841,21 @@ export class Controller {
           m.publications.some((p) => p.id === previous.id),
       )
     ) {
+      const audio = source.stream.getAudioTracks().length > 0;
+      if (previous.audio !== audio) {
+        // Same key: the server updates the existing publication in place.
+        const updated = await this.request<Publication>("publish", {
+          kind,
+          key: source.key,
+          audio,
+          // Screen "muted" is the paused video, which the replacement keeps.
+          muted:
+            kind === "screen"
+              ? source.stream.getVideoTracks()[0]?.enabled === false
+              : previous.muted,
+        });
+        previous.audio = updated.audio;
+      }
       if (previous.muted !== muted) {
         await this.request("state", { publicationId: previous.id, muted });
         previous.muted = muted;
@@ -1191,15 +1206,20 @@ export class Controller {
       if (this.reconciling === generation) this.reconciling = undefined;
     }
   }
-  async startScreen(audio: boolean) {
+  /** `replace` swaps what is shared without ending the publication viewers watch. */
+  async startScreen(audio: boolean, replace = false) {
     const generation = this.generation;
     if (this.sounds) this.cues.unlock();
     try {
-      await this.captures.startScreen(audio);
+      await this.captures.startScreen(audio, replace);
       await this.captureQueue;
     } catch (e) {
       if (generation === this.generation) this.fail(e);
     }
+  }
+  setScreenAudioMuted(muted: boolean) {
+    this.captures.setScreenAudioMuted(muted);
+    this.bump();
   }
   async microphone() {
     if (!this.inCall || this.voicePending || this.voiceBlocked) return;
