@@ -8,7 +8,7 @@ Atualizado: 2026-10-27.
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
 | Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.11.0-rc.4 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.11.0-rc.7 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
@@ -28,13 +28,14 @@ planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pres
 
 1. Leva 4 de Design publicada: canvas https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf —
    usuário escolhe por comentário; #191 (compartilhar, estilo Discord) primeiro.
-2. #192 captura nativa no app — Mídia 5 (crate `webview2-com` aprovado em 27 out).
-3. #194 até 3 telas — Mídia 4.
+2. #192 captura nativa no app: parte nativa feita (#217–#219, rc.7). Falta o seletor
+   visual (Frontend, após a spec da #191) e medir a CPU em 1080p60 no PC do usuário.
+3. #194 até 3 telas — Mídia 6.
 4. Depois: brandbook/identidade/design system (Design novo com Figma/Canva), clips (#208),
    Ajustes (#168).
 
-Feito na 2.11 até rc.4: #158, #189, #190, #198, #159 Pessoas, #160 Minha transmissão,
-#162 Câmeras, #193 som no Windows 10, #207 avatar, #209 lacunas da leva 3. O usuário
+Feito na 2.11 até rc.7: #158, #189, #190, #198, #159 Pessoas, #160 Minha transmissão,
+#162 Câmeras, #192 parte nativa (rc.7), #193 som no Windows 10, #207 avatar, #209 lacunas da leva 3. O usuário
 decidiu **não publicar a 2.10.0**: a próxima produção é a 2.11.0, após aval na prévia.
 
 ## Decisões vigentes
