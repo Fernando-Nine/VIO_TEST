@@ -71,6 +71,7 @@ import { loadClosed, saveClosed } from "./closed-widgets";
 import { toasts } from "../components/Toasts";
 import { adjacentDropSlot, dropSlotAt, type Point } from "./drag";
 import { createWidget, titleOf, widgetRegistry } from "./widgets";
+import { pinCamera } from "./CamerasWidget";
 import { createModule } from "./ModuleWidget";
 import { createContent } from "./CustomWidget";
 import { isModule } from "../../shared/room-modules";
@@ -719,6 +720,28 @@ export function RoomCanvas(props: Props) {
     };
     return () => {
       engine.watchRequest = undefined;
+    };
+  });
+  useEffect(() => {
+    engine.cameraRequest = (personId) => {
+      const existing = store
+        .getSnapshot()
+        .widgets.find((w) => w.type === "cameras");
+      const widget = existing || createWidget("cameras");
+      if (!existing) {
+        widget.config = { pinned: personId };
+        const free =
+          store.getSnapshot().slots.find((s) => !s.widgetId && !s.offer)?.id ||
+          store.addSlot();
+        store.add(widget, free);
+      } else {
+        pinCamera(engine, widget.id, personId);
+        store.show(widget.id);
+      }
+      focusHeader(widget.id);
+    };
+    return () => {
+      engine.cameraRequest = undefined;
     };
   });
   function sharedInstance(widget: SharedWidget): WidgetInstance {

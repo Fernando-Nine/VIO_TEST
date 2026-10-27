@@ -9,6 +9,7 @@ import {
   RotateCcw,
   ShieldCheck,
   ShieldOff,
+  Video,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -81,6 +82,15 @@ export function usePersonMenu(
         label: "Assistir a tela",
         icon: Eye,
         run: () => engine.watch(screen.id, true),
+      });
+    if (
+      engine.cameraRequest &&
+      person.publications.some((p) => p.kind === "camera")
+    )
+      watch.push({
+        label: "Abrir câmera",
+        icon: Video,
+        run: () => engine.cameraRequest?.(person.id),
       });
     const level = engine.volumes.get(person.id) ?? 1;
     if (level !== 1 && level !== 0)

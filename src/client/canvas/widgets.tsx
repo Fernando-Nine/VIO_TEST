@@ -14,12 +14,15 @@ import {
   Shuffle,
   ListTodo,
   Palette,
+  Video,
+  LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
 import type { MenuItem } from "../components/ContextMenu";
 import type { Controller } from "../room/controller";
 import { Media } from "../components/Media";
 import { PeopleWidget } from "./PeopleWidget";
+import { CamerasWidget, pinCamera } from "./CamerasWidget";
 import { MyStreamWidget } from "./MyStreamWidget";
 import { Spectators } from "../components/Spectators";
 import { ScreenTimer } from "../components/RoomStatus";
@@ -167,6 +170,7 @@ const definition = (
     {
       screen: MonitorUp,
       people: Users,
+      cameras: Video,
       stream: Radio,
       chat: MessageCircle,
       canvas: PencilRuler,
@@ -199,6 +203,23 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     PeopleWidget,
     true,
     colorItem,
+  ),
+  cameras: definition(
+    "cameras",
+    "Câmeras",
+    "Quem fala em destaque; fixe uma câmera pelo botão direito.",
+    CamerasWidget,
+    false,
+    ({ widget, engine }) =>
+      widget.config.pinned
+        ? [
+            {
+              label: "Mostrar todas",
+              icon: LayoutGrid,
+              run: () => pinCamera(engine, widget.id, undefined),
+            },
+          ]
+        : [],
   ),
   stream: definition(
     "stream",

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Play, VideoOff } from "lucide-react";
-import { observeVoiceActivity } from "../media/voice-activity";
+import { shareVoiceActivity } from "../media/voice-activity";
 import type { AudioOutput } from "../media/audio-output";
 import type { ScreenPlayback } from "../media/screen-playback";
 import { AudioBoost, type BoostState } from "./ScreenAudio";
@@ -201,7 +201,7 @@ export function useSpeaking(
     if (muted || (!stream && !localLevel)) {
       return;
     }
-    return observeVoiceActivity(stream, setSpeaking, localLevel);
+    return shareVoiceActivity(stream, setSpeaking, localLevel);
   }, [stream, muted, localLevel]);
   return speaking;
 }

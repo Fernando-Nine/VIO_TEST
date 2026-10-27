@@ -53,6 +53,8 @@ interface Peer {
   info: PeerInfo;
   events: AbortController;
 }
+/** Kinds whose sender follows each viewer's video demand. */
+const hasDemand = (kind: string) => kind === "screen" || kind === "camera";
 export class Peers {
   entries = new Map<string, Peer>();
   ice: IceConfig = { iceServers: [], expiresAt: 0, turn: false };
@@ -116,7 +118,7 @@ export class Peers {
     if (
       outgoing &&
       sub.tier === "main" &&
-      sub.publication.kind === "screen" &&
+      hasDemand(sub.publication.kind) &&
       pendingDemand
     )
       sub = { ...sub, demand: pendingDemand };
@@ -344,7 +346,7 @@ export class Peers {
     if (
       !peer.outgoing ||
       peer.sub.tier !== "main" ||
-      peer.sub.publication.kind !== "screen"
+      !hasDemand(peer.sub.publication.kind)
     )
       return;
     peer.sub.demand = { video: demand.video, height: demand.height };
@@ -361,7 +363,11 @@ export class Peers {
     if (!sender.track && active && source) await sender.replaceTrack(source);
     const height = (sender.track || source)?.getSettings().height;
     const quality = { ...this.captures.quality };
-    if (demand && peer.sub.tier === "main") {
+    if (
+      demand &&
+      peer.sub.tier === "main" &&
+      peer.sub.publication.kind === "screen"
+    ) {
       quality.resolution = Math.min(quality.resolution, demand.height);
       if (demand.video === "small") {
         quality.fps = Math.min(quality.fps, 12);
@@ -385,7 +391,13 @@ export class Peers {
     }
     Object.assign(
       p.encodings[0],
-      videoEncoding(quality, peer.sub.publication.kind, peer.sub.tier, height),
+      videoEncoding(
+        quality,
+        peer.sub.publication.kind,
+        peer.sub.tier,
+        height,
+        demand,
+      ),
       { active },
     );
     try {
