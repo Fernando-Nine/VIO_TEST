@@ -8,7 +8,7 @@ Atualizado: 2026-10-27.
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
 | Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.10.0-rc.8 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.11.0-rc.1 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
@@ -26,10 +26,15 @@ Ordem completa em `ROADMAP.md`.
 Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
 planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
 
-1. 2.10.0 pronta na prévia (rc.8: #158, #189, #190, #198 feitas): aguarda aval do usuário.
-2. Compartilhar e app Windows: #192 seletor próprio, #193 Windows 10, #160 + #191 — Mídia 3.
-3. 2.11.0: #159 Pessoas (Frontend 10), #162 Câmeras, #194 até 3 telas por pessoa.
-4. Design leva 4: #195 grade/fantasma do foco, #196 categorias do catálogo, #197 landing.
+1. Pendentes da leva 3: #160 Minha transmissão (interface), #207 anel do avatar, #209 lacunas — Frontend 11.
+2. Redesenho da janela de compartilhar no estilo Discord (#191) — Design leva 4, primeiro item.
+3. #162 Câmeras e #194 até 3 telas — Mídia 4.
+4. #192 captura nativa no app (seletor próprio, sem aviso do WebView2): custo alto e crate
+   `webview2-com` — aguarda aval do usuário.
+5. Design leva 4: #195 grade/fantasma, #196 categorias, #197 landing. Clips: plano na #208.
+
+Feito na 2.10/2.11 até agora: #158, #189, #190, #198, #159 (Pessoas), #193 (som da janela no
+Windows 10), mídia da #160. 2.10.0 (rc.8) aguarda aval para produção.
 
 ## Decisões vigentes
 
@@ -45,6 +50,8 @@ planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pres
   volume fica em cada tela, não no rodapé (#145).
 - Fechar widget (#146): widget da sala tem − (minimizar, só para você) e × (fechar para
   todos) para dono da sala, admins e criador; os demais só −. Widget pessoal só ×.
+- Agentes novos (27 out): Jurídico e Privacidade (sem verba para advogado agora) e Roteirista.
+- Clips (#208): no aparelho, até 3 min, vozes de todos, edição rápida em ms, marca d'água.
 - Desativar áudio (#149): como no Discord, desliga microfone e vozes, mas não as telas.
 - Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
   a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
