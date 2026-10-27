@@ -46,6 +46,20 @@ prancha 191A (app, com miniaturas) e 191B (navegador). As duas são interativas.
 - Vazio na aba Janela: "Abra o aplicativo que deseja compartilhar." + botão Atualizar.
 - Erro de captura: `Fault` com mensagem em português, no lugar da grade.
 
+### API nativa (já na `main`, Mídia)
+
+`src/client/desktop/share.ts`:
+
+- `listVideoSources()` → `VideoSource[]` (`kind` `screen`/`window`, `title`, `width`,
+  `height`, `primary`, `minimized`). Abre as abas Tela inteira e Janela do aplicativo;
+  a tela com `primary` vem escolhida.
+- `videoThumbnail(source)` → miniatura de cada cartão (carregar sob demanda, por aba).
+- `startNativeShare(engine, { source, quality, audio, replace })` → Compartilhar.
+  `audio`: Sem som = `"none"`; Com som = `"app"` na aba Janela e `"system"` (o PC
+  inteiro, sem o VIO) na aba Tela inteira. `quality` vem das faixas Qualidade e Taxa;
+  `replace` = Trocar (#160).
+- Erro lançado vira `Fault` com a mensagem dele no modal.
+
 ## B · navegador
 
 - No lugar da grade, faixa tracejada com `ArrowUpRight` e uma linha:
