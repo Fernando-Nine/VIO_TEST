@@ -13,16 +13,7 @@ export type Scope = "individual" | "room";
 const groups: { title: string; ids: string[] }[] = [
   {
     title: "Na sala",
-    ids: [
-      "people",
-      "call",
-      "viewers",
-      "mixer",
-      "connection",
-      "time",
-      "quick",
-      "chat",
-    ],
+    ids: ["people", "call", "viewers", "mixer", "connection", "quick", "chat"],
   },
   { title: "Decidir e jogar", ids: ["poll", "dice", "random"] },
   { title: "Tempo", ids: ["timer", "tasks"] },
@@ -34,7 +25,6 @@ const shortNames: Record<string, string> = {
   viewers: "Público",
   mixer: "Mixer",
   quick: "Minha tela",
-  time: "Tempo",
   tasks: "Tarefas",
 };
 /** Widgets about your own stream: always yours, whatever the choice. */

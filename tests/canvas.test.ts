@@ -461,3 +461,14 @@ test("rodada E: migração remove Notas canceladas e mantém cronômetro individ
   assert.equal(restored.slots[1].widgetId, "timer");
   assert.equal(restored.schemaVersion, 2);
 });
+
+test("#161: widget Tempo da sala sai do layout e libera o espaço", () => {
+  const state = newCanvas();
+  state.widgets = [
+    { id: "time", type: "time", title: "Tempo da sala", config: {} },
+  ];
+  state.slots[0].widgetId = "time";
+  const restored = restoreCanvas(state);
+  assert.deepEqual(restored.widgets, []);
+  assert.equal(restored.slots[0].widgetId, undefined);
+});

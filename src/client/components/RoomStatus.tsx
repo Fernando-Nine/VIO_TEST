@@ -1,26 +1,64 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnchoredPopover } from "./AnchoredPopover";
-import { Clock3, HelpCircle } from "lucide-react";
+import { Clock, HelpCircle } from "lucide-react";
 import type { Controller } from "../room/controller";
-import { connectionMetric, formatDuration } from "../room/status";
+import {
+  connectionMetric,
+  formatDuration,
+  spokenDuration,
+} from "../room/status";
 
-export function RoomTimer({ engine }: { engine: Controller }) {
-  const [seconds, setSeconds] = useState(() => engine.roomSeconds());
+/** Ticks once a second; the clock itself comes from the server. */
+function useServerNow(engine: Controller) {
+  const [now, setNow] = useState(() => engine.serverNow());
   useEffect(() => {
-    const update = () => setSeconds(engine.roomSeconds());
+    const update = () => setNow(engine.serverNow());
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
-  }, [engine, engine.view.snapshot?.createdAt]);
+  }, [engine]);
+  return now;
+}
+
+export function RoomTimer({ engine }: { engine: Controller }) {
+  useServerNow(engine);
+  const seconds = engine.roomSeconds();
   return (
-    <span className="room-duration" title="Tempo desde a criação desta sala">
-      <Clock3 size={13} aria-hidden="true" />
-      <span>
-        Há{" "}
-        <time aria-label={`Duração da sala: ${formatDuration(seconds)}`}>
-          {formatDuration(seconds)}
-        </time>
-      </span>
+    <span
+      className="room-duration"
+      title={`Sala aberta há ${spokenDuration(seconds)}`}
+    >
+      <Clock size={14} aria-hidden="true" />
+      <time aria-label={`Sala aberta há ${spokenDuration(seconds)}`}>
+        {formatDuration(seconds)}
+      </time>
+    </span>
+  );
+}
+
+/** How long a screen has been live, in its own header. */
+export function ScreenTimer({
+  engine,
+  publicationId,
+}: {
+  engine: Controller;
+  publicationId: string;
+}) {
+  const now = useServerNow(engine);
+  const createdAt = engine.view.snapshot?.participants
+    .flatMap((p) => p.publications)
+    .find((p) => p.id === publicationId)?.createdAt;
+  if (!createdAt) return null;
+  const seconds = Math.max(0, (now - createdAt) / 1000);
+  return (
+    <span
+      className="screen-duration"
+      title={`Ao vivo há ${spokenDuration(seconds)}`}
+    >
+      <span className="live-dot" aria-hidden="true" />
+      <time aria-label={`Ao vivo há ${spokenDuration(seconds)}`}>
+        {formatDuration(seconds)}
+      </time>
     </span>
   );
 }
@@ -174,7 +212,6 @@ export function ConnectionStatus({
           onPointerLeave={leaveHover}
         >
           <strong>{metric.quality}</strong>
-          <RoomTimer engine={engine} />
           <p>
             Servidor{" "}
             <b>

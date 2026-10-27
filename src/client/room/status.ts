@@ -1,5 +1,6 @@
 export function formatDuration(total: number) {
   const seconds = Math.max(0, Math.floor(total));
+  if (seconds >= 100 * 3600) return "99:59:59+";
   return [
     Math.floor(seconds / 3600),
     Math.floor(seconds / 60) % 60,
@@ -59,4 +60,11 @@ export function connectionMetric(
           ? "Latência moderada"
           : "Latência alta",
   };
+}
+/** "1 h 24 min" for tooltips; minutes only below an hour. */
+export function spokenDuration(total: number) {
+  const minutes = Math.floor(Math.max(0, total) / 60);
+  const hours = Math.floor(minutes / 60);
+  if (!hours) return `${minutes} min`;
+  return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
 }

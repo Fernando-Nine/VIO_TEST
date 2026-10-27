@@ -16,7 +16,6 @@ import {
   Eye,
   SlidersHorizontal,
   Activity,
-  Clock3,
   MessageCircle,
   PencilRuler,
   Timer,
@@ -33,7 +32,7 @@ import type { Controller } from "../room/controller";
 import { Media } from "../components/Media";
 import { ParticipantCard } from "../components/ParticipantCard";
 import { Spectators } from "../components/Spectators";
-import { RoomLimit } from "../components/RoomStatus";
+import { RoomLimit, ScreenTimer } from "../components/RoomStatus";
 import { screenResolutions } from "../../shared/protocol";
 import { ScreenVolume } from "../components/ScreenVolume";
 import { CustomWidget, createContent, widgetValue } from "./CustomWidget";
@@ -337,33 +336,6 @@ function ConnectionWidget({ engine }: WidgetProps) {
     </div>
   );
 }
-function TimeWidget({ engine, visible }: WidgetProps) {
-  const [now, setNow] = useState(0);
-  useEffect(() => {
-    if (!visible) return;
-    const update = () => setNow(engine.serverNow());
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [engine, visible]);
-  const show = (seconds: number) =>
-    `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
-  const publication = engine.publications.get("screen");
-  return (
-    <div className="widget-time">
-      <span>Sala aberta há</span>
-      <output>{show(engine.roomSeconds())}</output>
-      {publication?.createdAt && (
-        <>
-          <span>Sua transmissão</span>
-          <output>
-            {show(Math.max(0, (now - publication.createdAt) / 1000))}
-          </output>
-        </>
-      )}
-    </div>
-  );
-}
 function ViewersWidget({ engine }: WidgetProps) {
   const own = engine.publications.get("screen");
   const viewers = new Set(
@@ -495,7 +467,6 @@ const definition = (
       viewers: Eye,
       mixer: SlidersHorizontal,
       connection: Activity,
-      time: Clock3,
       quick: Settings2,
       chat: MessageCircle,
       canvas: PencilRuler,
@@ -558,12 +529,6 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
     ({ diagnostics }) => [
       { label: "Detalhes da conexão", icon: Activity, run: diagnostics },
     ],
-  ),
-  time: definition(
-    "time",
-    "Tempo da sala",
-    "Duração da sala e do seu compartilhamento.",
-    TimeWidget,
   ),
   quick: definition(
     "quick",
@@ -654,6 +619,10 @@ export function HeaderAccessory({
 }) {
   return widget.type === "screen" ? (
     <>
+      <ScreenTimer
+        engine={engine}
+        publicationId={widget.config.publicationId}
+      />
       <ScreenVolume engine={engine} id={widget.config.publicationId} />
       <Spectators engine={engine} publicationId={widget.config.publicationId} />
     </>
