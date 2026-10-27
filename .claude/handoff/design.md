@@ -4,14 +4,13 @@ Atualizado: 2026-10-27
 
 ## Agora
 
-Leva 3 aprovada e especificada. Nada em andamento.
-Canvas leva 3: https://claude.ai/artifact/3yJ4umERzwmY3vtWfxt8hJ (seção `#escolhidas` =
-versão final; o resto são as alternativas). Leva 2:
-https://claude.ai/artifact/819UwyvwKn6c5WCU1X5Hv8 · leva 1:
-https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ. Specs em `docs/design/`.
+Nada em aberto. Próxima leva segue a skill `vio-design-delivery` (canvas do tipo Design,
+editável, com seções por issue e "Escolhidas" no topo).
 
 ## Feito recentemente
 
+- Skill `vio-design-delivery` (formato da leva 3 + edição das levas 1/2) e
+  `docs/design/ideias-futuras.md` (categorias futuras de Ajustes, divergências com o plano da #168).
 - Escolhas do usuário (27 out) viraram specs e issues `frontend`:
   - Cabeçalho − / × + Desfazer + "N não exibidos" — `cabecalho-widget.md`, #158 (+backend).
   - Widget Pessoas C, volume sempre à vista, menu só no botão direito — `widget-pessoas.md`, #159.
@@ -29,15 +28,18 @@ https://claude.ai/artifact/3M2c9eiZF8Pp26bjBhMjAZ. Specs em `docs/design/`.
 
 ## Decisões
 
-- Skills do projeto: `vio-design-system` e `vio-design-review` (`.claude/skills/`).
+- "Silenciar para mim" (#107): qualquer pessoa silencia para si; "para todos" só o dono
+  (#122, implementado).
+
+- Skills do projeto: `vio-design-system`, `vio-design-review` e `vio-design-delivery`.
 - Destaque discreto `#A6A9FF`; volume acima de 100% em `#F2D36B`.
 - Animações ≤ 800 ms, desligadas em movimento reduzido.
 
 ## Pendente / bloqueios
 
-- Copiloto: milestone das issues #158–#168; categorias futuras de Ajustes com o usuário.
-- Confirmar com o copiloto: "Silenciar para mim" (#107).
+- Copiloto: milestone das issues #158–#168.
 
 ## Próximo passo
 
 Aguardar a próxima leva (landing, página de download ou categorias futuras de Ajustes).
+Copiloto decide as divergências listadas em `ideias-futuras.md` (nome do grupo App, Atalhos).

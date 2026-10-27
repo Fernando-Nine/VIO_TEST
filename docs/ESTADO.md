@@ -8,7 +8,7 @@ Atualizado: 2026-10-26.
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
 | Produção | 2.8.1       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.9.0-rc.13 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+| Prévia   | 2.9.0-rc.20 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.8.1 = 2.8.0 + correções de segurança (VIO PR #3). A prévia já tem o visual novo
