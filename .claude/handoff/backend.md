@@ -1,14 +1,17 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-10-25
+Atualizado: 2026-10-27
 
 ## Agora
 
-#122 (PR #126): "Silenciar para todos" no servidor — aguardando CI → squash merge.
-Contrato comentado na #122 (Frontend: menus; Mídia: soltar o microfone ao ser bloqueado).
+#158 (PR #171): fechar para todos + Desfazer de 8 s no servidor. Contrato comentado na
+#158 para o Frontend.
 
 ## Feito recentemente
 
+- #158: `widget-delete` guarda o widget 8 s (`RoomWidgets.closed`, `closedWidgetHold`);
+  `widget-updated.closed { by, byName, until }`; `widget-restore` só para quem fechou ou
+  pode fechar, respeitando limites.
 - #122: comando `moderate { participantId, voiceBlocked }` só do criador; encerra só a
   `voice`; `Participant.voiceBlocked`; `publish` de voz recusado com `VOICE_BLOCKED`;
   `transfer` limpa o bloqueio.
