@@ -1,0 +1,231 @@
+/* #159: Pessoas widget (docs/design/widget-pessoas.md). Bubbles in a grid
+   with the volume always shown; sizes follow the widget body. */
+.widget-body > .people-widget {
+  --avatar: 42px;
+  --columns: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+.people-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.people-group.is-call {
+  flex: 1 1 auto;
+}
+/* Only the call group scrolls when more people than fit. */
+.people-group.is-call > .people-bubbles {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+.people-heading {
+  margin: 0;
+  font: 600 0.625rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.people-bubbles,
+.people-outside-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.people-bubbles {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 10px 8px;
+  align-items: start;
+  padding: 3px;
+}
+.people-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  border-radius: 10px;
+  outline-offset: 2px;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.people-bubble.is-offline,
+.people-outside {
+  opacity: 0.55;
+}
+.bubble-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--avatar);
+  height: var(--avatar);
+  border-radius: 50%;
+  background: var(--person-color, #2727f5);
+  color: var(--person-ink, #fff);
+  font: 650 calc(var(--avatar) * 0.34) var(--font);
+  transition: box-shadow var(--ease);
+}
+.people-bubble.is-speaking .bubble-avatar {
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 4px var(--live);
+}
+.bubble-badge {
+  position: absolute;
+  width: max(14px, calc(var(--avatar) * 0.36));
+  height: max(14px, calc(var(--avatar) * 0.36));
+  padding: 2px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--panel);
+  box-shadow: 0 0 0 1.5px var(--panel);
+}
+.bubble-badge.is-sharing {
+  top: -3px;
+  right: -3px;
+  color: var(--blue-light);
+}
+.bubble-badge.is-muted {
+  right: -3px;
+  bottom: -3px;
+  color: var(--danger);
+}
+.bubble-badge.is-camera {
+  left: -3px;
+  bottom: -3px;
+  color: var(--blue-light);
+}
+.bubble-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 0.75rem;
+}
+.bubble-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.bubble-name small {
+  color: var(--muted);
+}
+.bubble-name .volume-number {
+  flex: none;
+}
+.people-bubble > .volume-slider {
+  width: 100%;
+  flex: none;
+}
+.people-bubble > .volume-slider input[type="range"] {
+  margin: 6px 0;
+}
+.people-more {
+  display: grid;
+  place-items: center;
+  width: var(--avatar);
+  height: var(--avatar);
+  justify-self: center;
+  border-radius: 50%;
+  background: var(--raised);
+  font: 0.75rem var(--mono);
+  color: var(--muted);
+}
+.people-group.is-room {
+  flex: none;
+}
+.people-outside-list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+}
+.people-outside {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  border-radius: 999px;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.people-outside .bubble-avatar {
+  --avatar: 24px;
+}
+.outside-name {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.people-outside-count {
+  white-space: nowrap;
+  font: 0.6875rem var(--mono);
+  color: var(--muted);
+}
+
+/* Strip 280×160: small avatars, only the number, no scrolling. */
+.widget-body > .people-widget.is-strip {
+  --avatar: 32px;
+  justify-content: center;
+  padding: 4px 10px;
+}
+.people-widget.is-strip .people-bubbles {
+  overflow: hidden;
+  gap: 6px;
+}
+.people-widget.is-strip .people-bubble {
+  gap: 2px;
+}
+.people-widget.is-strip .people-bubble > .volume-slider,
+.people-widget.is-strip .bubble-name strong,
+.people-widget.is-strip .bubble-name small {
+  display: none;
+}
+.people-widget.is-strip
+  .people-bubble:not(:has(.volume-number))
+  .bubble-name
+  small {
+  display: inline;
+}
+
+/* Focus 960×640: big bubbles, a 170 px track under each one. */
+@container widget-body (min-width: 760px) and (min-height: 480px) {
+  .widget-body > .people-widget {
+    --avatar: 84px;
+    gap: 18px;
+  }
+  .people-bubbles {
+    gap: 22px 16px;
+    justify-items: center;
+  }
+  .people-bubble {
+    width: min(100%, 170px);
+  }
+  .bubble-name {
+    font-size: 0.875rem;
+  }
+  .people-outside .bubble-avatar {
+    --avatar: 56px;
+  }
+  .outside-name {
+    font-size: 0.875rem;
+  }
+}
+/* Phone: three columns of bigger, touch-friendly bubbles. */
+@media (max-width: 679px) {
+  .widget-body > .people-widget:not(.is-strip) {
+    --columns: 3;
+    --avatar: 56px;
+  }
+}

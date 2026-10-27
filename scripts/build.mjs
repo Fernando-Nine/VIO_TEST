@@ -15,7 +15,7 @@ const changelog =
     .filter((release) => !release.legacy)
     .map(
       (release) =>
-        `## [${release.version}] - ${release.date}\n\n${release.title}\n\n` +
+        `## [${release.version}] - ${release.date ?? "prevista"}\n\n${release.title}\n\n` +
         release.sections
           .map(
             (section) =>

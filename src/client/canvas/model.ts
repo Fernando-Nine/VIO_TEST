@@ -579,19 +579,29 @@ export function restoreCanvas(raw: unknown): CanvasState {
     !Array.isArray(s.floating)
   )
     return newCanvas();
-  const widgets = s.widgets.filter(
-    (w) =>
-      w &&
-      typeof w.id === "string" &&
-      typeof w.type === "string" &&
-      // Retired widgets: their slots come back empty.
-      !["notes", "time"].includes(w.type) &&
-      typeof w.title === "string" &&
-      w.config &&
-      typeof w.config === "object" &&
-      Object.values(w.config).every((v) => typeof v === "string") &&
-      !w.transient,
-  );
+  // #159: People in the room, in the call and the volume mixer became one
+  // People widget; the first one found keeps its spot, the others close.
+  let merged = false;
+  const widgets = s.widgets
+    .flatMap((w) => {
+      if (!w || !["people", "call", "mixer"].includes(w.type)) return [w];
+      if (merged) return [];
+      merged = true;
+      return [{ ...w, type: "people", title: "Pessoas" }];
+    })
+    .filter(
+      (w) =>
+        w &&
+        typeof w.id === "string" &&
+        typeof w.type === "string" &&
+        // Retired widgets: their slots come back empty.
+        !["notes", "time"].includes(w.type) &&
+        typeof w.title === "string" &&
+        w.config &&
+        typeof w.config === "object" &&
+        Object.values(w.config).every((v) => typeof v === "string") &&
+        !w.transient,
+    );
   if (new Set(widgets.map((w) => w.id)).size !== widgets.length)
     return newCanvas();
   const placed = new Set<string>();

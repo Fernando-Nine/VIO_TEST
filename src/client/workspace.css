@@ -593,36 +593,13 @@
 .widget-people-summary > .text-button {
   margin-left: auto;
 }
-.widget-people-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
-  gap: 8px;
-}
-.widget-people .participant-card {
-  min-width: 0;
-}
+
 .widget-empty {
   font-size: 13px;
   color: #bdc5e2;
   line-height: 1.5;
 }
-.widget-mixer {
-  display: grid;
-  gap: 12px;
-}
-.mixer-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.mixer-row label {
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-}
-.mixer-row input {
-  width: 100%;
-}
+
 .widget-connection {
   font-size: 12px;
 }
@@ -1225,27 +1202,13 @@
     cursor: none !important;
   }
 }
-.person-volume {
-  margin-top: 8px;
-  font-size: 11px;
-  color: #c4cee9;
-}
-.person-volume input {
-  width: 100%;
-  min-height: 24px;
-}
-.widget-people-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
-}
-.widget-mixer,
+
 .widget-quick,
 .widget-connection {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
 }
-.widget-mixer > .field-note,
-.widget-mixer > .widget-empty,
 .widget-connection > p,
 .widget-connection > button {
   grid-column: 1 / -1;
@@ -1411,15 +1374,7 @@
     opacity: 1;
   }
 }
-.participant-ping {
-  margin-left: auto;
-  color: #9aa3c4;
-  font: 11px var(--mono);
-  white-space: nowrap;
-}
-.person-row .participant-ping {
-  margin-right: 34px;
-}
+
 .room-admin {
   margin-left: 6px;
   color: #a8adff;

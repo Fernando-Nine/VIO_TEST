@@ -486,3 +486,29 @@ test("#161: widget Tempo da sala sai do layout e libera o espaço", () => {
   assert.deepEqual(restored.widgets, []);
   assert.equal(restored.slots[0].widgetId, undefined);
 });
+
+test("#159: Pessoas na sala, na chamada e Mixer viram um só Pessoas no mesmo espaço", () => {
+  const state = newCanvas();
+  state.widgets = [
+    { id: "call", type: "call", title: "Pessoas na chamada", config: {} },
+    { id: "mixer", type: "mixer", title: "Mixer de volume", config: {} },
+    { id: "room", type: "people", title: "Pessoas na sala", config: {} },
+    { id: "chat", type: "connection", title: "Conexão", config: {} },
+  ];
+  state.slots[0].widgetId = "mixer";
+  state.slots[1].widgetId = "call";
+  state.slots[2].widgetId = "room";
+  state.slots[3].widgetId = "chat";
+  const restored = restoreCanvas(state);
+  assert.deepEqual(
+    restored.widgets.map((w) => [w.id, w.type, w.title]),
+    [
+      ["call", "people", "Pessoas"],
+      ["chat", "connection", "Conexão"],
+    ],
+  );
+  assert.deepEqual(
+    restored.slots.map((s) => s.widgetId),
+    [undefined, "call", undefined, "chat"],
+  );
+});
