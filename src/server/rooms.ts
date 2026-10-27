@@ -715,7 +715,7 @@ export class Rooms {
         !sub ||
         sub.viewer !== m.id ||
         sub.tier !== "main" ||
-        sub.publication.kind !== "screen"
+        sub.publication.kind === "voice"
       )
         throw new Fault("FORBIDDEN", "Demanda de vídeo não autorizada.");
       sub.demand = { video: data.video, height: data.height };

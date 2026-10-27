@@ -52,6 +52,7 @@ export interface View {
   notice: string;
   signalingPing?: number;
 }
+const cameraOff: VideoDemand = { video: "off", height: 120 };
 export class Controller {
   view: View = {
     revision: 0,
@@ -71,6 +72,8 @@ export class Controller {
     this.bump();
   }
   watchRequest?: (id: string, together: boolean, single?: boolean) => boolean;
+  /** Opens (or brings) the Cameras widget pinned on this person (#162). */
+  cameraRequest?: (personId: string) => void;
   /** Runs before a room widget closed for everyone leaves the snapshot. */
   widgetClosed?: (widget: SharedWidget, closed: WidgetClosed) => void;
   private desiredVideo = new Map<string, VideoDemand>();
@@ -1054,9 +1057,12 @@ export class Controller {
   private async flushVideoDemands() {
     if (!this.socket?.connected) return;
     for (const info of this.peers.infos()) {
-      if (info.sending || info.kind !== "screen" || info.tier !== "main")
+      if (info.sending || info.kind === "voice" || info.tier !== "main")
         continue;
-      const demand = this.desiredVideo.get(info.publicationId);
+      // A camera nobody shows (no Cameras widget, hidden tile) costs no upload.
+      const demand =
+        this.desiredVideo.get(info.publicationId) ||
+        (info.kind === "camera" ? cameraOff : undefined);
       if (!demand) continue;
       const key = JSON.stringify(demand);
       if (this.sentVideo.get(info.id) === key) continue;

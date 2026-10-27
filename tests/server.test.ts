@@ -2545,3 +2545,68 @@ test("silenciar para todos: só o dono, encerra a voz e bloqueia até liberar", 
     await app.close();
   }
 });
+
+test("câmera segue a demanda de cada espectador (#162); voz não tem demanda", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 2; i++) {
+      const socket = await connect(app.url, (await session(app.url)).token);
+      sockets.push(socket);
+      data(
+        await request(socket, "join", {
+          name: `Pessoa ${i}`,
+          code: "QACAMDEMAND",
+        }),
+      );
+    }
+    const [owner, viewer] = sockets;
+    const subscribe = async (kind: "camera" | "voice") => {
+      const publication = data(
+        await request<Publication>(owner, "publish", {
+          kind,
+          key: crypto.randomUUID(),
+          audio: kind === "voice",
+          muted: false,
+        }),
+      );
+      return data(
+        await request<Subscription>(viewer, "subscribe", {
+          publicationId: publication.id,
+          tier: "main",
+          nonce: crypto.randomUUID(),
+        }),
+      );
+    };
+    const camera = await subscribe("camera");
+    const received = new Promise<{ id: string; video: string }>((resolve) =>
+      owner.once("video-demand", resolve),
+    );
+    data(
+      await request(viewer, "demand", {
+        id: camera.id,
+        video: "small",
+        height: 240,
+      }),
+    );
+    assert.deepEqual(await received, {
+      id: camera.id,
+      video: "small",
+      height: 240,
+    });
+    const voice = await subscribe("voice");
+    assert.equal(
+      (
+        await request(viewer, "demand", {
+          id: voice.id,
+          video: "off",
+          height: 240,
+        })
+      ).ok,
+      false,
+    );
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});

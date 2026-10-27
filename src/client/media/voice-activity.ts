@@ -80,3 +80,47 @@ export function observeVoiceActivity(
     void context?.close().catch(() => {});
   };
 }
+
+const shared = new Map<
+  MediaStream,
+  {
+    listeners: Set<(speaking: boolean) => void>;
+    speaking: boolean;
+    stop: () => void;
+  }
+>();
+/**
+ * One analyser per remote stream, however many views show who speaks (People,
+ * Cameras): each observer would otherwise open its own AudioContext (#24).
+ */
+export function shareVoiceActivity(
+  stream: MediaStream | undefined,
+  changed: (speaking: boolean) => void,
+  localLevel?: () => number,
+) {
+  if (!stream || localLevel)
+    return observeVoiceActivity(stream, changed, localLevel);
+  let entry = shared.get(stream);
+  if (!entry) {
+    const created = {
+      listeners: new Set<(speaking: boolean) => void>(),
+      speaking: false,
+      stop: () => {},
+    };
+    created.stop = observeVoiceActivity(stream, (speaking) => {
+      created.speaking = speaking;
+      for (const listener of created.listeners) listener(speaking);
+    });
+    shared.set(stream, created);
+    entry = created;
+  }
+  const current = entry;
+  current.listeners.add(changed);
+  if (current.speaking) changed(true);
+  return () => {
+    current.listeners.delete(changed);
+    if (current.listeners.size) return;
+    current.stop();
+    shared.delete(stream);
+  };
+}

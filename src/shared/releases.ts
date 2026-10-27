@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.1";
+export const version = "2.11.0-rc.2";
 export const currentRelease: Release = {
   version,
   date: "2026-10-27",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        "Widget Câmeras: quem fala fica em destaque (troca depois de 1,5 s de fala, sem piscar) e as outras câmeras ligadas ficam ao lado; na Tira, só a câmera de quem fala. Botão direito numa câmera fixa só ela, com o nome no cabeçalho; Mostrar todas volta ao automático. O selo de câmera em Pessoas, ou Abrir câmera no menu da pessoa, abre o widget já fixado. Nenhuma câmera é esticada, e a sua aparece espelhada só para você. Câmera pequena chega mais leve, e câmera que ninguém está vendo não gasta o envio de quem a ligou.",
         "Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.",
       ],
     },

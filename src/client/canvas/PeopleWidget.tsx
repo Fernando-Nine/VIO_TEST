@@ -97,11 +97,15 @@ function Bubble({
           />
         )}
         {camera && (
-          <Video
+          <button
+            type="button"
             className="bubble-badge is-camera"
-            role="img"
-            aria-label="Câmera ligada"
-          />
+            aria-label={`Abrir câmera de ${person.name}`}
+            title="Abrir câmera"
+            onClick={() => engine.cameraRequest?.(person.id)}
+          >
+            <Video aria-hidden="true" />
+          </button>
         )}
       </span>
       <span className="bubble-name">
