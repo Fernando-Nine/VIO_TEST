@@ -4,12 +4,20 @@ Atualizado: 2026-10-27
 
 ## Agora
 
-Fila 2.10.0: só falta a **#158** (cabeçalho −/×/Desfazer; servidor pronto na main, PR #171,
-contrato comentado na #158; spec `docs/design/cabecalho-widget.md`). PR #185 (#163) pode
-estar aguardando CI/merge: conferir antes de começar.
+Fila 2.10.0 do Frontend concluída (#161, #167, #163, #158). Aguardando o copiloto/QA para a
+próxima fila (2.11.0: #159, #160, #162).
 
 ## Feito recentemente
 
+- #158 (rc.5): cabeçalho com − (widget da sala, só para mim) e × (fechar para todos, para quem
+  pode: `endsForEveryone` em `WidgetFrame`); pessoal só ×. Menu: "Fechar só para mim" /
+  "Fechar para todos". `engine.widgetClosed` (controller) avisa antes de o widget sair:
+  quem fechou recebe toast Desfazer (`widget-restore`, 8 s); os outros, item no sino.
+  `restoreSpots` recoloca o widget no mesmo espaço quando volta. Fechados com − ficam em
+  `vio:widgets:closed` (`canvas/closed-widgets.ts`). "N não exibidos" junta grade
+  (`state.hidden`, "Sem espaço na grade") e widgets da sala fora do layout ("Você fechou",
+  "Novo, de X", "Criado por você"). Sem espaço livre, Mostrar abre o `.slot-picker`
+  (`store.replace`; o substituído vira não exibido; Esc cancela).
 - #161 (PR #183, rc.2): `RoomTimer` no topo após o código; `ScreenTimer` no cabeçalho de
   cada tela (`HeaderAccessory`). `formatDuration` limita em `99:59:59+`. Widget `time` saiu
   do registro; `restoreCanvas` descarta `notes`/`time`. No celular o ping não reserva 86 px.
@@ -36,11 +44,8 @@ estar aguardando CI/merge: conferir antes de começar.
 
 ## Pendente / bloqueios
 
-- #158: botões − / × no cabeçalho, renomear "Desconectar"/"Remover" para "Fechar só para
-  mim"/"Fechar para todos", motivo nas linhas de "não exibidos" e separar ocultos por − dos
-  ocultos pela grade. Toast de Desfazer com `kind: "important"`, `duration: 8000`.
 - Widget Pessoas (bolha com volume, `docs/design/widget-pessoas.md`) não está na fila.
 
 ## Próximo passo
 
-Ler a #158 (com o comentário do contrato) e `docs/design/cabecalho-widget.md`.
+Pegar a próxima issue com etiqueta `frontend` no Milestone 2.11.0 (#159, #160 ou #162).

@@ -17,8 +17,8 @@ import {
   Ellipsis,
   Grip,
   Pencil,
+  Minus,
   PictureInPicture2,
-  Power,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -215,10 +215,14 @@ export function WidgetFrame(props: Props) {
           ? 3
           : 2,
   } as CSSProperties;
+  // Room widget: − closes only for you, × for everyone (whoever may); a
+  // personal widget only closes (docs/design/cabecalho-widget.md).
   const removeLabel =
     widget.type === "screen"
       ? "Desconectar transmissão"
-      : "Remover deste layout";
+      : shared
+        ? "Fechar só para mim"
+        : "Fechar";
   // Same order everywhere (docs/design/widgets-padrao.md): focus, rename,
   // widget actions and appearance, access, then remove and end.
   const menuItems: MenuItem[] = [
@@ -254,12 +258,17 @@ export function WidgetFrame(props: Props) {
           },
         ]
       : []),
-    { label: removeLabel, icon: X, separated: true, run: props.close },
+    {
+      label: removeLabel,
+      icon: shared ? Minus : X,
+      separated: true,
+      run: props.close,
+    },
     ...(endsForEveryone
       ? [
           {
-            label: "Encerrar para todos",
-            icon: Power,
+            label: "Fechar para todos",
+            icon: X,
             danger: true,
             run: props.end,
           },
@@ -369,18 +378,39 @@ export function WidgetFrame(props: Props) {
               <ArrowLeftRight size={16} />
             </button>
           )}
-          <button
-            className="icon-button"
-            onClick={props.close}
-            aria-label={
-              widget.type === "screen"
-                ? `Desconectar ${title}`
-                : `Remover ${title} deste layout`
-            }
-            title={removeLabel}
-          >
-            <X size={15} />
-          </button>
+          {shared ? (
+            <button
+              className="icon-button widget-close"
+              onClick={props.close}
+              aria-label={`Fechar ${title} só para mim`}
+              title={"Fechar só para mim\nContinua aberto para os outros."}
+            >
+              <Minus size={16} />
+            </button>
+          ) : (
+            <button
+              className="icon-button widget-close"
+              onClick={props.close}
+              aria-label={
+                widget.type === "screen"
+                  ? `Desconectar ${title}`
+                  : `Fechar ${title}`
+              }
+              title={removeLabel}
+            >
+              <X size={16} />
+            </button>
+          )}
+          {endsForEveryone && (
+            <button
+              className="icon-button widget-close widget-close-all"
+              onClick={props.end}
+              aria-label={`Fechar ${title} para todos`}
+              title="Fechar para todos"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </header>
       <div

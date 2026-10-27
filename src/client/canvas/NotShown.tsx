@@ -1,19 +1,25 @@
 import { useId, useRef, useState } from "react";
-import { EyeOff } from "lucide-react";
+import { EyeOff, type LucideIcon } from "lucide-react";
 import { AnchoredPopover } from "../components/AnchoredPopover";
-import { widgetRegistry } from "./widgets";
-import type { WidgetInstance } from "./model";
 
-/** Toolbar list of widgets the layout put away; exists only while N > 0. */
+export interface NotShownEntry {
+  id: string;
+  name: string;
+  icon?: LucideIcon;
+  /** "Você fechou", "Novo, de Lia" or "Sem espaço na grade". */
+  reason: string;
+  show: () => void;
+}
+
+/** Toolbar list of widgets you are not seeing; exists only while N > 0. */
 export function NotShown(props: {
-  widgets: WidgetInstance[];
-  title: (widget: WidgetInstance) => string;
-  show: (id: string) => void;
+  entries: NotShownEntry[];
+  showAll: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const count = props.widgets.length;
+  const count = props.entries.length;
   const label = `${count} ${count === 1 ? "widget" : "widgets"} que você não está vendo`;
   return (
     <>
@@ -41,19 +47,21 @@ export function NotShown(props: {
         >
           <h3>Widgets que você não está vendo</h3>
           <ul>
-            {props.widgets.map((widget) => {
-              const Icon = widgetRegistry[widget.type]?.icon;
-              const name = props.title(widget);
+            {props.entries.map((entry) => {
+              const Icon = entry.icon;
               return (
-                <li key={widget.id}>
+                <li key={entry.id}>
                   {Icon && <Icon size={16} aria-hidden="true" />}
-                  <span title={name}>{name}</span>
+                  <span className="not-shown-name">
+                    <span title={entry.name}>{entry.name}</span>
+                    <small>{entry.reason}</small>
+                  </span>
                   <button
                     className="secondary"
-                    aria-label={`Mostrar ${name}`}
+                    aria-label={`Mostrar ${entry.name}`}
                     onClick={() => {
-                      props.show(widget.id);
-                      if (count === 1) setOpen(false);
+                      setOpen(false);
+                      entry.show();
                     }}
                   >
                     Mostrar
@@ -66,8 +74,8 @@ export function NotShown(props: {
             <button
               className="text-button not-shown-all"
               onClick={() => {
-                props.widgets.forEach((widget) => props.show(widget.id));
                 setOpen(false);
+                props.showAll();
               }}
             >
               Mostrar todos

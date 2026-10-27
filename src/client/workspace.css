@@ -3402,3 +3402,71 @@ button.inline-text.is-empty {
   border-radius: 50%;
   background: var(--live);
 }
+/* #158: × closes a room widget for everyone; − only for you. */
+.widget-header .widget-close-all:hover,
+.widget-header .widget-close-all:focus-visible {
+  background: #4a2330;
+  color: #ff8a96;
+}
+.not-shown-panel .not-shown-name {
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+}
+.not-shown-panel .not-shown-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.not-shown-panel .not-shown-name small {
+  color: #a3a7c2;
+  font-size: 12px;
+}
+/* "Mostrar" with no free cell: pick which one to replace; Esc cancels. */
+.slot-picker {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+.slot-pick {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border: 2px dashed #a6a9ff;
+  border-radius: 12px;
+  background: rgb(22 24 42 / 0.8);
+  color: #eef0ff;
+  font-weight: 600;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.slot-pick > span {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #1c1e30;
+}
+.slot-pick:hover,
+.slot-pick:focus-visible {
+  border-style: solid;
+  background: rgb(80 84 160 / 0.55);
+  outline: none;
+}
+.slot-picker-hint {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 999px;
+  background: #1c1e30;
+  border: 1px solid #3a3d5c;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: auto;
+}

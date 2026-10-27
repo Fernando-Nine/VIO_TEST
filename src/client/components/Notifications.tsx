@@ -19,6 +19,8 @@ export function Notifications({
   openWidget,
   openScreen,
   screenEvents,
+  closeEvents,
+  closedIds,
   onOpenChange,
 }: {
   engine: Controller;
@@ -26,6 +28,10 @@ export function Notifications({
   openScreen: (id: string) => void;
   /** Newest last; the one still shown in the corner is left out by the caller. */
   screenEvents: ScreenEvent[];
+  /** "Nine fechou o Cronômetro." for closes made by someone else. */
+  closeEvents: { id: string; text: string; at: number }[];
+  /** Room widgets you closed with −: not news anymore. */
+  closedIds: string[];
   onOpenChange: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -79,9 +85,12 @@ export function Notifications({
           ? [{ label: "Assistir", run: () => openScreen(event.publicationId) }]
           : [],
     });
+  for (const event of closeEvents)
+    items.push({ id: `closed:${event.id}`, text: event.text, time: event.at });
   for (const widget of snapshot?.widgets || []) {
     if (
       widget.owner !== engine.view.id &&
+      !closedIds.includes(widget.id) &&
       !state.widgets.some((w) => w.config.sharedId === widget.id)
     )
       items.push({

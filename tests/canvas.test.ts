@@ -268,6 +268,20 @@ test("grade menor manda o que não cabe para não exibidos; maior traz de volta"
   assert.equal(store.getSnapshot().hidden.length, 0, "a tira mostra todos");
 });
 
+test("Mostrar sem espaço livre substitui o espaço escolhido", () => {
+  const store = filled(2);
+  store.preset("grid-1x2");
+  const target = store.getSnapshot().slots[1].id;
+  store.replace(
+    { id: "room", type: "timer", title: "Cronômetro", config: {} },
+    target,
+  );
+  const state = store.getSnapshot();
+  assert.equal(state.slots[1].widgetId, "room");
+  assert.deepEqual(state.hidden, ["video-1"], "o substituído vira não exibido");
+  assert.equal(state.floating.length, 0);
+});
+
 test("grade automática cresce até 3 × 4 e restauração migra presets antigos", () => {
   assert.equal(autoGrid(1), "grid-1x1");
   assert.equal(autoGrid(3), "grid-1x3");

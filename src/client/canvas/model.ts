@@ -526,6 +526,15 @@ export class CanvasStore {
         });
     });
   }
+  /** Puts a widget in a chosen cell; whatever was there goes to "not shown". */
+  replace(widget: WidgetInstance, slotId: string) {
+    if (!this.value.widgets.some((w) => w.id === widget.id))
+      this.change((s) => {
+        s.widgets.push(widget);
+        s.hidden.push(widget.id);
+      });
+    this.move(widget.id, slotId);
+  }
   resetRoom() {
     this.change((s) => {
       const next = persistentCanvas(s);
