@@ -1,11 +1,17 @@
 # design — handoff
 
-Atualizado: 2026-10-27
+Atualizado: 2026-10-27 (leva 4)
 
 ## Agora
 
-Nada em aberto. Próxima leva segue a skill `vio-design-delivery` (canvas do tipo Design,
-editável, com seções por issue e "Escolhidas" no topo).
+Leva 4 publicada (27 out): canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
+aguardando escolhas por comentário nas pranchas (sessão assinada; comentários acordam o chat).
+
+- #191 Compartilhar (prioridade): 191A app com miniaturas (Main.dc.html), 191B navegador.
+- #195 Grade: 195A alça (recom.), 195B seleção, 195C mapa no painel; Foco: 195D miniaturas +
+  fantasma, 195E arrastar à borda (sugestão D + E).
+- #196 Catálogo: 196A seções sem abas (recom.), 196B abas + escolha no cartão, 196C filtros.
+- #197 Landing 197A (recom.) / 197B; início do app 197C (recentes, sugestão) / 197D mínimo.
 
 ## Feito recentemente
 
@@ -41,5 +47,5 @@ editável, com seções por issue e "Escolhidas" no topo).
 
 ## Próximo passo
 
-Aguardar a próxima leva (landing, página de download ou categorias futuras de Ajustes).
+Coletar escolhas da leva 4 e fechar (Escolhidas, specs, issues frontend), #191 primeiro.
 Copiloto decide as divergências listadas em `ideias-futuras.md` (nome do grupo App, Atalhos).
