@@ -1421,11 +1421,16 @@ test("compartilhar é idempotente e somente criador encerra a instância para to
     data(await request(owner, "widget-create", { id, content }));
     assert.equal(app.rooms.rooms.get("QACLOSE")!.widgets.entries.size, 1);
     assert.equal((await request(member, "widget-delete", { id })).ok, false);
-    const closed = new Promise<{ id: string; widget: null }>((resolve) =>
-      member.once("widget-updated", resolve),
-    );
+    const closed = new Promise<{
+      id: string;
+      widget: null;
+      closed?: { byName: string };
+    }>((resolve) => member.once("widget-updated", resolve));
     data(await request(owner, "widget-delete", { id }));
-    assert.deepEqual(await closed, { id, widget: null });
+    const event = await closed;
+    assert.equal(event.id, id);
+    assert.equal(event.widget, null);
+    assert.equal(event.closed?.byName, "Criador");
     assert.equal(app.rooms.rooms.get("QACLOSE")!.widgets.entries.size, 0);
   } finally {
     owner.disconnect();
