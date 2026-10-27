@@ -16,7 +16,7 @@ export function Avatar({
   const photo = url && /^https:\/\//i.test(url) && failed !== url;
   return (
     <span
-      className="person-avatar"
+      className="ring-avatar"
       style={
         {
           "--avatar-color": safeColor,
