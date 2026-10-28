@@ -14,6 +14,7 @@ import type { Participant, Publication } from "../../shared/protocol";
 import { screenResolutions } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import type { PeerInfo } from "../media/peers";
+import type { Slot } from "../media/capture";
 import type { MenuItem } from "../components/ContextMenu";
 import { Media } from "../components/Media";
 import { participantStyle } from "../components/participant-style";
@@ -32,11 +33,10 @@ export function setStreamPaused(
   engine: Controller,
   paused: boolean,
   video?: HTMLVideoElement | null,
+  slot: Slot = "screen",
 ) {
-  const publication = engine.publications.get("screen");
-  const track = engine.captures.sources
-    .get("screen")
-    ?.stream.getVideoTracks()[0];
+  const publication = engine.publications.get(slot);
+  const track = engine.captures.sources.get(slot)?.stream.getVideoTracks()[0];
   if (!publication || !track) return;
   // Pausing the element first keeps the last frame instead of black.
   if (paused) video?.pause();
@@ -49,25 +49,34 @@ export function setStreamPaused(
 }
 
 /** The local track is the truth; the publication follows it via "state". */
-export const streamPaused = (engine: Controller) =>
-  engine.captures.sources.get("screen")?.stream.getVideoTracks()[0]?.enabled ===
+export const streamPaused = (engine: Controller, slot: Slot = "screen") =>
+  engine.captures.sources.get(slot)?.stream.getVideoTracks()[0]?.enabled ===
   false;
+
+/** The local capture slot behind one of my publications (#194). */
+export function slotOf(engine: Controller, publicationId?: string) {
+  for (const [slot, publication] of engine.publications)
+    if (publication.id === publicationId) return slot;
+  return undefined;
+}
 
 /** Pausar, Silenciar, Trocar and Parar, shared by the buttons and the menu. */
 export function streamActions(
   engine: Controller,
-  replaceShare: () => void,
+  replaceShare: (slot: Slot) => void,
   video?: HTMLVideoElement | null,
+  slot: Slot = "screen",
+  share?: () => void,
 ): (MenuItem & { active?: boolean; hint?: string })[] {
-  const publication = engine.publications.get("screen");
+  const publication = engine.publications.get(slot);
   if (!publication) return [];
-  const paused = streamPaused(engine);
-  const silenced = engine.captures.screenAudioMuted;
+  const paused = streamPaused(engine, slot);
+  const silenced = engine.captures.isScreenAudioMuted(slot);
   return [
     {
       label: paused ? "Continuar" : "Pausar",
       icon: paused ? Play : Pause,
-      run: () => setStreamPaused(engine, !paused, video),
+      run: () => setStreamPaused(engine, !paused, video, slot),
     },
     ...(publication.audio
       ? [
@@ -76,17 +85,25 @@ export function streamActions(
             icon: VolumeX,
             active: silenced,
             hint: "Quem assiste vê a tela, sem som.",
-            run: () => engine.setScreenAudioMuted(!silenced),
+            run: () => engine.setScreenAudioMuted(!silenced, slot),
           },
         ]
       : []),
-    { label: "Trocar o que transmito", icon: RefreshCw, run: replaceShare },
+    {
+      label: "Trocar o que transmito",
+      icon: RefreshCw,
+      run: () => replaceShare(slot),
+    },
+    // Up to MAX_SCREENS at once (#194).
+    ...(share && engine.captures.nextScreen()
+      ? [{ label: "Compartilhar outra tela", icon: MonitorUp, run: share }]
+      : []),
     {
       label: "Parar",
       icon: Square,
       danger: true,
       separated: true,
-      run: () => void engine.stop("screen"),
+      run: () => void engine.stop(slot),
     },
   ];
 }
@@ -180,12 +197,10 @@ export function MyStreamWidget({
   const own: Publication[] =
     me?.publications.filter((p) => p.kind === "screen") || [];
   const current = own[Math.min(index, own.length - 1)];
-  const capture = engine.publications.get("screen");
   // The preview is the local capture; only the publication made from it has one.
-  const local = current && capture?.id === current.id;
-  const stream = local
-    ? engine.captures.sources.get("screen")?.stream
-    : undefined;
+  const slot = slotOf(engine, current?.id);
+  const local = !!slot;
+  const stream = slot ? engine.captures.sources.get(slot)?.stream : undefined;
   const track = stream?.getVideoTracks()[0];
   const infos = current
     ? engine.peers
@@ -197,12 +212,12 @@ export function MyStreamWidget({
   const viewers = (snapshot?.participants || []).filter((p) =>
     viewerIds.has(p.id),
   );
-  const actions = local
-    ? streamActions(engine, replaceShare, video.current)
+  const actions = slot
+    ? streamActions(engine, replaceShare, video.current, slot, share)
     : [];
   useMenuItems(actions.length ? actions : undefined);
-  const paused = local ? streamPaused(engine) : !!current?.muted;
-  const silenced = local && engine.captures.screenAudioMuted;
+  const paused = slot ? streamPaused(engine, slot) : !!current?.muted;
+  const silenced = !!slot && engine.captures.isScreenAudioMuted(slot);
   // Keep the frozen frame when the pause comes from elsewhere (menu, reload).
   useEffect(() => {
     if (paused) video.current?.pause();
@@ -232,7 +247,9 @@ export function MyStreamWidget({
   const strip = height < 170;
   const resolution = track?.getSettings().height;
   const source = surfaceLabel(track);
-  const quality = engine.captures.quality;
+  const quality = engine.captures.qualityOf(
+    slot ? engine.captures.sources.get(slot) : undefined,
+  );
   const cells = [
     {
       label: "Envio",

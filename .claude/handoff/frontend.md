@@ -1,13 +1,31 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-27 (Frontend 11)
+Atualizado: 2026-10-28 (Frontend 12)
 
 ## Agora
 
-Bloco do Frontend 11: #160 (rc.2, PR #212), #207 (rc.3, PR #214), #209 (rc.4). Próximas da
-2.11.0: #162 Câmeras, #194.
+Bloco do Frontend 12: #191 (rc.9), #221 (rc.10), #228 (rc.11), #222 (rc.12). Pendente
+humano: aval do seletor no app Windows (miniaturas reais) e medir CPU 1080p60 (#192).
 
 ## Feito recentemente
+
+- #191 (PR #225, rc.9): `components/ShareDialog.tsx` + `share.css` + `share-options.ts`
+  (`vio:share`). App com #192: `listVideoSources`/`videoThumbnail`/`startNativeShare`; navegador
+  ou app sem #192: `setDisplayVideo` (em `media/capture.ts`) leva `displaySurface` + teto de
+  tamanho/FPS ao `getDisplayMedia`. Várias telas (#194): o modal recebe o `slot`
+  (`captures.nextScreen()` ou o da troca); doca tem + e "Parar telas (N)"; Minha transmissão
+  usa `slotOf(engine, publicationId)` e age no slot. No app, só uma tela leva som.
+  `NativeShare.tsx` e `desktop.css` saíram.
+- #221 (rc.10): `canvas/GridTools.tsx` (alça `SpanHandle`, `FocusGhost`, `FocusThumb`,
+  `EdgeBands`, `edgeAt`) + `grid-tools.css`. Modelo: `gridPlacement` (slots em ordem de
+  linha da célula superior esquerda) e `CanvasStore.resizeSlot` (1 × 1 separa; `splitSlot`
+  na grade chama ele). Grade com `gridArea` explícita; spans 2D persistem; mudar a grade ou ir
+  para a tira achata. Shift + borda (48 px) aplica `strip-<lado>` + `focus`. Fantasma do
+  Layout é `position: fixed; z-index: -1` dentro do diálogo (fica sob a folha).
+- #228 (rc.11): botão Foco único/Voltar ao conjunto na barra (`toggleSingle`, não persiste).
+- #222 (rc.12): `WidgetCatalog` com abas por intenção (`vio:catalog-tab`), ações por item,
+  rodapé Widgets da sala (`roomWidgets`), `community`; `catalog.css`. Placar (`custom`)
+  criável para mim e para a sala. Chat só "Para a sala".
 
 - #160 (PR #212, rc.2): widget `stream` "Minha transmissão" (`canvas/MyStreamWidget.tsx`,
   `my-stream.css`). Ações em `streamActions` (botões e menu via `useMenuItems`); pausa =
@@ -80,4 +98,5 @@ Bloco do Frontend 11: #160 (rc.2, PR #212), #207 (rc.3, PR #214), #209 (rc.4). P
 
 ## Próximo passo
 
-#162 Câmeras, ligando o selo/menu do Pessoas.
+Ver `docs/ESTADO.md` com o copiloto. Faltam do Design: rótulo "Dividir espaço" (tira) vs
+"Separar espaços" (grade) poderia unificar.

@@ -1,4 +1,5 @@
 import { canvasShortcuts, snapPressed } from "./shortcuts";
+import type { Slot as CaptureSlot } from "../media/capture";
 import {
   useCallback,
   useEffect,
@@ -30,6 +31,7 @@ import {
   Blocks,
   Columns3,
   LayoutGrid,
+  Focus,
   Maximize,
   Minimize,
   MonitorUp,
@@ -56,6 +58,7 @@ import {
   autoGrid,
   gridPreset,
   gridSize,
+  gridPlacement,
   type Offer,
   type Slot,
   type WidgetInstance,
@@ -66,6 +69,19 @@ import { useStripInput, stripStops } from "./strip-input";
 import { WidgetFrame } from "./WidgetFrame";
 import { WidgetCatalog, type Scope } from "./WidgetCatalog";
 import { GridPicker } from "./GridPicker";
+import {
+  EdgeBands,
+  FocusGhost,
+  FocusThumb,
+  SpanHandle,
+  edgeAt,
+  sideLabel,
+  sidePhrase,
+  sides,
+  type GridFrame,
+  type Side,
+} from "./GridTools";
+import type { CellRect } from "./slot-spans";
 import { NotShown, type NotShownEntry } from "./NotShown";
 import { loadClosed, saveClosed } from "./closed-widgets";
 import { toasts } from "../components/Toasts";
@@ -140,7 +156,7 @@ interface Props {
   people: () => void;
   diagnostics: () => void;
   share: () => void;
-  replaceShare: () => void;
+  replaceShare: (slot: CaptureSlot) => void;
   fullscreen: () => void;
   isFullscreen?: boolean;
 }
@@ -161,6 +177,7 @@ function CanvasSlot({
   dragging,
   split,
   reorderTarget,
+  area,
 }: {
   slot: Slot;
   index: number;
@@ -178,6 +195,8 @@ function CanvasSlot({
   split: () => void;
   /** A strip widget dragged along the strip lands here. */
   reorderTarget: boolean;
+  /** Grid cells this slot covers (#221); the strip stacks spans instead. */
+  area?: CellRect;
 }) {
   const { ref, isDropTarget } = useDroppable({
     id: slot.id,
@@ -196,10 +215,16 @@ function CanvasSlot({
       className={`canvas-slot ${isDropTarget && !disabled ? "is-drop-target" : ""} ${reorderTarget ? "is-reorder-target" : ""}`}
       data-slot-id={slot.id}
       data-span={slotUnits(slot)}
-      style={{ "--slot-span": slotUnits(slot) } as CSSProperties}
+      style={
+        (area
+          ? {
+              gridArea: `${area.row + 1} / ${area.column + 1} / span ${area.rows} / span ${area.columns}`,
+            }
+          : { "--slot-span": slotUnits(slot) }) as CSSProperties
+      }
       aria-label={`Espaço ${index + 1}`}
     >
-      {Array.from({ length: slotUnits(slot) }, (_, i) => (
+      {Array.from({ length: area ? 1 : slotUnits(slot) }, (_, i) => (
         <i
           key={i}
           className="slot-snap-point"
@@ -298,6 +323,12 @@ export function RoomCanvas(props: Props) {
   const [announcement, announce] = useState("");
   const [roving, setRoving] = useState<string | null>(null);
   const [snap, setSnap] = useState(false);
+  // #221: slot under the pointer (span handle), Shift edge and focus preview.
+  const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+  const [spanning, setSpanning] = useState(false);
+  const [edge, setEdge] = useState<Side | null>(null);
+  const edgeRef = useRef<Side | null>(null);
+  const [preview, setPreview] = useState<Side | null>(null);
   const [stripTarget, setStripTarget] = useState<string | null>(null);
   const shift = useRef(false);
   const keyboardDrag = useRef(false);
@@ -793,7 +824,7 @@ export function RoomCanvas(props: Props) {
         : "guestCreate",
     );
   async function addWidget(type: string, scope: Scope) {
-    const scoped = isModule(type) || type === "timer";
+    const scoped = isModule(type) || type === "timer" || type === "custom";
     if (type === "chat" || (scoped && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
@@ -1070,6 +1101,7 @@ export function RoomCanvas(props: Props) {
     dragging: !!drag && !keyboardDrag.current,
     split: () => store.splitSlot(slot.id),
     reorderTarget: stripTarget === slot.id,
+    area: placement?.get(slot.id),
   });
   useLayoutEffect(() => {
     if (!highlightedSlot) return;
@@ -1087,6 +1119,62 @@ export function RoomCanvas(props: Props) {
   const horizontalStrip =
     !compact && ["strip-top", "strip-bottom"].includes(state.preset);
   const grid = gridSize(state.preset);
+  // Phones stack the grid in one column, so cells keep no position there.
+  const placement =
+    grid && !compact
+      ? gridPlacement(state.slots, grid.rows, grid.columns)
+      : null;
+  const frame: GridFrame | null = (() => {
+    if (!grid || !placement) return null;
+    const boxes = state.slots.flatMap((t) => geometry.slots.get(t.id) ?? []);
+    if (boxes.length !== state.slots.length) return null;
+    const x = Math.min(...boxes.map((b) => b.x)),
+      y = Math.min(...boxes.map((b) => b.y));
+    return {
+      area: {
+        x,
+        y,
+        width: Math.max(...boxes.map((b) => b.x + b.width)) - x,
+        height: Math.max(...boxes.map((b) => b.y + b.height)) - y,
+      },
+      ...grid,
+      // Same as --canvas-gap (workspace.css).
+      gap: 8,
+    };
+  })();
+  const spanOrigin =
+    frame && hoverSlot && !state.single && !drag
+      ? placement?.get(hoverSlot)
+      : undefined;
+  const toLocal = (point: Point) => {
+    const base = root.current?.getBoundingClientRect();
+    return base ? { x: point.x - base.left, y: point.y - base.top } : point;
+  };
+  /** Docked slot under a point, for the span handle; floating widgets have their own resizer. */
+  function slotUnder(event: {
+    clientX: number;
+    clientY: number;
+    target: EventTarget;
+  }) {
+    if (
+      !frame ||
+      (event.target as HTMLElement).closest?.(".widget-host.is-floating")
+    )
+      return null;
+    const local = toLocal({ x: event.clientX, y: event.clientY });
+    return (
+      state.slots.find((t) => {
+        const box = geometry.slots.get(t.id);
+        return (
+          box &&
+          local.x >= box.x &&
+          local.x <= box.x + box.width &&
+          local.y >= box.y &&
+          local.y <= box.y + box.height
+        );
+      })?.id ?? null
+    );
+  }
   // Switching to the grid picks the smallest one that shows everything.
   const gridToFit = autoGrid(
     state.slots.filter((t) => t.widgetId || t.offer).length +
@@ -1128,7 +1216,8 @@ export function RoomCanvas(props: Props) {
     <div
       className={`room-canvas ${props.isFullscreen ? "is-fullscreen" : ""} ${nearTop || fullscreenIntro || notificationsOpen ? "show-top-toolbar" : ""}`}
       onPointerMove={(event) => {
-        if (event.pointerType === "mouse")
+        // A drag toward the top edge must not open the toolbar (#221).
+        if (event.pointerType === "mouse" && !drag)
           setNearTop(
             event.clientY - event.currentTarget.getBoundingClientRect().top <=
               4 || !!(event.target as HTMLElement).closest(".canvas-toolbar"),
@@ -1207,12 +1296,21 @@ export function RoomCanvas(props: Props) {
             }}
           />
         )}
-        {state.single && (
-          <button className="text-button" onClick={() => store.toggleSingle()}>
-            <Columns3 size={16} />
-            <span>Voltar ao conjunto</span>
-          </button>
-        )}
+        {/* #228: one click fills the canvas with the focus; the layout is untouched. */}
+        <button
+          className="text-button single-toggle"
+          aria-pressed={state.single}
+          disabled={!state.single && !focusedWidgetId(state)}
+          title={
+            !state.single && !focusedWidgetId(state)
+              ? "Abra um widget para usar o Foco único."
+              : undefined
+          }
+          onClick={() => store.toggleSingle()}
+        >
+          {state.single ? <Columns3 size={16} /> : <Focus size={16} />}
+          <span>{state.single ? "Voltar ao conjunto" : "Foco único"}</span>
+        </button>
         <Notifications
           engine={engine}
           openWidget={(w) => openShared(w, true)}
@@ -1285,6 +1383,15 @@ export function RoomCanvas(props: Props) {
             manager.actions.move({ to: point, propagate: false });
           }
           origin.point = point;
+          const nextEdge =
+            shift.current && !keyboardDrag.current && !state.single
+              ? edgeAt(
+                  { x: point.x - base.left, y: point.y - base.top },
+                  geometry.bounds,
+                )
+              : null;
+          edgeRef.current = nextEdge;
+          setEdge(nextEdge);
           setStripTarget(
             keyboardDrag.current || shift.current
               ? null
@@ -1322,7 +1429,12 @@ export function RoomCanvas(props: Props) {
               shift.current || keyboardDrag.current
                 ? undefined
                 : stripDrop(id, point);
-            if (along !== undefined) {
+            const side = shift.current ? edgeRef.current : null;
+            if (side && !state.single) {
+              store.preset(`strip-${side}`);
+              store.focus(id);
+              announce(`Foco + tira: ${sidePhrase[side]}.`);
+            } else if (along !== undefined) {
               if (along) {
                 store.reorder(id, along);
                 announce("Widget movido na tira.");
@@ -1361,6 +1473,8 @@ export function RoomCanvas(props: Props) {
             }
           }
           dragOrigin.current = null;
+          edgeRef.current = null;
+          setEdge(null);
           setStripTarget(null);
           keyboardDrag.current = false;
           shift.current = false;
@@ -1370,8 +1484,30 @@ export function RoomCanvas(props: Props) {
         }}
       >
         <div
-          className={`canvas-viewport ${drag ? "canvas-dragging" : ""} ${snap || keyboardDrag.current ? "snap-enabled" : ""}`}
+          className={`canvas-viewport ${drag ? "canvas-dragging" : ""} ${snap || keyboardDrag.current ? "snap-enabled" : ""} ${edge ? "edge-armed" : ""}`}
           ref={root}
+          onPointerMove={(event) => {
+            if (event.pointerType === "mouse" && !spanning)
+              setHoverSlot(slotUnder(event));
+          }}
+          onPointerDown={(event) => {
+            if (event.pointerType !== "mouse" && !spanning)
+              setHoverSlot(slotUnder(event));
+          }}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse" && !spanning) setHoverSlot(null);
+          }}
+          onFocus={(event) => {
+            const target = event.target as HTMLElement;
+            if (target.closest(".span-handle")) return;
+            const widgetId =
+              target.closest<HTMLElement>("[data-widget-id]")?.dataset.widgetId;
+            const slotId =
+              state.slots.find((t) => widgetId && t.widgetId === widgetId)
+                ?.id ??
+              target.closest<HTMLElement>("[data-slot-id]")?.dataset.slotId;
+            if (slotId) setHoverSlot(slotId);
+          }}
         >
           <div
             className={`canvas-layout ${grid ? "grid" : state.preset} ${state.single ? "single-focus" : ""}`}
@@ -1409,6 +1545,37 @@ export function RoomCanvas(props: Props) {
               ))
             )}
           </div>
+          {frame && spanOrigin && hoverSlot && (
+            <SpanHandle
+              key={`${hoverSlot}:${spanOrigin.rows}x${spanOrigin.columns}`}
+              frame={frame}
+              origin={spanOrigin}
+              toLocal={toLocal}
+              busy={(active) => {
+                setSpanning(active);
+                props.interaction(active);
+              }}
+              apply={(rows, columns) => {
+                store.resizeSlot(hoverSlot, rows, columns);
+                announce(
+                  rows * columns > 1
+                    ? `Espaços juntados: ${rows} × ${columns}.`
+                    : "Espaços separados.",
+                );
+              }}
+            />
+          )}
+          {drag && snap && !keyboardDrag.current && !state.single && (
+            <EdgeBands active={edge} />
+          )}
+          {drag && snap && edge && (
+            <FocusGhost
+              box={geometry.bounds}
+              side={edge}
+              ratio={state.ratio}
+              label={`${canvasShortcuts.snap.label} · soltar: ${sidePhrase[edge]}`}
+            />
+          )}
           {stripMode && !state.single && (
             <div className="slot-junctions" aria-label="Mesclar espaços vazios">
               {state.slots.slice(1, -1).map((slot, i) => {
@@ -1662,7 +1829,14 @@ export function RoomCanvas(props: Props) {
         </Dialog>
       )}
       {layoutOpen && (
-        <Dialog title="Organizar seu espaço" close={() => setLayoutOpen(false)}>
+        <Dialog
+          title="Organizar seu espaço"
+          className={preview ? "is-previewing" : undefined}
+          close={() => {
+            setPreview(null);
+            setLayoutOpen(false);
+          }}
+        >
           {compact ? (
             <label className="layout-switch">
               <span>
@@ -1712,18 +1886,38 @@ export function RoomCanvas(props: Props) {
                       role="group"
                       aria-label="Posição do foco"
                     >
-                      {(["left", "right", "top", "bottom"] as const).map(
-                        (side, i) => (
-                          <button
-                            key={side}
-                            aria-pressed={state.preset === `strip-${side}`}
-                            onClick={() => store.preset(`strip-${side}`)}
-                          >
-                            {["Esquerda", "Direita", "Em cima", "Embaixo"][i]}
-                          </button>
-                        ),
-                      )}
+                      {sides.map((side) => (
+                        <button
+                          key={side}
+                          aria-pressed={state.preset === `strip-${side}`}
+                          onClick={() => store.preset(`strip-${side}`)}
+                          onPointerEnter={() => setPreview(side)}
+                          onPointerLeave={() => setPreview(null)}
+                          onFocus={() => setPreview(side)}
+                          onBlur={() => setPreview(null)}
+                        >
+                          <FocusThumb side={side} />
+                          {sideLabel[side]}
+                        </button>
+                      ))}
                     </div>
+                    {preview && root.current && (
+                      <FocusGhost
+                        fixed
+                        box={(() => {
+                          const r = root.current.getBoundingClientRect();
+                          return {
+                            x: r.left,
+                            y: r.top,
+                            width: r.width,
+                            height: r.height,
+                          };
+                        })()}
+                        side={preview}
+                        ratio={state.ratio}
+                        label={`${sidePhrase[preview][0].toUpperCase()}${sidePhrase[preview].slice(1)} · ${Math.round(state.ratio * 100)}%`}
+                      />
+                    )}
                     <label>
                       Tamanho do foco{" "}
                       <output>{Math.round(state.ratio * 100)}%</output>
@@ -1802,48 +1996,33 @@ export function RoomCanvas(props: Props) {
                 </section>
               )
             }
-            tabs={[
-              [
-                "Sala",
-                <>
-                  {!snapshot?.widgets?.length ? (
-                    <p className="widget-empty">
-                      Nenhum widget da sala ainda. Crie um em Widgets, Para a
-                      sala.
-                    </p>
-                  ) : (
-                    <div className="widget-catalog">
-                      {snapshot.widgets.map((w) => (
-                        <button
-                          className="catalog-item"
-                          key={w.id}
-                          onClick={() => openShared(w)}
-                        >
-                          <strong>{w.title}</strong>
-                          <span>
-                            Criado por{" "}
-                            {snapshot.participants.find((p) => p.id === w.owner)
-                              ?.name || "alguém que saiu da sala"}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>,
-              ],
-              [
-                "Comunidade",
-                <>
-                  <button
-                    className="catalog-item"
-                    onClick={() => setCommunityNotice(true)}
-                  >
-                    <Blocks size={20} aria-hidden="true" />
-                    <strong>Widget personalizado</strong>
-                  </button>
-                </>,
-              ],
-            ]}
+            community={() => setCommunityNotice(true)}
+            roomWidgets={{
+              count: snapshot?.widgets?.length ?? 0,
+              list: !snapshot?.widgets?.length ? (
+                <p className="widget-empty">Nenhum widget da sala ainda.</p>
+              ) : (
+                <div className="catalog-results is-rows">
+                  {snapshot.widgets.map((w) => (
+                    <button
+                      className="catalog-item is-row"
+                      key={w.id}
+                      onClick={() => openShared(w)}
+                    >
+                      <span className="catalog-text">
+                        <strong>{w.title}</strong>
+                        <span>
+                          Criado por{" "}
+                          {snapshot.participants.find((p) => p.id === w.owner)
+                            ?.name || "alguém que saiu da sala"}{" "}
+                          · Mostrar
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ),
+            }}
           />
         </Dialog>
       )}

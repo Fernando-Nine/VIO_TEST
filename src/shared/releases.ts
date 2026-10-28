@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.9";
+export const version = "2.11.0-rc.14";
 export const currentRelease: Release = {
   version,
   date: "2026-10-28",
@@ -17,10 +17,15 @@ export const currentRelease: Release = {
       title: "Somente no vio-test",
       items: [
         "O criador da sala continua criador quando o servidor reinicia ou demora a voltar: quem chegar antes fica no cargo só até ele voltar, com aviso na sala, e admins e permissões voltam junto.",
+        "Adicionar widget por abas: Assistir, Conversar, Decidir e jogar, Tempo e Comunidade (a última aberta fica lembrada); a busca procura em todas. Cada widget traz Para mim e Para a sala, ou Adicionar quando é só seu. Widgets da sala ficam no botão do rodapé. Personalizado agora se chama Placar e volta ao catálogo. No espaço vazio, cada ícone tem Mim e Sala.",
+        "Foco único volta à barra da sala: um clique mostra só o widget em foco, ocupando todo o espaço; outro clique (Voltar ao conjunto) devolve o layout exatamente como estava. Só muda para você.",
+        "Grade: passe o mouse num espaço e arraste a alça do canto para juntar espaços vizinhos (o fantasma mostra o tamanho, como 2 × 2); soltar junta, e o widget coberto vai para o próximo espaço livre ou para Não exibidos. Para separar, arraste de volta para 1 × 1 ou use Separar espaços no botão direito. Pelo teclado: setas na alça e Enter. Em Layout, as posições do foco viram miniaturas, e passar o mouse mostra o resultado na própria sala. Arrastando um widget com Shift até a borda, aparece o fantasma de Foco + tira daquele lado; soltar aplica, com o widget no foco.",
+        "Compartilhar abre uma janela no centro, já com a imagem: escolha Tela inteira ou Janela do aplicativo (e Aba do navegador no Chrome e no Edge), a qualidade (480p, 720p, 1080p ou Fonte), a taxa de quadros (15, 30 ou 60 FPS) e se vai com som ou sem som. No app, as telas e janelas aparecem com miniatura e um clique em Compartilhar começa, sem o seletor do Windows; no navegador, Compartilhar abre o seletor dele. As escolhas ficam lembradas, e Trocar o que transmito usa a mesma janela. Transmitindo, o + ao lado de Parar tela (ou Compartilhar outra tela no menu de Minha transmissão) abre outra tela, até 3; cada uma tem Pausar, Silenciar, Trocar e Parar em Minha transmissão.",
         "Widget Câmeras: quem fala fica em destaque (troca depois de 1,5 s de fala, sem piscar) e as outras câmeras ligadas ficam ao lado; na Tira, só a câmera de quem fala. Botão direito numa câmera fixa só ela, com o nome no cabeçalho; Mostrar todas volta ao automático. O selo de câmera em Pessoas, ou Abrir câmera no menu da pessoa, abre o widget já fixado. Nenhuma câmera é esticada, e a sua aparece espelhada só para você. Câmera pequena chega mais leve, e câmera que ninguém está vendo não gasta o envio de quem a ligou.",
         "Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.",
         "Widget Minha transmissão no lugar de Meus espectadores, Conexão e Minha tela: prévia da sua tela com AO VIVO e a fonte, Pausar, Silenciar o som (quem assiste vê a tela, sem som; o microfone não muda), Trocar o que transmito (a nova fonte entra sem derrubar quem assiste) e Parar. Ao lado, quem assiste e Envio, Quadros, Ping e Perda. Em foco, a conexão de cada pessoa, o gráfico do envio do último minuto e a qualidade; na tira, só a prévia, com os controles no botão direito. Quem já tinha um dos três widgets abertos fica com Minha transmissão no mesmo espaço.",
         "Base para transmitir até 3 telas ao mesmo tempo: cada tela é uma transmissão própria, quem assiste escolhe qual ver, e a partir da 2ª tela a qualidade começa em Baixa para poupar o envio. A 4ª é recusada com aviso. O botão para adicionar outra tela chega com o novo seletor de compartilhar.",
+        "App Windows: até 3 sons ao mesmo tempo, inclusive som sem tela (por exemplo, o jogo na tela e a música à parte). Na janela de compartilhar, a aba Só som lista os aplicativos com som. O mesmo aplicativo não entra duas vezes, Todo o som do computador não se soma a outro som, e o VIO nunca transmite o próprio som.",
         "Chat: entre o contorno colorido e o avatar volta a ficar um espaço vazio, sem o anel azul.",
         "Sino com os grupos Agora (última hora) e Antes, botão Limpar e um ponto nas notificações ainda não lidas.",
         "No celular, segurar o cabeçalho de um widget abre o menu dele por baixo da tela; para mover, arraste.",

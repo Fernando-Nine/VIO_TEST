@@ -33,10 +33,15 @@ export interface CaptureAdapter {
   stopScreen?(slot: Slot): void;
   screenAudioMessage?(): string;
 }
+/** Picker hint and size ceiling chosen in the share dialog (#191). */
+let displayVideo: MediaTrackConstraints | true = true;
+export function setDisplayVideo(video?: MediaTrackConstraints) {
+  displayVideo = video ?? true;
+}
 export const browserCapture: CaptureAdapter = {
   screen: (audio) =>
     navigator.mediaDevices.getDisplayMedia({
-      video: true,
+      video: displayVideo,
       audio: audio
         ? {
             echoCancellation: false,

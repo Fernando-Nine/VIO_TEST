@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import type { Slot as CaptureSlot } from "../media/capture";
 import {
   MonitorUp,
   Settings2,
@@ -45,7 +46,7 @@ export interface WidgetProps {
   diagnostics: () => void;
   share: () => void;
   /** Trocar o que transmito: a new source on the same publication (#160). */
-  replaceShare: () => void;
+  replaceShare: (slot: CaptureSlot) => void;
 }
 export interface WidgetDefinition {
   id: string;
@@ -271,14 +272,14 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
   ),
   custom: definition(
     "custom",
-    "Personalizado",
-    "Um placar com os seus contadores de pontos.",
+    "Placar",
+    "Contadores de pontos, um para cada jogador ou time.",
     CustomWidget,
   ),
 };
 export function createWidget(type: string): WidgetInstance {
   const def = widgetRegistry[type];
-  if (!def || ["custom", "notes", "canvas", "chat"].includes(type))
+  if (!def || ["notes", "canvas", "chat"].includes(type))
     throw new Error("Widget indisponível.");
   return {
     id: freshKey(),
