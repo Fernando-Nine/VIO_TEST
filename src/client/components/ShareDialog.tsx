@@ -245,8 +245,10 @@ export function ShareDialog({
     let cancelled = false;
     const created: string[] = [];
     setThumbs({});
-    void (async () => {
-      for (const source of visible) {
+    // Three at a time, in list order (#247): the app renders them in parallel.
+    const queue = [...visible];
+    const worker = async () => {
+      for (let source = queue.shift(); source; source = queue.shift()) {
         let url: string | null = null;
         try {
           url = (await videoThumbnail(source)) ?? null;
@@ -254,10 +256,12 @@ export function ShareDialog({
           url = null;
         }
         if (url) created.push(url);
-        if (cancelled) break;
-        setThumbs((current) => ({ ...current, [source.id]: url }));
+        if (cancelled) return;
+        const id = source.id;
+        setThumbs((current) => ({ ...current, [id]: url }));
       }
-    })();
+    };
+    for (let i = 0; i < 3; i++) void worker();
     return () => {
       cancelled = true;
       created.forEach((url) => URL.revokeObjectURL(url));
