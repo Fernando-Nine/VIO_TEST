@@ -14,10 +14,11 @@ import type { VideoSource } from "./video";
 let selected: DesktopSource | undefined;
 let video: { source: VideoSource; options: NativeVideoOptions } | undefined;
 // One capture per screen slot (#194); the native side streams up to three.
-const active = new Map<Slot, { stop: () => void; audio: boolean }>();
+const active = new Map<Slot, { stop: () => void }>();
 const pending = new Map<Slot, { stop: () => void }>();
+let soundOnly = false;
 let description = "";
-// The native side holds one audio capture; a replacement waits for the old one to end.
+// A replacement frees its sound before taking it again (same app, #229).
 let released: Promise<unknown> = Promise.resolve();
 export function selectProcess(source?: DesktopSource) {
   selected = source;
@@ -28,6 +29,10 @@ export function selectVideo(
   options?: NativeVideoOptions,
 ) {
   video = source && options ? { source, options } : undefined;
+}
+/** The next share is only the sound of `selectProcess` (#229): no image, no picker. */
+export function selectSoundOnly(on: boolean) {
+  soundOnly = on;
 }
 
 export const windowsCapture: CaptureAdapter = {
@@ -43,28 +48,27 @@ export const windowsCapture: CaptureAdapter = {
     const previous = active.get(slot);
     const source = selected;
     const chosen = video;
+    const silent = soundOnly;
     video = undefined;
-    if (audio && !source)
+    soundOnly = false;
+    if ((audio || silent) && !source)
       throw new Error("Escolha o aplicativo cujo áudio deseja transmitir.");
-    if (
-      audio &&
-      [...active].some(([other, capture]) => other !== slot && capture.audio)
-    )
-      throw new Error(
-        "O som já sai de outra tela. Transmita esta sem som ou encerre a outra.",
-      );
+    if (silent && !audio)
+      throw new Error("Escolha o som que deseja transmitir.");
     let native: NativeVideo | undefined;
     // Invoke the system video picker before the first await, within user activation.
-    const videoPromise = chosen
-      ? startNativeVideo(chosen.source, chosen.options).then((started) => {
-          native = started;
-          if (stopped) started.stop();
-          return new MediaStream([started.track]);
-        })
-      : navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: false,
-        });
+    const videoPromise = silent
+      ? Promise.resolve(new MediaStream())
+      : chosen
+        ? startNativeVideo(chosen.source, chosen.options).then((started) => {
+            native = started;
+            if (stopped) started.stop();
+            return new MediaStream([started.track]);
+          })
+        : navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: false,
+          });
     const context = audio
       ? new AudioContext({ sampleRate: 48000, latencyHint: "interactive" })
       : undefined;
@@ -101,9 +105,9 @@ export const windowsCapture: CaptureAdapter = {
       if (stopped) stream.getTracks().forEach((track) => track.stop());
       check();
       const video = stream.getVideoTracks()[0];
-      if (!video)
+      if (!video && !silent)
         throw new Error("O Windows não retornou a imagem selecionada.");
-      video.addEventListener("ended", stop, { once: true });
+      video?.addEventListener("ended", stop, { once: true });
       description = native
         ? `Imagem capturada pelo VIO em ${native.width}×${native.height}.`
         : "Compartilhando somente a imagem escolhida.";
@@ -158,6 +162,7 @@ export const windowsCapture: CaptureAdapter = {
           );
         const track = destination.stream.getAudioTracks()[0];
         stream.addTrack(track);
+        if (silent) track.addEventListener("ended", stop, { once: true });
         description = source.system
           ? "Todo o som do computador via WASAPI, sem as vozes da chamada."
           : `Áudio de ${source.title} via WASAPI, incluindo os processos filhos desse aplicativo.`;
@@ -173,7 +178,7 @@ export const windowsCapture: CaptureAdapter = {
           if (stopped) return;
           stop();
           // track.stop() deliberately does not emit ended; notify Captures explicitly.
-          video.dispatchEvent(new Event("ended"));
+          (video ?? track).dispatchEvent(new Event("ended"));
         };
         node.onprocessorerror = end;
         // One outstanding binary request, paced by the native event (20 ms max wait).
@@ -198,7 +203,7 @@ export const windowsCapture: CaptureAdapter = {
       check();
       previous?.stop();
       pending.delete(slot);
-      active.set(slot, { stop, audio: Boolean(captureId) });
+      active.set(slot, { stop });
       return stream;
     } catch (error) {
       stop();

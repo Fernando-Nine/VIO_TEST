@@ -6,6 +6,12 @@ Sem tarefa em curso. Falta da #192: CPU real 1080p60 no PC do usuário (caminho 
 seletor visual (Frontend, #191); borda amarela no Win10 continua (só o Win11 tira).
 
 ## Feito recentemente
+- #229 (rc.9): até 3 sons nativos ao mesmo tempo. `capture.rs` `Manager.active` virou
+  `HashMap` (id → pid, sistema, captura); `audio_conflict` recusa 4º som, o mesmo app duas
+  vezes e Todo o PC junto de outro som; `start` recusa a árvore do VIO. Som sem tela:
+  `startNativeSound(engine, {sound, slot})` + `listSoundSources()` em `desktop/share.ts`
+  (usa um slot de tela; publicação `screen` só com áudio — viewers precisam mostrar
+  "só som": sem flag no protocolo, detectar pela falta de trilha de vídeo).
 - #194 (rc.8): até 3 telas por pessoa. Servidor: telas somam até `MAX_SCREENS` (protocol),
   a 4ª → `Fault SCREEN_LIMIT`; voz/câmera seguem substituindo. Cliente: `Captures.sources`
   é `Map<Slot>` (`screen`, `screen:2`, `screen:3`; `slotKind`); `sourceFor(publication)`

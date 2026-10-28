@@ -44,6 +44,23 @@ pub(crate) const LIST_VALID: Duration = Duration::from_secs(60);
 /// 2004+ (as in OBS); an older or unpatched system fails the activation, not the app.
 pub const MIN_BUILD: u32 = 19041;
 const SYSTEM_TITLE: &str = "Todo o som do computador, sem o VIO";
+/// Simultaneous sounds (#229): each is its own process-loopback client.
+pub const MAX_AUDIO: usize = 3;
+
+/// Why a new capture cannot join the running ones: same sound twice, or the whole PC
+/// (which already holds every application) next to anything else.
+fn audio_conflict(running: &[(u32, bool)], pid: u32, system: bool) -> Option<&'static str> {
+    if running.len() >= MAX_AUDIO {
+        return Some("Você já transmite 3 sons. Encerre um para adicionar outro.");
+    }
+    if (system && !running.is_empty()) || running.iter().any(|&(_, s)| s) {
+        return Some("Todo o som do computador já inclui os aplicativos. Encerre um deles antes.");
+    }
+    if running.iter().any(|&(p, _)| p == pid) {
+        return Some("O som deste aplicativo já está sendo transmitido.");
+    }
+    None
+}
 
 /// Owned Win32 handle, closed once.
 pub(crate) struct Owned(pub(crate) HANDLE);
@@ -493,7 +510,8 @@ struct Inner {
     sources: HashMap<String, NativeSource>,
     listed: Option<Instant>,
     started: Option<Instant>,
-    active: Option<(String, Arc<Capture>)>,
+    /// Capture id → (pid, whole PC, capture).
+    active: HashMap<String, (u32, bool, Arc<Capture>)>,
 }
 
 #[derive(Default)]
@@ -569,9 +587,6 @@ impl Manager {
         if windows_build() < MIN_BUILD {
             return Err("O som da janela precisa do Windows 10 versão 2004 ou mais recente.".into());
         }
-        if inner.active.is_some() {
-            return Err("Encerre o compartilhamento atual antes de iniciar outro.".into());
-        }
         if inner.started.is_some_and(|t| t.elapsed() < LIST_COOLDOWN) {
             return Err("Aguarde um instante antes de tentar novamente.".into());
         }
@@ -580,12 +595,24 @@ impl Manager {
         }
         let source = inner
             .sources
-            .remove(source_id)
+            .get(source_id)
+            .cloned()
             .ok_or("Escolha um aplicativo da lista atual.")?;
+        // Never VIO's own tree: the call's voices would echo back to everyone.
+        if !source.system && own_tree().contains(&source.pid) {
+            return Err("O VIO não transmite o próprio som.".into());
+        }
+        let running: Vec<_> = inner.active.values().map(|&(pid, system, _)| (pid, system)).collect();
+        if let Some(reason) = audio_conflict(&running, source.pid, source.system) {
+            return Err(reason.into());
+        }
+        inner.sources.remove(source_id);
         inner.started = Some(Instant::now());
         let capture = Capture::start(&source)?;
         let id = key()?;
-        inner.active = Some((id.clone(), Arc::new(capture)));
+        inner
+            .active
+            .insert(id.clone(), (source.pid, source.system, Arc::new(capture)));
         Ok(id)
     }
 
@@ -593,26 +620,22 @@ impl Manager {
         let inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
         inner
             .active
-            .as_ref()
-            .filter(|(key, _)| key == id)
-            .map(|(_, c)| c.clone())
+            .get(id)
+            .map(|(_, _, c)| c.clone())
             .ok_or_else(|| "A captura já foi encerrada.".into())
     }
 
     pub fn stop(&self, id: Option<&str>) {
-        let capture = self.0.lock().ok().and_then(|mut inner| {
-            if inner
-                .active
-                .as_ref()
-                .is_some_and(|(key, _)| id.is_none_or(|id| id == key))
-            {
-                inner.active.take().map(|(_, capture)| capture)
-            } else {
-                None
-            }
-        });
-        // Never join the worker while holding the manager lock.
-        if let Some(capture) = capture {
+        let captures: Vec<_> = self
+            .0
+            .lock()
+            .map(|mut inner| match id {
+                Some(id) => inner.active.remove(id).into_iter().collect(),
+                None => inner.active.drain().map(|(_, entry)| entry).collect(),
+            })
+            .unwrap_or_default();
+        // Never join a worker while holding the manager lock.
+        for (_, _, capture) in captures {
             capture.stop();
         }
     }
@@ -621,5 +644,22 @@ impl Manager {
 impl Drop for Manager {
     fn drop(&mut self) {
         self.stop(None);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{audio_conflict, MAX_AUDIO};
+
+    #[test]
+    fn sounds_add_up_without_duplicates() {
+        assert_eq!(audio_conflict(&[], 10, false), None);
+        assert_eq!(audio_conflict(&[], 1, true), None);
+        assert_eq!(audio_conflict(&[(10, false)], 20, false), None);
+        assert!(audio_conflict(&[(10, false)], 10, false).is_some());
+        assert!(audio_conflict(&[(10, false)], 1, true).is_some());
+        assert!(audio_conflict(&[(1, true)], 20, false).is_some());
+        let full: Vec<_> = (0..MAX_AUDIO as u32).map(|p| (p + 10, false)).collect();
+        assert!(audio_conflict(&full, 99, false).is_some());
     }
 }

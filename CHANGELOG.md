@@ -2,7 +2,7 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.8] - 2026-10-27
+## [2.11.0-rc.9] - 2026-10-27
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
@@ -11,6 +11,7 @@ Prévia · Pessoas, Minha transmissão e Câmeras
 - Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.
 - Widget Minha transmissão no lugar de Meus espectadores, Conexão e Minha tela: prévia da sua tela com AO VIVO e a fonte, Pausar, Silenciar o som (quem assiste vê a tela, sem som; o microfone não muda), Trocar o que transmito (a nova fonte entra sem derrubar quem assiste) e Parar. Ao lado, quem assiste e Envio, Quadros, Ping e Perda. Em foco, a conexão de cada pessoa, o gráfico do envio do último minuto e a qualidade; na tira, só a prévia, com os controles no botão direito. Quem já tinha um dos três widgets abertos fica com Minha transmissão no mesmo espaço.
 - Base para transmitir até 3 telas ao mesmo tempo: cada tela é uma transmissão própria, quem assiste escolhe qual ver, e a partir da 2ª tela a qualidade começa em Baixa para poupar o envio. A 4ª é recusada com aviso. O botão para adicionar outra tela chega com o novo seletor de compartilhar.
+- App Windows: até 3 sons ao mesmo tempo, inclusive som sem tela (por exemplo, o jogo na tela e a música à parte). O mesmo aplicativo não entra duas vezes, Todo o som do computador não se soma a outro som, e o VIO nunca transmite o próprio som. A escolha chega com o novo seletor de compartilhar.
 - Chat: entre o contorno colorido e o avatar volta a ficar um espaço vazio, sem o anel azul.
 - Sino com os grupos Agora (última hora) e Antes, botão Limpar e um ponto nas notificações ainda não lidas.
 - No celular, segurar o cabeçalho de um widget abre o menu dele por baixo da tela; para mover, arraste.
