@@ -37,7 +37,7 @@ use windows::{
         },
         Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS},
         System::{
-            Com::{CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED},
+            Com::{CoIncrementMTAUsage, CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED},
             Threading::WaitForSingleObject,
             WinRT::{
                 Direct3D11::{CreateDirect3D11DeviceFromDXGIDevice, IDirect3DDxgiInterfaceAccess},
@@ -269,8 +269,19 @@ impl NativeVideo {
 
 /// MTA for the current blocking thread; undone only if this call set it.
 pub(crate) struct Apartment(bool);
+/// The MTA is torn down when its last thread leaves, and COM objects cached in it
+/// (activation factories) then crash on their next use. Short capture threads come
+/// and go, so the process keeps the MTA alive for good (#247).
+pub(crate) fn keep_mta() {
+    static KEEP: Once = Once::new();
+    KEEP.call_once(|| unsafe {
+        let _ = CoIncrementMTAUsage();
+    });
+}
+
 impl Apartment {
     pub fn enter() -> Self {
+        keep_mta();
         Self(unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.is_ok())
     }
 }
