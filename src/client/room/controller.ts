@@ -15,6 +15,7 @@ import type {
   Reply,
   RuntimeConfig,
   Snapshot,
+  JoinResult,
   Subscription,
   Tier,
   VideoDemand,
@@ -103,6 +104,8 @@ export class Controller {
   private listeners = new Set<() => void>();
   private session?: { token: string; id: string; expiresAt: number };
   private intent?: { name: string; code?: string; color?: string };
+  /** Signed creator seats by room code (#226); survive a server restart. */
+  private credentials: Record<string, string> = {};
   private roomEntered = false;
   roomColor = defaultColor;
   /** The color chosen last, kept on this device and applied when entering a room. */
@@ -382,6 +385,30 @@ export class Controller {
     }
     return this.session!;
   }
+  private loadCredentials() {
+    if (this.persist)
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem("vio:room-credentials") || "{}",
+        );
+        if (stored && typeof stored === "object") this.credentials = stored;
+      } catch {}
+    return this.credentials;
+  }
+  private storeCredential(code: string, credential: string | null) {
+    const all = { ...this.loadCredentials() };
+    delete all[code];
+    if (credential) all[code] = credential;
+    // Most recent last; a handful of rooms is plenty.
+    this.credentials = Object.fromEntries(Object.entries(all).slice(-20));
+    if (this.persist)
+      try {
+        localStorage.setItem(
+          "vio:room-credentials",
+          JSON.stringify(this.credentials),
+        );
+      } catch {}
+  }
   private storeSession() {
     if (this.persist)
       try {
@@ -537,6 +564,15 @@ export class Controller {
       socket.io.on("reconnect_failed", () => {
         if (!current()) return;
         this.scheduleRecovery();
+      });
+      socket.on("room-credential", (credential: string | null) => {
+        const code = this.intent?.code;
+        if (
+          current() &&
+          code &&
+          (credential === null || typeof credential === "string")
+        )
+          this.storeCredential(code, credential);
       });
       socket.on("snapshot", (snapshot: Snapshot) =>
         this.receiveSnapshot(snapshot),
@@ -703,12 +739,16 @@ export class Controller {
       socket === this.socket &&
       !!this.intent;
     try {
-      const result = await this.request<{ id: string; snapshot: Snapshot }>(
-        "join",
-        this.intent,
-      );
+      const code = this.intent.code;
+      const credential = code ? this.loadCredentials()[code] : undefined;
+      const result = await this.request<JoinResult>("join", {
+        ...this.intent,
+        ...(credential && { credential }),
+      });
       if (!current() || !this.intent) return;
       this.intent.code = result.snapshot.code;
+      if (result.credential)
+        this.storeCredential(result.snapshot.code, result.credential);
       this.view.id = result.id;
       this.view.status = "connected";
       void this.heartbeat();

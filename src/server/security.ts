@@ -4,6 +4,8 @@ import {
   randomUUID,
   timingSafeEqual,
 } from "node:crypto";
+import { z } from "zod";
+import { roomCode, roomPermissions, uuid } from "../shared/protocol";
 export class Fault extends Error {
   constructor(
     public code: string,
@@ -87,6 +89,65 @@ export function verifyToken(
       "SESSION_EXPIRED",
       "Sua sessão expirou. Reconecte para continuar.",
     );
+  }
+}
+/** Admins carried by a room credential; more are kept in memory only. */
+export const CREDENTIAL_ADMINS = 16;
+const credentialBody = z
+  .object({
+    code: roomCode,
+    /** When this creator seat was granted; a higher rank wins. 0 = provisional. */
+    rank: z.number().int().min(0),
+    admins: z.array(uuid).max(CREDENTIAL_ADMINS),
+    permissions: roomPermissions,
+    exp: z.number().int(),
+  })
+  .strict();
+export type RoomCredential = z.infer<typeof credentialBody>;
+/**
+ * Creator seat of a room, signed so it survives a server restart without a
+ * database (#226). Bearer: session ids rotate per tab and on expiry, so it is
+ * bound to the room code, not to the person. The "room." prefix keeps it from
+ * ever verifying as a session token, and vice versa.
+ */
+export function issueRoomCredential(
+  secret: string,
+  ttl: number,
+  credential: Omit<RoomCredential, "exp">,
+) {
+  const body = Buffer.from(
+    JSON.stringify({ ...credential, exp: Date.now() + ttl }),
+  ).toString("base64url");
+  return (
+    body +
+    "." +
+    createHmac("sha256", secret)
+      .update("room." + body)
+      .digest("base64url")
+  );
+}
+/** The credential if it is genuine, unexpired and for this room; else null. */
+export function verifyRoomCredential(
+  secret: string,
+  token: unknown,
+  code: string,
+): RoomCredential | null {
+  try {
+    if (typeof token !== "string" || token.length > 2048) return null;
+    const [body, signature, extra] = token.split(".");
+    if (extra !== undefined || !body || !signature) return null;
+    const expected = createHmac("sha256", secret)
+      .update("room." + body)
+      .digest();
+    const actual = Buffer.from(signature, "base64url");
+    if (expected.length !== actual.length || !timingSafeEqual(expected, actual))
+      return null;
+    const result = credentialBody.parse(
+      JSON.parse(Buffer.from(body, "base64url").toString()),
+    );
+    return result.code === code && result.exp > Date.now() ? result : null;
+  } catch {
+    return null;
   }
 }
 export const generateCode = () => randomBytes(8).toString("hex").toUpperCase();
