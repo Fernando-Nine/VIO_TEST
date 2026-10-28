@@ -42,22 +42,13 @@ export function Notifications({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const anchor = useRef<HTMLButtonElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const id = useId();
-  const suppressFocus = useRef(false);
+  // Opens only on click (or Enter/Space), never on hover or focus.
   const set = (value: boolean) => {
-    clearTimeout(timer.current);
     if (!value) setFresh(new Set());
     setOpen(value);
     onOpenChange(value);
   };
-  const leave = () => {
-    timer.current = setTimeout(() => {
-      if (!document.getElementById(id)?.contains(document.activeElement))
-        set(false);
-    }, 600);
-  };
-  useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => {
     if (!open) return;
     const blur = (event: FocusEvent) => {
@@ -161,13 +152,7 @@ export function Notifications({
     },
   ].filter((g) => g.items.length);
   return (
-    <div
-      className="notifications-trigger"
-      onPointerEnter={(e) => {
-        if (e.pointerType === "mouse") set(true);
-      }}
-      onPointerLeave={leave}
-    >
+    <div className="notifications-trigger">
       <button
         ref={anchor}
         className="text-button"
@@ -178,14 +163,7 @@ export function Notifications({
         }
         aria-expanded={open}
         aria-controls={open ? id : undefined}
-        onFocus={() => {
-          if (
-            !suppressFocus.current &&
-            anchor.current?.matches(":focus-visible")
-          )
-            set(true);
-        }}
-        onClick={() => set(true)}
+        onClick={() => set(!open)}
       >
         <Bell size={17} />
         {unread.length > 0 && (
@@ -203,15 +181,7 @@ export function Notifications({
           id={id}
           label="Notificações"
           className="notifications-panel"
-          close={() => {
-            suppressFocus.current = true;
-            set(false);
-            queueMicrotask(() => {
-              suppressFocus.current = false;
-            });
-          }}
-          onPointerEnter={() => clearTimeout(timer.current)}
-          onPointerLeave={leave}
+          close={() => set(false)}
         >
           <header>
             <strong>Notificações</strong>
