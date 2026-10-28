@@ -102,6 +102,11 @@
   object-fit: contain;
   background: #05060a;
 }
+.share-thumb img.share-icon {
+  width: 48px;
+  height: 48px;
+  background: none;
+}
 .share-source:hover .share-thumb {
   outline-color: var(--line);
 }
@@ -129,6 +134,13 @@
 .share-name {
   overflow: hidden;
   font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.share-detail {
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
 }

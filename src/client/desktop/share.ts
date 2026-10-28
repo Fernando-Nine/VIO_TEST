@@ -3,6 +3,7 @@ import type { Slot } from "../media/capture";
 import type { Controller } from "../room/controller";
 import { nativeInvoke, type DesktopSource } from "./bridge";
 import { selectProcess, selectSoundOnly, selectVideo } from "./capture";
+import { decodeThumbnail } from "./video";
 
 /**
  * Native share API for the app's own picker (#191/#192): list sources with
@@ -61,6 +62,21 @@ export async function startNativeShare(
 /** Sounds that can go without an image (#229): the whole PC first, then applications. */
 export const listSoundSources = () =>
   nativeInvoke<DesktopSource[]>("desktop_sources");
+
+/** Object URL of a listed program's icon (#247); the caller revokes it. */
+export async function soundIcon(source: DesktopSource) {
+  const { width, height, rgba } = decodeThumbnail(
+    await nativeInvoke<ArrayBuffer>("desktop_sound_icon", {
+      sourceId: source.id,
+    }),
+  );
+  const canvas = new OffscreenCanvas(width, height);
+  canvas
+    .getContext("2d")
+    ?.putImageData(new ImageData(rgba, width, height), 0, 0);
+  // PNG keeps the icon's transparency.
+  return URL.createObjectURL(await canvas.convertToBlob({ type: "image/png" }));
+}
 
 /**
  * Shares only the sound of a listed application (e.g. music while a game is the

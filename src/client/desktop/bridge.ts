@@ -7,6 +7,8 @@ export interface DesktopCapabilities {
 export interface DesktopSource {
   id: string;
   title: string;
+  /** Window title under the program name, when the program has a window. */
+  detail?: string;
   /** Whole PC minus VIO itself, so the call's voices never echo back. */
   system: boolean;
 }

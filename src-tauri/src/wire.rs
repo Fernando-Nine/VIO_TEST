@@ -35,6 +35,17 @@ pub fn thumb_size(width: u32, height: u32) -> (u32, u32) {
     (((width as f64 * scale).round() as u32).max(1), ((height as f64 * scale).round() as u32).max(1))
 }
 
+/// `VIOT` + RGBA of an already small image, alpha kept (program icons, #247).
+pub fn icon(rgba: &[u8], width: u32, height: u32) -> Vec<u8> {
+    assert!(width <= THUMB_WIDTH && height <= THUMB_HEIGHT && rgba.len() == (width * height * 4) as usize);
+    let mut bytes = Vec::with_capacity(THUMB_HEADER + rgba.len());
+    for value in [0x56494f54u32, 1, width, height] {
+        bytes.extend_from_slice(&value.to_le_bytes());
+    }
+    bytes.extend_from_slice(rgba);
+    bytes
+}
+
 /// Fits a BGRA frame into the thumbnail box and returns `VIOT` + RGBA pixels.
 /// Each output pixel averages up to 4×4 samples of its source cell.
 pub fn thumbnail(bgra: &[u8], width: u32, height: u32, stride: u32) -> Vec<u8> {

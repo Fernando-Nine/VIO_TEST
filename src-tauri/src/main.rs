@@ -6,6 +6,8 @@ mod duplication;
 #[cfg(windows)]
 mod printwindow;
 #[cfg(windows)]
+mod programs;
+#[cfg(windows)]
 mod log;
 #[cfg(windows)]
 mod shell;
