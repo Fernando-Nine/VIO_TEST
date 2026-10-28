@@ -954,16 +954,6 @@ legend {
   font-weight: 400;
   margin-top: 5px;
 }
-.share-intro {
-  color: var(--blue-light);
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  margin: 5px 0 26px;
-}
-.share-intro p {
-  margin: 0;
-}
 .participant-setting {
   border-bottom: 1px solid var(--line);
   padding: 12px 0 20px;

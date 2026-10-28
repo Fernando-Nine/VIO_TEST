@@ -1,4 +1,5 @@
 import { permissionText, roleAllows, roomRole } from "../shared/permissions";
+import type { Slot as CaptureSlot } from "./media/capture";
 import {
   lazy,
   Suspense,
@@ -29,6 +30,7 @@ import {
   Mic,
   MicOff,
   MonitorUp,
+  Plus,
   Pause,
   Settings2,
   Users,
@@ -61,8 +63,7 @@ import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
 import { applyMotion } from "./components/motion";
-import { desktop } from "./desktop/bridge";
-import { NativeShare } from "./desktop/NativeShare";
+import { ShareDialog } from "./components/ShareDialog";
 type Panel =
   | "people"
   | "settings"
@@ -85,11 +86,11 @@ function Brand() {
 export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
+  const [replaceSlot, setReplaceSlot] = useState<CaptureSlot>("screen");
   const [name, setName] = useState("");
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
   );
-  const [audio, setAudio] = useState(true);
   const [copied, setCopied] = useState(false);
   function showPeople() {
     // The icon toggles the side panel (docs/design/pessoas.md).
@@ -180,7 +181,10 @@ export default function App({ engine }: { engine: Controller }) {
   useEffect(() => {
     if (availableKey) wake();
   }, [availableKey, wake]);
-  const hasScreen = engine.captures.sources.has("screen");
+  // Up to MAX_SCREENS shares at once (#194).
+  const sharing = engine.captures.screens;
+  const hasScreen = sharing.length > 0;
+  const moreScreens = !!engine.captures.nextScreen();
   const hasVoice = engine.captures.sources.has("voice");
   const hasCamera = engine.captures.sources.has("camera");
   const micMuted =
@@ -458,14 +462,10 @@ export default function App({ engine }: { engine: Controller }) {
                     people={() => open("color")}
                     diagnostics={() => open("about")}
                     share={() => open("share")}
-                    replaceShare={() =>
-                      desktop
-                        ? open("replace")
-                        : void engine.startScreen(
-                            engine.publications.get("screen")?.audio ?? true,
-                            true,
-                          )
-                    }
+                    replaceShare={(slot) => {
+                      setReplaceSlot(slot);
+                      open("replace");
+                    }}
                     fullscreen={() => void fullscreen()}
                     isFullscreen={full}
                     interaction={(busy) => {
@@ -591,11 +591,21 @@ export default function App({ engine }: { engine: Controller }) {
                   >
                     <button
                       className={`share-button ${hasScreen ? "sharing" : ""}`}
-                      aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
+                      aria-label={
+                        sharing.length > 1
+                          ? `Parar as ${sharing.length} telas`
+                          : hasScreen
+                            ? "Parar tela"
+                            : "Compartilhar"
+                      }
                       disabled={(!canShare || !!screenBlocked) && !hasScreen}
                       title={hasScreen ? undefined : screenBlocked}
                       onClick={() =>
-                        hasScreen ? void engine.stop("screen") : open("share")
+                        hasScreen
+                          ? sharing.forEach(
+                              ({ slot }) => void engine.stop(slot),
+                            )
+                          : open("share")
                       }
                     >
                       {hasScreen ? (
@@ -605,11 +615,25 @@ export default function App({ engine }: { engine: Controller }) {
                       )}
                       <span>
                         <b className="dock-wide">
-                          {hasScreen ? "Parar tela" : "Compartilhar"}
+                          {sharing.length > 1
+                            ? `Parar telas (${sharing.length})`
+                            : hasScreen
+                              ? "Parar tela"
+                              : "Compartilhar"}
                         </b>
                         <b className="dock-narrow">Tela</b>
                       </span>
                     </button>
+                    {hasScreen && moreScreens && canShare && !screenBlocked && (
+                      <button
+                        className="dock-button share-more"
+                        aria-label="Compartilhar outra tela"
+                        title="Compartilhar outra tela"
+                        onClick={() => open("share")}
+                      >
+                        <Plus size={18} />
+                      </button>
+                    )}
                     {pip.supported && !full && (
                       <button
                         className="dock-button dock-wide"
@@ -772,17 +796,20 @@ export default function App({ engine }: { engine: Controller }) {
               settings: "Ajustes",
               color: "Minha cor na sala",
               about: "Sobre a sala",
-              share: "Compartilhar sua tela",
+              share: "Compartilhar tela",
               replace: "Trocar o que transmito",
               history: "O VIO está crescendo",
             }[panel]
           }
+          centered={panel === "share" || panel === "replace"}
           className={
             panel === "settings"
               ? "sheet-settings"
               : panel === "people"
                 ? "sheet-people"
-                : undefined
+                : panel === "share" || panel === "replace"
+                  ? "sheet-share"
+                  : undefined
           }
           close={() => open(null)}
         >
@@ -797,47 +824,15 @@ export default function App({ engine }: { engine: Controller }) {
               openHistory={() => open("history")}
             />
           )}
-          {panel === "share" && desktop && (
-            <NativeShare engine={engine} close={() => open(null)} />
-          )}
-          {panel === "replace" && desktop && (
-            <NativeShare engine={engine} close={() => open(null)} replace />
-          )}
-          {panel === "share" && !desktop && (
-            <>
-              <div className="share-intro">
-                <MonitorUp size={32} />
-                <p>Você escolhe o que compartilhar no seletor do navegador.</p>
-              </div>
-              <label className="toggle">
-                <span>
-                  Incluir áudio da tela
-                  <small>
-                    A trilha de áudio depende da fonte e do navegador.
-                  </small>
-                </span>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={audio}
-                  onChange={(e) => setAudio(e.target.checked)}
-                />
-              </label>
-              <p className="field-note">
-                Para assistir com som, procure a opção de compartilhar áudio ao
-                escolher a fonte. O som do sistema pode incluir a conversa da
-                sala.
-              </p>
-              <button
-                className="primary full-width"
-                onClick={() => {
-                  void engine.startScreen(audio);
-                  open(null);
-                }}
-              >
-                Escolher tela <ArrowUpRight size={18} />
-              </button>
-            </>
+          {(panel === "share" || panel === "replace") && (
+            <ShareDialog
+              engine={engine}
+              close={() => open(null)}
+              replace={panel === "replace"}
+              slot={
+                panel === "replace" ? replaceSlot : engine.captures.nextScreen()
+              }
+            />
           )}
           {panel === "color" && <ColorPicker engine={engine} />}
           {panel === "about" && (

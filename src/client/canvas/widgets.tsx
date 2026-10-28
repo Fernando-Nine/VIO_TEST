@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
+import type { Slot as CaptureSlot } from "../media/capture";
 import {
   MonitorUp,
   Settings2,
@@ -45,7 +46,7 @@ export interface WidgetProps {
   diagnostics: () => void;
   share: () => void;
   /** Trocar o que transmito: a new source on the same publication (#160). */
-  replaceShare: () => void;
+  replaceShare: (slot: CaptureSlot) => void;
 }
 export interface WidgetDefinition {
   id: string;

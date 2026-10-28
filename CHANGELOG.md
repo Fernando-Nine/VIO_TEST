@@ -2,11 +2,12 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.8] - 2026-10-27
+## [2.11.0-rc.9] - 2026-10-28
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
 ### Somente no vio-test
+- Compartilhar abre uma janela no centro, já com a imagem: escolha Tela inteira ou Janela do aplicativo (e Aba do navegador no Chrome e no Edge), a qualidade (480p, 720p, 1080p ou Fonte), a taxa de quadros (15, 30 ou 60 FPS) e se vai com som ou sem som. No app, as telas e janelas aparecem com miniatura e um clique em Compartilhar começa, sem o seletor do Windows; no navegador, Compartilhar abre o seletor dele. As escolhas ficam lembradas, e Trocar o que transmito usa a mesma janela. Transmitindo, o + ao lado de Parar tela (ou Compartilhar outra tela no menu de Minha transmissão) abre outra tela, até 3; cada uma tem Pausar, Silenciar, Trocar e Parar em Minha transmissão.
 - Widget Câmeras: quem fala fica em destaque (troca depois de 1,5 s de fala, sem piscar) e as outras câmeras ligadas ficam ao lado; na Tira, só a câmera de quem fala. Botão direito numa câmera fixa só ela, com o nome no cabeçalho; Mostrar todas volta ao automático. O selo de câmera em Pessoas, ou Abrir câmera no menu da pessoa, abre o widget já fixado. Nenhuma câmera é esticada, e a sua aparece espelhada só para você. Câmera pequena chega mais leve, e câmera que ninguém está vendo não gasta o envio de quem a ligou.
 - Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.
 - Widget Minha transmissão no lugar de Meus espectadores, Conexão e Minha tela: prévia da sua tela com AO VIVO e a fonte, Pausar, Silenciar o som (quem assiste vê a tela, sem som; o microfone não muda), Trocar o que transmito (a nova fonte entra sem derrubar quem assiste) e Parar. Ao lado, quem assiste e Envio, Quadros, Ping e Perda. Em foco, a conexão de cada pessoa, o gráfico do envio do último minuto e a qualidade; na tira, só a prévia, com os controles no botão direito. Quem já tinha um dos três widgets abertos fica com Minha transmissão no mesmo espaço.
