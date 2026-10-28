@@ -1,21 +1,18 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-27 (noite)
+Atualizado: 2026-10-28
 
 ## Agora
 
-Copiloto atual: `session_01K4nnLTF5gUKwkjx99XxmGX` (pode criar sessões e mandar mensagens).
-Sessões (tag `vio-team`):
+Copiloto: `session_01K4nnLTF5gUKwkjx99XxmGX`. Sessões abertas (tag `vio-team`):
 
-- Design leva 4 `session_01K4nnLSEtVrVyuaWhzvz189` — usuário já escolheu (191, 195, 196);
-  Design monta "Escolhidas", specs e issues frontend; avisa o copiloto com os números.
-- Mídia 6 `session_01K4nnLPUq3rQi1LBmFJscYX` — #194 até 3 telas (plano no handoff da Mídia).
-- Encerradas: Frontend 11 (#160, #207, #209), Mídia 4 (#162), Mídia 5 (#192 nativo:
-  `listVideoSources`, `videoThumbnail`, `startNativeShare` em `desktop/share.ts`).
-- Próximo: abrir Frontend 12 com a spec da #191 (seletor estilo Discord; app usa a API
-  nativa, web usa o seletor do navegador). Depois pedir medida de CPU 1080p60 no PC do usuário.
-- Usuário (27 out): pula a 2.10.0; produção será a 2.11.0 após aval na prévia.
-- Brandbook/identidade/design system (prioridade 4): abrir Design novo com Figma/Canva.
+- Design brandbook `session_01K4nnLQc9rnHwwaU5Jshvv4` — canvas "VIO · Marca", issue #227.
+- Encerradas em 28 out: Frontend 12 (#191, #221, #228, #222), Frontend 13 (#236), Mídia 6
+  (#194, #229), Backend (#226), Roteirista (ideias, PR #230), Design leva 4.
+- **2.11.0 pronta na prévia (rc.15)**, aguarda aval. Aceite humano no app: miniaturas do seletor,
+  nome do programa em "Só som", CPU 1080p60. Com o aval: release no VIO (ver Próximo passo).
+- Aguardam o usuário: ideias de sala (recomendado trancar + convite, depois grupo de bolso) e
+  narrativa da landing (#197; Roteirista recomenda C "O ponto", depende do logo).
 - Jurídico: primeira tarefa sugerida = parecer de clips (#208) e base de termos/política.
 
 ## Feito recentemente
@@ -51,7 +48,6 @@ Sessões (tag `vio-team`):
 
 ## Próximo passo
 
-Coletar as escolhas do usuário no canvas da leva 4 (Design avisa) e mandar #191 para o
-Frontend com a API da Mídia 5. Ao fechar #194 e #192, pedir aval da 2.11.0 e publicar no VIO:
-árvore idêntica ao commit aprovado do VIO_TEST (`git checkout <sha> -- .`), PR no VIO,
-squash, tag `v2.11.0` pelo usuário em Releases.
+Com o aval da 2.11.0: subir a versão estável em `releases.ts` + `package.json` no VIO_TEST, depois
+árvore idêntica ao commit aprovado (`git checkout <sha> -- .`) num branch do VIO, PR, squash; tag
+`v2.11.0` pelo usuário em Releases. Depois, transformar as ideias escolhidas em issues.
