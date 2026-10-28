@@ -41,10 +41,14 @@ export const permissionText: Record<RoomPermission, string> = {
   guestCamera: "ligar a câmera",
   adminCreate: "criar widgets para a sala",
   adminClose: "encerrar widgets de outras pessoas",
+  locked: "trancar a sala",
 };
 /** Who may flip each switch: admin switches belong to the creator alone. */
 export function canSetPermission(role: RoomRole, key: RoomPermission) {
-  return role === "creator" || (role === "admin" && key.startsWith("guest"));
+  return (
+    role === "creator" ||
+    (role === "admin" && (key.startsWith("guest") || key === "locked"))
+  );
 }
 /** Room-wide grant for a role; per-widget grants are checked separately. */
 export function roleAllows(
@@ -54,8 +58,8 @@ export function roleAllows(
 ) {
   const p = permissions || defaultPermissions;
   if (role === "creator") return true;
-  if (key.startsWith("admin")) return role === "admin" && p[key];
-  return role === "admin" || p[key];
+  if (key.startsWith("admin")) return role === "admin" && !!p[key];
+  return role === "admin" || !!p[key];
 }
 export function roomRole(
   snapshot: Pick<Snapshot, "creatorId" | "participants">,

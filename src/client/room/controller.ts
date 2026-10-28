@@ -16,6 +16,10 @@ import type {
   RuntimeConfig,
   Snapshot,
   JoinResult,
+  Admission,
+  InviteResult,
+  InviteTtl,
+  WaitingPerson,
   Subscription,
   Tier,
   VideoDemand,
@@ -59,6 +63,10 @@ export interface View {
   error: string;
   notice: string;
   signalingPing?: number;
+  /** At the door of a locked room until someone admits us (#242). */
+  waiting?: { expiresAt: number };
+  /** People waiting to enter; only sent to the creator and admins. */
+  knocks: WaitingPerson[];
 }
 const cameraOff: VideoDemand = { video: "off", height: 120 };
 /** A screen slot with sound and no image is published as a named sound (#236). */
@@ -85,6 +93,7 @@ export class Controller {
     watching: [],
     error: "",
     notice: "",
+    knocks: [],
   };
   readonly canvas: CanvasStore;
   readonly chatRead = new Map<string, number>();
@@ -118,7 +127,13 @@ export class Controller {
   visiblePreviews = new Set<string>();
   private listeners = new Set<() => void>();
   private session?: { token: string; id: string; expiresAt: number };
-  private intent?: { name: string; code?: string; color?: string };
+  private intent?: {
+    name: string;
+    code?: string;
+    color?: string;
+    /** Signed invite (#242): enters even a locked room. */
+    invite?: string;
+  };
   /** Signed creator seats by room code (#226); survive a server restart. */
   private credentials: Record<string, string> = {};
   private roomEntered = false;
@@ -470,7 +485,12 @@ export class Controller {
         );
     });
   }
-  async enter(name: string, code?: string, recovering = false) {
+  async enter(
+    name: string,
+    code?: string,
+    recovering = false,
+    invite?: string,
+  ) {
     const previousAttempts = recovering ? this.recoveryAttempt : 0;
     if (this.disposed) return;
     if (this.intent || this.socket) void this.leave();
@@ -484,6 +504,7 @@ export class Controller {
       name,
       code: code?.trim().toUpperCase() || undefined,
       color: this.roomColor,
+      ...(invite && { invite }),
     };
     this.recoveryAttempt = previousAttempts;
     if (typeof window !== "undefined") {
@@ -588,6 +609,26 @@ export class Controller {
           (credential === null || typeof credential === "string")
         )
           this.storeCredential(code, credential);
+      });
+      socket.on("waiting", (event: { expiresAt: number }) => {
+        if (!current() || !Number.isFinite(event?.expiresAt)) return;
+        this.view.waiting = { expiresAt: event.expiresAt };
+        this.bump();
+      });
+      socket.on("admission", (event: Admission) => {
+        if (!current() || !this.view.waiting) return;
+        this.view.waiting = undefined;
+        if (event?.allowed) void this.rejoin();
+        else {
+          this.view.status = "failed";
+          this.view.error = event?.message || "Sua entrada não foi aceita.";
+          this.bump();
+        }
+      });
+      socket.on("waiting-list", (list: WaitingPerson[]) => {
+        if (!current() || !Array.isArray(list)) return;
+        this.view.knocks = list;
+        this.bump();
       });
       socket.on("snapshot", (snapshot: Snapshot) =>
         this.receiveSnapshot(snapshot),
@@ -736,7 +777,13 @@ export class Controller {
       if (newSession) await this.newSession();
       else if (this.socket?.connected) await this.rejoin();
       else if (this.socket) this.socket.connect();
-      else await this.enter(this.intent.name, this.intent.code, true);
+      else
+        await this.enter(
+          this.intent.name,
+          this.intent.code,
+          true,
+          this.intent.invite,
+        );
     } catch (e) {
       this.scheduleRecovery(e);
     }
@@ -798,8 +845,30 @@ export class Controller {
       }
     } catch (e) {
       if (!current()) return;
+      // Locked room: stay connected and wait for the "admission" event.
+      if (recoveryCode(e) === "WAITING") {
+        this.view.waiting ||= { expiresAt: Date.now() + 5 * 60000 };
+        this.bump();
+        return;
+      }
       this.scheduleRecovery(e);
     }
+  }
+  /** Locks or unlocks the room; creator and admins only (#242). */
+  setLocked(locked: boolean) {
+    return this.request("room-permissions", { permissions: { locked } });
+  }
+  /** Lets someone from the waiting room in, or turns them away. */
+  admit(id: string, allow: boolean) {
+    return this.request("admit", { id, allow });
+  }
+  /** Signed invite that enters directly, even when the room is locked. */
+  createInvite(ttl: InviteTtl) {
+    return this.request<InviteResult>("invite-create", { ttl });
+  }
+  /** Every invite issued so far stops working (until a server restart). */
+  revokeInvites() {
+    return this.request("invite-revoke");
   }
   private receiveSnapshot(snapshot: Snapshot, announce = true) {
     if (
@@ -1459,6 +1528,7 @@ export class Controller {
       watching: [],
       error: "",
       notice: "",
+      knocks: [],
     };
     if (this.persist) history.replaceState(null, "", location.pathname);
     this.bump();

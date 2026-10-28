@@ -1,12 +1,24 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-10-28
+Atualizado: 2026-10-28 (#242)
 
 ## Agora
 
-Nada em andamento. #226 entregue (rc.9).
+Nada em andamento. #242 (servidor/protocolo) entregue na rc.16; interface fica com o Frontend.
 
 ## Feito recentemente
+
+- #242: `permissions.locked` (opcional: credenciais antigas seguem válidas; fora de
+  `defaultPermissions` para não virar switch). Trancada: entram membros atuais, `Room.known`
+  (quem já esteve, 500), `restoredAdmins`, credencial de criador e convite; o resto vai a
+  `Room.waiting` (`join` → Fault `WAITING` + evento `waiting {expiresAt}`). Comandos `admit
+  {id, allow}`, `invite-create {ttl: 1h|1d|7d}` → `{invite, expiresAt}`, `invite-revoke`.
+  Eventos: `waiting-list` (só criador/admins; `[]` para quem perde o cargo), `admission
+  {allowed, message?}` (aceito = refazer `join`). Convite `issueInvite/verifyInvite`
+  (prefixo `invite.`, `gen` da sala; revogadas só em memória). `sign/verifySigned` em
+  `security.ts` servem credencial e convite. Cliente: `view.waiting`, `view.knocks`,
+  `setLocked`, `admit`, `createInvite`, `revokeInvites`, `enter(nome, código, false,
+  convite)`, `invite(code, token)` em `endpoint.ts` (`?convite=`). Testes `room-lock*.test.ts`.
 
 - #226: credencial de cargo da sala (`issueRoomCredential`/`verifyRoomCredential` em
   `security.ts`, HMAC com prefixo `room.`). Portadora, atrelada ao código (ids de sessão
@@ -48,6 +60,9 @@ Nada em andamento. #226 entregue (rc.9).
 - Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 
 ## Pendente / bloqueios
+
+- Frontend (#242): ler `?convite=` e passar ao `enter`; tela de espera (`view.waiting`),
+  aviso com Aceitar/Recusar (`view.knocks`), Trancar, Copiar convite e Revogar.
 
 - Frontend: interface dos switches da #71 e usar `canEditPublic(..., "guestControl")`
   nos controles de cronômetro, votação e tarefas.

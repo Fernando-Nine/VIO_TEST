@@ -14,6 +14,18 @@ Essas medidas reduzem riscos; não constituem garantia de segurança.
   chega primeiro sem credencial é criador provisório; a credencial de maior posição
   recupera o cargo, os admins e as permissões. Transferir o cargo ou sair de propósito
   invalida a credencial antiga; cair além da tolerância não. Nunca vai aos logs.
+- **Sala trancada** (#242, `permissions.locked`; criador e admins): entram direto só quem
+  já esteve na sala (id de sessão, até 500 por sala), admins da credencial, quem traz a
+  credencial de criador e quem traz um **convite**. Os demais ficam na sala de espera
+  (`join` responde `WAITING`) até um admin aceitar ou recusar; a espera expira em 5 min,
+  a fila tem até 20 pessoas, e bater na porta é limitado por pessoa (5/10 min) e por IP
+  (20/10 min). Recusado espera 1 min para tentar de novo. Destrancar aceita todos.
+- **Convite** (#242): HMAC-SHA256 com prefixo `invite.` (não vale como credencial nem
+  sessão), com código da sala, validade (1 h, 1 dia ou 7 dias) e a geração de convites
+  da sala. "Revogar convites" troca a geração e lembra as revogadas **só em memória**:
+  depois de um reinício (ou se a sala ficar vazia além do `roomTtl`), convites revogados
+  voltam a valer até expirar. Convite inválido é ignorado (vai para a espera). Nunca vai
+  aos logs.
 - Nome, código, publicações e sinais têm schemas estritos e limites. Os nomes são
   renderizados pelo escaping do React; nunca por `dangerouslySetInnerHTML`.
 - Apenas membros da mesma sala podem assinar publicações e negociar. O servidor

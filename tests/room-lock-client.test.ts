@@ -1,0 +1,81 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { once } from "node:events";
+import { io } from "socket.io-client";
+import { Controller } from "../src/client/room/controller";
+import { createApp } from "../src/server/app";
+import { readConfig } from "../src/server/config";
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+async function until(predicate: () => boolean, timeout = 15000) {
+  const start = Date.now();
+  while (!predicate()) {
+    if (Date.now() - start > timeout) throw new Error("Condition timed out");
+    await delay(20);
+  }
+}
+
+// #242 end to end through the controller: lock, wait, admit, invite.
+test("cliente: espera na sala trancada, é aceito e entra com convite", async () => {
+  const origin = "http://localhost:3000";
+  const app = await createApp(
+    readConfig({
+      PORT: "0",
+      SESSION_SECRET: "test-only-room-lock-client-secret-00",
+      ALLOWED_ORIGINS: origin,
+      STUN_URLS: "",
+    }),
+  );
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as { port: number }).port}`;
+  const nativeFetch = globalThis.fetch;
+  const locationDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "location",
+  );
+  Object.defineProperty(globalThis, "location", {
+    value: new URL(url),
+    configurable: true,
+  });
+  globalThis.fetch = (input, init) =>
+    nativeFetch(
+      typeof input === "string" && input.startsWith("/") ? url + input : input,
+      { ...init, headers: { ...init?.headers, Origin: origin } },
+    );
+  const connect = ((uri, options) =>
+    io(uri, { ...options, extraHeaders: { Origin: origin } })) as typeof io;
+  const people = [0, 1, 2].map(() => {
+    const c = new Controller(undefined, false, connect);
+    c.sounds = false;
+    return c;
+  });
+  const [owner, guest, invited] = people;
+  try {
+    await owner.enter("Ana");
+    await until(() => owner.view.status === "connected");
+    const code = owner.view.snapshot!.code;
+    await owner.setLocked(true);
+    await until(() => !!owner.view.snapshot?.permissions?.locked);
+
+    await guest.enter("Bia", code);
+    await until(() => !!guest.view.waiting && owner.view.knocks.length === 1);
+    assert.notEqual(guest.view.status, "connected");
+    await owner.admit(owner.view.knocks[0].id, true);
+    await until(() => guest.view.status === "connected");
+    assert.equal(guest.view.waiting, undefined);
+    assert.equal(owner.view.knocks.length, 0);
+
+    const { invite } = await owner.createInvite("1h");
+    await invited.enter("Caio", code, false, invite);
+    await until(() => invited.view.status === "connected");
+    assert.equal(owner.view.knocks.length, 0);
+  } finally {
+    for (const c of people) await c.destroy();
+    await app.close();
+    globalThis.fetch = nativeFetch;
+    if (locationDescriptor)
+      Object.defineProperty(globalThis, "location", locationDescriptor);
+    else Reflect.deleteProperty(globalThis, "location");
+  }
+});
