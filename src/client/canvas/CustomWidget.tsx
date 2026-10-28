@@ -54,7 +54,7 @@ export function createContent(kind = "custom"): WidgetContent {
         ? "Notas"
         : kind === "timer"
           ? "Cronômetro"
-          : "Personalizado",
+          : "Placar",
     blocks: [block],
   };
 }

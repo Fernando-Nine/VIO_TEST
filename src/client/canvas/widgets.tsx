@@ -272,14 +272,14 @@ export const widgetRegistry: Record<string, WidgetDefinition> = {
   ),
   custom: definition(
     "custom",
-    "Personalizado",
-    "Um placar com os seus contadores de pontos.",
+    "Placar",
+    "Contadores de pontos, um para cada jogador ou time.",
     CustomWidget,
   ),
 };
 export function createWidget(type: string): WidgetInstance {
   const def = widgetRegistry[type];
-  if (!def || ["custom", "notes", "canvas", "chat"].includes(type))
+  if (!def || ["notes", "canvas", "chat"].includes(type))
     throw new Error("Widget indisponível.");
   return {
     id: freshKey(),
