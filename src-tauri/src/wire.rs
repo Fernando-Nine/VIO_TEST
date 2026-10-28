@@ -26,16 +26,21 @@ pub const THUMB_WIDTH: u32 = 320;
 pub const THUMB_HEIGHT: u32 = 180;
 const THUMB_HEADER: usize = 16;
 
+/// The thumbnail box for a source: its aspect kept, never upscaled.
+pub fn thumb_size(width: u32, height: u32) -> (u32, u32) {
+    let (width, height) = (width.max(1), height.max(1));
+    let scale = (THUMB_WIDTH as f64 / width as f64)
+        .min(THUMB_HEIGHT as f64 / height as f64)
+        .min(1.0);
+    (((width as f64 * scale).round() as u32).max(1), ((height as f64 * scale).round() as u32).max(1))
+}
+
 /// Fits a BGRA frame into the thumbnail box and returns `VIOT` + RGBA pixels.
 /// Each output pixel averages up to 4×4 samples of its source cell.
 pub fn thumbnail(bgra: &[u8], width: u32, height: u32, stride: u32) -> Vec<u8> {
     assert!(width > 0 && height > 0 && stride >= width * 4);
     assert!(bgra.len() >= (stride * (height - 1) + width * 4) as usize);
-    let scale = (THUMB_WIDTH as f64 / width as f64)
-        .min(THUMB_HEIGHT as f64 / height as f64)
-        .min(1.0);
-    let w = ((width as f64 * scale).round() as u32).max(1);
-    let h = ((height as f64 * scale).round() as u32).max(1);
+    let (w, h) = thumb_size(width, height);
     let mut bytes = Vec::with_capacity(THUMB_HEADER + (w * h * 4) as usize);
     for value in [0x56494f54u32, 1, w, h] {
         bytes.extend_from_slice(&value.to_le_bytes());

@@ -58,5 +58,8 @@ export async function videoThumbnail(source: VideoSource) {
   canvas
     .getContext("2d")
     ?.putImageData(new ImageData(rgba, width, height), 0, 0);
-  return URL.createObjectURL(await canvas.convertToBlob({ type: "image/png" }));
+  // JPEG encodes several times faster than PNG for a 320×180 preview (#247).
+  return URL.createObjectURL(
+    await canvas.convertToBlob({ type: "image/jpeg", quality: 0.85 }),
+  );
 }

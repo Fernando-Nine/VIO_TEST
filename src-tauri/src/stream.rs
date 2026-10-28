@@ -5,6 +5,7 @@
 // the page's own WebRTC connections.
 use crate::{
     capture::{key, Owned},
+    duplication::{self, Duplicator},
     log,
     video::{borderless, Apartment, Gpu, VideoManager},
     wire,
@@ -69,7 +70,7 @@ struct UiBuffer(ICoreWebView2SharedBuffer);
 unsafe impl Send for UiBuffer {}
 
 #[derive(Clone, Copy)]
-struct Mapping(*mut u8, usize);
+pub(crate) struct Mapping(*mut u8, usize);
 // The mapping stays valid until the UI thread closes the buffer, after the worker joins.
 unsafe impl Send for Mapping {}
 
@@ -88,7 +89,7 @@ pub struct Tick {
     gpu: bool,
 }
 
-struct Frames {
+pub(crate) struct Frames {
     tick: Mutex<Tick>,
     changed: Condvar,
     stopping: AtomicBool,
@@ -98,7 +99,19 @@ struct Frames {
 }
 
 impl Frames {
-    fn set(&self, update: impl FnOnce(&mut Tick)) {
+    pub fn stopping(&self) -> bool {
+        self.stopping.load(Ordering::Acquire)
+    }
+
+    /// First frame on its way: the page starts reading.
+    pub fn running(&self, gpu: bool) {
+        self.set(|t| {
+            t.state = 1;
+            t.gpu = gpu;
+        });
+    }
+
+    pub fn set(&self, update: impl FnOnce(&mut Tick)) {
         let mut tick = self.tick.lock().unwrap_or_else(|e| e.into_inner());
         update(&mut tick);
         self.changed.notify_all();
@@ -133,8 +146,8 @@ enum Path {
     },
 }
 
-struct Pipeline {
-    gpu: Gpu,
+pub(crate) struct Pipeline {
+    pub gpu: Gpu,
     path: Path,
     options: Options,
 }
@@ -208,8 +221,12 @@ impl Processor {
 }
 
 impl Pipeline {
-    fn new(input: SizeInt32, options: Options) -> windows::core::Result<Self> {
-        let gpu = Gpu::new()?;
+    pub fn new(input: SizeInt32, options: Options) -> windows::core::Result<Self> {
+        Self::on(Gpu::new()?, input, options)
+    }
+
+    /// On a given device (Desktop Duplication needs the GPU that drives the screen).
+    pub fn on(gpu: Gpu, input: SizeInt32, options: Options) -> windows::core::Result<Self> {
         let path = match Processor::new(&gpu, input, options) {
             Ok(processor) => Path::Gpu(processor),
             Err(_) => Path::Cpu {
@@ -220,12 +237,12 @@ impl Pipeline {
         Ok(Self { gpu, path, options })
     }
 
-    fn on_gpu(&self) -> bool {
+    pub fn on_gpu(&self) -> bool {
         matches!(self.path, Path::Gpu(_))
     }
 
     /// The video processor is built for one input size; a resized source needs a new one.
-    fn resize(&mut self, input: SizeInt32) -> windows::core::Result<()> {
+    pub fn resize(&mut self, input: SizeInt32) -> windows::core::Result<()> {
         if let Path::Gpu(_) = self.path {
             self.path = Path::Gpu(Processor::new(&self.gpu, input, self.options)?);
         }
@@ -328,6 +345,78 @@ fn publish(mapping: Mapping, width: u32, height: u32, sequence: u32, timestamp: 
     }
 }
 
+/// Pacing, frame numbering and the per-second stats shared by both capture loops.
+pub(crate) struct Writer {
+    mapping: Mapping,
+    options: Options,
+    interval: Duration,
+    due: Instant,
+    sequence: u32,
+    window: Instant,
+    written: u32,
+    busy: Duration,
+}
+
+impl Writer {
+    pub fn new(mapping: Mapping, options: Options) -> Self {
+        Self {
+            mapping,
+            options,
+            interval: Duration::from_micros(1_000_000 / options.fps as u64),
+            due: Instant::now(),
+            sequence: 0,
+            window: Instant::now(),
+            written: 0,
+            busy: Duration::ZERO,
+        }
+    }
+
+    /// False when a frame comes too early for the chosen rate; the caller drops it.
+    pub fn due(&mut self) -> bool {
+        let now = Instant::now();
+        if now + Duration::from_millis(2) < self.due {
+            return false;
+        }
+        self.due = (self.due + self.interval).max(now);
+        true
+    }
+
+    /// Converts `source` into the next slot of the shared buffer.
+    pub fn write(
+        &mut self,
+        frames: &Frames,
+        pipeline: &mut Pipeline,
+        source: &ID3D11Texture2D,
+        content: SizeInt32,
+        timestamp: u64,
+    ) -> windows::core::Result<()> {
+        let sequence = self.sequence.wrapping_add(1).max(1);
+        let (mapping, width, height) = (self.mapping, self.options.width, self.options.height);
+        pipeline.convert(source, content, |planes, pitch| publish(mapping, width, height, sequence, timestamp, planes, pitch))?;
+        self.sequence = sequence;
+        let slot = sequence % wire::VIDEO_SLOTS;
+        frames.set(|t| {
+            t.sequence = sequence;
+            t.slot = slot;
+        });
+        Ok(())
+    }
+
+    /// Accounts one written frame; once a second the bench numbers reach the page.
+    pub fn count(&mut self, frames: &Frames, started: Instant) {
+        self.busy += started.elapsed();
+        self.written += 1;
+        if self.window.elapsed() >= Duration::from_secs(1) {
+            let (written, busy) = (self.written, self.busy);
+            frames.set(|t| {
+                t.fps = written;
+                t.busy_ms = busy.as_secs_f32() * 1000.0 / written.max(1) as f32;
+            });
+            (self.window, self.written, self.busy) = (Instant::now(), 0, Duration::ZERO);
+        }
+    }
+}
+
 fn run(
     frames: &Frames,
     item: GraphicsCaptureItem,
@@ -388,21 +477,15 @@ fn capture(
     let session = pool.CreateCaptureSession(item)?;
     let _ = session.SetIsBorderRequired(false);
     let _ = session.SetIsCursorCaptureEnabled(options.cursor);
-    let interval = Duration::from_micros(1_000_000 / options.fps as u64);
-    // Windows 11 paces the pool itself; older builds rely on the skip below.
+    // Windows 11 paces the pool itself; older builds rely on the writer's skip.
     let _ = session.SetMinUpdateInterval(TimeSpan {
-        Duration: interval.as_micros() as i64 * 10,
+        Duration: 10_000_000 / options.fps as i64,
     });
     session.StartCapture()?;
-    let gpu = pipeline.on_gpu();
-    frames.set(|t| {
-        t.state = 1;
-        t.gpu = gpu;
-    });
+    frames.running(pipeline.on_gpu());
     let _ = ready.send(Ok(()));
     let events = [frames.stop_event.0, frames.frame_event.0];
-    let (mut sequence, mut due) = (0u32, Instant::now());
-    let (mut window, mut written, mut busy) = (Instant::now(), 0u32, Duration::ZERO);
+    let mut writer = Writer::new(mapping, options);
     let result = (|| -> windows::core::Result<()> {
         while !frames.stopping.load(Ordering::Acquire) {
             let event = unsafe { WaitForMultipleObjects(&events, false, 1000) };
@@ -420,42 +503,23 @@ fn capture(
                 }
             }
             let Some(frame) = latest else { continue };
-            let now = Instant::now();
-            if now + Duration::from_millis(2) < due {
+            if !writer.due() {
                 let _ = frame.Close();
                 continue;
             }
-            due = (due + interval).max(now);
             let started = Instant::now();
             let content = frame.ContentSize()?;
             let access: IDirect3DDxgiInterfaceAccess = frame.Surface()?.cast()?;
             let source: ID3D11Texture2D = unsafe { access.GetInterface() }?;
             let timestamp = (frame.SystemRelativeTime()?.Duration / 10) as u64;
-            sequence = sequence.wrapping_add(1).max(1);
-            pipeline.convert(&source, content, |planes, pitch| {
-                publish(mapping, options.width, options.height, sequence, timestamp, planes, pitch)
-            })?;
+            writer.write(frames, pipeline, &source, content, timestamp)?;
             let _ = frame.Close();
             if content.Width != size.Width || content.Height != size.Height {
                 size = content;
                 pool.Recreate(&pipeline.gpu.winrt, DirectXPixelFormat::B8G8R8A8UIntNormalized, 2, size)?;
                 pipeline.resize(size)?;
             }
-            busy += started.elapsed();
-            written += 1;
-            let report = window.elapsed() >= Duration::from_secs(1);
-            let slot = sequence % wire::VIDEO_SLOTS;
-            frames.set(|t| {
-                t.sequence = sequence;
-                t.slot = slot;
-                if report {
-                    t.fps = written;
-                    t.busy_ms = busy.as_secs_f32() * 1000.0 / written.max(1) as f32;
-                }
-            });
-            if report {
-                (window, written, busy) = (Instant::now(), 0, Duration::ZERO);
-            }
+            writer.count(frames, started);
         }
         Ok(())
     })();
@@ -581,18 +645,41 @@ impl StreamManager {
         let worker = std::thread::spawn(move || {
             let frames = worker_frames;
             let _apartment = Apartment::enter();
-            borderless();
-            let item = match worker_app.state::<VideoManager>().item(&source) {
-                Ok(item) => item,
+            let videos = worker_app.state::<VideoManager>();
+            // Windows 10 screens go through Desktop Duplication (no yellow border); any
+            // failure to set it up falls back to WGC.
+            let duplicator = match videos.monitor(&source) {
+                Ok(Some(monitor)) if duplication::wanted() => Duplicator::open(monitor, options)
+                    .inspect_err(|e| log::write("duplication", &format!("{:#010x}", e.code().0)))
+                    .ok(),
+                Ok(_) => None,
                 Err(message) => {
                     frames.set(|t| t.state = 3);
                     let _ = ready.send(Err(message));
                     return;
                 }
             };
+            let item = match duplicator {
+                Some(_) => None,
+                None => {
+                    borderless();
+                    match videos.item(&source) {
+                        Ok(item) => Some(item),
+                        Err(message) => {
+                            frames.set(|t| t.state = 3);
+                            let _ = ready.send(Err(message));
+                            return;
+                        }
+                    }
+                }
+            };
             let failed = ready.clone();
             // A panic ends this capture only; the page sees state 3 and ends the share.
-            let result = std::panic::catch_unwind(AssertUnwindSafe(|| run(&frames, item, options, mapping, ready)));
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| match (duplicator, item) {
+                (Some(duplicator), _) => duplicator.run(&frames, options, mapping, ready),
+                (None, Some(item)) => run(&frames, item, options, mapping, ready),
+                (None, None) => unreachable!(),
+            }));
             match result {
                 Ok(Ok(())) => frames.set(|t| t.state = t.state.max(2)),
                 failure => {
@@ -654,7 +741,7 @@ mod bench {
     use super::*;
     use windows::Win32::{
         Foundation::{FILETIME, POINT},
-        Graphics::Gdi::{MonitorFromPoint, MONITOR_DEFAULTTOPRIMARY},
+        Graphics::Gdi::{MonitorFromPoint, HMONITOR, MONITOR_DEFAULTTOPRIMARY},
         System::{
             Threading::{GetCurrentProcess, GetProcessTimes},
             WinRT::Graphics::Capture::IGraphicsCaptureItemInterop,
@@ -670,7 +757,9 @@ mod bench {
         Duration::from_nanos((ticks(kernel) + ticks(user)) * 100)
     }
 
-    /// Primary screen → NV12 1080p60 → shared memory for 10 s, without the WebView.
+    /// Primary screen → NV12 → shared memory, without the WebView: WGC and Desktop
+    /// Duplication (#247) at 1080p60 and 720p30, 6 s each. The runner's screen is static
+    /// and has no GPU, so this is a ceiling; real numbers come from the user's PC.
     /// `cargo test --release -- --ignored --nocapture native_capture_cpu`
     #[test]
     #[ignore]
@@ -678,58 +767,53 @@ mod bench {
         let _apartment = Apartment::enter();
         let monitor = unsafe { MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTOPRIMARY) };
         let interop = windows::core::factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>().unwrap();
-        let item: GraphicsCaptureItem = unsafe { interop.CreateForMonitor(monitor) }.unwrap();
-        let options = Options { width: 1920, height: 1080, fps: 60, cursor: true };
-        let (width, height) = (options.width, options.height);
-        let size = wire::VIDEO_HEADER + wire::VIDEO_SLOTS as usize * wire::video_slot_size(width, height);
-        let mut memory = vec![0u8; size];
-        let mapping = Mapping(memory.as_mut_ptr(), size);
-        let frames = Arc::new(Frames {
-            tick: Mutex::new(Tick::default()),
-            changed: Condvar::new(),
-            stopping: AtomicBool::new(false),
-            closed: Arc::new(AtomicBool::new(false)),
-            stop_event: Owned(unsafe { CreateEventW(None, true, false, None) }.unwrap()),
-            frame_event: Owned(unsafe { CreateEventW(None, false, false, None) }.unwrap()),
-        });
-        // Fail with the stage and HRESULT: the runner may lack a video processor (WARP).
-        let size = item.Size().expect("item size");
-        let on_gpu = Pipeline::new(size, options).unwrap_or_else(|e| panic!("D3D11: {e:?}")).on_gpu();
-        let worker_frames = frames.clone();
-        let (ready, started) = mpsc::sync_channel(1);
-        let worker = std::thread::spawn(move || {
-            let _apartment = Apartment::enter();
-            run(&worker_frames, item, options, mapping, ready).map_err(|e| format!("{e:?}"))
-        });
-        match started.recv_timeout(Duration::from_secs(5)) {
-            Ok(Ok(())) => {}
-            other => panic!("captura não iniciou: {other:?} / {:?}", worker.join()),
-        }
-        let (cpu0, wall0) = (cpu(), Instant::now());
-        let mut samples = Vec::new();
-        while wall0.elapsed() < Duration::from_secs(10) {
-            std::thread::sleep(Duration::from_secs(1));
-            samples.push(*frames.tick.lock().unwrap());
-        }
-        let (used, wall) = (cpu() - cpu0, wall0.elapsed());
-        frames.stopping.store(true, Ordering::Release);
-        unsafe {
-            let _ = SetEvent(frames.stop_event.0);
-        }
-        worker.join().unwrap().unwrap();
-        let cores = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
-        let share = used.as_secs_f64() / wall.as_secs_f64() * 100.0;
         let screen = item_size();
-        println!(
-            "VIO bench ({}): tela {}x{} -> {width}x{height}@60 | CPU {share:.1}% de um núcleo ({:.1}% do PC, {cores} núcleos) | quadros/s {:?} | ms/quadro {:?}",
-            if on_gpu { "conversão na GPU" } else { "conversão na CPU" },
-            screen.0,
-            screen.1,
-            share / cores,
-            samples.iter().map(|t| t.fps).collect::<Vec<_>>(),
-            samples.iter().map(|t| (t.busy_ms * 10.0).round() / 10.0).collect::<Vec<_>>(),
-        );
-        drop(memory);
+        let cores = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
+        for options in [
+            Options { width: 1920, height: 1080, fps: 60, cursor: true },
+            Options { width: 1280, height: 720, fps: 30, cursor: true },
+        ] {
+            for engine in ["WGC", "DXGI"] {
+                let size = SizeInt32 { Width: screen.0, Height: screen.1 };
+                let on_gpu = Pipeline::new(size, options).unwrap_or_else(|e| panic!("D3D11: {e:?}")).on_gpu();
+                let running = if engine == "WGC" {
+                    Running::start(unsafe { interop.CreateForMonitor::<GraphicsCaptureItem>(monitor) }.unwrap(), options)
+                } else {
+                    let handle = monitor.0 as isize;
+                    let spawned = Running::spawn(options, move |frames, mapping, ready| {
+                        Duplicator::open(HMONITOR(handle as *mut _), options)?.run(frames, options, mapping, ready)
+                    });
+                    match spawned {
+                        Ok(running) => running,
+                        Err(e) => {
+                            println!("VIO bench (DXGI): indisponível neste PC ({e})");
+                            continue;
+                        }
+                    }
+                };
+                let (cpu0, wall0) = (cpu(), Instant::now());
+                let mut samples = Vec::new();
+                while wall0.elapsed() < Duration::from_secs(6) {
+                    std::thread::sleep(Duration::from_secs(1));
+                    samples.push(*running.frames.tick.lock().unwrap());
+                }
+                let (used, wall) = (cpu() - cpu0, wall0.elapsed());
+                running.stop();
+                let share = used.as_secs_f64() / wall.as_secs_f64() * 100.0;
+                println!(
+                    "VIO bench ({engine}, {}): tela {}x{} -> {}x{}@{} | CPU {share:.1}% de um núcleo ({:.1}% do PC, {cores} núcleos) | quadros/s {:?} | ms/quadro {:?}",
+                    if on_gpu { "conversão na GPU" } else { "conversão na CPU" },
+                    screen.0,
+                    screen.1,
+                    options.width,
+                    options.height,
+                    options.fps,
+                    share / cores,
+                    samples.iter().map(|t| t.fps).collect::<Vec<_>>(),
+                    samples.iter().map(|t| (t.busy_ms * 10.0).round() / 10.0).collect::<Vec<_>>(),
+                );
+            }
+        }
     }
 
     struct Running {
@@ -740,6 +824,13 @@ mod bench {
 
     impl Running {
         fn start(item: GraphicsCaptureItem, options: Options) -> Self {
+            Self::spawn(options, move |frames, mapping, ready| run(frames, item, options, mapping, ready)).expect("captura não iniciou")
+        }
+
+        fn spawn(
+            options: Options,
+            body: impl FnOnce(&Frames, Mapping, mpsc::SyncSender<Result<(), String>>) -> windows::core::Result<()> + Send + 'static,
+        ) -> Result<Self, String> {
             let size = wire::VIDEO_HEADER + wire::VIDEO_SLOTS as usize * wire::video_slot_size(options.width, options.height);
             let mut memory = vec![0u8; size];
             let mapping = Mapping(memory.as_mut_ptr(), size);
@@ -755,13 +846,12 @@ mod bench {
             let (ready, started) = mpsc::sync_channel(1);
             let worker = std::thread::spawn(move || {
                 let _apartment = Apartment::enter();
-                run(&worker_frames, item, options, mapping, ready).map_err(|e| format!("{e:?}"))
+                body(&worker_frames, mapping, ready).map_err(|e| format!("{e:?}"))
             });
             match started.recv_timeout(Duration::from_secs(5)) {
-                Ok(Ok(())) => {}
-                other => panic!("captura não iniciou: {other:?}"),
+                Ok(Ok(())) => Ok(Self { frames, worker, _memory: memory }),
+                other => Err(format!("{other:?} / {:?}", worker.join())),
             }
-            Self { frames, worker, _memory: memory }
         }
 
         fn sequence(&self) -> u32 {

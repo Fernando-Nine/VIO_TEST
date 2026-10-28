@@ -8,7 +8,7 @@ use crate::{
 use serde::Serialize;
 use std::{
     collections::{HashMap, HashSet},
-    sync::{Mutex, Once},
+    sync::{Condvar, Mutex, Once},
     time::{Duration, Instant},
 };
 use windows::{
@@ -20,16 +20,22 @@ use windows::{
     Win32::{
         Foundation::{HMODULE, HWND, LPARAM, RECT, WAIT_TIMEOUT},
         Graphics::{
-            Direct3D::D3D_DRIVER_TYPE_HARDWARE,
+            Direct3D::{D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_UNKNOWN},
             Direct3D11::{
                 D3D11CreateDevice, ID3D11Device, ID3D11DeviceContext, ID3D11Texture2D, D3D11_CPU_ACCESS_READ,
                 D3D11_CREATE_DEVICE_BGRA_SUPPORT, D3D11_MAP_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_SDK_VERSION,
                 D3D11_TEXTURE2D_DESC, D3D11_USAGE_STAGING,
             },
-            Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED},
-            Dxgi::IDXGIDevice,
-            Gdi::{EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFO, MONITORINFOEXW},
+            Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED, DWMWA_EXTENDED_FRAME_BOUNDS},
+            Dxgi::{IDXGIAdapter, IDXGIDevice},
+            Gdi::{
+                CreateCompatibleBitmap, CreateCompatibleDC, CreateDIBSection, DeleteDC, DeleteObject, EnumDisplayMonitors, GdiFlush,
+                GetDC, GetMonitorInfoW, ReleaseDC, SelectObject, SetBrushOrgEx, SetStretchBltMode, StretchBlt, BITMAPINFO,
+                BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HALFTONE, HBITMAP, HDC, HGDIOBJ, HMONITOR, MONITORINFO, MONITORINFOEXW,
+                SRCCOPY,
+            },
         },
+        Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS},
         System::{
             Com::{CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED},
             Threading::WaitForSingleObject,
@@ -40,7 +46,7 @@ use windows::{
         },
         UI::WindowsAndMessaging::{
             EnumWindows, GetClassNameW, GetWindow, GetWindowLongPtrW, GetWindowRect, GetWindowTextW,
-            GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, GWL_EXSTYLE, GWL_STYLE, GW_OWNER,
+            GetWindowThreadProcessId, IsHungAppWindow, IsIconic, IsWindow, IsWindowVisible, GWL_EXSTYLE, GWL_STYLE, GW_OWNER,
             MONITORINFOF_PRIMARY, WS_CHILD, WS_EX_APPWINDOW, WS_EX_TOOLWINDOW,
         },
     },
@@ -270,11 +276,16 @@ pub(crate) struct Gpu {
 
 impl Gpu {
     pub fn new() -> windows::core::Result<Self> {
+        Self::on(None)
+    }
+
+    /// A device on `adapter`, or on the default GPU.
+    pub fn on(adapter: Option<&IDXGIAdapter>) -> windows::core::Result<Self> {
         let (mut device, mut context) = (None, None);
         unsafe {
             D3D11CreateDevice(
-                None,
-                D3D_DRIVER_TYPE_HARDWARE,
+                adapter,
+                if adapter.is_some() { D3D_DRIVER_TYPE_UNKNOWN } else { D3D_DRIVER_TYPE_HARDWARE },
                 HMODULE::default(),
                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                 None,
@@ -302,8 +313,7 @@ pub(crate) fn borderless() {
 }
 
 /// One frame of `item`, scaled down to the picker thumbnail.
-fn snapshot(item: &GraphicsCaptureItem) -> windows::core::Result<Vec<u8>> {
-    let gpu = Gpu::new()?;
+fn snapshot(gpu: &Gpu, item: &GraphicsCaptureItem) -> windows::core::Result<Vec<u8>> {
     let pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
         &gpu.winrt,
         DirectXPixelFormat::B8G8R8A8UIntNormalized,
@@ -351,6 +361,150 @@ fn snapshot(item: &GraphicsCaptureItem) -> windows::core::Result<Vec<u8>> {
     result
 }
 
+/// GDI device context and bitmap of one thumbnail, released on drop.
+struct Canvas {
+    dc: HDC,
+    bitmap: HBITMAP,
+    previous: HGDIOBJ,
+}
+
+impl Canvas {
+    fn new(screen: HDC, bitmap: HBITMAP) -> Option<Self> {
+        if bitmap.is_invalid() {
+            return None;
+        }
+        let dc = unsafe { CreateCompatibleDC(Some(screen)) };
+        if dc.is_invalid() {
+            unsafe {
+                let _ = DeleteObject(bitmap.into());
+            }
+            return None;
+        }
+        let previous = unsafe { SelectObject(dc, bitmap.into()) };
+        Some(Self { dc, bitmap, previous })
+    }
+}
+
+impl Drop for Canvas {
+    fn drop(&mut self) {
+        unsafe {
+            SelectObject(self.dc, self.previous);
+            let _ = DeleteDC(self.dc);
+            let _ = DeleteObject(self.bitmap.into());
+        }
+    }
+}
+
+/// Thumbnail through GDI (#247): no capture session, so no yellow border on Windows 10
+/// and no GPU device per source, cheap enough for three at a time. Screens are scaled
+/// from the desktop; windows draw themselves with PrintWindow (PW_RENDERFULLCONTENT
+/// covers GPU-drawn browsers). `None` when GDI sees only black (protected or exclusive
+/// fullscreen content): WGC tries then.
+fn gdi_thumbnail(source: &NativeVideo) -> Option<Vec<u8>> {
+    let screen = unsafe { GetDC(None) };
+    if screen.is_invalid() {
+        return None;
+    }
+    let result = (|| {
+        let mut window_canvas = None;
+        let (from, area) = match &source.target {
+            Target::Screen { monitor, .. } => (screen, monitor_info(HMONITOR(*monitor as *mut _))?.monitorInfo.rcMonitor),
+            Target::Window { window, .. } => {
+                let window = HWND(*window as *mut _);
+                // PrintWindow waits on the window's thread; a hung one would hold a slot.
+                if unsafe { IsHungAppWindow(window) }.as_bool() {
+                    return None;
+                }
+                let mut outer = RECT::default();
+                unsafe { GetWindowRect(window, &mut outer) }.ok()?;
+                // The visible frame, without the invisible resize borders around it.
+                let mut frame = outer;
+                let _ = unsafe {
+                    DwmGetWindowAttribute(
+                        window,
+                        DWMWA_EXTENDED_FRAME_BOUNDS,
+                        &mut frame as *mut RECT as *mut _,
+                        std::mem::size_of::<RECT>() as u32,
+                    )
+                };
+                let (width, height) = (outer.right - outer.left, outer.bottom - outer.top);
+                if width < 2 || height < 2 {
+                    return None;
+                }
+                let canvas = Canvas::new(screen, unsafe { CreateCompatibleBitmap(screen, width, height) })?;
+                if !unsafe { PrintWindow(window, canvas.dc, PRINT_WINDOW_FLAGS(PW_RENDERFULLCONTENT)) }.as_bool() {
+                    return None;
+                }
+                let dc = canvas.dc;
+                window_canvas = Some(canvas);
+                let area = RECT {
+                    left: frame.left - outer.left,
+                    top: frame.top - outer.top,
+                    right: frame.right - outer.left,
+                    bottom: frame.bottom - outer.top,
+                };
+                (dc, area)
+            }
+        };
+        let (width, height) = (area.right - area.left, area.bottom - area.top);
+        if width < 1 || height < 1 {
+            return None;
+        }
+        let (w, h) = wire::thumb_size(width as u32, height as u32);
+        let info = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: w as i32,
+                biHeight: -(h as i32),
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: BI_RGB.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let mut bits = std::ptr::null_mut();
+        let dib = unsafe { CreateDIBSection(Some(screen), &info, DIB_RGB_COLORS, &mut bits, None, 0) }.ok()?;
+        let out = Canvas::new(screen, dib)?;
+        let copied = unsafe {
+            SetStretchBltMode(out.dc, HALFTONE);
+            let _ = SetBrushOrgEx(out.dc, 0, 0, None);
+            let copied = StretchBlt(out.dc, 0, 0, w as i32, h as i32, Some(from), area.left, area.top, width, height, SRCCOPY).as_bool();
+            let _ = GdiFlush();
+            copied
+        };
+        drop(window_canvas);
+        if !copied || bits.is_null() {
+            return None;
+        }
+        let pixels = unsafe { std::slice::from_raw_parts(bits as *const u8, (w * h * 4) as usize) };
+        if pixels.chunks_exact(4).all(|p| p[0] | p[1] | p[2] == 0) {
+            return None;
+        }
+        Some(wire::thumbnail(pixels, w, h, w * 4))
+    })();
+    unsafe { ReleaseDC(None, screen) };
+    result
+}
+
+/// The listed screen or window a thumbnail belongs to, across listings.
+fn handle(target: &Target) -> isize {
+    match target {
+        Target::Screen { monitor, .. } => *monitor,
+        Target::Window { window, .. } => *window,
+    }
+}
+
+/// Win32 PW_RENDERFULLCONTENT (Windows 8.1+), missing from the bindings.
+const PW_RENDERFULLCONTENT: u32 = 2;
+const THUMB_FRESH: Duration = Duration::from_secs(4);
+const THUMB_PARALLEL: u32 = 3;
+
+/// The WGC fallback's device, kept between thumbnails. D3D11 devices are free-threaded;
+/// the immediate context is only used under `VideoManager::busy`.
+struct SharedGpu(Gpu);
+unsafe impl Send for SharedGpu {}
+
 #[derive(Default)]
 struct Inner {
     sources: HashMap<String, NativeVideo>,
@@ -360,8 +514,12 @@ struct Inner {
 #[derive(Default)]
 pub struct VideoManager {
     inner: Mutex<Inner>,
-    /// One thumbnail at a time keeps a picker refresh from flooding the GPU.
-    busy: Mutex<()>,
+    /// One WGC thumbnail at a time keeps a picker refresh from flooding the GPU.
+    busy: Mutex<Option<SharedGpu>>,
+    /// GDI thumbnails running now (up to `THUMB_PARALLEL`).
+    running: (Mutex<u32>, Condvar),
+    /// Recent thumbnails by screen or window: reopening the picker shows them at once.
+    recent: Mutex<HashMap<isize, (Instant, Vec<u8>)>>,
 }
 
 impl VideoManager {
@@ -421,21 +579,131 @@ impl VideoManager {
         }
     }
 
+    /// The monitor behind a screen source, still showing the listed device; `None` for a window.
+    pub fn monitor(&self, id: &str) -> Result<Option<HMONITOR>, String> {
+        match self.source(id)?.target {
+            Target::Screen { monitor, device } => {
+                let monitor = HMONITOR(monitor as *mut _);
+                if monitor_info(monitor).is_none_or(|info| text(&info.szDevice) != text(&device)) {
+                    return Err("Esta tela não está mais disponível. Atualize a lista.".into());
+                }
+                Ok(Some(monitor))
+            }
+            Target::Window { .. } => Ok(None),
+        }
+    }
+
     /// The capture item of a listed source; call inside an MTA [`Apartment`].
     pub fn item(&self, id: &str) -> Result<GraphicsCaptureItem, String> {
         self.source(id)?.item()
     }
 
-    /// Blocking: call from a worker thread.
+    /// Blocking: call from a worker thread. GDI first, WGC only when GDI sees black.
     pub fn thumbnail(&self, id: &str) -> Result<Vec<u8>, String> {
         let source = self.source(id)?;
         if source.minimized {
             return Err("Janelas minimizadas não têm miniatura.".into());
         }
-        let _busy = self.busy.lock().map_err(|_| "A captura está indisponível.")?;
+        let key = handle(&source.target);
+        if let Some((_, bytes)) = self.recent.lock().ok().and_then(|r| r.get(&key).filter(|(at, _)| at.elapsed() < THUMB_FRESH).cloned()) {
+            return Ok(bytes);
+        }
+        let bytes = match self.gdi(&source) {
+            Some(bytes) => bytes,
+            None => self.wgc(&source)?,
+        };
+        if let Ok(mut recent) = self.recent.lock() {
+            recent.retain(|_, (at, _)| at.elapsed() < THUMB_FRESH);
+            recent.insert(key, (Instant::now(), bytes.clone()));
+        }
+        Ok(bytes)
+    }
+
+    fn gdi(&self, source: &NativeVideo) -> Option<Vec<u8>> {
+        let (count, freed) = &self.running;
+        {
+            let mut running = count.lock().ok()?;
+            while *running >= THUMB_PARALLEL {
+                running = freed.wait(running).ok()?;
+            }
+            *running += 1;
+        }
+        struct Slot<'a>(&'a (Mutex<u32>, Condvar));
+        impl Drop for Slot<'_> {
+            fn drop(&mut self) {
+                if let Ok(mut running) = self.0 .0.lock() {
+                    *running -= 1;
+                }
+                self.0 .1.notify_one();
+            }
+        }
+        let _slot = Slot(&self.running);
+        gdi_thumbnail(source)
+    }
+
+    fn wgc(&self, source: &NativeVideo) -> Result<Vec<u8>, String> {
+        let failed = || "O Windows não liberou a imagem desta janela.".to_string();
+        let mut gpu = self.busy.lock().map_err(|_| "A captura está indisponível.")?;
         let _apartment = Apartment::enter();
         borderless();
         let item = source.item()?;
-        snapshot(&item).map_err(|_| "O Windows não liberou a imagem desta janela.".into())
+        if gpu.is_none() {
+            *gpu = Some(SharedGpu(Gpu::new().map_err(|_| failed())?));
+        }
+        let Some(SharedGpu(device)) = gpu.as_ref() else { return Err(failed()) };
+        snapshot(device, &item).map_err(|_| {
+            // A lost device (driver update, GPU reset) is made again next time.
+            *gpu = None;
+            failed()
+        })
+    }
+}
+
+#[cfg(test)]
+mod bench {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    /// #247: every listed source's thumbnail, the old way (WGC, one at a time) and the
+    /// new one (GDI, three at a time, WGC only for black results).
+    /// `cargo test --release -- --ignored --nocapture thumbnails_speed`
+    #[test]
+    #[ignore]
+    fn thumbnails_speed() {
+        let manager = VideoManager::default();
+        let listed = Instant::now();
+        let list = manager.sources().expect("lista");
+        let listing = listed.elapsed();
+        let sources: Vec<NativeVideo> = list.iter().filter(|s| !s.minimized).map(|s| manager.source(&s.id).unwrap()).collect();
+        let started = Instant::now();
+        let before = sources.iter().filter(|s| manager.wgc(s).is_ok()).count();
+        let wgc = started.elapsed();
+        let (next, ready, fallback) = (AtomicUsize::new(0), AtomicUsize::new(0), AtomicUsize::new(0));
+        let started = Instant::now();
+        std::thread::scope(|scope| {
+            for _ in 0..THUMB_PARALLEL {
+                scope.spawn(|| {
+                    while let Some(source) = sources.get(next.fetch_add(1, Ordering::Relaxed)) {
+                        let bytes = manager.gdi(source).or_else(|| {
+                            fallback.fetch_add(1, Ordering::Relaxed);
+                            manager.wgc(source).ok()
+                        });
+                        if bytes.is_some() {
+                            ready.fetch_add(1, Ordering::Relaxed);
+                        }
+                    }
+                });
+            }
+        });
+        let gdi = started.elapsed();
+        println!(
+            "VIO miniaturas: {} fontes, lista em {} ms | antes (WGC, uma a uma): {} ms, {before} prontas | agora (GDI, 3 em paralelo): {} ms, {} prontas, {} pela reserva WGC",
+            sources.len(),
+            listing.as_millis(),
+            wgc.as_millis(),
+            gdi.as_millis(),
+            ready.load(Ordering::Relaxed),
+            fallback.load(Ordering::Relaxed),
+        );
     }
 }
