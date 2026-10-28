@@ -28,6 +28,7 @@ import {
 } from "../shared/permissions";
 import {
   defaultPermissions,
+  MAX_SCREENS,
   type RoomPermission,
   type RoomPermissions,
   schemas,
@@ -751,8 +752,15 @@ export class Rooms {
         (p) => p.kind === data.kind && p.key === data.key,
       );
       if (!p) {
-        const existing = m.publications.find((p) => p.kind === data.kind);
-        if (existing) this.removePublication(room, existing);
+        // Screens add up to MAX_SCREENS (#194); voice and camera replace.
+        const same = m.publications.filter((p) => p.kind === data.kind);
+        if (data.kind !== "screen")
+          for (const existing of same) this.removePublication(room, existing);
+        else if (same.length >= MAX_SCREENS)
+          throw new Fault(
+            "SCREEN_LIMIT",
+            "Você já transmite 3 telas. Encerre uma para compartilhar outra.",
+          );
         p = {
           id: stableId(
             this.config.secret,

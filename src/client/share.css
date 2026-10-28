@@ -223,3 +223,7 @@
     white-space: normal;
   }
 }
+.sheet-share .share-limit {
+  margin: 0;
+  color: var(--danger);
+}

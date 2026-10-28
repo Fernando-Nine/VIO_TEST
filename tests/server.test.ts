@@ -219,6 +219,69 @@ test("três sessões, nomes iguais, publicações simultâneas e assinatura sele
     await app.close();
   }
 });
+test("até três telas por pessoa, cada uma sua publicação; a quarta é recusada", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 2; i++)
+      sockets.push(await connect(app.url, (await session(app.url)).token));
+    for (const [i, s] of sockets.entries())
+      data(await request(s, "join", { name: `P${i}`, code: "QATELAS" }));
+    const share = (key: string, s = sockets[0]) =>
+      request<Publication>(s, "publish", {
+        kind: "screen",
+        key,
+        audio: false,
+        muted: false,
+      });
+    const keys = [0, 1, 2].map(() => crypto.randomUUID());
+    const screens = [];
+    for (const key of keys) screens.push(data(await share(key)));
+    assert.equal(new Set(screens.map((p) => p.id)).size, 3);
+    // Same key updates in place, even at the limit.
+    assert.equal(data(await share(keys[1])).id, screens[1].id);
+    const fourth = await share(crypto.randomUUID());
+    assert.equal(fourth.ok, false);
+    if (!fourth.ok) assert.equal(fourth.code, "SCREEN_LIMIT");
+    const sub = data(
+      await request<Subscription>(sockets[1], "subscribe", {
+        publicationId: screens[2].id,
+        tier: "main",
+        nonce: crypto.randomUUID(),
+      }),
+    );
+    assert.equal(sub.publication.id, screens[2].id);
+    data(
+      await request(sockets[0], "unpublish", { publicationId: screens[0].id }),
+    );
+    const room = app.rooms.rooms.get("QATELAS")!;
+    const owner = [...room.members.values()].find((m) => m.name === "P0")!;
+    assert.deepEqual(
+      owner.publications.map((p) => p.id),
+      [screens[1].id, screens[2].id],
+    );
+    assert.equal(room.subscriptions.has(sub.id), true);
+    data(await share(crypto.randomUUID()));
+    // Voice still replaces itself.
+    const voice = (key: string) =>
+      request<Publication>(sockets[0], "publish", {
+        kind: "voice",
+        key,
+        audio: true,
+        muted: false,
+      });
+    data(await request(sockets[0], "call", { active: true }));
+    data(await voice(crypto.randomUUID()));
+    data(await voice(crypto.randomUUID()));
+    assert.equal(
+      owner.publications.filter((p) => p.kind === "voice").length,
+      1,
+    );
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
 test("isolamento entre salas, falsa identidade e ação de terceiros são recusados", async () => {
   const app = await server();
   const a = await connect(app.url, (await session(app.url)).token);

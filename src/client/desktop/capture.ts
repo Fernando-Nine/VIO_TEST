@@ -1,4 +1,8 @@
-import { browserCapture, type CaptureAdapter } from "../media/capture";
+import {
+  browserCapture,
+  type CaptureAdapter,
+  type Slot,
+} from "../media/capture";
 import { decodePacket, nativeInvoke, type DesktopSource } from "./bridge";
 import {
   startNativeVideo,
@@ -9,8 +13,9 @@ import type { VideoSource } from "./video";
 
 let selected: DesktopSource | undefined;
 let video: { source: VideoSource; options: NativeVideoOptions } | undefined;
-let active: { stop: () => void } | undefined;
-let pending: { stop: () => void } | undefined;
+// One capture per screen slot (#194); the native side streams up to three.
+const active = new Map<Slot, { stop: () => void; audio: boolean }>();
+const pending = new Map<Slot, { stop: () => void }>();
 let description = "";
 // The native side holds one audio capture; a replacement waits for the old one to end.
 let released: Promise<unknown> = Promise.resolve();
@@ -27,20 +32,27 @@ export function selectVideo(
 
 export const windowsCapture: CaptureAdapter = {
   device: browserCapture.device,
-  stopScreen: () => {
-    pending?.stop();
-    active?.stop();
+  stopScreen: (slot) => {
+    pending.get(slot)?.stop();
+    active.get(slot)?.stop();
   },
   screenAudioMessage: () => description,
-  async screen(audio) {
+  async screen(audio, slot) {
     // A replacement keeps the current share until the new image is chosen (#160).
-    pending?.stop();
-    const previous = active;
+    pending.get(slot)?.stop();
+    const previous = active.get(slot);
     const source = selected;
     const chosen = video;
     video = undefined;
     if (audio && !source)
       throw new Error("Escolha o aplicativo cujo áudio deseja transmitir.");
+    if (
+      audio &&
+      [...active].some(([other, capture]) => other !== slot && capture.audio)
+    )
+      throw new Error(
+        "O som já sai de outra tela. Transmita esta sem som ou encerre a outra.",
+      );
     let native: NativeVideo | undefined;
     // Invoke the system video picker before the first await, within user activation.
     const videoPromise = chosen
@@ -65,8 +77,8 @@ export const windowsCapture: CaptureAdapter = {
     const stop = () => {
       if (stopped) return;
       stopped = true;
-      if (pending?.stop === stop) pending = undefined;
-      if (active?.stop === stop) active = undefined;
+      if (pending.get(slot)?.stop === stop) pending.delete(slot);
+      if (active.get(slot)?.stop === stop) active.delete(slot);
       stream?.getTracks().forEach((track) => track.stop());
       native?.stop();
       destination?.stream.getTracks().forEach((track) => track.stop());
@@ -80,7 +92,7 @@ export const windowsCapture: CaptureAdapter = {
           () => {},
         );
     };
-    pending = { stop };
+    pending.set(slot, { stop });
     const check = () => {
       if (stopped) throw new DOMException("Captura cancelada.", "AbortError");
     };
@@ -185,8 +197,8 @@ export const windowsCapture: CaptureAdapter = {
       }
       check();
       previous?.stop();
-      pending = undefined;
-      active = { stop };
+      pending.delete(slot);
+      active.set(slot, { stop, audio: Boolean(captureId) });
       return stream;
     } catch (error) {
       stop();

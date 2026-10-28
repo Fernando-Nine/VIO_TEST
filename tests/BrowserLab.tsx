@@ -204,6 +204,56 @@ export function BrowserLab() {
         "FPS, escala e bitrate aplicados",
         b.peers.infos().filter((p) => p.sending && p.publicationId === bScreen),
       );
+      // #194: two more screens from the same person, each its own publication.
+      await b.startScreen(false, false, b.captures.nextScreen());
+      await b.startScreen(false, false, b.captures.nextScreen());
+      await until(
+        () => b.publications.has("screen:2") && b.publications.has("screen:3"),
+        "três telas da mesma pessoa",
+      );
+      const third = b.publications.get("screen:3")!.id;
+      assert(
+        new Set([bScreen, b.publications.get("screen:2")!.id, third]).size ===
+          3 && b.captures.nextScreen() === undefined,
+        "cada tela deve ser uma publicação",
+      );
+      assert(
+        b.captures.qualityOf(b.captures.sources.get("screen:2")).resolution <=
+          480,
+        "tela extra começa em qualidade baixa",
+      );
+      c.previews([third]);
+      await until(
+        () =>
+          c.peers
+            .infos()
+            .some(
+              (p) =>
+                p.publicationId === third &&
+                p.tier === "preview" &&
+                (p.bytes || 0) > 0,
+            ),
+        "miniatura da terceira tela",
+      );
+      c.previews([]);
+      await b.stop("screen:2");
+      await b.stop("screen:3");
+      await until(
+        () =>
+          !b.publications.has("screen:2") &&
+          !b.publications.has("screen:3") &&
+          b.publications.get("screen")?.id === bScreen &&
+          c.peers
+            .infos()
+            .some(
+              (p) =>
+                p.publicationId === bScreen &&
+                p.tier === "main" &&
+                p.state === "connected",
+            ),
+        "telas extras encerradas, principal mantida",
+      );
+      report("Três telas da mesma pessoa, cada uma sua publicação (#194)");
       const watcher = () =>
         c.peers
           .infos()

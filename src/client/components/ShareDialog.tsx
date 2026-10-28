@@ -29,7 +29,7 @@ import {
   videoThumbnail,
   type VideoSource,
 } from "../desktop/share";
-import { setDisplayVideo } from "../media/capture";
+import { setDisplayVideo, type Slot } from "../media/capture";
 import {
   chromium,
   displayVideo,
@@ -138,11 +138,14 @@ export function ShareDialog({
   engine,
   close,
   replace = false,
+  slot,
 }: {
   engine: Controller;
   close: () => void;
   /** Swap the source of the current share instead of starting a new one (#160). */
   replace?: boolean;
+  /** Which screen (#194); none left when MAX_SCREENS are already shared. */
+  slot?: Slot;
 }) {
   const [choice, setChoice] = useState<ShareChoice>(loadShareChoice);
   const [tab, setTab] = useState<ShareSurface>("monitor");
@@ -247,8 +250,15 @@ export function ShareDialog({
   const surfaces: ShareSurface[] = browserTab
     ? ["monitor", "window", "browser"]
     : ["monitor", "window"];
-  const soundBlocked =
-    native.state === "on"
+  // The app captures one window's or the PC's sound at a time (#194).
+  const soundTaken =
+    desktop &&
+    [...engine.publications].some(
+      ([held, p]) => held !== slot && p.kind === "screen" && p.audio,
+    );
+  const soundBlocked = soundTaken
+    ? "No app, só uma tela por vez transmite o som."
+    : native.state === "on"
       ? native.processAudio
         ? undefined
         : "O som precisa do Windows 10 versão 2004 ou mais recente."
@@ -261,10 +271,10 @@ export function ShareDialog({
             : undefined;
   const audio = choice.audio && !soundBlocked;
   const selected = visible.find((s) => s.id === chosen);
-  const ready = native.state === "off" || (!loading && !!selected);
+  const ready = !!slot && (native.state === "off" || (!loading && !!selected));
 
   async function share() {
-    if (busy) return;
+    if (busy || !slot) return;
     if (native.state === "on") {
       if (!selected) return;
       setBusy(true);
@@ -275,6 +285,7 @@ export function ShareDialog({
           quality: shareQuality(choice, selected.height),
           audio: audio ? (tab === "window" ? "app" : "system") : "none",
           replace,
+          slot,
         });
         close();
       } catch (e) {
@@ -293,8 +304,8 @@ export function ShareDialog({
       selectVideo(undefined);
     } else setDisplayVideo(displayVideo(tab, choice));
     void engine
-      .startScreen(!!audio, replace)
-      .then(() => engine.quality(quality))
+      .startScreen(!!audio, replace, slot)
+      .then(() => engine.quality(quality, slot))
       .catch((e) => engine.fail(e));
     close();
   }
@@ -427,6 +438,11 @@ export function ShareDialog({
           />
         </div>
       </div>
+      {!slot && (
+        <p className="share-limit" role="status">
+          Você já transmite 3 telas. Encerre uma para compartilhar outra.
+        </p>
+      )}
       <div className="share-footer">
         <div className="share-sound">
           <span className="share-label">{tabInfo[tab].sound}</span>

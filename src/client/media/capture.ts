@@ -1,10 +1,36 @@
-import { presets, type Kind, type Quality } from "../../shared/protocol";
+import {
+  MAX_SCREENS,
+  presets,
+  type Kind,
+  type Publication,
+  type Quality,
+} from "../../shared/protocol";
 import { freshKey } from "../id";
 import { mediaDeadline } from "./deadline";
+/**
+ * Where a local capture lives: one voice, one camera and up to MAX_SCREENS
+ * screens (#194). "screen" is the first one, the one the room UI controls.
+ */
+export type Slot = Kind | `screen:${number}`;
+export const screenSlots: Slot[] = Array.from(
+  { length: MAX_SCREENS },
+  (_, i) => (i ? (`screen:${i + 1}` as const) : "screen"),
+);
+export const slotKind = (slot: Slot): Kind =>
+  slot.startsWith("screen") ? "screen" : (slot as Kind);
+/** Extra screens start lighter: the uplink carries all of them at once. */
+export function extraScreenQuality(q: Quality): Quality {
+  const low = presets.Baixa;
+  return {
+    fps: Math.min(q.fps, low.fps),
+    bitrate: Math.min(q.bitrate, low.bitrate),
+    resolution: Math.min(q.resolution, low.resolution),
+  };
+}
 export interface CaptureAdapter {
-  screen(audio: boolean): Promise<MediaStream>;
+  screen(audio: boolean, slot: Slot): Promise<MediaStream>;
   device(constraints: MediaStreamConstraints): Promise<MediaStream>;
-  stopScreen?(): void;
+  stopScreen?(slot: Slot): void;
   screenAudioMessage?(): string;
 }
 /** Picker hint and size ceiling chosen in the share dialog (#191). */
@@ -52,6 +78,8 @@ export interface LocalSource {
   kind: Kind;
   key: string;
   stream: MediaStream;
+  /** Extra screens only; the first follows `Captures.quality`. */
+  quality?: Quality;
 }
 export class Captures {
   get canShare() {
@@ -65,7 +93,7 @@ export class Captures {
       this.adapter !== browserCapture || !!navigator.mediaDevices?.getUserMedia
     );
   }
-  sources = new Map<Kind, LocalSource>();
+  sources = new Map<Slot, LocalSource>();
   quality: Quality = { ...presets.Média };
   micMuted = false;
   deaf = false;
@@ -91,17 +119,24 @@ export class Captures {
   private voiceGain?: GainNode;
   private analyser?: AnalyserNode;
   private voiceTimer?: ReturnType<typeof setInterval>;
-  private thumbnail?: {
-    stream: MediaStream;
-    video: HTMLVideoElement;
-    timer: ReturnType<typeof setInterval>;
-  };
-  private generation = { screen: 0, voice: 0, camera: 0 };
-  private thumbnailPending?: Promise<MediaStream>;
-  screenAudioMuted = false;
+  private thumbnails = new Map<
+    Slot,
+    {
+      stream: MediaStream;
+      video: HTMLVideoElement;
+      timer: ReturnType<typeof setInterval>;
+    }
+  >();
+  private generation = new Map<Slot, number>();
+  private thumbnailPending = new Map<Slot, Promise<MediaStream>>();
+  private silenced = new Set<Slot>();
+  /** Sound of the first screen; other screens use `isScreenAudioMuted`. */
+  get screenAudioMuted() {
+    return this.silenced.has("screen");
+  }
   constructor(
     private adapter: CaptureAdapter = browserCapture,
-    private changed: (kind: Kind, ended?: boolean) => void = () => {},
+    private changed: (slot: Slot, ended?: boolean) => void = () => {},
   ) {
     if (
       typeof navigator !== "undefined" &&
@@ -109,47 +144,92 @@ export class Captures {
     )
       this.voiceSettings.autoGainControl = false;
   }
-  private save(kind: Kind, stream: MediaStream) {
-    const previous = this.sources.get(kind);
+  private bumpGeneration(slot: Slot) {
+    const next = (this.generation.get(slot) ?? 0) + 1;
+    this.generation.set(slot, next);
+    return next;
+  }
+  private save(slot: Slot, stream: MediaStream) {
+    const kind = slotKind(slot);
+    const previous = this.sources.get(slot);
     // Same key = same publication: peers swap tracks and viewers stay connected.
-    const source = { kind, key: previous?.key || freshKey(), stream };
-    this.sources.set(kind, source);
+    const source: LocalSource = {
+      kind,
+      key: previous?.key || freshKey(),
+      stream,
+      quality:
+        previous?.quality ??
+        (kind === "screen" && slot !== "screen"
+          ? extraScreenQuality(this.quality)
+          : undefined),
+    };
+    this.sources.set(slot, source);
     if (kind === "screen") {
       for (const track of stream.getAudioTracks())
-        track.enabled = !this.screenAudioMuted;
+        track.enabled = !this.silenced.has(slot);
       const paused = previous?.stream.getVideoTracks()[0]?.enabled === false;
       const video = stream.getVideoTracks()[0];
       if (paused && video) video.enabled = false;
-      if (this.thumbnail) {
-        this.thumbnail.video.srcObject = stream;
-        void this.thumbnail.video.play().catch(() => {});
+      const thumbnail = this.thumbnails.get(slot);
+      if (thumbnail) {
+        thumbnail.video.srcObject = stream;
+        void thumbnail.video.play().catch(() => {});
       }
     }
     for (const track of stream.getTracks())
       track.addEventListener(
         "ended",
         () => {
-          if (this.sources.get(kind)?.stream === stream) this.stop(kind);
+          if (this.sources.get(slot)?.stream === stream) this.stop(slot);
         },
         { once: true },
       );
     if (previous) previous.stream.getTracks().forEach((t) => t.stop());
-    this.changed(kind);
+    this.changed(slot);
     return source;
   }
+  /** The local capture behind one of our publications. */
+  sourceFor(publication: Pick<Publication, "kind" | "key">) {
+    for (const source of this.sources.values())
+      if (source.kind === publication.kind && source.key === publication.key)
+        return source;
+  }
+  slotOf(source: LocalSource) {
+    for (const [slot, s] of this.sources) if (s === source) return slot;
+  }
+  /** Effective sending quality of a capture. */
+  qualityOf(source?: LocalSource) {
+    return source?.quality ?? this.quality;
+  }
+  /** First free screen slot, or undefined at MAX_SCREENS. */
+  nextScreen() {
+    return screenSlots.find((slot) => !this.sources.has(slot));
+  }
+  get screens() {
+    return screenSlots.flatMap((slot) => {
+      const source = this.sources.get(slot);
+      return source ? [{ slot, source }] : [];
+    });
+  }
+  isScreenAudioMuted(slot: Slot) {
+    return this.silenced.has(slot);
+  }
   /** Silences the shared sound for everyone; the track keeps flowing, so nothing renegotiates. */
-  setScreenAudioMuted(muted: boolean) {
-    this.screenAudioMuted = muted;
-    for (const track of this.sources.get("screen")?.stream.getAudioTracks() ??
-      [])
+  setScreenAudioMuted(muted: boolean, slot: Slot = "screen") {
+    if (muted) this.silenced.add(slot);
+    else this.silenced.delete(slot);
+    for (const track of this.sources.get(slot)?.stream.getAudioTracks() ?? [])
       track.enabled = !muted;
   }
-  /** With `replace`, a new source takes over the same publication (#160). */
-  async startScreen(audio: boolean, replace = false) {
-    if (this.sources.has("screen") && !replace) return;
-    const generation = ++this.generation.screen;
-    const stream = await this.adapter.screen(audio);
-    if (generation !== this.generation.screen) {
+  /**
+   * With `replace`, a new source takes over the same publication (#160).
+   * Another screen goes in `nextScreen()`; the server refuses past MAX_SCREENS.
+   */
+  async startScreen(audio: boolean, replace = false, slot: Slot = "screen") {
+    if (this.sources.has(slot) && !replace) return;
+    const generation = this.bumpGeneration(slot);
+    const stream = await this.adapter.screen(audio, slot);
+    if (generation !== this.generation.get(slot)) {
       stream.getTracks().forEach((t) => t.stop());
       return;
     }
@@ -168,7 +248,7 @@ export class Captures {
           "O navegador não aceitou todos os ajustes de processamento de áudio.";
       }
     }
-    if (generation !== this.generation.screen) {
+    if (generation !== this.generation.get(slot)) {
       stream.getTracks().forEach((t) => t.stop());
       return;
     }
@@ -182,8 +262,8 @@ export class Captures {
         " O som do sistema pode incluir a conversa desta sala; prefira uma aba ou use fones.";
     if (this.adapter.screenAudioMessage)
       this.audioMessage = this.adapter.screenAudioMessage();
-    this.save("screen", stream);
-    await this.applyQuality(this.quality);
+    const source = this.save(slot, stream);
+    await this.applyQuality(this.qualityOf(source), slot);
   }
   async startVoice() {
     if (this.sources.has("voice")) return;
@@ -339,7 +419,7 @@ export class Captures {
     this.changed("voice");
   }
   async startCamera(deviceId = this.cameraDevice, facing = this.facing) {
-    const generation = ++this.generation.camera;
+    const generation = this.bumpGeneration("camera");
     const stream = await this.adapter.device({
       video: {
         width: { ideal: 640 },
@@ -351,7 +431,7 @@ export class Captures {
       },
       audio: false,
     });
-    if (generation !== this.generation.camera) {
+    if (generation !== this.generation.get("camera")) {
       stream.getTracks().forEach((t) => t.stop());
       return;
     }
@@ -359,9 +439,11 @@ export class Captures {
     this.facing = facing;
     this.save("camera", stream);
   }
-  async applyQuality(q: Quality) {
-    this.quality = q;
-    const track = this.sources.get("screen")?.stream.getVideoTracks()[0];
+  async applyQuality(q: Quality, slot: Slot = "screen") {
+    const source = this.sources.get(slot);
+    if (slot === "screen") this.quality = q;
+    else if (source) source.quality = q;
+    const track = source?.stream.getVideoTracks()[0];
     if (!track) return;
     try {
       await mediaDeadline(
@@ -374,16 +456,20 @@ export class Captures {
         "O navegador limitou os ajustes de captura. Confira os valores efetivos abaixo.";
     }
   }
-  async previewStream() {
-    if (this.thumbnail) return this.thumbnail.stream;
-    if (this.thumbnailPending) return this.thumbnailPending;
-    this.thumbnailPending = this.createPreview().finally(() => {
-      this.thumbnailPending = undefined;
+  async previewStream(slot: Slot = "screen") {
+    const ready = this.thumbnails.get(slot);
+    if (ready) return ready.stream;
+    const waiting = this.thumbnailPending.get(slot);
+    if (waiting) return waiting;
+    const pending = this.createPreview(slot).finally(() => {
+      if (this.thumbnailPending.get(slot) === pending)
+        this.thumbnailPending.delete(slot);
     });
-    return this.thumbnailPending;
+    this.thumbnailPending.set(slot, pending);
+    return pending;
   }
-  private async createPreview() {
-    const source = this.sources.get("screen");
+  private async createPreview(slot: Slot) {
+    const source = this.sources.get(slot);
     if (!source) throw new Error("A tela foi encerrada.");
     const video = document.createElement("video");
     video.muted = true;
@@ -399,7 +485,7 @@ export class Captures {
       video.srcObject = null;
       throw e;
     }
-    if (this.sources.get("screen") !== source) {
+    if (this.sources.get(slot) !== source) {
       video.pause();
       video.srcObject = null;
       throw new Error("A tela foi encerrada.");
@@ -427,27 +513,35 @@ export class Captures {
     draw();
     const stream = canvas.captureStream(5);
     const timer = setInterval(draw, 200);
-    this.thumbnail = { stream, video, timer };
+    this.thumbnails.set(slot, { stream, video, timer });
     return stream;
   }
-  stopPreview() {
-    if (this.thumbnail) {
-      clearInterval(this.thumbnail.timer);
-      this.thumbnail.stream.getTracks().forEach((t) => t.stop());
-      this.thumbnail.video.pause();
-      this.thumbnail.video.srcObject = null;
-      this.thumbnail = undefined;
+  /** Without a slot, stops every preview. */
+  stopPreview(slot?: Slot) {
+    for (const [key, thumbnail] of this.thumbnails) {
+      if (slot && key !== slot) continue;
+      clearInterval(thumbnail.timer);
+      thumbnail.stream.getTracks().forEach((t) => t.stop());
+      thumbnail.video.pause();
+      thumbnail.video.srcObject = null;
+      this.thumbnails.delete(key);
     }
   }
-  stop(kind: Kind) {
-    this.generation[kind]++;
-    const source = this.sources.get(kind);
-    this.sources.delete(kind);
+  /** Stops the previews of screens nobody watches as a preview any more. */
+  keepPreviews(used: Set<Slot>) {
+    for (const slot of [...this.thumbnails.keys()])
+      if (!used.has(slot)) this.stopPreview(slot);
+  }
+  stop(slot: Slot) {
+    const kind = slotKind(slot);
+    this.bumpGeneration(slot);
+    const source = this.sources.get(slot);
+    this.sources.delete(slot);
     source?.stream.getTracks().forEach((t) => t.stop());
     if (kind === "screen") {
-      this.adapter.stopScreen?.();
-      this.stopPreview();
-      this.screenAudioMuted = false;
+      this.adapter.stopScreen?.(slot);
+      this.stopPreview(slot);
+      this.silenced.delete(slot);
     }
     if (kind === "voice") {
       clearInterval(this.voiceTimer);
@@ -463,9 +557,13 @@ export class Captures {
       this.voiceLevel = 0;
       this.inputDb = -100;
     }
-    this.changed(kind, true);
+    this.changed(slot, true);
   }
   stopAll() {
-    for (const kind of ["screen", "voice", "camera"] as const) this.stop(kind);
+    const extras = screenSlots.filter(
+      (s) => s !== "screen" && this.sources.has(s),
+    );
+    for (const slot of [...extras, "screen", "voice", "camera"] as Slot[])
+      this.stop(slot);
   }
 }

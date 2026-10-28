@@ -1,4 +1,5 @@
 import { permissionText, roleAllows, roomRole } from "../shared/permissions";
+import type { Slot as CaptureSlot } from "./media/capture";
 import {
   lazy,
   Suspense,
@@ -29,6 +30,7 @@ import {
   Mic,
   MicOff,
   MonitorUp,
+  Plus,
   Pause,
   Settings2,
   Users,
@@ -84,6 +86,7 @@ function Brand() {
 export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
+  const [replaceSlot, setReplaceSlot] = useState<CaptureSlot>("screen");
   const [name, setName] = useState("");
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
@@ -178,7 +181,10 @@ export default function App({ engine }: { engine: Controller }) {
   useEffect(() => {
     if (availableKey) wake();
   }, [availableKey, wake]);
-  const hasScreen = engine.captures.sources.has("screen");
+  // Up to MAX_SCREENS shares at once (#194).
+  const sharing = engine.captures.screens;
+  const hasScreen = sharing.length > 0;
+  const moreScreens = !!engine.captures.nextScreen();
   const hasVoice = engine.captures.sources.has("voice");
   const hasCamera = engine.captures.sources.has("camera");
   const micMuted =
@@ -456,7 +462,10 @@ export default function App({ engine }: { engine: Controller }) {
                     people={() => open("color")}
                     diagnostics={() => open("about")}
                     share={() => open("share")}
-                    replaceShare={() => open("replace")}
+                    replaceShare={(slot) => {
+                      setReplaceSlot(slot);
+                      open("replace");
+                    }}
                     fullscreen={() => void fullscreen()}
                     isFullscreen={full}
                     interaction={(busy) => {
@@ -582,11 +591,21 @@ export default function App({ engine }: { engine: Controller }) {
                   >
                     <button
                       className={`share-button ${hasScreen ? "sharing" : ""}`}
-                      aria-label={hasScreen ? "Parar tela" : "Compartilhar"}
+                      aria-label={
+                        sharing.length > 1
+                          ? `Parar as ${sharing.length} telas`
+                          : hasScreen
+                            ? "Parar tela"
+                            : "Compartilhar"
+                      }
                       disabled={(!canShare || !!screenBlocked) && !hasScreen}
                       title={hasScreen ? undefined : screenBlocked}
                       onClick={() =>
-                        hasScreen ? void engine.stop("screen") : open("share")
+                        hasScreen
+                          ? sharing.forEach(
+                              ({ slot }) => void engine.stop(slot),
+                            )
+                          : open("share")
                       }
                     >
                       {hasScreen ? (
@@ -596,11 +615,25 @@ export default function App({ engine }: { engine: Controller }) {
                       )}
                       <span>
                         <b className="dock-wide">
-                          {hasScreen ? "Parar tela" : "Compartilhar"}
+                          {sharing.length > 1
+                            ? `Parar telas (${sharing.length})`
+                            : hasScreen
+                              ? "Parar tela"
+                              : "Compartilhar"}
                         </b>
                         <b className="dock-narrow">Tela</b>
                       </span>
                     </button>
+                    {hasScreen && moreScreens && canShare && !screenBlocked && (
+                      <button
+                        className="dock-button share-more"
+                        aria-label="Compartilhar outra tela"
+                        title="Compartilhar outra tela"
+                        onClick={() => open("share")}
+                      >
+                        <Plus size={18} />
+                      </button>
+                    )}
                     {pip.supported && !full && (
                       <button
                         className="dock-button dock-wide"
@@ -796,6 +829,9 @@ export default function App({ engine }: { engine: Controller }) {
               engine={engine}
               close={() => open(null)}
               replace={panel === "replace"}
+              slot={
+                panel === "replace" ? replaceSlot : engine.captures.nextScreen()
+              }
             />
           )}
           {panel === "color" && <ColorPicker engine={engine} />}

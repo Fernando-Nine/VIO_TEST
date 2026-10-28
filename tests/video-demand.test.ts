@@ -10,11 +10,12 @@ test("demanda pausa apenas o sender de vídeo e restaura a mesma faixa após fal
     enabled: true,
     getSettings: () => ({ height: 2160 }),
   } as MediaStreamTrack;
+  const source = { stream: { getVideoTracks: () => [video] } };
+  const quality = { resolution: 1080, fps: 30, bitrate: 4000 };
   const captures = {
-    quality: { resolution: 1080, fps: 30, bitrate: 4000 },
-    sources: new Map([
-      ["screen", { stream: { getVideoTracks: () => [video] } }],
-    ]),
+    quality,
+    sourceFor: () => source,
+    qualityOf: () => quality,
   } as unknown as Captures;
   const peers = new Peers(
     () => "owner",
