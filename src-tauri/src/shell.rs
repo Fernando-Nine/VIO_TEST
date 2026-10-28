@@ -1,10 +1,17 @@
 use crate::capture::{self, Manager, Source};
+use crate::log;
 use crate::stream::{Options, Started, StreamManager, Tick};
 use crate::video::{VideoManager, VideoSource};
 use serde::Serialize;
 use std::time::Duration;
 use tauri::{AppHandle, Manager as _, State, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_updater::UpdaterExt;
+use webview2_com::{
+    Microsoft::Web::WebView2::Win32::{
+        COREWEBVIEW2_PROCESS_FAILED_KIND, COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED,
+    },
+    ProcessFailedEventHandler,
+};
 
 // The window loads the interface bundled in the installer. Only that local origin
 // may call the capture commands; navigation never leaves it.
@@ -185,14 +192,37 @@ async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
 }
 
 fn open(app: &AppHandle) -> tauri::Result<()> {
-    WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+    let window = WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
         .title(app.package_info().name.clone())
         .inner_size(1280.0, 800.0)
         .min_inner_size(720.0, 480.0)
         .use_https_scheme(true)
         .on_navigation(local)
         .build()?;
+    window.with_webview(|webview| {
+        let _ = watch_page(&webview);
+    })?;
     Ok(())
+}
+
+/// A crashed page is logged and reloaded instead of leaving a blank window (#246).
+fn watch_page(webview: &tauri::webview::PlatformWebview) -> windows::core::Result<()> {
+    let core = unsafe { webview.controller().CoreWebView2() }?;
+    let handler = ProcessFailedEventHandler::create(Box::new(|sender, args| {
+        let mut kind = COREWEBVIEW2_PROCESS_FAILED_KIND::default();
+        if let Some(args) = args {
+            unsafe { args.ProcessFailedKind(&mut kind) }?;
+        }
+        log::write("webview", &format!("process failed, kind {}", kind.0));
+        if kind == COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED {
+            if let Some(sender) = sender {
+                unsafe { sender.Reload() }?;
+            }
+        }
+        Ok(())
+    }));
+    let mut token = 0i64;
+    unsafe { core.add_ProcessFailed(&handler, &mut token) }
 }
 
 pub fn run() {
@@ -215,6 +245,9 @@ pub fn run() {
             desktop_share_audio
         ])
         .setup(|app| {
+            if let Ok(dir) = app.path().app_log_dir() {
+                log::init(dir, &app.package_info().version.to_string());
+            }
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 // Update only before the room opens: installing must never end a call.

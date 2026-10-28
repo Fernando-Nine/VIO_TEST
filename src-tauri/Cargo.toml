@@ -48,4 +48,5 @@ windows = { version = "0.62", features = [
 lto = true
 codegen-units = 1
 strip = true
-panic = "abort"
+# Unwind (#246): a panic in a capture thread ends that capture, not the app.
+panic = "unwind"

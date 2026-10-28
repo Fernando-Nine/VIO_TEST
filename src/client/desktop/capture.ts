@@ -11,11 +11,14 @@ import {
 } from "./native-video";
 import type { VideoSource } from "./video";
 
+/** Native entry points, swapped by tests (no app runs there). */
+export const nativeApi = { invoke: nativeInvoke, startVideo: startNativeVideo };
+
 let selected: DesktopSource | undefined;
 let video: { source: VideoSource; options: NativeVideoOptions } | undefined;
 // One capture per screen slot (#194); the native side streams up to three.
-const active = new Map<Slot, { stop: () => void }>();
-const pending = new Map<Slot, { stop: () => void }>();
+const active = new Map<Slot, { stop: () => void; releaseAudio: () => void }>();
+const pending = new Map<Slot, { stop: () => void; releaseAudio: () => void }>();
 let soundOnly = false;
 const soundLabels = new Map<Slot, string>();
 let description = "";
@@ -62,11 +65,13 @@ export const windowsCapture: CaptureAdapter = {
     const videoPromise = silent
       ? Promise.resolve(new MediaStream())
       : chosen
-        ? startNativeVideo(chosen.source, chosen.options).then((started) => {
-            native = started;
-            if (stopped) started.stop();
-            return new MediaStream([started.track]);
-          })
+        ? nativeApi
+            .startVideo(chosen.source, chosen.options)
+            .then((started) => {
+              native = started;
+              if (stopped) started.stop();
+              return new MediaStream([started.track]);
+            })
         : navigator.mediaDevices.getDisplayMedia({
             video: true,
             audio: false,
@@ -80,6 +85,21 @@ export const windowsCapture: CaptureAdapter = {
     let captureId: string | undefined;
     let destination: MediaStreamAudioDestinationNode | undefined;
     let stopped = false;
+    // Set when a replacement takes this sound (#246): the image goes on until the swap.
+    let audioReleased = false;
+    const releaseAudio = () => {
+      if (audioReleased) return;
+      audioReleased = true;
+      node?.port.postMessage("stop");
+      node?.port.close();
+      node?.disconnect();
+      if (context && context.state !== "closed")
+        void context.close().catch(() => {});
+      if (captureId)
+        released = nativeApi
+          .invoke("desktop_stop_audio", { captureId })
+          .catch(() => {});
+    };
     const stop = () => {
       if (stopped) return;
       stopped = true;
@@ -88,17 +108,9 @@ export const windowsCapture: CaptureAdapter = {
       stream?.getTracks().forEach((track) => track.stop());
       native?.stop();
       destination?.stream.getTracks().forEach((track) => track.stop());
-      node?.port.postMessage("stop");
-      node?.port.close();
-      node?.disconnect();
-      if (context && context.state !== "closed")
-        void context.close().catch(() => {});
-      if (captureId)
-        released = nativeInvoke("desktop_stop_audio", { captureId }).catch(
-          () => {},
-        );
+      releaseAudio();
     };
-    pending.set(slot, { stop });
+    pending.set(slot, { stop, releaseAudio });
     const check = () => {
       if (stopped) throw new DOMException("Captura cancelada.", "AbortError");
     };
@@ -127,22 +139,24 @@ export const windowsCapture: CaptureAdapter = {
         });
         destination = context.createMediaStreamDestination();
         node.connect(destination); // Never route the captured audio to local speakers.
-        previous?.stop();
+        // Free only the sound (the same app cannot be captured twice); if this swap
+        // fails, viewers keep the previous image instead of a frozen share.
+        previous?.releaseAudio();
         await released;
         check();
-        captureId = await nativeInvoke<string>("desktop_start_audio", {
+        captureId = await nativeApi.invoke<string>("desktop_start_audio", {
           sourceId: source.id,
         });
         if (stopped)
-          void nativeInvoke("desktop_stop_audio", { captureId }).catch(
-            () => {},
-          );
+          void nativeApi
+            .invoke("desktop_stop_audio", { captureId })
+            .catch(() => {});
         check();
         const startedAt = performance.now();
         let packet;
         do {
           packet = decodePacket(
-            await nativeInvoke<ArrayBuffer>("desktop_read_audio", {
+            await nativeApi.invoke<ArrayBuffer>("desktop_read_audio", {
               captureId,
             }),
           );
@@ -183,7 +197,7 @@ export const windowsCapture: CaptureAdapter = {
         };
         push(packet.pcm);
         const end = () => {
-          if (stopped) return;
+          if (stopped || audioReleased) return;
           stop();
           // track.stop() deliberately does not emit ended; notify Captures explicitly.
           (video ?? track).dispatchEvent(new Event("ended"));
@@ -191,13 +205,13 @@ export const windowsCapture: CaptureAdapter = {
         node.onprocessorerror = end;
         // One outstanding binary request, paced by the native event (20 ms max wait).
         void (async () => {
-          while (!stopped) {
+          while (!stopped && !audioReleased) {
             const next = decodePacket(
-              await nativeInvoke<ArrayBuffer>("desktop_read_audio", {
+              await nativeApi.invoke<ArrayBuffer>("desktop_read_audio", {
                 captureId,
               }),
             );
-            if (stopped) return;
+            if (stopped || audioReleased) return;
             if (next.state >= 2) {
               end();
               return;
@@ -211,7 +225,7 @@ export const windowsCapture: CaptureAdapter = {
       check();
       previous?.stop();
       pending.delete(slot);
-      active.set(slot, { stop });
+      active.set(slot, { stop, releaseAudio });
       return stream;
     } catch (error) {
       stop();
