@@ -824,7 +824,7 @@ export function RoomCanvas(props: Props) {
         : "guestCreate",
     );
   async function addWidget(type: string, scope: Scope) {
-    const scoped = isModule(type) || type === "timer";
+    const scoped = isModule(type) || type === "timer" || type === "custom";
     if (type === "chat" || (scoped && scope === "room")) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
@@ -1996,48 +1996,33 @@ export function RoomCanvas(props: Props) {
                 </section>
               )
             }
-            tabs={[
-              [
-                "Sala",
-                <>
-                  {!snapshot?.widgets?.length ? (
-                    <p className="widget-empty">
-                      Nenhum widget da sala ainda. Crie um em Widgets, Para a
-                      sala.
-                    </p>
-                  ) : (
-                    <div className="widget-catalog">
-                      {snapshot.widgets.map((w) => (
-                        <button
-                          className="catalog-item"
-                          key={w.id}
-                          onClick={() => openShared(w)}
-                        >
-                          <strong>{w.title}</strong>
-                          <span>
-                            Criado por{" "}
-                            {snapshot.participants.find((p) => p.id === w.owner)
-                              ?.name || "alguém que saiu da sala"}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>,
-              ],
-              [
-                "Comunidade",
-                <>
-                  <button
-                    className="catalog-item"
-                    onClick={() => setCommunityNotice(true)}
-                  >
-                    <Blocks size={20} aria-hidden="true" />
-                    <strong>Widget personalizado</strong>
-                  </button>
-                </>,
-              ],
-            ]}
+            community={() => setCommunityNotice(true)}
+            roomWidgets={{
+              count: snapshot?.widgets?.length ?? 0,
+              list: !snapshot?.widgets?.length ? (
+                <p className="widget-empty">Nenhum widget da sala ainda.</p>
+              ) : (
+                <div className="catalog-results is-rows">
+                  {snapshot.widgets.map((w) => (
+                    <button
+                      className="catalog-item is-row"
+                      key={w.id}
+                      onClick={() => openShared(w)}
+                    >
+                      <span className="catalog-text">
+                        <strong>{w.title}</strong>
+                        <span>
+                          Criado por{" "}
+                          {snapshot.participants.find((p) => p.id === w.owner)
+                            ?.name || "alguém que saiu da sala"}{" "}
+                          · Mostrar
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ),
+            }}
           />
         </Dialog>
       )}
