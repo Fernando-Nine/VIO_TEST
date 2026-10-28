@@ -2,7 +2,7 @@ import type { Quality } from "../../shared/protocol";
 import type { Slot } from "../media/capture";
 import type { Controller } from "../room/controller";
 import { nativeInvoke, type DesktopSource } from "./bridge";
-import { selectProcess, selectVideo } from "./capture";
+import { selectProcess, selectSoundOnly, selectVideo } from "./capture";
 
 /**
  * Native share API for the app's own picker (#191/#192): list sources with
@@ -56,4 +56,27 @@ export async function startNativeShare(
   });
   await engine.startScreen(Boolean(sound), replace, slot);
   await engine.quality(quality, slot);
+}
+
+/** Sounds that can go without an image (#229): the whole PC first, then applications. */
+export const listSoundSources = () =>
+  nativeInvoke<DesktopSource[]>("desktop_sources");
+
+/**
+ * Shares only the sound of a listed application (e.g. music while a game is the
+ * screen). It takes a screen slot like any share; the app streams up to three sounds,
+ * never the same one twice, never the whole PC next to another, never VIO itself.
+ */
+export async function startNativeSound(
+  engine: Controller,
+  { sound, slot }: { sound: DesktopSource; slot: Slot },
+) {
+  selectProcess(sound);
+  selectSoundOnly(true);
+  try {
+    await engine.startScreen(true, false, slot);
+  } finally {
+    // An early return must not turn the next screen share into sound only.
+    selectSoundOnly(false);
+  }
 }

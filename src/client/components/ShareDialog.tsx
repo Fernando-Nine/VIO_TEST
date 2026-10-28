@@ -21,11 +21,14 @@ import {
   desktop,
   nativeInvoke,
   type DesktopCapabilities,
+  type DesktopSource,
 } from "../desktop/bridge";
 import { selectProcess, selectVideo } from "../desktop/capture";
 import {
+  listSoundSources,
   listVideoSources,
   startNativeShare,
+  startNativeSound,
   videoThumbnail,
   type VideoSource,
 } from "../desktop/share";
@@ -42,8 +45,11 @@ import {
   type ShareSurface,
 } from "./share-options";
 
+/** "sound": an application's sound without an image, app only (#229). */
+type Tab = ShareSurface | "sound";
+
 const tabInfo: Record<
-  ShareSurface,
+  Tab,
   { label: string; icon: LucideIcon; sound: string; picker: string }
 > = {
   monitor: {
@@ -64,7 +70,15 @@ const tabInfo: Record<
     sound: "Som da aba",
     picker: "a aba",
   },
+  sound: {
+    label: "Só som",
+    icon: Volume2,
+    sound: "Som",
+    picker: "o som",
+  },
 };
+/** Native sound captures at once; see MAX_AUDIO in src-tauri/src/capture.rs. */
+const maxSounds = 3;
 
 /** Arrow keys move between sibling options, as in a native radio group or tablist. */
 function roving(event: KeyboardEvent<HTMLElement>) {
@@ -127,7 +141,12 @@ function Choices<T extends number | boolean>({
 type Native =
   | { state: "probe" }
   | { state: "off" }
-  | { state: "on"; sources: VideoSource[]; processAudio: boolean };
+  | {
+      state: "on";
+      sources: VideoSource[];
+      sounds: DesktopSource[];
+      processAudio: boolean;
+    };
 
 /**
  * One dialog for every platform (#191): the app lists sources with
@@ -148,7 +167,7 @@ export function ShareDialog({
   slot?: Slot;
 }) {
   const [choice, setChoice] = useState<ShareChoice>(loadShareChoice);
-  const [tab, setTab] = useState<ShareSurface>("monitor");
+  const [tab, setTab] = useState<Tab>("monitor");
   const [native, setNative] = useState<Native>(
     desktop ? { state: "probe" } : { state: "off" },
   );
@@ -165,7 +184,7 @@ export function ShareDialog({
       return merged;
     });
 
-  async function list(surface: ShareSurface) {
+  async function list(surface: Tab) {
     setLoading(true);
     setError("");
     try {
@@ -175,11 +194,11 @@ export function ShareDialog({
           () => undefined,
         ),
       ]);
-      setNative({
-        state: "on",
-        sources,
-        processAudio: caps?.protocol === 1 && caps.processAudio,
-      });
+      const processAudio = caps?.protocol === 1 && caps.processAudio;
+      // Sound ids, like video ids, are valid for one listing.
+      const sounds =
+        surface === "sound" && processAudio ? await listSoundSources() : [];
+      setNative({ state: "on", sources, sounds, processAudio });
       setChosen(
         surface === "monitor"
           ? (sources.find((s) => s.kind === "screen" && s.primary)?.id ??
@@ -215,7 +234,7 @@ export function ShareDialog({
   }, []);
 
   const visible =
-    native.state === "on"
+    native.state === "on" && tab !== "sound"
       ? native.sources.filter(
           (s) => s.kind === (tab === "monitor" ? "screen" : "window"),
         )
@@ -247,17 +266,25 @@ export function ShareDialog({
 
   const web = !desktop;
   const browserTab = web && chromium();
-  const surfaces: ShareSurface[] = browserTab
+  const soundTab = native.state === "on" && native.processAudio && !replace;
+  const surfaces: Tab[] = browserTab
     ? ["monitor", "window", "browser"]
-    : ["monitor", "window"];
-  // The app captures one window's or the PC's sound at a time (#194).
-  const soundTaken =
-    desktop &&
-    [...engine.publications].some(
-      ([held, p]) => held !== slot && p.kind === "screen" && p.audio,
-    );
+    : soundTab
+      ? ["monitor", "window", "sound"]
+      : ["monitor", "window"];
+  // The app sends up to 3 sounds (#229); the native side refuses duplicates.
+  const othersWithSound = [...engine.publications].filter(
+    ([held, p]) => held !== slot && p.kind === "screen" && p.audio,
+  ).length;
+  const soundTaken = !desktop
+    ? undefined
+    : othersWithSound >= maxSounds
+      ? "Você já transmite 3 sons. Encerre um para adicionar outro."
+      : tab === "monitor" && othersWithSound
+        ? "Todo o som do computador já inclui o som das outras telas."
+        : undefined;
   const soundBlocked = soundTaken
-    ? "No app, só uma tela por vez transmite o som."
+    ? soundTaken
     : native.state === "on"
       ? native.processAudio
         ? undefined
@@ -270,11 +297,32 @@ export function ShareDialog({
             ? "O navegador não capta o som de uma janela. Use Tela inteira, Aba do navegador ou o app."
             : undefined;
   const audio = choice.audio && !soundBlocked;
+  const sounds = native.state === "on" && tab === "sound" ? native.sounds : [];
   const selected = visible.find((s) => s.id === chosen);
-  const ready = !!slot && (native.state === "off" || (!loading && !!selected));
+  const sound = sounds.find((s) => s.id === chosen);
+  const ready =
+    !!slot &&
+    (native.state === "off" ||
+      (!loading && (tab === "sound" ? !!sound && !soundTaken : !!selected)));
 
   async function share() {
     if (busy || !slot) return;
+    if (tab === "sound") {
+      if (!sound) return;
+      setBusy(true);
+      setError("");
+      try {
+        await startNativeSound(engine, { sound, slot });
+        close();
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Não foi possível compartilhar.",
+        );
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (native.state === "on") {
       if (!selected) return;
       setBusy(true);
@@ -310,7 +358,10 @@ export function ShareDialog({
     close();
   }
 
-  const empty = !loading && native.state === "on" && !visible.length;
+  const empty =
+    !loading &&
+    native.state === "on" &&
+    !(tab === "sound" ? sounds.length : visible.length);
   return (
     <div className="share-dialog">
       <div
@@ -361,9 +412,9 @@ export function ShareDialog({
           ) : empty ? (
             <div className="share-empty">
               <p>
-                {tab === "window"
-                  ? "Abra o aplicativo que deseja compartilhar."
-                  : "Nenhuma tela encontrada."}
+                {tab === "monitor"
+                  ? "Nenhuma tela encontrada."
+                  : "Abra o aplicativo que deseja compartilhar."}
               </p>
               <button className="secondary" onClick={() => void list(tab)}>
                 <RefreshCw size={16} aria-hidden="true" /> Atualizar
@@ -377,100 +428,136 @@ export function ShareDialog({
                       <span className="share-thumb" />
                     </div>
                   ))
-                : visible.map((source) => {
-                    const thumb = thumbs[source.id];
-                    const Icon = source.kind === "screen" ? Monitor : AppWindow;
-                    return (
-                      <button
-                        key={source.id}
-                        className="share-source"
-                        aria-pressed={chosen === source.id}
-                        title={source.title}
-                        onClick={() => setChosen(source.id)}
-                        onDoubleClick={() => void share()}
-                      >
-                        <span className="share-thumb">
-                          {thumb ? (
-                            <img src={thumb} alt="" />
-                          ) : thumb === null ? (
+                : tab === "sound"
+                  ? sounds.map((source) => {
+                      const Icon = source.system ? Monitor : Volume2;
+                      return (
+                        <button
+                          key={source.id}
+                          className="share-source"
+                          aria-pressed={chosen === source.id}
+                          title={source.title}
+                          onClick={() => setChosen(source.id)}
+                          onDoubleClick={() => void share()}
+                        >
+                          <span className="share-thumb">
                             <Icon size={28} aria-hidden="true" />
-                          ) : null}
-                          {chosen === source.id && (
-                            <span className="share-check" aria-hidden="true">
-                              <Check size={14} strokeWidth={3} />
-                            </span>
-                          )}
-                        </span>
-                        <span className="share-name">{source.title}</span>
-                        <span className="share-meta">
-                          {source.width}×{source.height}
-                        </span>
-                      </button>
-                    );
-                  })}
+                            {chosen === source.id && (
+                              <span className="share-check" aria-hidden="true">
+                                <Check size={14} strokeWidth={3} />
+                              </span>
+                            )}
+                          </span>
+                          <span className="share-name">{source.title}</span>
+                        </button>
+                      );
+                    })
+                  : visible.map((source) => {
+                      const thumb = thumbs[source.id];
+                      const Icon =
+                        source.kind === "screen" ? Monitor : AppWindow;
+                      return (
+                        <button
+                          key={source.id}
+                          className="share-source"
+                          aria-pressed={chosen === source.id}
+                          title={source.title}
+                          onClick={() => setChosen(source.id)}
+                          onDoubleClick={() => void share()}
+                        >
+                          <span className="share-thumb">
+                            {thumb ? (
+                              <img src={thumb} alt="" />
+                            ) : thumb === null ? (
+                              <Icon size={28} aria-hidden="true" />
+                            ) : null}
+                            {chosen === source.id && (
+                              <span className="share-check" aria-hidden="true">
+                                <Check size={14} strokeWidth={3} />
+                              </span>
+                            )}
+                          </span>
+                          <span className="share-name">{source.title}</span>
+                          <span className="share-meta">
+                            {source.width}×{source.height}
+                          </span>
+                        </button>
+                      );
+                    })}
             </div>
           )}
         </div>
       )}
-      <div className="share-quality">
-        <div>
-          <span className="share-label">Qualidade</span>
-          <Choices
-            label="Qualidade"
-            value={choice.resolution}
-            options={shareResolutions.map((value) => ({
-              value,
-              label: value ? `${value}p` : "Fonte",
-            }))}
-            change={(resolution) => update({ resolution })}
-          />
+      {tab !== "sound" && (
+        <div className="share-quality">
+          <div>
+            <span className="share-label">Qualidade</span>
+            <Choices
+              label="Qualidade"
+              value={choice.resolution}
+              options={shareResolutions.map((value) => ({
+                value,
+                label: value ? `${value}p` : "Fonte",
+              }))}
+              change={(resolution) => update({ resolution })}
+            />
+          </div>
+          <div>
+            <span className="share-label">Taxa de quadros</span>
+            <Choices
+              label="Taxa de quadros"
+              value={choice.fps}
+              options={shareRates.map((value) => ({
+                value,
+                label: `${value} FPS`,
+              }))}
+              change={(fps) => update({ fps })}
+            />
+          </div>
         </div>
-        <div>
-          <span className="share-label">Taxa de quadros</span>
-          <Choices
-            label="Taxa de quadros"
-            value={choice.fps}
-            options={shareRates.map((value) => ({
-              value,
-              label: `${value} FPS`,
-            }))}
-            change={(fps) => update({ fps })}
-          />
-        </div>
-      </div>
-      {!slot && (
+      )}
+      {!slot ? (
         <p className="share-limit" role="status">
           Você já transmite 3 telas. Encerre uma para compartilhar outra.
         </p>
+      ) : (
+        tab === "sound" &&
+        soundTaken && (
+          <p className="share-limit" role="status">
+            {soundTaken}
+          </p>
+        )
       )}
       <div className="share-footer">
-        <div className="share-sound">
-          <span className="share-label">{tabInfo[tab].sound}</span>
-          <Choices
-            label={tabInfo[tab].sound}
-            value={!!audio}
-            options={[
-              {
-                value: true,
-                label: (
-                  <>
-                    <Volume2 size={16} aria-hidden="true" /> Com som
-                  </>
-                ),
-                disabled: soundBlocked,
-              },
-              {
-                value: false,
-                label: (
-                  <>
-                    <VolumeX size={16} aria-hidden="true" /> Sem som
-                  </>
-                ),
-              },
-            ]}
-            change={(value) => update({ audio: value })}
-          />
-        </div>
+        {tab !== "sound" && (
+          <div className="share-sound">
+            <span className="share-label">{tabInfo[tab].sound}</span>
+            <Choices
+              label={tabInfo[tab].sound}
+              value={!!audio}
+              options={[
+                {
+                  value: true,
+                  label: (
+                    <>
+                      <Volume2 size={16} aria-hidden="true" /> Com som
+                    </>
+                  ),
+                  disabled: soundBlocked,
+                },
+                {
+                  value: false,
+                  label: (
+                    <>
+                      <VolumeX size={16} aria-hidden="true" /> Sem som
+                    </>
+                  ),
+                },
+              ]}
+              change={(value) => update({ audio: value })}
+            />
+          </div>
+        )}
         <div className="share-actions">
           <button className="secondary" onClick={close}>
             Cancelar
