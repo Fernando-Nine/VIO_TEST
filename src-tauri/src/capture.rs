@@ -431,6 +431,7 @@ impl Capture {
         let (pid, system) = (source.pid, source.system);
         let worker = std::thread::spawn(move || {
             let shared = worker_shared;
+            crate::video::keep_mta();
             if let Err(e) = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) }.ok() {
                 shared.finish(Err(e));
                 return;
