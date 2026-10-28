@@ -11,7 +11,9 @@ seletor visual (Frontend, #191); borda amarela no Win10 continua (só o Win11 ti
   vezes e Todo o PC junto de outro som; `start` recusa a árvore do VIO. Som sem tela:
   `startNativeSound(engine, {sound, slot})` + `listSoundSources()` em `desktop/share.ts`
   (usa um slot de tela; publicação `screen` só com áudio — viewers precisam mostrar
-  "só som": sem flag no protocolo, detectar pela falta de trilha de vídeo).
+  "só som": sem flag no protocolo, detectar pela falta de trilha de vídeo). No modal da
+  #191 (`ShareDialog.tsx`), aba "Só som" (app com processAudio, fora de "Trocar"); a trava
+  "uma tela com som" virou: até 3 sons e Tela inteira com som só sem outro som.
 - #194 (rc.8): até 3 telas por pessoa. Servidor: telas somam até `MAX_SCREENS` (protocol),
   a 4ª → `Fault SCREEN_LIMIT`; voz/câmera seguem substituindo. Cliente: `Captures.sources`
   é `Map<Slot>` (`screen`, `screen:2`, `screen:3`; `slotKind`); `sourceFor(publication)`

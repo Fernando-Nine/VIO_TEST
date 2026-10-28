@@ -1,4 +1,5 @@
 import { canvasShortcuts, snapPressed } from "./shortcuts";
+import type { Slot as CaptureSlot } from "../media/capture";
 import {
   useCallback,
   useEffect,
@@ -140,7 +141,7 @@ interface Props {
   people: () => void;
   diagnostics: () => void;
   share: () => void;
-  replaceShare: () => void;
+  replaceShare: (slot: CaptureSlot) => void;
   fullscreen: () => void;
   isFullscreen?: boolean;
 }
