@@ -15,6 +15,9 @@ export const roomCode = z
   .trim()
   .toUpperCase()
   .regex(/^[A-Z0-9]{4,24}$/);
+/** Invite validity choices (#242). */
+export const inviteTtls = ["1h", "1d", "7d"] as const;
+export type InviteTtl = (typeof inviteTtls)[number];
 /** Room-wide permissions (Discord-like roles). The creator can do everything. */
 export const roomPermissions = z
   .object({
@@ -32,6 +35,12 @@ export const roomPermissions = z
     adminCreate: z.boolean(),
     /** Admins close widgets created by others. Creator only. */
     adminClose: z.boolean(),
+    /**
+     * Locked room (#242): only people who were already in it, holders of an
+     * invite and the creator's credential enter; the rest wait for approval.
+     * Optional so credentials signed before it still verify.
+     */
+    locked: z.boolean().optional(),
   })
   .strict();
 export type RoomPermissions = z.infer<typeof roomPermissions>;
@@ -72,8 +81,15 @@ export const schemas = {
       color: participantColor.optional(),
       /** Signed creator seat of this room, kept by the client (#226). */
       credential: z.string().max(2048).optional(),
+      /** Signed invite of this room (#242). */
+      invite: z.string().max(512).optional(),
     })
     .strict(),
+  /** Admit or turn away someone in the waiting room (#242). */
+  admit: z.object({ id: uuid, allow: z.boolean() }).strict(),
+  "invite-create": z.object({ ttl: z.enum(inviteTtls) }).strict(),
+  /** Every invite issued so far stops working. */
+  "invite-revoke": z.object({}).strict(),
   role: z
     .object({
       participantId: uuid,
@@ -204,6 +220,24 @@ export interface JoinResult {
   id: string;
   snapshot: Snapshot;
   credential?: string;
+}
+/** Someone at the door of a locked room, as managers see them (#242). */
+export interface WaitingPerson {
+  /** Request id, not the person's id: they are not a member yet. */
+  id: string;
+  name: string;
+  color: string;
+  since: number;
+  expiresAt: number;
+}
+/** Sent to whoever waits: allowed = join again; otherwise the message says why. */
+export interface Admission {
+  allowed: boolean;
+  message?: string;
+}
+export interface InviteResult {
+  invite: string;
+  expiresAt: number;
 }
 export interface Subscription {
   id: string;

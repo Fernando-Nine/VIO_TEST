@@ -37,12 +37,15 @@ export function socketOrigin() {
  * é o esquema da própria casca e não serve para ninguém — aí a URL pública
  * assume.
  */
-export function invite(code: string) {
+/** Room link; with a signed invite (#242) it enters even a locked room. */
+export function invite(code: string, token?: string) {
   const url = new URL(webBase || location.href);
   if (webBase) {
     url.pathname = "/";
     url.hash = "";
   }
   url.searchParams.set("sala", code);
+  if (token) url.searchParams.set("convite", token);
+  else url.searchParams.delete("convite");
   return url;
 }

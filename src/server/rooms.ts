@@ -1,4 +1,4 @@
-import { randomUUID, createHmac } from "node:crypto";
+import { randomBytes, randomUUID, createHmac } from "node:crypto";
 import type { Server, Socket } from "socket.io";
 import type { Config } from "./config";
 import { RoomWidgets } from "./widgets";
@@ -19,6 +19,8 @@ import {
   issueToken,
   issueRoomCredential,
   verifyRoomCredential,
+  issueInvite,
+  verifyInvite,
   CREDENTIAL_ADMINS,
   log,
 } from "./security";
@@ -43,6 +45,10 @@ import {
   type Subscription,
   type Action,
   type JoinResult,
+  type Admission,
+  type InviteResult,
+  type InviteTtl,
+  type WaitingPerson,
 } from "../shared/protocol";
 interface Member extends Participant {
   socketId?: string;
@@ -71,7 +77,33 @@ interface Room {
   lentFromAdmin?: string;
   /** Admins named by a credential who have not come back yet. */
   restoredAdmins: Set<string>;
+  /** Everyone who has been a member: they skip the waiting room (#242). */
+  known: Set<string>;
+  /** Waiting room of a locked room, by request id. */
+  waiting: Map<string, Waiting>;
+  /** Turned away: they cannot knock again until then. */
+  refused: Map<string, number>;
+  /**
+   * Invite generation (#242). Revoking moves on and remembers the old one, in
+   * memory only: after a restart, revoked invites work until they expire.
+   */
+  inviteGen: string;
+  revokedInvites: Set<string>;
 }
+interface Waiting extends WaitingPerson {
+  person: string;
+  socketId: string;
+}
+const WAIT_TTL = 5 * 60 * 1000;
+const MAX_WAITING = 20;
+const REFUSED_FOR = 60 * 1000;
+const MAX_KNOWN = 500;
+const inviteTtl: Record<InviteTtl, number> = {
+  "1h": 3600 * 1000,
+  "1d": 24 * 3600 * 1000,
+  "7d": 7 * 24 * 3600 * 1000,
+};
+const newInviteGen = () => randomBytes(9).toString("base64url");
 /** Long enough to outlive a weekend; reissued on every join of the creator. */
 const CREDENTIAL_TTL = 30 * 24 * 3600 * 1000;
 const publishPermission = {
@@ -330,6 +362,94 @@ export class Rooms {
   private sendCredential(room: Room) {
     this.send(room, room.creatorId, "room-credential", this.credential(room));
   }
+  private manages(room: Room, id: string) {
+    return this.role(room, id) !== "guest";
+  }
+  /** Managers get the waiting room; with `everyone`, the rest get it emptied. */
+  private emitWaiting(room: Room, everyone = false) {
+    const list = [...room.waiting.values()].map(
+      ({ person, socketId, ...visible }) => visible,
+    );
+    for (const m of room.members.values())
+      if (m.socketId && (everyone || this.manages(room, m.id)))
+        this.io
+          .to(m.socketId)
+          .emit("waiting-list", this.manages(room, m.id) ? list : []);
+  }
+  /** Ends a wait and tells the person why. */
+  private dismiss(room: Room, waiting: Waiting, admission: Admission) {
+    room.waiting.delete(waiting.id);
+    this.io.to(waiting.socketId).emit("admission", admission);
+    this.emitWaiting(room);
+  }
+  private admitAll(room: Room) {
+    for (const w of [...room.waiting.values()]) {
+      this.remember(room, w.person);
+      this.dismiss(room, w, { allowed: true });
+    }
+  }
+  private remember(room: Room, id: string) {
+    room.known.delete(id);
+    room.known.add(id);
+    if (room.known.size > MAX_KNOWN)
+      room.known.delete(room.known.values().next().value!);
+  }
+  /** Puts someone at the door of a locked room; managers decide. */
+  private knock(room: Room, socket: Socket, name: string, color?: string) {
+    const person = socket.data.id as string;
+    const now = Date.now();
+    if ((room.refused.get(person) || 0) > now)
+      throw new Fault(
+        "ENTRY_REFUSED",
+        "Sua entrada foi recusada. Tente de novo mais tarde.",
+      );
+    let waiting = [...room.waiting.values()].find((w) => w.person === person);
+    if (!waiting) {
+      this.limits.take(person + ":knock:" + room.code, 5, 10 * 60000);
+      this.limits.take(socket.data.ip + ":knock", 20, 10 * 60000);
+      if (room.waiting.size >= MAX_WAITING)
+        throw new Fault(
+          "WAITING_FULL",
+          "A sala está trancada e a fila de espera está cheia. Tente mais tarde.",
+        );
+      waiting = {
+        id: randomUUID(),
+        person,
+        name,
+        color: color || defaultColor,
+        since: now,
+        expiresAt: now + WAIT_TTL,
+        socketId: socket.id,
+      };
+      room.waiting.set(waiting.id, waiting);
+    } else {
+      // Same person knocking again (reconnect): keep the place in line.
+      if (waiting.socketId !== socket.id)
+        this.io.to(waiting.socketId).emit("admission", {
+          allowed: false,
+          message: "Você está esperando em outra aba.",
+        } satisfies Admission);
+      Object.assign(waiting, { name, socketId: socket.id });
+    }
+    socket.data.waiting = room.code;
+    this.emitWaiting(room);
+    socket.emit("waiting", { expiresAt: waiting.expiresAt });
+    throw new Fault(
+      "WAITING",
+      "A sala está trancada. Aguarde alguém da sala aceitar sua entrada.",
+    );
+  }
+  /** Leaves the waiting room on purpose or by disconnecting. */
+  private stopWaiting(socket: Socket) {
+    const room = this.rooms.get(socket.data.waiting);
+    socket.data.waiting = undefined;
+    if (!room) return;
+    for (const w of room.waiting.values())
+      if (w.socketId === socket.id) {
+        room.waiting.delete(w.id);
+        this.emitWaiting(room);
+      }
+  }
   private leave(room: Room, member: Member, explicit = false) {
     for (const p of [...member.publications]) this.removePublication(room, p);
     for (const sub of [...room.subscriptions.values()])
@@ -344,6 +464,12 @@ export class Rooms {
       room.provisional = true;
       room.fresh = true;
       room.restoredAdmins.clear();
+      // Nobody left to open the door.
+      for (const w of [...room.waiting.values()])
+        this.dismiss(room, w, {
+          allowed: false,
+          message: "Todos saíram da sala. Tente entrar de novo.",
+        });
     }
     if (room.creatorId === member.id && room.members.size) {
       const members = [...room.members.values()];
@@ -373,6 +499,14 @@ export class Rooms {
     this.limits.clean();
     const now = Date.now();
     for (const room of this.rooms.values()) {
+      for (const [person, until] of room.refused)
+        if (until <= now) room.refused.delete(person);
+      for (const w of [...room.waiting.values()])
+        if (w.expiresAt <= now)
+          this.dismiss(room, w, {
+            allowed: false,
+            message: "Ninguém respondeu a tempo. Tente entrar de novo.",
+          });
       for (const m of room.members.values())
         if (!m.online && now - m.lastSeen > this.config.grace)
           this.leave(room, m);
@@ -384,6 +518,9 @@ export class Rooms {
     const rates: Record<Action, number> = {
       role: 20,
       moderate: 30,
+      admit: 120,
+      "invite-create": 20,
+      "invite-revoke": 10,
       "room-permissions": 30,
       "chat-send": 45,
       "module-interact": 240,
@@ -473,6 +610,7 @@ export class Rooms {
       }
     });
     socket.on("disconnect", () => {
+      if (socket.data.waiting) this.stopWaiting(socket);
       const code = this.membership.get(socket.data.id);
       const room = code && this.rooms.get(code);
       const m = room && room.members.get(socket.data.id);
@@ -549,6 +687,11 @@ export class Rooms {
           provisional: recreated,
           fresh: recreated,
           restoredAdmins: new Set(),
+          known: new Set(),
+          waiting: new Map(),
+          refused: new Map(),
+          inviteGen: newInviteGen(),
+          revokedInvites: new Set(),
         };
         this.rooms.set(code, room);
       }
@@ -559,12 +702,24 @@ export class Rooms {
           "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
         );
       const empty = !room.members.size;
-      if (empty) room.creatorId = socket.data.id;
       const claim = verifyRoomCredential(
         this.config.secret,
         data.credential,
         code,
       );
+      if (socket.data.waiting && socket.data.waiting !== code)
+        this.stopWaiting(socket);
+      if (room.permissions.locked && !empty && !member && !claim) {
+        const invite = verifyInvite(this.config.secret, data.invite, code);
+        if (
+          !room.known.has(socket.data.id) &&
+          !room.restoredAdmins.has(socket.data.id) &&
+          !(invite && !room.revokedInvites.has(invite.gen))
+        )
+          this.knock(room, socket, data.name, data.color);
+      }
+      if (socket.data.waiting) this.stopWaiting(socket);
+      if (empty) room.creatorId = socket.data.id;
       const reclaim =
         !!claim &&
         (claim.rank > room.creatorRank ||
@@ -609,6 +764,7 @@ export class Rooms {
       };
       room.members.set(member.id, member);
       this.membership.set(member.id, code);
+      this.remember(room, member.id);
       if (previous) {
         this.notice(
           room,
@@ -623,6 +779,8 @@ export class Rooms {
         );
       await socket.join(code);
       this.broadcast(room, member.id);
+      if (room.waiting.size && this.manages(room, member.id))
+        this.emitWaiting(room);
       for (const sub of room.subscriptions.values())
         if (sub.viewer === member.id || sub.publication.owner === member.id)
           socket.emit("subscription", sub);
@@ -633,6 +791,10 @@ export class Rooms {
           credential: this.credential(room),
         }),
       } satisfies JoinResult;
+    }
+    if (action === "leave" && socket.data.waiting) {
+      this.stopWaiting(socket);
+      return {};
     }
     const [room, m] = this.member(socket);
     const manages = m.id === room.creatorId || m.role === "admin";
@@ -664,10 +826,45 @@ export class Rooms {
             `Só o criador decide se administradores podem ${permissionText[key]}.`,
           );
       room.permissions = { ...room.permissions, ...data.permissions };
+      if (!room.permissions.locked) this.admitAll(room);
       this.enforcePublications(room);
       this.sendCredential(room);
       this.broadcast(room);
       return room.permissions;
+    }
+    if (action === "admit") {
+      if (!manages) deny();
+      const waiting = room.waiting.get(data.id);
+      if (!waiting)
+        throw new Fault("NOT_FOUND", "Esta pessoa não está mais esperando.");
+      if (data.allow) this.remember(room, waiting.person);
+      else room.refused.set(waiting.person, Date.now() + REFUSED_FOR);
+      this.dismiss(
+        room,
+        waiting,
+        data.allow
+          ? { allowed: true }
+          : { allowed: false, message: "Sua entrada na sala foi recusada." },
+      );
+      return {};
+    }
+    if (action === "invite-create") {
+      if (!manages) deny();
+      const expiresAt = Date.now() + inviteTtl[data.ttl as InviteTtl];
+      return {
+        invite: issueInvite(this.config.secret, {
+          code: room.code,
+          gen: room.inviteGen,
+          exp: expiresAt,
+        }),
+        expiresAt,
+      } satisfies InviteResult;
+    }
+    if (action === "invite-revoke") {
+      if (!manages) deny();
+      room.revokedInvites.add(room.inviteGen);
+      room.inviteGen = newInviteGen();
+      return {};
     }
     if (action === "moderate") {
       if (m.id !== room.creatorId)
@@ -705,6 +902,7 @@ export class Rooms {
       this.enforcePublications(room);
       this.sendCredential(room);
       this.broadcast(room);
+      if (room.waiting.size) this.emitWaiting(room, true);
       return {};
     }
     if (action === "module-interact") {
