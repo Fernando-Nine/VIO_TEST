@@ -1,4 +1,4 @@
-import { rectangularUnion } from "./slot-spans";
+import { rectangularUnion, type CellRect } from "./slot-spans";
 import { freshKey } from "../id";
 
 type GridRows = 1 | 2 | 3;
@@ -155,6 +155,51 @@ export function fitted(rect: Placement): Placement {
   };
 }
 
+/**
+ * Cells of each grid slot (#221). Slots are kept in row-major order of their
+ * top-left cell, so each one starts at the first cell still free. Null when
+ * the spans do not tile the grid.
+ */
+export function gridPlacement(
+  slots: Slot[],
+  rows: number,
+  columns: number,
+): Map<string, CellRect> | null {
+  const taken = Array.from({ length: rows }, () =>
+    Array<boolean>(columns).fill(false),
+  );
+  const placement = new Map<string, CellRect>();
+  let cell = 0;
+  for (const slot of slots) {
+    while (
+      cell < rows * columns &&
+      taken[Math.floor(cell / columns)][cell % columns]
+    )
+      cell++;
+    const row = Math.floor(cell / columns),
+      column = cell % columns;
+    const height = slot.span?.rows || 1,
+      width = slot.span?.columns || 1;
+    if (row + height > rows || column + width > columns) return null;
+    for (let r = row; r < row + height; r++)
+      for (let c = column; c < column + width; c++) {
+        if (taken[r][c]) return null;
+        taken[r][c] = true;
+      }
+    placement.set(slot.id, { row, column, rows: height, columns: width });
+  }
+  return taken.every((line) => line.every(Boolean)) ? placement : null;
+}
+/** Merged cells become single cells again, keeping their ids and content. */
+function flatten(s: CanvasState) {
+  s.slots = s.slots.flatMap((slot) => [
+    { ...slot, span: undefined, mergedIds: undefined },
+    ...Array.from({ length: slotUnits(slot) - 1 }, (_, i) => ({
+      id: slot.mergedIds?.[i] || freshKey(),
+    })),
+  ]);
+}
+
 /** Layout mechanics know only widget identity, geometry and occupancy. */
 export class CanvasStore {
   private value: CanvasState;
@@ -196,13 +241,8 @@ export class CanvasStore {
   preset(preset: Preset) {
     this.change((s) => {
       // Leaving the strip restores its component cells without discarding content.
-      if (!preset.startsWith("strip-"))
-        s.slots = s.slots.flatMap((slot) => [
-          { ...slot, span: undefined, mergedIds: undefined },
-          ...Array.from({ length: slotUnits(slot) - 1 }, (_, i) => ({
-            id: slot.mergedIds?.[i] || freshKey(),
-          })),
-        ]);
+      // Grid spans are two-dimensional; the strip only stacks cells.
+      if (!preset.startsWith("strip-") || gridSize(s.preset)) flatten(s);
       s.preset = preset;
       s.single = false;
       const grid = gridSize(preset);
@@ -283,6 +323,10 @@ export class CanvasStore {
     });
   }
   splitSlot(id: string) {
+    if (gridSize(this.value.preset)) {
+      this.resizeSlot(id, 1, 1);
+      return;
+    }
     this.change((s) => {
       const index = s.slots.findIndex((slot) => slot.id === id),
         slot = s.slots[index];
@@ -297,6 +341,98 @@ export class CanvasStore {
       );
     });
   }
+  /**
+   * Grid only (#221): the slot covers `rows` × `columns` cells from its
+   * top-left one; 1 × 1 separates it. Covered widgets move to the next free
+   * cell, else to "not shown", as when the grid shrinks.
+   */
+  resizeSlot(id: string, rows: number, columns: number) {
+    const grid = gridSize(this.value.preset);
+    if (!grid) return;
+    const placement = gridPlacement(this.value.slots, grid.rows, grid.columns);
+    const origin = placement?.get(id);
+    if (!placement || !origin) return;
+    rows = Math.max(1, Math.min(grid.rows - origin.row, Math.round(rows)));
+    columns = Math.max(
+      1,
+      Math.min(grid.columns - origin.column, Math.round(columns)),
+    );
+    if (rows === origin.rows && columns === origin.columns) return;
+    const target: CellRect = {
+      row: origin.row,
+      column: origin.column,
+      rows,
+      columns,
+    };
+    const inside = (r: number, c: number, rect: CellRect) =>
+      r >= rect.row &&
+      r < rect.row + rect.rows &&
+      c >= rect.column &&
+      c < rect.column + rect.columns;
+    const overlaps = (rect: CellRect) =>
+      rect.row < target.row + target.rows &&
+      target.row < rect.row + rect.rows &&
+      rect.column < target.column + target.columns &&
+      target.column < rect.column + rect.columns;
+    this.change((s) => {
+      const resized = s.slots.find((t) => t.id === id)!;
+      // Ids of cells that stop being covered get reused for the new singles.
+      const spare = [...(resized.mergedIds || [])];
+      const cells = new Map<string, Slot>();
+      const moved: Partial<Slot>[] = [];
+      for (const slot of s.slots) {
+        const rect = placement.get(slot.id)!;
+        if (slot.id !== id && !overlaps(rect)) {
+          cells.set(`${rect.row}:${rect.column}`, slot);
+          continue;
+        }
+        if (slot.id !== id) {
+          if (slot.widgetId || slot.offer) moved.push(pick(slot));
+          spare.push(slot.id, ...(slot.mergedIds || []));
+        }
+        // Cells outside the new rectangle come back as empty singles.
+        for (let r = rect.row; r < rect.row + rect.rows; r++)
+          for (let c = rect.column; c < rect.column + rect.columns; c++)
+            if (!inside(r, c, target)) cells.set(`${r}:${c}`, { id: "" });
+      }
+      const units = rows * columns;
+      const merged: Slot = {
+        ...resized,
+        span: units > 1 ? { rows, columns } : undefined,
+        mergedIds: undefined,
+      };
+      // An empty slot takes the first covered widget.
+      if (!merged.widgetId && !merged.offer && moved.length)
+        Object.assign(merged, moved.shift());
+      cells.set(`${target.row}:${target.column}`, merged);
+      s.slots = [];
+      for (let r = 0; r < grid.rows; r++)
+        for (let c = 0; c < grid.columns; c++) {
+          const slot = cells.get(`${r}:${c}`);
+          if (slot) s.slots.push(slot);
+        }
+      const used = new Set(s.slots.map((t) => t.id).filter(Boolean));
+      const ids = spare.filter((value) => !used.has(value));
+      for (const slot of s.slots)
+        if (!slot.id) {
+          slot.id = ids.pop() || freshKey();
+          used.add(slot.id);
+        }
+      if (units > 1)
+        merged.mergedIds = Array.from({ length: units - 1 }, () => {
+          const value = ids.pop() || freshKey();
+          used.add(value);
+          return value;
+        });
+      for (const content of moved) {
+        const free = s.slots.find((t) => !t.widgetId && !t.offer);
+        if (free) Object.assign(free, content);
+        else if (content.widgetId) s.hidden.push(content.widgetId);
+        else if (content.offer) s.pending.push(content.offer);
+      }
+      s.focusId = focusedWidgetId(s);
+    });
+  }
   addSlot() {
     const slot = newSlot();
     this.change((s) => {
@@ -304,6 +440,7 @@ export class CanvasStore {
         s.slots.push(slot);
         return;
       }
+      flatten(s);
       if (s.slots.length >= MAX_GRID.rows * MAX_GRID.columns) return;
       s.slots.push(slot);
       s.preset = autoGrid(s.slots.length);
@@ -626,10 +763,13 @@ export function restoreCanvas(raw: unknown): CanvasState {
       t.span.columns > 0
         ? t.span.rows * t.span.columns
         : 1;
+    const shape = preset.startsWith("strip-")
+      ? t !== s.slots[0] && units <= 3 && { rows: units, columns: 1 }
+      : gridSize(preset) && t.span;
     const span =
-      preset.startsWith("strip-") && t !== s.slots[0] && units > 1 && units <= 3
+      shape && units > 1
         ? {
-            span: { rows: units, columns: 1 },
+            span: { rows: shape.rows, columns: shape.columns },
             mergedIds: Array.from({ length: units - 1 }, (_, i) => {
               const id = t.mergedIds?.[i];
               return typeof id === "string" &&
@@ -668,6 +808,11 @@ export function restoreCanvas(raw: unknown): CanvasState {
   );
   const grid = gridSize(preset);
   if (grid) {
+    if (!gridPlacement(slots, grid.rows, grid.columns)) {
+      const flat = { slots } as CanvasState;
+      flatten(flat);
+      slots.splice(0, slots.length, ...flat.slots);
+    }
     for (const extra of slots.splice(grid.rows * grid.columns))
       if (extra.widgetId) hidden.add(extra.widgetId);
     while (slots.length < grid.rows * grid.columns)

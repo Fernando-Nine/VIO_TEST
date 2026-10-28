@@ -1,0 +1,201 @@
+/* Grid tools (#221): docs/design/grade-foco.md */
+.span-handle {
+  position: absolute;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  background: #a6a9ff;
+  color: #10112a;
+  box-shadow: 0 4px 14px #0007;
+  transform: translate(calc(-100% - 6px), calc(-100% - 6px));
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.span-handle:hover {
+  background: #c3c5ff;
+}
+.span-handle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .span-handle {
+    width: 44px;
+    height: 44px;
+  }
+}
+.span-ghost,
+.focus-ghost,
+.edge-bands {
+  pointer-events: none;
+  animation: ghost-in 120ms ease both;
+}
+@keyframes ghost-in {
+  from {
+    opacity: 0;
+  }
+}
+.span-ghost {
+  position: absolute;
+  z-index: 39;
+  border: 2px dashed #a6a9ff;
+  border-radius: 12px;
+  background: rgba(39, 39, 245, 0.16);
+}
+.span-ghost-label,
+.ghost-label {
+  position: absolute;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #0b0c13e6;
+  color: #fff;
+  font: 600 0.75rem var(--mono);
+  white-space: nowrap;
+}
+.focus-ghost {
+  position: absolute;
+  z-index: 45;
+  /* The current layout stays at 35% under the preview. */
+  background: rgba(11, 12, 19, 0.65);
+}
+.focus-ghost.is-fixed {
+  position: fixed;
+}
+.focus-ghost-area {
+  position: absolute;
+  inset: 8px;
+}
+.ghost-focus,
+.ghost-cell {
+  position: absolute;
+  border-radius: 12px;
+}
+.ghost-focus {
+  border: 2px dashed #a6a9ff;
+  background: rgba(39, 39, 245, 0.2);
+}
+.ghost-cell {
+  border: 1px dashed #a6a9ff;
+  border-radius: 10px;
+}
+.ghost-label {
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.edge-bands {
+  position: absolute;
+  inset: 0;
+  z-index: 44;
+}
+.edge-band,
+.edge-band.is-bottom i {
+  position: absolute;
+  background: rgba(166, 169, 255, 0.3);
+  transition: background var(--ease);
+}
+.edge-band.is-left,
+.edge-band.is-right {
+  top: 0;
+  bottom: 0;
+  width: 6px;
+}
+.edge-band.is-left {
+  left: 0;
+}
+.edge-band.is-right {
+  right: 0;
+}
+.edge-band.is-top,
+.edge-band.is-bottom {
+  left: 0;
+  right: 0;
+  height: 6px;
+}
+.edge-band.is-top {
+  top: 0;
+}
+.edge-band.is-bottom {
+  bottom: 0;
+  background: none;
+}
+/* The dock's middle (460 px, as `underDock`) gets no band. */
+.edge-band.is-bottom i {
+  top: 0;
+  bottom: 0;
+  width: calc(50% - 230px);
+}
+.edge-band.is-bottom i:last-child {
+  right: 0;
+}
+.edge-band.is-active,
+.edge-band.is-bottom.is-active i {
+  background: #a6a9ff;
+}
+.edge-band.is-bottom.is-active {
+  background: none;
+}
+.layout-directions button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 8px 8px;
+  font-size: 11px;
+  text-align: center;
+}
+.layout-directions button[aria-pressed="true"] {
+  background: #1f2140;
+  border-color: #a6a9ff;
+  box-shadow: inset 0 0 0 1px #a6a9ff;
+}
+.focus-thumb {
+  position: relative;
+  display: block;
+  width: 56px;
+  height: 40px;
+  border-radius: 6px;
+  background: #0d0f19;
+  border: 1px solid #3a3f5c;
+}
+.focus-thumb > span {
+  position: absolute;
+  margin: 3px;
+  border-radius: 2px;
+  background: #ffffff26;
+}
+.focus-thumb > .thumb-focus {
+  background: #a6a9ff8c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .span-ghost,
+  .focus-ghost,
+  .edge-bands {
+    animation: none;
+  }
+}
+[data-motion="reduce"] :is(.span-ghost, .focus-ghost, .edge-bands) {
+  animation: none;
+}
+/* Layout dialog preview: drawn under the sheet, over a clear room. */
+.focus-ghost.is-fixed {
+  z-index: -1;
+}
+.sheet.is-previewing::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+/* Near an edge, the edge wins over the slot under the pointer. */
+.canvas-dragging.snap-enabled.edge-armed .canvas-slot.is-drop-target {
+  background: #10121c;
+  outline: none;
+}
+.canvas-dragging.snap-enabled.edge-armed .canvas-slot.is-drop-target::after {
+  display: none;
+}
+.edge-bands {
+  z-index: 46;
+}
