@@ -1,13 +1,21 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-10-27
+Atualizado: 2026-10-28
 
 ## Agora
 
-#158 (PR #171): fechar para todos + Desfazer de 8 s no servidor. Contrato comentado na
-#158 para o Frontend.
+Nada em andamento. #226 entregue (rc.9).
 
 ## Feito recentemente
+
+- #226: credencial de cargo da sala (`issueRoomCredential`/`verifyRoomCredential` em
+  `security.ts`, HMAC com prefixo `room.`). Portadora, atrelada ao código (ids de sessão
+  mudam por aba/expiração). `rank` = quando o cargo foi dado; provisório assina 0.
+  `Room.creatorRank/provisional/fresh/restoredAdmins/lentFromAdmin`. Vence quem tem
+  `rank` maior, ou ≥ se o criador atual é provisório. Transferência e `leave` explícito
+  dão `rank` novo; tolerância vencida só empresta. Evento `room-credential` (null =
+  esquecer); `JoinResult.credential`. Cliente guarda em `localStorage`
+  `vio:room-credentials` (20 salas). Testes: `room-credential*.test.ts`.
 
 - #158: `widget-delete` guarda o widget 8 s (`RoomWidgets.closed`, `closedWidgetHold`);
   `widget-updated.closed { by, byName, until }`; `widget-restore` só para quem fechou ou
@@ -50,4 +58,5 @@ Atualizado: 2026-10-27
 
 ## Próximo passo
 
-Mesclar #73 com CI verde; depois revisar PRs do Frontend que usem as permissões.
+Widgets e avisos da sala ainda se perdem num reinício (fora da #226; só em memória).
+Revisar PRs do Frontend que usem as permissões.

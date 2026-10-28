@@ -17,6 +17,9 @@ import {
   stableId,
   generateCode,
   issueToken,
+  issueRoomCredential,
+  verifyRoomCredential,
+  CREDENTIAL_ADMINS,
   log,
 } from "./security";
 import {
@@ -39,6 +42,7 @@ import {
   type Snapshot,
   type Subscription,
   type Action,
+  type JoinResult,
 } from "../shared/protocol";
 interface Member extends Participant {
   socketId?: string;
@@ -54,7 +58,22 @@ interface Room {
   creatorId: string;
   permissions: RoomPermissions;
   touched: number;
+  /**
+   * Seat ranking (#226): the rank of the creator's credential (-1 = none).
+   * While `provisional`, the creator got the seat without one (first back after
+   * a restart, or succession) and a credential of at least this rank takes it.
+   */
+  creatorRank: number;
+  provisional: boolean;
+  /** State came from defaults: the next winning credential also restores it. */
+  fresh: boolean;
+  /** Admins who hold a lent seat get admin back when the creator returns. */
+  lentFromAdmin?: string;
+  /** Admins named by a credential who have not come back yet. */
+  restoredAdmins: Set<string>;
 }
+/** Long enough to outlive a weekend; reissued on every join of the creator. */
+const CREDENTIAL_TTL = 30 * 24 * 3600 * 1000;
 const publishPermission = {
   screen: "guestScreen",
   voice: "guestVoice",
@@ -292,7 +311,26 @@ export class Rooms {
     if (member)
       member.publications = member.publications.filter((v) => v.id !== p.id);
   }
-  private leave(room: Room, member: Member) {
+  private notice(room: Room, text: string) {
+    room.notices.push({ id: randomUUID(), text, createdAt: Date.now() });
+    room.notices = room.notices.slice(-30);
+  }
+  /** Signed creator seat; provisional seats sign rank 0 so any real one wins. */
+  private credential(room: Room) {
+    const admins = new Set(room.restoredAdmins);
+    for (const m of room.members.values())
+      if (m.role === "admin" && m.id !== room.creatorId) admins.add(m.id);
+    return issueRoomCredential(this.config.secret, CREDENTIAL_TTL, {
+      code: room.code,
+      rank: room.provisional ? 0 : room.creatorRank,
+      admins: [...admins].slice(-CREDENTIAL_ADMINS),
+      permissions: room.permissions,
+    });
+  }
+  private sendCredential(room: Room) {
+    this.send(room, room.creatorId, "room-credential", this.credential(room));
+  }
+  private leave(room: Room, member: Member, explicit = false) {
     for (const p of [...member.publications]) this.removePublication(room, p);
     for (const sub of [...room.subscriptions.values()])
       if (sub.viewer === member.id) this.closeSub(room, sub);
@@ -302,6 +340,10 @@ export class Rooms {
       room.widgets.clear();
       room.notices = [];
       room.permissions = { ...defaultPermissions };
+      room.creatorRank = -1;
+      room.provisional = true;
+      room.fresh = true;
+      room.restoredAdmins.clear();
     }
     if (room.creatorId === member.id && room.members.size) {
       const members = [...room.members.values()];
@@ -311,13 +353,18 @@ export class Rooms {
         members.find((m) => m.role === "admin") ||
         members[0];
       room.creatorId = next.id;
+      if (next.role === "admin") room.lentFromAdmin = next.id;
       next.role = "creator";
-      room.notices.push({
-        id: randomUUID(),
-        text: `${next.name} agora é o criador da sala.`,
-        createdAt: Date.now(),
-      });
-      room.notices = room.notices.slice(-30);
+      // Leaving on purpose hands the seat over; timing out only lends it.
+      if (explicit && !room.provisional) room.creatorRank = Date.now();
+      else room.provisional = true;
+      this.notice(
+        room,
+        room.provisional
+          ? `${next.name} é o criador da sala até ${member.name} voltar.`
+          : `${next.name} agora é o criador da sala.`,
+      );
+      this.sendCredential(room);
     }
     this.membership.delete(member.id);
     this.broadcast(room, true);
@@ -473,6 +520,7 @@ export class Rooms {
     }
     if (action === "join") {
       const current = this.membership.get(socket.data.id);
+      const recreated = !!(data.code || current);
       const code = data.code || current || generateCode();
       if (current && current !== code)
         throw new Fault(
@@ -496,23 +544,62 @@ export class Rooms {
           creatorId: socket.data.id,
           permissions: { ...defaultPermissions },
           touched: Date.now(),
+          // A known code that is gone means a restart: its creator may return.
+          creatorRank: recreated ? -1 : Date.now(),
+          provisional: recreated,
+          fresh: recreated,
+          restoredAdmins: new Set(),
         };
         this.rooms.set(code, room);
       }
-      if (!room.members.size) room.creatorId = socket.data.id;
       let member = room.members.get(socket.data.id);
       if (member?.socketId && member.socketId !== socket.id)
         throw new Fault(
           "SESSION_IN_USE",
           "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
         );
+      const empty = !room.members.size;
+      if (empty) room.creatorId = socket.data.id;
+      const claim = verifyRoomCredential(
+        this.config.secret,
+        data.credential,
+        code,
+      );
+      const reclaim =
+        !!claim &&
+        (claim.rank > room.creatorRank ||
+          (room.provisional && claim.rank >= room.creatorRank));
+      let previous: Member | undefined;
+      if (reclaim) {
+        if (room.creatorId !== socket.data.id)
+          previous = room.members.get(room.creatorId);
+        room.creatorId = socket.data.id;
+        room.creatorRank = claim.rank;
+        room.provisional = claim.rank === 0;
+        if (room.fresh) room.permissions = { ...claim.permissions };
+        room.fresh = false;
+        for (const id of claim.admins)
+          if (id === socket.data.id) continue;
+          else if (room.members.has(id)) room.members.get(id)!.role = "admin";
+          else room.restoredAdmins.add(id);
+        if (previous)
+          previous.role =
+            claim.admins.includes(previous.id) ||
+            room.lentFromAdmin === previous.id
+              ? "admin"
+              : "guest";
+        room.lentFromAdmin = undefined;
+      }
+      const restoredAdmin = room.restoredAdmins.delete(socket.data.id);
       member = {
         id: socket.data.id,
         name: data.name,
         role:
           room.creatorId === socket.data.id
             ? "creator"
-            : member?.role || "guest",
+            : restoredAdmin
+              ? "admin"
+              : member?.role || "guest",
         color: member?.color || data.color || defaultColor,
         online: true,
         inCall: member?.inCall || false,
@@ -522,12 +609,30 @@ export class Rooms {
       };
       room.members.set(member.id, member);
       this.membership.set(member.id, code);
+      if (previous) {
+        this.notice(
+          room,
+          `${member.name} voltou e é de novo o criador da sala.`,
+        );
+        this.send(room, previous.id, "room-credential", null);
+        this.enforcePublications(room);
+      } else if (empty && room.provisional && !reclaim)
+        this.notice(
+          room,
+          `${member.name} é o criador da sala até o criador anterior voltar.`,
+        );
       await socket.join(code);
       this.broadcast(room, member.id);
       for (const sub of room.subscriptions.values())
         if (sub.viewer === member.id || sub.publication.owner === member.id)
           socket.emit("subscription", sub);
-      return { id: member.id, snapshot: this.snapshot(room, member.id) };
+      return {
+        id: member.id,
+        snapshot: this.snapshot(room, member.id),
+        ...(room.creatorId === member.id && {
+          credential: this.credential(room),
+        }),
+      } satisfies JoinResult;
     }
     const [room, m] = this.member(socket);
     const manages = m.id === room.creatorId || m.role === "admin";
@@ -560,6 +665,7 @@ export class Rooms {
           );
       room.permissions = { ...room.permissions, ...data.permissions };
       this.enforcePublications(room);
+      this.sendCredential(room);
       this.broadcast(room);
       return room.permissions;
     }
@@ -585,18 +691,19 @@ export class Rooms {
       if (!target || target.id === m.id)
         throw new Fault("INVALID_REQUEST", "Escolha outra pessoa da sala.");
       if (data.action === "transfer") {
+        if (room.provisional && target.role === "admin")
+          room.lentFromAdmin = target.id;
         m.role = "admin";
         target.role = "creator";
         target.voiceBlocked = undefined;
         room.creatorId = target.id;
-        room.notices.push({
-          id: randomUUID(),
-          text: `${target.name} agora é o criador da sala.`,
-          createdAt: Date.now(),
-        });
-        room.notices = room.notices.slice(-30);
+        // A provisional creator can only lend the seat it was lent.
+        if (!room.provisional) room.creatorRank = Date.now();
+        this.send(room, m.id, "room-credential", null);
+        this.notice(room, `${target.name} agora é o criador da sala.`);
       } else target.role = data.action === "promote" ? "admin" : "guest";
       this.enforcePublications(room);
+      this.sendCredential(room);
       this.broadcast(room);
       return {};
     }
@@ -732,7 +839,7 @@ export class Rooms {
       return { color: m.color };
     }
     if (action === "leave") {
-      this.leave(room, m);
+      this.leave(room, m, true);
       await socket.leave(room.code);
       return {};
     }
