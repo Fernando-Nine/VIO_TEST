@@ -16,7 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
-        "App Windows: Trocar o que transmito não fecha mais o app. Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.",
+        "App Windows: parar ou trocar uma transmissão com som não fecha mais o app (o erro estava no fim de cada captura de som). Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.",
         "O sino de notificações abre só quando você clica nele, não mais ao passar o mouse; clicar de novo fecha.",
         "O criador da sala continua criador quando o servidor reinicia ou demora a voltar: quem chegar antes fica no cargo só até ele voltar, com aviso na sala, e admins e permissões voltam junto.",
         "Adicionar widget por abas: Assistir, Conversar, Decidir e jogar, Tempo e Comunidade (a última aberta fica lembrada); a busca procura em todas. Cada widget traz Para mim e Para a sala, ou Adicionar quando é só seu. Widgets da sala ficam no botão do rodapé. Personalizado agora se chama Placar e volta ao catálogo. No espaço vazio, cada ícone tem Mim e Sala.",
