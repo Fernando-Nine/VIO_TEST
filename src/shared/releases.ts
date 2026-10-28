@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.11";
+export const version = "2.11.0-rc.12";
 export const currentRelease: Release = {
   version,
   date: "2026-10-28",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        "Adicionar widget por abas: Assistir, Conversar, Decidir e jogar, Tempo e Comunidade (a última aberta fica lembrada); a busca procura em todas. Cada widget traz Para mim e Para a sala, ou Adicionar quando é só seu. Widgets da sala ficam no botão do rodapé. Personalizado agora se chama Placar e volta ao catálogo. No espaço vazio, cada ícone tem Mim e Sala.",
         "Foco único volta à barra da sala: um clique mostra só o widget em foco, ocupando todo o espaço; outro clique (Voltar ao conjunto) devolve o layout exatamente como estava. Só muda para você.",
         "Grade: passe o mouse num espaço e arraste a alça do canto para juntar espaços vizinhos (o fantasma mostra o tamanho, como 2 × 2); soltar junta, e o widget coberto vai para o próximo espaço livre ou para Não exibidos. Para separar, arraste de volta para 1 × 1 ou use Separar espaços no botão direito. Pelo teclado: setas na alça e Enter. Em Layout, as posições do foco viram miniaturas, e passar o mouse mostra o resultado na própria sala. Arrastando um widget com Shift até a borda, aparece o fantasma de Foco + tira daquele lado; soltar aplica, com o widget no foco.",
         "Compartilhar abre uma janela no centro, já com a imagem: escolha Tela inteira ou Janela do aplicativo (e Aba do navegador no Chrome e no Edge), a qualidade (480p, 720p, 1080p ou Fonte), a taxa de quadros (15, 30 ou 60 FPS) e se vai com som ou sem som. No app, as telas e janelas aparecem com miniatura e um clique em Compartilhar começa, sem o seletor do Windows; no navegador, Compartilhar abre o seletor dele. As escolhas ficam lembradas, e Trocar o que transmito usa a mesma janela. Transmitindo, o + ao lado de Parar tela (ou Compartilhar outra tela no menu de Minha transmissão) abre outra tela, até 3; cada uma tem Pausar, Silenciar, Trocar e Parar em Minha transmissão.",
