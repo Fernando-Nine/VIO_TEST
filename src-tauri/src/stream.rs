@@ -838,6 +838,9 @@ mod bench {
         }
         .unwrap();
         pump();
+        // Each resize must change the size, or Windows sends no new frame.
+        let sizes = [(900, 520), (500, 700), (760, 430)];
+        let mut resizes = 0usize;
         let target = || unsafe { interop.CreateForWindow::<GraphicsCaptureItem>(window) }.unwrap();
         for options in [
             Options { width: 1920, height: 1080, fps: 60, cursor: true },
@@ -850,7 +853,8 @@ mod bench {
                 assert!(second.frame_after(0), "janela sem quadros ({round})");
                 first.stop();
                 let before = second.sequence();
-                let (w, h) = if round % 2 == 0 { (900, 520) } else { (500, 700) };
+                let (w, h) = sizes[resizes % sizes.len()];
+                resizes += 1;
                 unsafe { SetWindowPos(window, None, 0, 0, w, h, SWP_NOMOVE | SWP_NOZORDER) }.unwrap();
                 assert!(second.frame_after(before), "janela redimensionada parou ({round})");
                 let third = Running::start(screen(), options);
