@@ -2,6 +2,8 @@
 #[cfg(windows)]
 mod capture;
 #[cfg(windows)]
+mod duplication;
+#[cfg(windows)]
 mod log;
 #[cfg(windows)]
 mod shell;
