@@ -54,9 +54,21 @@ fn desktop_capabilities(window: WebviewWindow) -> Result<Capabilities, String> {
 }
 
 #[tauri::command]
-fn desktop_sources(window: WebviewWindow, state: State<'_, Manager>) -> Result<Vec<Source>, String> {
+async fn desktop_sources(window: WebviewWindow, app: AppHandle) -> Result<Vec<Source>, String> {
     trusted(&window)?;
-    state.sources()
+    tauri::async_runtime::spawn_blocking(move || app.state::<Manager>().sources())
+        .await
+        .map_err(|_| "Não foi possível listar os programas.")?
+}
+
+#[tauri::command]
+async fn desktop_sound_icon(window: WebviewWindow, app: AppHandle, source_id: String) -> Result<tauri::ipc::Response, String> {
+    trusted(&window)?;
+    valid_id(&source_id)?;
+    let bytes = tauri::async_runtime::spawn_blocking(move || app.state::<Manager>().icon(&source_id))
+        .await
+        .map_err(|_| "Não foi possível ler o ícone.")??;
+    Ok(tauri::ipc::Response::new(bytes))
 }
 
 #[tauri::command]
@@ -234,6 +246,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             desktop_capabilities,
             desktop_sources,
+            desktop_sound_icon,
             desktop_start_audio,
             desktop_read_audio,
             desktop_stop_audio,

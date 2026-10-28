@@ -1,7 +1,7 @@
 // WASAPI process loopback (Windows 10 2004+): the audio of one application tree, or of
 // the whole PC minus VIO's own tree (the call's voices).
 // No files, network or global audio hook; the PCM only goes to the local window.
-use crate::wire;
+use crate::{programs, wire};
 use serde::Serialize;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -14,10 +14,10 @@ use std::{
     time::{Duration, Instant},
 };
 use windows::{
-    core::{implement, Interface, Ref, Result as WinResult, BOOL, HRESULT},
+    core::{implement, Interface, Ref, Result as WinResult, HRESULT},
     Wdk::System::SystemServices::RtlGetVersion,
     Win32::{
-        Foundation::{CloseHandle, E_FAIL, FILETIME, HANDLE, HWND, LPARAM, WAIT_OBJECT_0, WAIT_TIMEOUT},
+        Foundation::{CloseHandle, E_FAIL, FILETIME, HANDLE, HWND, WAIT_OBJECT_0, WAIT_TIMEOUT},
         Media::Audio::*,
         Security::Cryptography::{BCryptGenRandom, BCRYPT_USE_SYSTEM_PREFERRED_RNG},
         System::{
@@ -31,10 +31,7 @@ use windows::{
             },
             Variant::VT_BLOB,
         },
-        UI::WindowsAndMessaging::{
-            EnumWindows, GetWindowLongPtrW, GetWindowTextW, GetWindowThreadProcessId, IsWindow,
-            IsWindowVisible, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
-        },
+        UI::WindowsAndMessaging::{GetWindowThreadProcessId, IsWindow},
     },
 };
 
@@ -144,67 +141,64 @@ pub(crate) fn own_tree() -> HashSet<u32> {
 
 #[derive(Clone)]
 struct NativeSource {
+    /// 0 for the whole PC and for a program heard without a window (#247).
     window: isize,
     started: u64,
     pid: u32,
     title: String,
+    /// Window title under the program name; empty when there is none.
+    detail: String,
+    /// Executable, nul-terminated, for the icon; empty for the whole PC.
+    path: Vec<u16>,
     /// Everything the PC plays except this process tree (WebView2 renders the call there).
     system: bool,
 }
 
-struct Enumeration {
-    excluded: HashSet<u32>,
-    seen: HashSet<u32>,
-    found: Vec<NativeSource>,
-}
-
-unsafe extern "system" fn visit(window: HWND, data: LPARAM) -> BOOL {
-    let list = unsafe { &mut *(data.0 as *mut Enumeration) };
-    if list.found.len() >= 128 {
-        return false.into();
-    }
-    let tool = unsafe { GetWindowLongPtrW(window, GWL_EXSTYLE) } as u32 & WS_EX_TOOLWINDOW.0 != 0;
-    if !unsafe { IsWindowVisible(window) }.as_bool() || tool {
-        return true.into();
-    }
-    let mut pid = 0u32;
-    unsafe { GetWindowThreadProcessId(window, Some(&mut pid)) };
-    if pid == 0 || list.excluded.contains(&pid) || list.seen.contains(&pid) {
-        return true.into();
-    }
-    let mut title = [0u16; 256];
-    let length = unsafe { GetWindowTextW(window, &mut title) };
-    if length <= 0 {
-        return true.into();
-    }
-    let Some(process) = open_process(pid) else {
-        return true.into();
+/// Programs for "Só som" (#247): one per process with an Alt+Tab window, plus those
+/// playing sound with no window (a player in the tray). Helpers of a listed program
+/// (a browser's audio process) are its sound already and stay out.
+fn enumerate(names: &mut HashMap<Vec<u16>, String>) -> Vec<NativeSource> {
+    let excluded = own_tree();
+    let mut seen = HashSet::new();
+    let mut found = Vec::new();
+    let mut add = |window: isize, pid: u32, started: u64, detail: String, process: &Owned| {
+        let Some(path) = programs::executable(process.0) else { return };
+        let title = names.entry(path.clone()).or_insert_with(|| programs::name(&path)).clone();
+        found.push(NativeSource {
+            window,
+            started,
+            pid,
+            title,
+            detail,
+            path,
+            system: false,
+        });
     };
-    let started = process_started(process.0);
-    if started == 0 {
-        return true.into();
+    for (window, pid, started, title) in crate::video::app_windows() {
+        if excluded.contains(&pid) || !seen.insert(pid) {
+            continue;
+        }
+        if let Some(process) = open_process(pid) {
+            add(window, pid, started, title, &process);
+        }
     }
-    list.seen.insert(pid);
-    list.found.push(NativeSource {
-        window: window.0 as isize,
-        started,
-        pid,
-        title: String::from_utf16_lossy(&title[..length as usize]),
-        system: false,
-    });
-    true.into()
-}
-
-fn enumerate() -> Vec<NativeSource> {
-    let mut list = Enumeration {
-        excluded: own_tree(),
-        seen: HashSet::new(),
-        found: Vec::new(),
-    };
-    unsafe {
-        let _ = EnumWindows(Some(visit), LPARAM(&mut list as *mut Enumeration as isize));
+    let parents = programs::parents();
+    let mut playing: Vec<u32> = programs::playing().into_iter().collect();
+    playing.sort_unstable();
+    for pid in playing {
+        if programs::descends(pid, &excluded, &parents) || programs::descends(pid, &seen, &parents) {
+            continue;
+        }
+        let Some(process) = open_process(pid) else { continue };
+        let started = process_started(process.0);
+        if started == 0 {
+            continue;
+        }
+        seen.insert(pid);
+        add(0, pid, started, String::new(), &process);
     }
-    list.found
+    found.truncate(128);
+    found
 }
 
 // The handler owns its sender, so a late completion never touches the worker's stack.
@@ -409,11 +403,14 @@ impl Capture {
         let process = if source.system {
             open_process(unsafe { GetCurrentProcessId() }).ok_or_else(closed)?
         } else {
-            let window = HWND(source.window as *mut _);
-            let mut current = 0u32;
-            unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
-            if !unsafe { IsWindow(Some(window)) }.as_bool() || current != source.pid {
-                return Err(closed());
+            // A program heard without a window is checked by its process alone.
+            if source.window != 0 {
+                let window = HWND(source.window as *mut _);
+                let mut current = 0u32;
+                unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
+                if !unsafe { IsWindow(Some(window)) }.as_bool() || current != source.pid {
+                    return Err(closed());
+                }
             }
             let process = open_process(source.pid).ok_or_else(closed)?;
             if process_started(process.0) != source.started
@@ -513,7 +510,20 @@ impl Drop for Capture {
 pub struct Source {
     id: String,
     title: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    detail: String,
     system: bool,
+}
+
+impl Source {
+    fn of(id: String, entry: &NativeSource) -> Self {
+        Self {
+            id,
+            title: entry.title.clone(),
+            detail: entry.detail.clone(),
+            system: entry.system,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -523,6 +533,21 @@ struct Inner {
     started: Option<Instant>,
     /// Capture id → (pid, whole PC, capture).
     active: HashMap<String, (u32, bool, Arc<Capture>)>,
+    /// Program names and icons by executable, kept across listings.
+    names: HashMap<Vec<u16>, String>,
+    icons: HashMap<Vec<u16>, Option<Vec<u8>>>,
+}
+
+fn system_source() -> NativeSource {
+    NativeSource {
+        window: 0,
+        started: 0,
+        pid: unsafe { GetCurrentProcessId() },
+        title: SYSTEM_TITLE.into(),
+        detail: String::new(),
+        path: Vec::new(),
+        system: true,
+    }
 }
 
 #[derive(Default)]
@@ -537,25 +562,17 @@ impl Manager {
         inner.sources.clear();
         inner.listed = Some(Instant::now());
         let mut sources = Vec::new();
-        let system = NativeSource {
-            window: 0,
-            started: 0,
-            pid: unsafe { GetCurrentProcessId() },
-            title: SYSTEM_TITLE.into(),
-            system: true,
-        };
-        for entry in std::iter::once(system).chain(enumerate()) {
+        // Audio sessions are COM objects: this worker thread joins the MTA for the listing.
+        let _apartment = crate::video::Apartment::enter();
+        let programs = enumerate(&mut inner.names);
+        for entry in std::iter::once(system_source()).chain(programs) {
             // Opaque ids: the page never sees or chooses a PID.
             let id = key()?;
-            sources.push(Source {
-                id: id.clone(),
-                title: entry.title.clone(),
-                system: entry.system,
-            });
+            sources.push(Source::of(id.clone(), &entry));
             inner.sources.insert(id, entry);
         }
         // The whole-PC option stays first; applications follow by name.
-        sources[1..].sort_by_key(|s| s.title.to_lowercase());
+        sources[1..].sort_by_key(|s| (s.title.to_lowercase(), s.detail.to_lowercase()));
         Ok(sources)
     }
 
@@ -569,28 +586,41 @@ impl Manager {
                 started,
                 pid,
                 title,
+                detail: String::new(),
+                path: Vec::new(),
                 system: false,
             },
-            None => NativeSource {
-                window: 0,
-                started: 0,
-                pid: unsafe { GetCurrentProcessId() },
-                title: SYSTEM_TITLE.into(),
-                system: true,
-            },
+            None => system_source(),
         };
         if !inner.listed.is_some_and(|t| t.elapsed() < LIST_VALID) {
             inner.sources.clear();
             inner.listed = Some(Instant::now());
         }
         let id = key()?;
-        let source = Source {
-            id: id.clone(),
-            title: entry.title.clone(),
-            system: entry.system,
-        };
+        let source = Source::of(id.clone(), &entry);
         inner.sources.insert(id, entry);
         Ok(source)
+    }
+
+    /// Icon of a listed program as `VIOT` + RGBA; blocking, call from a worker thread.
+    pub fn icon(&self, source_id: &str) -> Result<Vec<u8>, String> {
+        let missing = || "Este programa não tem ícone.".to_string();
+        let path = {
+            let inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
+            let source = inner.sources.get(source_id).ok_or("Escolha um programa da lista atual.")?;
+            if let Some(cached) = inner.icons.get(&source.path) {
+                return cached.clone().ok_or_else(missing);
+            }
+            source.path.clone()
+        };
+        if path.is_empty() {
+            return Err(missing());
+        }
+        let icon = programs::icon(&path);
+        if let Ok(mut inner) = self.0.lock() {
+            inner.icons.insert(path, icon.clone());
+        }
+        icon.ok_or_else(missing)
     }
 
     pub fn start(&self, source_id: &str) -> Result<String, String> {
@@ -660,9 +690,29 @@ impl Drop for Manager {
 
 #[cfg(test)]
 mod tests {
-    use super::{audio_conflict, Capture, NativeSource, MAX_AUDIO};
+    use super::{audio_conflict, system_source, Capture, Manager, MAX_AUDIO};
     use std::time::{Duration, Instant};
-    use windows::Win32::System::Threading::GetCurrentProcessId;
+
+    /// #247: "Só som" lists programs with a window or playing sound, by name, with icons.
+    /// `cargo test --release -- --ignored --nocapture sound_sources`
+    #[test]
+    #[ignore]
+    fn sound_sources() {
+        let manager = Manager::default();
+        let started = Instant::now();
+        let sources = manager.sources().expect("lista");
+        let listing = started.elapsed();
+        let started = Instant::now();
+        let icons = sources.iter().filter(|s| manager.icon(&s.id).is_ok()).count();
+        println!(
+            "VIO só som: {} programas em {} ms, {icons} ícones em {} ms: {:?}",
+            sources.len() - 1,
+            listing.as_millis(),
+            started.elapsed().as_millis(),
+            sources.iter().skip(1).map(|s| s.title.as_str()).collect::<Vec<_>>(),
+        );
+        assert!(sources[0].system);
+    }
 
     /// #246: the sound of a share is stopped and taken again on every swap. The runner may
     /// have no audio device (activation fails); what matters is that nothing hangs or dies.
@@ -670,13 +720,7 @@ mod tests {
     #[test]
     #[ignore]
     fn audio_swap() {
-        let system = NativeSource {
-            window: 0,
-            started: 0,
-            pid: unsafe { GetCurrentProcessId() },
-            title: String::new(),
-            system: true,
-        };
+        let system = system_source();
         for round in 0..5 {
             let capture = Capture::start(&system).expect("captura de som");
             let deadline = Instant::now() + Duration::from_secs(6);

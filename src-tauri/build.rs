@@ -7,6 +7,7 @@ fn main() {
         tauri_build::AppManifest::new().commands(&[
             "desktop_capabilities",
             "desktop_sources",
+            "desktop_sound_icon",
             "desktop_start_audio",
             "desktop_read_audio",
             "desktop_stop_audio",

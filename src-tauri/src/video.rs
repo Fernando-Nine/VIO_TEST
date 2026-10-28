@@ -213,6 +213,17 @@ unsafe extern "system" fn visit_window(window: HWND, data: LPARAM) -> BOOL {
     true.into()
 }
 
+/// Alt+Tab windows as (window, PID, process start, title), for the sound list (#247).
+pub(crate) fn app_windows() -> Vec<(isize, u32, u64, String)> {
+    windows()
+        .into_iter()
+        .filter_map(|w| match w.target {
+            Target::Window { window, pid, started } => Some((window, pid, started, w.title)),
+            Target::Screen { .. } => None,
+        })
+        .collect()
+}
+
 fn windows() -> Vec<NativeVideo> {
     let mut list = Windows {
         excluded: own_tree(),
@@ -376,14 +387,14 @@ fn snapshot(gpu: &Gpu, item: &GraphicsCaptureItem) -> windows::core::Result<Vec<
 }
 
 /// GDI device context and bitmap of one thumbnail, released on drop.
-struct Canvas {
-    dc: HDC,
+pub(crate) struct Canvas {
+    pub dc: HDC,
     bitmap: HBITMAP,
     previous: HGDIOBJ,
 }
 
 impl Canvas {
-    fn new(screen: HDC, bitmap: HBITMAP) -> Option<Self> {
+    pub fn new(screen: HDC, bitmap: HBITMAP) -> Option<Self> {
         if bitmap.is_invalid() {
             return None;
         }

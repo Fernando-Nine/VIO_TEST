@@ -27,6 +27,7 @@ import { selectProcess, selectVideo } from "../desktop/capture";
 import {
   listSoundSources,
   listVideoSources,
+  soundIcon,
   startNativeShare,
   startNativeSound,
   videoThumbnail,
@@ -246,12 +247,24 @@ export function ShareDialog({
     const created: string[] = [];
     setThumbs({});
     // Three at a time, in list order (#247): the app renders them in parallel.
-    const queue = [...visible];
+    // Programs in "Só som" get their icon the same way.
+    const queue: (() => Promise<string | undefined>)[] = [];
+    const ids: string[] = [];
+    for (const source of visible) {
+      queue.push(() => videoThumbnail(source));
+      ids.push(source.id);
+    }
+    if (tab === "sound")
+      for (const source of native.sounds.filter((s) => !s.system)) {
+        queue.push(() => soundIcon(source));
+        ids.push(source.id);
+      }
     const worker = async () => {
-      for (let source = queue.shift(); source; source = queue.shift()) {
+      for (let load = queue.shift(); load; load = queue.shift()) {
+        const id = ids.shift() as string;
         let url: string | null = null;
         try {
-          url = (await videoThumbnail(source)) ?? null;
+          url = (await load()) ?? null;
         } catch {
           url = null;
         }
@@ -261,7 +274,6 @@ export function ShareDialog({
           return;
         }
         if (url) created.push(url);
-        const id = source.id;
         setThumbs((current) => ({ ...current, [id]: url }));
       }
     };
@@ -439,6 +451,7 @@ export function ShareDialog({
                 : tab === "sound"
                   ? sounds.map((source) => {
                       const Icon = source.system ? Monitor : Volume2;
+                      const icon = thumbs[source.id];
                       return (
                         <button
                           key={source.id}
@@ -449,7 +462,11 @@ export function ShareDialog({
                           onDoubleClick={() => void share()}
                         >
                           <span className="share-thumb">
-                            <Icon size={28} aria-hidden="true" />
+                            {icon ? (
+                              <img className="share-icon" src={icon} alt="" />
+                            ) : (
+                              <Icon size={28} aria-hidden="true" />
+                            )}
                             {chosen === source.id && (
                               <span className="share-check" aria-hidden="true">
                                 <Check size={14} strokeWidth={3} />
@@ -457,6 +474,11 @@ export function ShareDialog({
                             )}
                           </span>
                           <span className="share-name">{source.title}</span>
+                          {source.detail && (
+                            <span className="share-detail">
+                              {source.detail}
+                            </span>
+                          )}
                         </button>
                       );
                     })
