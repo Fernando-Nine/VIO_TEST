@@ -26,6 +26,9 @@ Copiloto: `session_01K4nnLTF5gUKwkjx99XxmGX`. Sessões abertas (tag `vio-team`):
 
 ## Decisões
 
+- **Copiloto conversa antes de mandar fazer** (usuário, 28 out): ideias visuais novas (transições,
+  telas, mudanças de interação) primeiro são discutidas e aprovadas com o usuário; só depois viram
+  pedido a uma área. Bugs e pedidos explícitos do usuário seguem direto.
 - Segurança vai direto para produção (hotfix PATCH sobre a produção), sem aval.
 - Widgets: pessoais ou da sala; sem compartilhar (#104).
 - Silenciar: "para mim" todos; "para todos" só o dono (#122).
