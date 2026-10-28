@@ -2,11 +2,12 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.19] - 2026-10-28
+## [2.11.0-rc.20] - 2026-10-28
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
 ### Somente no vio-test
+- App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord). Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.
 - App Windows: no Windows 10, a tela inteira é transmitida sem a borda amarela (as janelas ainda mostram a borda no Windows 10; no 11, nenhuma). O seletor de Compartilhar carrega as miniaturas três por vez e bem mais rápido, e ao reabrir em poucos segundos elas já aparecem na hora.
 - App Windows: parar ou trocar uma transmissão com som não fecha mais o app (o erro estava no fim de cada captura de som). Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.
 - O sino de notificações abre só quando você clica nele, não mais ao passar o mouse; clicar de novo fecha.
