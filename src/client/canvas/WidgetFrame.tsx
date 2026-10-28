@@ -16,6 +16,7 @@ import {
   ArrowLeftRight,
   Ellipsis,
   Grip,
+  LayoutGrid,
   Pencil,
   Minus,
   PictureInPicture2,
@@ -43,7 +44,7 @@ import {
   type WidgetProps,
 } from "./widgets";
 import type { Box } from "./geometry";
-import type { Placement, WidgetInstance } from "./model";
+import { gridSize, type Placement, type WidgetInstance } from "./model";
 
 interface Props extends WidgetProps {
   box: Box;
@@ -227,6 +228,12 @@ export function WidgetFrame(props: Props) {
       : shared
         ? "Fechar só para mim"
         : "Fechar";
+  // A grid slot made of joined cells (#221).
+  const layout = engine.canvas.getSnapshot();
+  const joined =
+    !floating && gridSize(layout.preset)
+      ? layout.slots.find((t) => t.widgetId === widget.id && t.span)
+      : undefined;
   // Same order everywhere (docs/design/widgets-padrao.md): focus, rename,
   // widget actions and appearance, access, then remove and end.
   const menuItems: MenuItem[] = [
@@ -253,6 +260,15 @@ export function WidgetFrame(props: Props) {
       : []),
     ...(def?.menu?.(props) || []),
     ...(bodyMenu?.() || []),
+    ...(joined
+      ? [
+          {
+            label: "Separar espaços",
+            icon: LayoutGrid,
+            run: () => engine.canvas.resizeSlot(joined.id, 1, 1),
+          },
+        ]
+      : []),
     ...(choosesAccess
       ? [
           {
