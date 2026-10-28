@@ -70,6 +70,8 @@ export const schemas = {
         .regex(/^[^\p{Cc}\p{Cf}]+$/u),
       code: roomCode.optional(),
       color: participantColor.optional(),
+      /** Signed creator seat of this room, kept by the client (#226). */
+      credential: z.string().max(2048).optional(),
     })
     .strict(),
   role: z
@@ -193,6 +195,15 @@ export interface Snapshot {
   screenViewers?: Record<string, string[]>;
   maxParticipants: null;
   recommendedParticipants: number;
+}
+/**
+ * Reply to `join`. `credential` goes only to the creator; the server also sends
+ * it later in a `room-credential` event (null = forget the stored one).
+ */
+export interface JoinResult {
+  id: string;
+  snapshot: Snapshot;
+  credential?: string;
 }
 export interface Subscription {
   id: string;

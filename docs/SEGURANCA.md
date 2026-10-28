@@ -7,6 +7,13 @@ Essas medidas reduzem riscos; não constituem garantia de segurança.
   identidades de participantes. Tokens expiram e são renovados durante a sessão.
 - A sessão fica em `sessionStorage` da aba. Preferências ficam em `localStorage`.
   Não há conta, banco de dados, gravação ou histórico de conversas.
+- O criador recebe uma **credencial de cargo da sala** (#226): HMAC-SHA256 com prefixo
+  próprio (nunca vale como token de sessão), atrelada ao código da sala, com validade
+  de 30 dias, posição (`rank`), até 16 admins e as permissões. Fica em `localStorage`
+  (`vio:room-credentials`) e é reapresentada no `join`. Depois de um reinício, quem
+  chega primeiro sem credencial é criador provisório; a credencial de maior posição
+  recupera o cargo, os admins e as permissões. Transferir o cargo ou sair de propósito
+  invalida a credencial antiga; cair além da tolerância não. Nunca vai aos logs.
 - Nome, código, publicações e sinais têm schemas estritos e limites. Os nomes são
   renderizados pelo escaping do React; nunca por `dangerouslySetInnerHTML`.
 - Apenas membros da mesma sala podem assinar publicações e negociar. O servidor
