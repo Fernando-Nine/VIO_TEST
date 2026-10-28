@@ -14,6 +14,7 @@ import "./multiscreen.css";
 import "./preferences.css";
 import "./workspace.css";
 import "./share.css";
+import "./grid-tools.css";
 import { registerRoomTools } from "./webmcp";
 const root = createRoot(document.getElementById("root")!);
 const engine = new Controller(desktop ? windowsCapture : undefined);
