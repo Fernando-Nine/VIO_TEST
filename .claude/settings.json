@@ -1,8 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "mcp__Figma"
-    ]
+    "allow": ["mcp__Figma"]
   },
   "hooks": {
     "PreToolUse": [
