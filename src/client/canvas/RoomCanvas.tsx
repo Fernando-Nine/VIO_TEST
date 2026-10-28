@@ -31,6 +31,7 @@ import {
   Blocks,
   Columns3,
   LayoutGrid,
+  Focus,
   Maximize,
   Minimize,
   MonitorUp,
@@ -1295,12 +1296,21 @@ export function RoomCanvas(props: Props) {
             }}
           />
         )}
-        {state.single && (
-          <button className="text-button" onClick={() => store.toggleSingle()}>
-            <Columns3 size={16} />
-            <span>Voltar ao conjunto</span>
-          </button>
-        )}
+        {/* #228: one click fills the canvas with the focus; the layout is untouched. */}
+        <button
+          className="text-button single-toggle"
+          aria-pressed={state.single}
+          disabled={!state.single && !focusedWidgetId(state)}
+          title={
+            !state.single && !focusedWidgetId(state)
+              ? "Abra um widget para usar o Foco único."
+              : undefined
+          }
+          onClick={() => store.toggleSingle()}
+        >
+          {state.single ? <Columns3 size={16} /> : <Focus size={16} />}
+          <span>{state.single ? "Voltar ao conjunto" : "Foco único"}</span>
+        </button>
         <Notifications
           engine={engine}
           openWidget={(w) => openShared(w, true)}
