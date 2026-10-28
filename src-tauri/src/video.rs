@@ -237,19 +237,22 @@ impl NativeVideo {
                 }
                 unsafe { interop.CreateForMonitor(monitor) }.map_err(|_| gone())
             }
-            Target::Window { window, pid, started } => {
-                let window = HWND(*window as *mut _);
-                let mut current = 0u32;
-                unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
-                let alive = open_process(*pid).is_some_and(|p| {
-                    process_started(p.0) == *started && unsafe { WaitForSingleObject(p.0, 0) } == WAIT_TIMEOUT
-                });
-                if !unsafe { IsWindow(Some(window)) }.as_bool() || current != *pid || !alive {
-                    return Err(gone());
-                }
+            Target::Window { .. } => {
+                let window = self.window().ok_or_else(gone)?;
                 unsafe { interop.CreateForWindow(window) }.map_err(|_| gone())
             }
         }
+    }
+
+    /// The listed window, if it still belongs to the same running process.
+    fn window(&self) -> Option<HWND> {
+        let Target::Window { window, pid, started } = &self.target else { return None };
+        let window = HWND(*window as *mut _);
+        let mut current = 0u32;
+        unsafe { GetWindowThreadProcessId(window, Some(&mut current)) };
+        let alive = open_process(*pid)
+            .is_some_and(|p| process_started(p.0) == *started && unsafe { WaitForSingleObject(p.0, 0) } == WAIT_TIMEOUT);
+        (unsafe { IsWindow(Some(window)) }.as_bool() && current == *pid && alive).then_some(window)
     }
 }
 
@@ -591,6 +594,19 @@ impl VideoManager {
             }
             Target::Window { .. } => Ok(None),
         }
+    }
+
+    /// A window source GDI can draw (#247): Windows 10 windows go through PrintWindow,
+    /// since WGC there always draws the yellow border. `None` sends it to WGC: a screen,
+    /// Windows 11, or a window GDI sees as black (protected or exclusive fullscreen).
+    pub fn gdi_window(&self, id: &str) -> Result<Option<HWND>, String> {
+        let source = self.source(id)?;
+        if !matches!(source.target, Target::Window { .. }) || !crate::duplication::wanted() {
+            return Ok(None);
+        }
+        let window = source.window().ok_or("Esta janela não está mais disponível. Atualize a lista.")?;
+        // A minimized window has nothing to test yet; it starts drawing once restored.
+        Ok((source.minimized || self.gdi(&source).is_some()).then_some(window))
     }
 
     /// The capture item of a listed source; call inside an MTA [`Apartment`].

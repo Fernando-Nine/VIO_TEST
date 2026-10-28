@@ -26,7 +26,7 @@ use windows::{
                 CreateDXGIFactory1, IDXGIFactory1, IDXGIOutput1, IDXGIOutputDuplication, IDXGISurface1, DXGI_ERROR_ACCESS_LOST,
                 DXGI_ERROR_NOT_FOUND, DXGI_ERROR_WAIT_TIMEOUT, DXGI_OUTDUPL_FRAME_INFO,
             },
-            Gdi::{DeleteObject, HMONITOR},
+            Gdi::{DeleteObject, HDC, HMONITOR},
         },
         UI::WindowsAndMessaging::{DrawIconEx, GetCursorInfo, GetIconInfo, CURSORINFO, CURSOR_SHOWING, DI_NORMAL, HICON, ICONINFO},
     },
@@ -54,7 +54,7 @@ struct Surfaces {
     format: DXGI_FORMAT,
 }
 
-fn texture(pipeline: &Pipeline, width: u32, height: u32, format: DXGI_FORMAT, gdi: bool) -> Result<ID3D11Texture2D> {
+pub(crate) fn texture(pipeline: &Pipeline, width: u32, height: u32, format: DXGI_FORMAT, gdi: bool) -> Result<ID3D11Texture2D> {
     let desc = D3D11_TEXTURE2D_DESC {
         Width: width,
         Height: height,
@@ -76,6 +76,12 @@ fn texture(pipeline: &Pipeline, width: u32, height: u32, format: DXGI_FORMAT, gd
 fn draw_cursor(canvas: &ID3D11Texture2D, origin: POINT) -> Result<()> {
     let surface: IDXGISurface1 = canvas.cast()?;
     let dc = unsafe { surface.GetDC(false) }?;
+    cursor(dc, origin);
+    unsafe { surface.ReleaseDC(None) }
+}
+
+/// The pointer on `dc`, whose top-left sits at `origin` on the virtual desktop.
+pub(crate) fn cursor(dc: HDC, origin: POINT) {
     let mut info = CURSORINFO {
         cbSize: std::mem::size_of::<CURSORINFO>() as u32,
         ..Default::default()
@@ -98,7 +104,6 @@ fn draw_cursor(canvas: &ID3D11Texture2D, origin: POINT) -> Result<()> {
             let _ = DrawIconEx(dc, x, y, icon, 0, 0, 0, None, DI_NORMAL);
         }
     }
-    unsafe { surface.ReleaseDC(None) }
 }
 
 impl Duplicator {
