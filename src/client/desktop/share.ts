@@ -1,4 +1,5 @@
 import type { Quality } from "../../shared/protocol";
+import type { Slot } from "../media/capture";
 import type { Controller } from "../room/controller";
 import { nativeInvoke, type DesktopSource } from "./bridge";
 import { selectProcess, selectVideo } from "./capture";
@@ -19,6 +20,8 @@ export interface NativeShareRequest {
   audio: ShareAudio;
   /** Swap the source of the current share instead of starting a new one (#160). */
   replace?: boolean;
+  /** Which screen (#194): `engine.captures.nextScreen()` adds one; default the first. */
+  slot?: Slot;
 }
 
 /** Native rate at or above the requested one; the track caps the rest. */
@@ -28,7 +31,13 @@ export function captureRate(fps: number): 15 | 30 | 60 {
 
 export async function startNativeShare(
   engine: Controller,
-  { source, quality, audio, replace = false }: NativeShareRequest,
+  {
+    source,
+    quality,
+    audio,
+    replace = false,
+    slot = "screen",
+  }: NativeShareRequest,
 ) {
   if (audio === "app" && source.kind !== "window")
     throw new Error("Escolha uma janela para transmitir o som dela.");
@@ -45,6 +54,6 @@ export async function startNativeShare(
     height: quality.resolution,
     fps: captureRate(quality.fps),
   });
-  await engine.startScreen(Boolean(sound), replace);
-  await engine.quality(quality);
+  await engine.startScreen(Boolean(sound), replace, slot);
+  await engine.quality(quality, slot);
 }

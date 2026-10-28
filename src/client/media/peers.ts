@@ -4,7 +4,7 @@ import type {
   Subscription,
   VideoDemand,
 } from "../../shared/protocol";
-import type { Captures } from "./capture";
+import type { Captures, Slot } from "./capture";
 import { mediaDeadline } from "./deadline";
 import { videoEncoding } from "./video-quality";
 import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
@@ -113,7 +113,7 @@ export class Peers {
       return;
     }
     const outgoing = sub.publication.owner === this.me();
-    if (outgoing && !this.captures.sources.has(sub.publication.kind)) return;
+    if (outgoing && !this.captures.sourceFor(sub.publication)) return;
     const pendingDemand = this.pendingVideoDemand.get(sub.id);
     if (
       outgoing &&
@@ -198,17 +198,14 @@ export class Peers {
     };
     if (outgoing)
       await this.serial(peer, async () => {
+        const source = this.captures.sourceFor(sub.publication);
+        const slot = source && this.captures.slotOf(source);
         const stream =
           sub.tier === "preview"
-            ? await this.captures.previewStream()
-            : this.captures.sources.get(sub.publication.kind)?.stream;
+            ? slot && (await this.captures.previewStream(slot))
+            : source?.stream;
         if (this.entries.get(sub.id) !== peer) {
-          if (
-            ![...this.entries.values()].some(
-              (p) => p.outgoing && p.sub.tier === "preview",
-            )
-          )
-            this.captures.stopPreview();
+          this.releasePreviews();
           return;
         }
         if (!stream) throw new Error("A captura foi encerrada.");
@@ -355,14 +352,13 @@ export class Peers {
   async parameters(peer: Peer) {
     const sender = peer.videoSender;
     if (!sender) return;
-    const source = this.captures.sources
-      .get(peer.sub.publication.kind)
-      ?.stream.getVideoTracks()[0];
+    const local = this.captures.sourceFor(peer.sub.publication);
+    const source = local?.stream.getVideoTracks()[0];
     const demand = peer.sub.demand;
     const active = demand?.video !== "off";
     if (!sender.track && active && source) await sender.replaceTrack(source);
     const height = (sender.track || source)?.getSettings().height;
-    const quality = { ...this.captures.quality };
+    const quality = { ...this.captures.qualityOf(local) };
     if (
       demand &&
       peer.sub.tier === "main" &&
@@ -379,7 +375,8 @@ export class Peers {
             500,
             Math.round(
               quality.bitrate *
-                (quality.resolution / this.captures.quality.resolution),
+                (quality.resolution /
+                  this.captures.qualityOf(local).resolution),
             ),
           ),
         );
@@ -423,7 +420,7 @@ export class Peers {
         peer.sub.tier !== "preview"
       ) {
         await this.serial(peer, async () => {
-          const source = this.captures.sources.get(peer.sub.publication.kind);
+          const source = this.captures.sourceFor(peer.sub.publication);
           const senders = peer.pc.getSenders();
           for (const sender of senders) {
             const track = source?.stream
@@ -465,13 +462,19 @@ export class Peers {
       t.onunmute = null;
       t.stop();
     });
-    if (
-      ![...this.entries.values()].some(
-        (p) => p.outgoing && p.sub.tier === "preview",
-      )
-    )
-      this.captures.stopPreview();
+    this.releasePreviews();
     this.changed();
+  }
+  /** Each screen keeps its live thumbnail only while a preview peer sends it. */
+  private releasePreviews() {
+    const used = new Set<Slot>();
+    for (const p of this.entries.values())
+      if (p.outgoing && p.sub.tier === "preview") {
+        const source = this.captures.sourceFor(p.sub.publication);
+        const slot = source && this.captures.slotOf(source);
+        if (slot) used.add(slot);
+      }
+    this.captures.keepPreviews(used);
   }
   closePublication(id: string) {
     for (const peer of [...this.entries.values()])
@@ -489,8 +492,8 @@ export class Peers {
             peer.sub.publication.kind === "screen" &&
             peer.sub.tier === "main"
           ) {
-            const height = this.captures.sources
-              .get("screen")
+            const height = this.captures
+              .sourceFor(peer.sub.publication)
               ?.stream.getVideoTracks()[0]
               ?.getSettings().height;
             if (height !== peer.sourceHeight)
