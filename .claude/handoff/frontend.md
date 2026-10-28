@@ -1,6 +1,6 @@
 # Frontend — handoff
 
-Atualizado: 2026-10-28 (Frontend 12)
+Atualizado: 2026-10-28 (Frontend 13)
 
 ## Agora
 
@@ -8,6 +8,14 @@ Bloco do Frontend 12: #191 (rc.9), #221 (rc.10), #228 (rc.11), #222 (rc.12). Pen
 humano: aval do seletor no app Windows (miniaturas reais) e medir CPU 1080p60 (#192).
 
 ## Feito recentemente
+
+- #236 (PR #237, rc.15): Só som. Protocolo `publish.audioOnly` + `label` (servidor valida:
+  só `screen` com som; `label` só com `audioOnly`). Cliente: `soundOnly(source)` no
+  controller; nome via `CaptureAdapter.soundLabel` (desktop). Quem ouve:
+  `components/SoundSources.tsx` + `sound.css` (chip na barra, popover com volume, Silenciar,
+  Parar de ouvir); RoomCanvas não cria widget para som (`publications[].sound`,
+  `screenList` sem sons, `showPublication` só assiste). Pessoas/PeoplePanel/PersonMenu,
+  aviso/sino, Ao vivo, Minha transmissão (`SoundPreview`) e "Parar som" no rodapé.
 
 - #191 (PR #225, rc.9): `components/ShareDialog.tsx` + `share.css` + `share-options.ts`
   (`vio:share`). App com #192: `listVideoSources`/`videoThumbnail`/`startNativeShare`; navegador

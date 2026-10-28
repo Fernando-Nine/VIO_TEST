@@ -175,6 +175,10 @@ export default function App({ engine }: { engine: Controller }) {
   const people = view.snapshot?.participants || [];
   const all = people.flatMap((m) => m.publications);
   const screens = all.filter((p) => p.kind === "screen");
+  // Sounds without an image (#236) have their own chip, never the screen volume.
+  const fullscreenScreen = [view.selected, ...view.watching].find(
+    (id) => id && !engine.screenInfo(id)?.publication.audioOnly,
+  );
   const watching = view.watching.length > 0;
   const available = screens.filter((p) => !view.watching.includes(p.id));
   const availableKey = available.map((p) => p.id).join(",");
@@ -184,6 +188,11 @@ export default function App({ engine }: { engine: Controller }) {
   // Up to MAX_SCREENS shares at once (#194).
   const sharing = engine.captures.screens;
   const hasScreen = sharing.length > 0;
+  // A lone sound without an image (#236) is not a screen to the person sharing.
+  const stopOne =
+    sharing.length === 1 && engine.publications.get(sharing[0].slot)?.audioOnly
+      ? "Parar som"
+      : "Parar tela";
   const moreScreens = !!engine.captures.nextScreen();
   const hasVoice = engine.captures.sources.has("voice");
   const hasCamera = engine.captures.sources.has("camera");
@@ -595,7 +604,7 @@ export default function App({ engine }: { engine: Controller }) {
                         sharing.length > 1
                           ? `Parar as ${sharing.length} telas`
                           : hasScreen
-                            ? "Parar tela"
+                            ? stopOne
                             : "Compartilhar"
                       }
                       disabled={(!canShare || !!screenBlocked) && !hasScreen}
@@ -618,7 +627,7 @@ export default function App({ engine }: { engine: Controller }) {
                           {sharing.length > 1
                             ? `Parar telas (${sharing.length})`
                             : hasScreen
-                              ? "Parar tela"
+                              ? stopOne
                               : "Compartilhar"}
                         </b>
                         <b className="dock-narrow">Tela</b>
@@ -651,11 +660,8 @@ export default function App({ engine }: { engine: Controller }) {
                         <span>Flutuante</span>
                       </button>
                     )}
-                    {full && (view.selected || view.watching[0]) && (
-                      <FullscreenVolume
-                        engine={engine}
-                        id={view.selected || view.watching[0]}
-                      />
+                    {full && fullscreenScreen && (
+                      <FullscreenVolume engine={engine} id={fullscreenScreen} />
                     )}
                     {full && (
                       <button

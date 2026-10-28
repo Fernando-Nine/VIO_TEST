@@ -79,13 +79,20 @@ export function Notifications({
   for (const event of screenEvents)
     items.push({
       id: `screen:${event.id}`,
-      text: `${event.name} começou a transmitir`,
+      text: event.sound
+        ? `${event.name} começou a transmitir o som de ${event.sound}`
+        : `${event.name} começou a transmitir`,
       read: event.read,
       time: event.at,
       actions:
         live.has(event.publicationId) &&
         !engine.view.watching.includes(event.publicationId)
-          ? [{ label: "Assistir", run: () => openScreen(event.publicationId) }]
+          ? [
+              {
+                label: event.sound ? "Ouvir" : "Assistir",
+                run: () => openScreen(event.publicationId),
+              },
+            ]
           : [],
     });
   for (const event of closeEvents)
