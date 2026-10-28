@@ -19,7 +19,13 @@ import type {
   Tier,
   VideoDemand,
 } from "../../shared/protocol";
-import { Captures, mediaError, type CaptureAdapter } from "../media/capture";
+import {
+  Captures,
+  mediaError,
+  slotKind,
+  type CaptureAdapter,
+  type Slot,
+} from "../media/capture";
 import { Peers } from "../media/peers";
 import { SoundCues } from "../media/sounds";
 import {
@@ -92,7 +98,7 @@ export class Controller {
     this.savePreferences();
   });
   private unwatchOutput?: () => void;
-  publications = new Map<Kind, Publication>();
+  publications = new Map<Slot, Publication>();
   visiblePreviews = new Set<string>();
   private listeners = new Set<() => void>();
   private session?: { token: string; id: string; expiresAt: number };
@@ -803,7 +809,8 @@ export class Controller {
     this.captures.micMuted = true;
     if (this.captures.sources.has("voice")) this.captures.stop("voice");
   }
-  private async syncCapture(kind: Kind, ended = false) {
+  private async syncCapture(slot: Slot, ended = false) {
+    const kind = slotKind(slot);
     if (this.view.status !== "connected") return;
     if (
       kind === "voice" &&
@@ -814,16 +821,16 @@ export class Controller {
       this.releaseBlockedVoice();
       return;
     }
-    if (kind !== "screen" && !this.inCall && this.captures.sources.has(kind)) {
-      this.captures.stop(kind);
+    if (kind !== "screen" && !this.inCall && this.captures.sources.has(slot)) {
+      this.captures.stop(slot);
       return;
     }
     const generation = this.generation;
-    const source = this.captures.sources.get(kind);
-    const previous = this.publications.get(kind);
+    const source = this.captures.sources.get(slot);
+    const previous = this.publications.get(slot);
     if (!source || ended) {
       if (previous) {
-        this.publications.delete(kind);
+        this.publications.delete(slot);
         this.peers.closePublication(previous.id);
         await this.request("unpublish", { publicationId: previous.id }).catch(
           () => {},
@@ -876,18 +883,24 @@ export class Controller {
         muted,
       });
     } catch (e) {
+      // Past MAX_SCREENS the capture would only burn CPU: let it go (#194).
+      if (recoveryCode(e) === "SCREEN_LIMIT") {
+        if (this.captures.sources.get(slot) === source)
+          this.captures.stop(slot);
+        throw e;
+      }
       // Blocked before our snapshot said so: same outcome, no error loop.
       if (recoveryCode(e) !== "VOICE_BLOCKED") throw e;
-      if (this.captures.sources.get(kind) === source)
+      if (this.captures.sources.get(slot) === source)
         this.releaseBlockedVoice();
       return;
     }
     if (
       generation !== this.generation ||
-      this.captures.sources.get(kind) !== source
+      this.captures.sources.get(slot) !== source
     )
       return;
-    this.publications.set(kind, publication);
+    this.publications.set(slot, publication);
     await this.peers.update(kind);
     if (!previous && kind === "screen") this.chime(true);
     this.bump();
@@ -1212,19 +1225,22 @@ export class Controller {
       if (this.reconciling === generation) this.reconciling = undefined;
     }
   }
-  /** `replace` swaps what is shared without ending the publication viewers watch. */
-  async startScreen(audio: boolean, replace = false) {
+  /**
+   * `replace` swaps what is shared without ending the publication viewers watch.
+   * Another screen (#194): `startScreen(audio, false, engine.captures.nextScreen())`.
+   */
+  async startScreen(audio: boolean, replace = false, slot: Slot = "screen") {
     const generation = this.generation;
     if (this.sounds) this.cues.unlock();
     try {
-      await this.captures.startScreen(audio, replace);
+      await this.captures.startScreen(audio, replace, slot);
       await this.captureQueue;
     } catch (e) {
       if (generation === this.generation) this.fail(e);
     }
   }
-  setScreenAudioMuted(muted: boolean) {
-    this.captures.setScreenAudioMuted(muted);
+  setScreenAudioMuted(muted: boolean, slot: Slot = "screen") {
+    this.captures.setScreenAudioMuted(muted, slot);
     this.bump();
   }
   async microphone() {
@@ -1278,12 +1294,12 @@ export class Controller {
       if (generation === this.callGeneration) this.cameraPending = false;
     }
   }
-  async stop(kind: Kind) {
-    this.captures.stop(kind);
+  async stop(slot: Slot) {
+    this.captures.stop(slot);
     await this.captureQueue;
   }
-  async quality(q: typeof this.captures.quality) {
-    await this.captures.applyQuality(q);
+  async quality(q: typeof this.captures.quality, slot: Slot = "screen") {
+    await this.captures.applyQuality(q, slot);
     await this.peers.update("screen");
     this.bump();
   }

@@ -2,6 +2,8 @@ import { z } from "zod";
 import { widgetSchemas, type SharedWidget, type RoomNotice } from "./widgets";
 export const kinds = ["screen", "voice", "camera"] as const;
 export type Kind = (typeof kinds)[number];
+/** Screens one person may share at once (#194); the desktop app captures as many. */
+export const MAX_SCREENS = 3;
 export type Tier = "main" | "preview";
 export const uuid = z.string().uuid();
 export const participantColor = z
