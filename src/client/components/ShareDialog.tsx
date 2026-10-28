@@ -255,8 +255,12 @@ export function ShareDialog({
         } catch {
           url = null;
         }
+        // A thumbnail that lands after the picker moved on is dropped at once.
+        if (cancelled) {
+          if (url) URL.revokeObjectURL(url);
+          return;
+        }
         if (url) created.push(url);
-        if (cancelled) return;
         const id = source.id;
         setThumbs((current) => ({ ...current, [id]: url }));
       }
