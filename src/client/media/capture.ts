@@ -32,6 +32,8 @@ export interface CaptureAdapter {
   device(constraints: MediaStreamConstraints): Promise<MediaStream>;
   stopScreen?(slot: Slot): void;
   screenAudioMessage?(): string;
+  /** Program name of a sound shared without an image (#236). */
+  soundLabel?(slot: Slot): string | undefined;
 }
 /** Picker hint and size ceiling chosen in the share dialog (#191). */
 let displayVideo: MediaTrackConstraints | true = true;
@@ -80,6 +82,8 @@ export interface LocalSource {
   stream: MediaStream;
   /** Extra screens only; the first follows `Captures.quality`. */
   quality?: Quality;
+  /** Screen slot with sound and no image (#236): the program it comes from. */
+  label?: string;
 }
 export class Captures {
   get canShare() {
@@ -263,6 +267,8 @@ export class Captures {
     if (this.adapter.screenAudioMessage)
       this.audioMessage = this.adapter.screenAudioMessage();
     const source = this.save(slot, stream);
+    if (!stream.getVideoTracks().length)
+      source.label = this.adapter.soundLabel?.(slot);
     await this.applyQuality(this.qualityOf(source), slot);
   }
   async startVoice() {

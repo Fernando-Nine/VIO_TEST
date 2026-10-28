@@ -12,9 +12,11 @@ import {
   Video,
   Volume2,
   VolumeX,
+  Music,
 } from "lucide-react";
 import { canManageRoom } from "../../shared/permissions";
 import type { Participant } from "../../shared/protocol";
+import { soundName } from "./SoundSources";
 import type { Controller } from "../room/controller";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { Dialog } from "./Dialog";
@@ -76,13 +78,23 @@ export function usePersonMenu(
     const watch: MenuItem[] = [];
     const voice: MenuItem[] = [];
     const room: MenuItem[] = [];
-    const screen = person.publications.find((p) => p.kind === "screen");
-    if (screen && !engine.view.watching.includes(screen.id))
-      watch.push({
-        label: "Assistir a tela",
-        icon: Eye,
-        run: () => engine.watch(screen.id, true),
-      });
+    for (const share of person.publications) {
+      if (share.kind !== "screen" || engine.view.watching.includes(share.id))
+        continue;
+      // One "Assistir" for the screens; each sound (#236) is listened to apart.
+      if (share.audioOnly)
+        watch.push({
+          label: `Ouvir ${soundName(share.label)}`,
+          icon: Music,
+          run: () => engine.watch(share.id, true, true),
+        });
+      else if (!watch.some((item) => item.icon === Eye))
+        watch.push({
+          label: "Assistir a tela",
+          icon: Eye,
+          run: () => engine.watch(share.id, true),
+        });
+    }
     if (
       engine.cameraRequest &&
       person.publications.some((p) => p.kind === "camera")

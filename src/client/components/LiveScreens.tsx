@@ -1,8 +1,14 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Radio } from "lucide-react";
+import { Music, Radio } from "lucide-react";
 import { AnchoredPopover } from "./AnchoredPopover";
 
-export type LiveScreen = { id: string; title: string; watching: boolean };
+export type LiveScreen = {
+  id: string;
+  title: string;
+  watching: boolean;
+  /** Sound without an image (#236): its program name. */
+  sound?: string;
+};
 /** Someone started a screen: a toast at the top, then kept in the bell. */
 export type ScreenEvent = {
   id: string;
@@ -10,6 +16,7 @@ export type ScreenEvent = {
   name: string;
   at: number;
   read: boolean;
+  sound?: string;
 };
 
 /** Discreet toolbar icon that exists only while other people are streaming. */
@@ -35,7 +42,7 @@ export function LiveScreens({
   const label =
     screens.length === 1
       ? `${screens[0].title} ao vivo`
-      : `${screens.length} telas ao vivo`;
+      : `${screens.length} transmissões ao vivo`;
   return (
     <div
       className="live-screens"
@@ -60,7 +67,7 @@ export function LiveScreens({
         <AnchoredPopover
           anchor={anchor}
           id={id}
-          label="Telas ao vivo"
+          label="Transmissões ao vivo"
           className="live-screens-panel"
           close={() => setOpen(false)}
           onPointerEnter={() => clearTimeout(timer.current)}
@@ -69,10 +76,28 @@ export function LiveScreens({
           <ul>
             {screens.map((screen) => (
               <li key={screen.id}>
-                <i className="live-pulse" aria-hidden="true" />
-                <span title={screen.title}>{screen.title}</span>
+                {screen.sound ? (
+                  <Music className="live-sound" size={14} aria-label="Só som" />
+                ) : (
+                  <i className="live-pulse" aria-hidden="true" />
+                )}
+                <span
+                  title={
+                    screen.sound
+                      ? `${screen.sound} · ${screen.title}`
+                      : screen.title
+                  }
+                >
+                  {screen.sound ? (
+                    <>
+                      {screen.sound} <small>de {screen.title}</small>
+                    </>
+                  ) : (
+                    screen.title
+                  )}
+                </span>
                 {screen.watching ? (
-                  <small>Assistindo</small>
+                  <small>{screen.sound ? "Ouvindo" : "Assistindo"}</small>
                 ) : (
                   <button
                     className="secondary"
@@ -81,7 +106,7 @@ export function LiveScreens({
                       setOpen(false);
                     }}
                   >
-                    Assistir
+                    {screen.sound ? "Ouvir" : "Assistir"}
                   </button>
                 )}
               </li>

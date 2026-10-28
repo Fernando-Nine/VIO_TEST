@@ -1,5 +1,5 @@
 import { useCallback, useRef, type PointerEvent } from "react";
-import { MicOff, Monitor, Video } from "lucide-react";
+import { MicOff, Monitor, Music, Video } from "lucide-react";
 import type { Participant } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import { useSpeaking } from "../components/Media";
@@ -53,7 +53,10 @@ function Bubble({
 }) {
   const own = person.id === engine.view.id;
   const voice = person.publications.find((p) => p.kind === "voice");
-  const sharing = person.publications.some((p) => p.kind === "screen");
+  const shares = person.publications.filter((p) => p.kind === "screen");
+  const sharing = shares.some((p) => !p.audioOnly);
+  // Only sound without an image (#236): a note instead of the screen badge.
+  const sound = !sharing && shares.length > 0;
   const camera = person.publications.some((p) => p.kind === "camera");
   const stream = voice
     ? own
@@ -83,6 +86,13 @@ function Bubble({
             className="bubble-badge is-sharing"
             role="img"
             aria-label="Transmitindo"
+          />
+        )}
+        {sound && (
+          <Music
+            className="bubble-badge is-sharing"
+            role="img"
+            aria-label="Transmitindo som"
           />
         )}
         {micOff && (

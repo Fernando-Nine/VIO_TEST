@@ -17,6 +17,7 @@ let video: { source: VideoSource; options: NativeVideoOptions } | undefined;
 const active = new Map<Slot, { stop: () => void }>();
 const pending = new Map<Slot, { stop: () => void }>();
 let soundOnly = false;
+const soundLabels = new Map<Slot, string>();
 let description = "";
 // A replacement frees its sound before taking it again (same app, #229).
 let released: Promise<unknown> = Promise.resolve();
@@ -42,6 +43,7 @@ export const windowsCapture: CaptureAdapter = {
     active.get(slot)?.stop();
   },
   screenAudioMessage: () => description,
+  soundLabel: (slot) => soundLabels.get(slot),
   async screen(audio, slot) {
     // A replacement keeps the current share until the new image is chosen (#160).
     pending.get(slot)?.stop();
@@ -162,7 +164,13 @@ export const windowsCapture: CaptureAdapter = {
           );
         const track = destination.stream.getAudioTracks()[0];
         stream.addTrack(track);
-        if (silent) track.addEventListener("ended", stop, { once: true });
+        if (silent) {
+          track.addEventListener("ended", stop, { once: true });
+          soundLabels.set(
+            slot,
+            source.system ? "Som do computador" : source.title,
+          );
+        } else soundLabels.delete(slot);
         description = source.system
           ? "Todo o som do computador via WASAPI, sem as vozes da chamada."
           : `Áudio de ${source.title} via WASAPI, incluindo os processos filhos desse aplicativo.`;

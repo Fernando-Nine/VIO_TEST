@@ -331,3 +331,31 @@
     order: -1;
   }
 }
+
+/* #236: sound only, no image to preview. */
+.stream-preview.is-sound {
+  background: #121528;
+}
+.stream-sound {
+  height: 100%;
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 28px 12px 12px;
+  color: #9bb0ff;
+}
+.stream-sound strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f1f2fa;
+  font-size: 14px;
+}
+.my-stream.is-strip .stream-sound {
+  flex-direction: row;
+  padding: 8px 12px 28px;
+}

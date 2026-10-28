@@ -46,6 +46,7 @@ import type { SharedWidget } from "../../shared/widgets";
 import { closedWidgetHold, contentKind } from "../../shared/widgets";
 import { Dialog } from "../components/Dialog";
 import { ScreenAudio } from "../components/ScreenAudio";
+import { SoundSources, soundName } from "../components/SoundSources";
 import type { Controller } from "../room/controller";
 import { reducedMotion } from "../components/motion";
 import { freshKey } from "../id";
@@ -456,9 +457,21 @@ export function RoomCanvas(props: Props) {
           id: pub.id,
           title: p.name,
           own: p.id === engine.view.id,
+          // Sound without an image (#236): listened to, never a tile.
+          sound: pub.audioOnly ? soundName(pub.label) : undefined,
         })),
     ) || [];
-  const publicationsKey = publications.map((p) => p.id).join("|");
+  const publicationsKey = publications
+    .map((p) => `${p.id}:${p.sound ?? ""}`)
+    .join("|");
+  const screenList = publications
+    .filter((p) => !p.sound)
+    .map((p) => ({
+      id: p.id,
+      name: p.title,
+      own: p.own,
+      watching: engine.view.watching.includes(p.id),
+    }));
   const liveScreens = publications
     .filter((p) => !p.own)
     .map((p) => ({ ...p, watching: engine.view.watching.includes(p.id) }));
@@ -637,14 +650,19 @@ export function RoomCanvas(props: Props) {
       epoch.current = snapshot?.epoch;
     }
     const current = store.getSnapshot();
+    const sounds = new Set(
+      publications.filter((p) => p.sound).map((p) => p.id),
+    );
     for (const widget of current.widgets) {
       if (
         widget.type === "screen" &&
-        !engine.view.watching.includes(widget.config.publicationId)
+        (!engine.view.watching.includes(widget.config.publicationId) ||
+          sounds.has(widget.config.publicationId))
       )
         store.remove(widget.id);
     }
     for (const id of engine.view.watching) {
+      if (sounds.has(id)) continue;
       if (!store.getSnapshot().widgets.some((w) => w.id === `screen:${id}`)) {
         store.decline(id);
         store.add(screenWidget(id));
@@ -666,6 +684,7 @@ export function RoomCanvas(props: Props) {
           name: publication.title,
           at: Date.now(),
           read: false,
+          sound: publication.sound,
         };
         setScreenEvents((events) => [...events, event].slice(-30));
         if (!engine.balloons.screens) continue;
@@ -674,15 +693,22 @@ export function RoomCanvas(props: Props) {
           id: `screen:${event.id}`,
           kind: "important",
           avatar: event.name,
-          label: `${event.name} começou a transmitir`,
-          text: (
+          label: publication.sound
+            ? `${event.name} começou a transmitir o som de ${publication.sound}`
+            : `${event.name} começou a transmitir`,
+          text: publication.sound ? (
+            <>
+              <strong>{event.name}</strong> começou a transmitir o som de{" "}
+              {publication.sound}.
+            </>
+          ) : (
             <>
               <strong>{event.name}</strong> começou a transmitir.
             </>
           ),
           duration: 6000,
           action: {
-            label: "Assistir",
+            label: publication.sound ? "Ouvir" : "Assistir",
             run: () => {
               setScreenEvents((events) =>
                 events.map((e) =>
@@ -940,6 +966,11 @@ export function RoomCanvas(props: Props) {
     return () => window.removeEventListener("keydown", key);
   }, [picking]);
   function showPublication(id: string) {
+    if (engine.screenInfo(id)?.publication.audioOnly) {
+      engine.watch(id, true, true);
+      closeCatalog();
+      return;
+    }
     const existing = store
       .getSnapshot()
       .widgets.find((w) => w.id === `screen:${id}`);
@@ -1082,12 +1113,7 @@ export function RoomCanvas(props: Props) {
           chatAllowed={canManageRoom(snapshot, engine.view.id)}
           add={(type, scope) => void addWidget(type, scope)}
           close={() => setSlotCatalog(null)}
-          screens={publications.map((p) => ({
-            id: p.id,
-            name: p.title,
-            own: p.own,
-            watching: engine.view.watching.includes(p.id),
-          }))}
+          screens={screenList}
           showScreen={showPublication}
         />
       ) : undefined,
@@ -1320,6 +1346,7 @@ export function RoomCanvas(props: Props) {
           closedIds={closedIds}
           onOpenChange={setNotificationsOpen}
         />
+        <SoundSources engine={engine} />
         <LiveScreens screens={liveScreens} watch={showPublication} />
         <button
           className="icon-button canvas-fullscreen"
@@ -1961,12 +1988,7 @@ export function RoomCanvas(props: Props) {
             chatAllowed={canManageRoom(snapshot, engine.view.id)}
             add={(type, scope) => void addWidget(type, scope)}
             close={() => setCatalog(null)}
-            screens={publications.map((p) => ({
-              id: p.id,
-              name: p.title,
-              own: p.own,
-              watching: engine.view.watching.includes(p.id),
-            }))}
+            screens={screenList}
             showScreen={showPublication}
             notShown={
               notShown.length > 0 && (

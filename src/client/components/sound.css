@@ -1,0 +1,124 @@
+/* #236: sounds shared without an image, as toolbar chips. */
+.sound-sources {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.canvas-toolbar .sound-chip-trigger {
+  max-width: 168px;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #343951;
+  padding: 4px 10px 4px 8px;
+  min-height: 30px;
+  color: #d6daf2;
+}
+.sound-chip.is-playing .sound-chip-trigger {
+  border-color: #4b5a9c;
+}
+.sound-chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sound-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.sound-bars b {
+  width: 2px;
+  height: 3px;
+  border-radius: 1px;
+  background: #6b7099;
+}
+.is-playing .sound-bars b {
+  background: #9bb0ff;
+  animation: sound-bar 900ms ease-in-out infinite alternate;
+}
+.is-playing .sound-bars b:nth-child(2) {
+  animation-delay: -300ms;
+}
+.is-playing .sound-bars b:nth-child(3) {
+  animation-delay: -600ms;
+}
+@keyframes sound-bar {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-playing .sound-bars b {
+    animation: none;
+    height: 8px;
+  }
+}
+.sound-panel {
+  width: min(260px, calc(100vw - 24px));
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #454b6c;
+  border-radius: 14px;
+  background: #151722;
+  color: #f1f2fa;
+  box-shadow: 0 12px 40px #0008;
+}
+.sound-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #9bb0ff;
+}
+.sound-panel-head > span {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.sound-panel-head strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f1f2fa;
+  font-size: 14px;
+}
+.sound-panel-head small {
+  color: #a3a7c2;
+  font-size: 12px;
+}
+.sound-panel-volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sound-panel-volume .volume-slider {
+  flex: 1;
+}
+.sound-panel-stop {
+  justify-self: start;
+  gap: 6px;
+  color: #ffb3bd;
+}
+@media (max-width: 679px) {
+  .canvas-toolbar .sound-chip-trigger {
+    max-width: 44px;
+    padding: 4px 8px;
+  }
+  .sound-chip-name {
+    display: none;
+  }
+}
+.live-screens-panel .live-sound {
+  flex-shrink: 0;
+  color: #9bb0ff;
+}

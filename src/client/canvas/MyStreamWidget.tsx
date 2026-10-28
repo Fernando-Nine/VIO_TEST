@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Eye,
   MonitorUp,
+  Music,
   Pause,
   Play,
   RefreshCw,
@@ -16,7 +17,8 @@ import type { Controller } from "../room/controller";
 import type { PeerInfo } from "../media/peers";
 import type { Slot } from "../media/capture";
 import type { MenuItem } from "../components/ContextMenu";
-import { Media } from "../components/Media";
+import { Media, useSpeaking } from "../components/Media";
+import { soundName } from "../components/SoundSources";
 import { participantStyle } from "../components/participant-style";
 import { HeaderTools, useMenuItems } from "./header-tools";
 import type { WidgetProps } from "./widgets";
@@ -72,28 +74,40 @@ export function streamActions(
   if (!publication) return [];
   const paused = streamPaused(engine, slot);
   const silenced = engine.captures.isScreenAudioMuted(slot);
+  // Sound only (#236): no image to pause, and the dialog swaps only screens.
+  const sound = !!publication.audioOnly;
   return [
-    {
-      label: paused ? "Continuar" : "Pausar",
-      icon: paused ? Play : Pause,
-      run: () => setStreamPaused(engine, !paused, video, slot),
-    },
+    ...(sound
+      ? []
+      : [
+          {
+            label: paused ? "Continuar" : "Pausar",
+            icon: paused ? Play : Pause,
+            run: () => setStreamPaused(engine, !paused, video, slot),
+          },
+        ]),
     ...(publication.audio
       ? [
           {
             label: silenced ? "Ativar o som" : "Silenciar o som",
             icon: VolumeX,
             active: silenced,
-            hint: "Quem assiste vê a tela, sem som.",
+            hint: sound
+              ? "Quem ouve fica sem som até você ativar."
+              : "Quem assiste vê a tela, sem som.",
             run: () => engine.setScreenAudioMuted(!silenced, slot),
           },
         ]
       : []),
-    {
-      label: "Trocar o que transmito",
-      icon: RefreshCw,
-      run: () => replaceShare(slot),
-    },
+    ...(sound
+      ? []
+      : [
+          {
+            label: "Trocar o que transmito",
+            icon: RefreshCw,
+            run: () => replaceShare(slot),
+          },
+        ]),
     // Up to MAX_SCREENS at once (#194).
     ...(share && engine.captures.nextScreen()
       ? [{ label: "Compartilhar outra tela", icon: MonitorUp, run: share }]
@@ -245,6 +259,7 @@ export function MyStreamWidget({
     );
 
   const strip = height < 170;
+  const sound = !!current.audioOnly;
   const resolution = track?.getSettings().height;
   const source = surfaceLabel(track);
   const quality = engine.captures.qualityOf(
@@ -256,12 +271,16 @@ export function MyStreamWidget({
       value: numbers.bitrate === undefined ? "—" : mbps(numbers.bitrate),
       unit: "Mbps",
     },
-    {
-      label: "Quadros",
-      value: numbers.fps ?? "—",
-      unit: "fps",
-      extra: resolution ? `${resolution}p` : undefined,
-    },
+    ...(sound
+      ? []
+      : [
+          {
+            label: "Quadros",
+            value: numbers.fps ?? "—",
+            unit: "fps",
+            extra: resolution ? `${resolution}p` : undefined,
+          },
+        ]),
     {
       label: "Ping",
       value: numbers.rtt === undefined ? "—" : Math.round(numbers.rtt),
@@ -303,14 +322,22 @@ export function MyStreamWidget({
           </span>
         </HeaderTools>
       )}
-      <div className="stream-preview">
-        <Media
-          stream={stream}
-          videoRef={video}
-          label="Prévia da sua transmissão"
-          className="stream-video"
-          muted
-        />
+      <div className={`stream-preview ${sound ? "is-sound" : ""}`}>
+        {sound ? (
+          <SoundPreview
+            stream={stream}
+            name={soundName(current.label)}
+            silent={silenced}
+          />
+        ) : (
+          <Media
+            stream={stream}
+            videoRef={video}
+            label="Prévia da sua transmissão"
+            className="stream-video"
+            muted
+          />
+        )}
         <span className={`stream-live ${paused ? "is-paused" : ""}`}>
           {!paused && <i className="live-pulse" />}
           {paused ? "Pausado" : "AO VIVO"}
@@ -321,7 +348,8 @@ export function MyStreamWidget({
         {source && !strip && <span className="stream-source">{source}</span>}
         {strip && (
           <span className="stream-overlay stream-mono">
-            <Eye size={12} aria-label="Assistindo" /> {viewers.length}
+            <Eye size={12} aria-label={sound ? "Ouvindo" : "Assistindo"} />{" "}
+            {viewers.length}
             {numbers.bitrate !== undefined &&
               ` · ${mbps(numbers.bitrate)} Mbps`}
             {numbers.fps !== undefined && ` · ${numbers.fps} fps`}
@@ -353,7 +381,10 @@ export function MyStreamWidget({
             })}
           </div>
           <div className="stream-side">
-            <section className="stream-audience" aria-label="Quem assiste">
+            <section
+              className="stream-audience"
+              aria-label={sound ? "Quem ouve" : "Quem assiste"}
+            >
               <p className="stream-count">
                 {!!viewers.length && (
                   <span className="stream-stack" aria-hidden="true">
@@ -369,8 +400,10 @@ export function MyStreamWidget({
                   </span>
                 )}
                 {viewers.length
-                  ? `${viewers.length} assistindo`
-                  : "Ninguém assistindo"}
+                  ? `${viewers.length} ${sound ? "ouvindo" : "assistindo"}`
+                  : sound
+                    ? "Ninguém ouvindo"
+                    : "Ninguém assistindo"}
               </p>
               {!!viewers.length && (
                 <ul className="stream-viewers">
@@ -403,7 +436,7 @@ export function MyStreamWidget({
               ))}
             </dl>
             <Chart samples={history} />
-            {local && (
+            {local && !sound && (
               <div className="stream-quality-pick" aria-label="Qualidade">
                 <select
                   aria-label="Resolução"
@@ -440,6 +473,30 @@ export function MyStreamWidget({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** Sound only (#236): the program and a live level instead of a black frame. */
+function SoundPreview({
+  stream,
+  name,
+  silent,
+}: {
+  stream?: MediaStream;
+  name: string;
+  silent: boolean;
+}) {
+  const playing = useSpeaking(stream, silent);
+  return (
+    <div className={`stream-sound ${playing ? "is-playing" : ""}`}>
+      <Music size={22} aria-hidden="true" />
+      <strong title={name}>{name}</strong>
+      <i className="sound-bars" aria-hidden="true">
+        <b />
+        <b />
+        <b />
+      </i>
     </div>
   );
 }

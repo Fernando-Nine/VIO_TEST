@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   VolumeX,
   ShieldCheck,
+  Music,
 } from "lucide-react";
 import {
   canManageRoom,
@@ -40,7 +41,8 @@ function PersonRow({
 }) {
   const own = person.id === engine.view.id;
   const voice = person.publications.find((p) => p.kind === "voice");
-  const screen = person.publications.find((p) => p.kind === "screen");
+  const shares = person.publications.filter((p) => p.kind === "screen");
+  const screen = shares.find((p) => !p.audioOnly) || shares[0];
   const stream = voice
     ? own
       ? engine.captures.sources.get("voice")?.stream
@@ -112,14 +114,22 @@ function PersonRow({
         )}
       </span>
       <span className="person-state">
-        {screen && (
-          <Monitor
-            size={16}
-            className="is-sharing"
-            role="img"
-            aria-label="Transmitindo"
-          />
-        )}
+        {screen &&
+          (screen.audioOnly ? (
+            <Music
+              size={16}
+              className="is-sharing"
+              role="img"
+              aria-label="Transmitindo som"
+            />
+          ) : (
+            <Monitor
+              size={16}
+              className="is-sharing"
+              role="img"
+              aria-label="Transmitindo"
+            />
+          ))}
         {silenced && (
           <VolumeX
             size={16}

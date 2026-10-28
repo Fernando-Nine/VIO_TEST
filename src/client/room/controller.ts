@@ -24,6 +24,7 @@ import {
   mediaError,
   slotKind,
   type CaptureAdapter,
+  type LocalSource,
   type Slot,
 } from "../media/capture";
 import { Peers } from "../media/peers";
@@ -59,6 +60,20 @@ export interface View {
   signalingPing?: number;
 }
 const cameraOff: VideoDemand = { video: "off", height: 120 };
+/** A screen slot with sound and no image is published as a named sound (#236). */
+function soundOnly({ kind, stream, label }: LocalSource) {
+  if (
+    kind !== "screen" ||
+    stream.getVideoTracks().length ||
+    !stream.getAudioTracks().length
+  )
+    return {};
+  const name = label
+    ?.replace(/[\p{Cc}\p{Cf}]/gu, "")
+    .trim()
+    .slice(0, 60);
+  return { audioOnly: true, ...(name && { label: name }) };
+}
 export class Controller {
   view: View = {
     revision: 0,
@@ -858,6 +873,7 @@ export class Controller {
           kind,
           key: source.key,
           audio,
+          ...soundOnly(source),
           // Screen "muted" is the paused video, which the replacement keeps.
           muted:
             kind === "screen"
@@ -865,6 +881,8 @@ export class Controller {
               : previous.muted,
         });
         previous.audio = updated.audio;
+        previous.audioOnly = updated.audioOnly;
+        previous.label = updated.label;
       }
       if (previous.muted !== muted) {
         await this.request("state", { publicationId: previous.id, muted });
@@ -880,6 +898,7 @@ export class Controller {
         kind,
         key: source.key,
         audio: source.stream.getAudioTracks().length > 0,
+        ...soundOnly(source),
         muted,
       });
     } catch (e) {

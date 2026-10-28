@@ -91,6 +91,15 @@ export const schemas = {
       key: uuid,
       audio: z.boolean(),
       muted: z.boolean(),
+      /** A screen slot carrying only a program's sound (#236), named by it. */
+      audioOnly: z.boolean().optional(),
+      label: z
+        .string()
+        .trim()
+        .min(1)
+        .max(60)
+        .regex(/^[^\p{Cc}\p{Cf}]+$/u)
+        .optional(),
     })
     .strict(),
   unpublish: z.object({ publicationId: z.string().max(80) }).strict(),
@@ -150,6 +159,10 @@ export interface Publication {
   key: string;
   audio: boolean;
   muted: boolean;
+  /** Sound without an image (#236): shown as a compact sound source. */
+  audioOnly?: boolean;
+  /** The program whose sound is shared; only with `audioOnly`. */
+  label?: string;
 }
 export interface Participant {
   id: string;

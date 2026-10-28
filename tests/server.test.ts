@@ -282,6 +282,51 @@ test("até três telas por pessoa, cada uma sua publicação; a quarta é recusa
     await app.close();
   }
 });
+test("só som é uma tela com som, marcada e nomeada; o resto é recusado", async () => {
+  const app = await server();
+  const sockets: Socket[] = [];
+  try {
+    for (let i = 0; i < 2; i++)
+      sockets.push(await connect(app.url, (await session(app.url)).token));
+    for (const [i, s] of sockets.entries())
+      data(await request(s, "join", { name: `P${i}`, code: "QASOM" }));
+    const key = crypto.randomUUID();
+    const publish = (extra: Record<string, unknown>) =>
+      request<Publication>(sockets[0], "publish", {
+        kind: "screen",
+        key,
+        audio: true,
+        muted: false,
+        ...extra,
+      });
+    const sound = data(await publish({ audioOnly: true, label: "Spotify" }));
+    assert.equal(sound.audioOnly, true);
+    assert.equal(sound.label, "Spotify");
+    const owner = [...app.rooms.rooms.get("QASOM")!.members.values()].find(
+      (m) => m.id === sound.owner,
+    )!;
+    const seen = owner.publications.find((p) => p.id === sound.id)!;
+    assert.equal(seen.label, "Spotify");
+    for (const bad of [
+      { audioOnly: true, audio: false },
+      { audioOnly: true, kind: "camera" },
+      { label: "Spotify" },
+      { audioOnly: true, label: "x".repeat(61) },
+      { audioOnly: true, label: "Spo\u0000tify" },
+    ]) {
+      const reply = await publish(bad);
+      assert.equal(reply.ok, false, JSON.stringify(bad));
+    }
+    // The same key turning into a normal screen drops the mark.
+    const screen = data(await publish({}));
+    assert.equal(screen.id, sound.id);
+    assert.equal(screen.audioOnly, undefined);
+    assert.equal(screen.label, undefined);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
 test("isolamento entre salas, falsa identidade e ação de terceiros são recusados", async () => {
   const app = await server();
   const a = await connect(app.url, (await session(app.url)).token);

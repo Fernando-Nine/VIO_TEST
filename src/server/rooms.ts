@@ -747,6 +747,11 @@ export class Rooms {
     if (action === "publish") {
       require(publishPermission[data.kind as Publication["kind"]]);
       if (data.kind === "voice" && m.voiceBlocked) voiceBlocked();
+      // Sound only is a screen slot with sound and nothing else (#236).
+      if (data.audioOnly && (data.kind !== "screen" || !data.audio))
+        throw new Fault("INVALID_REQUEST", "Escolha um som para transmitir.");
+      if (data.label !== undefined && !data.audioOnly)
+        throw new Fault("INVALID_REQUEST", "Só um som sem tela leva nome.");
       if (data.kind !== "screen") m.inCall = true;
       let p = m.publications.find(
         (p) => p.kind === data.kind && p.key === data.key,
@@ -772,11 +777,19 @@ export class Rooms {
           key: data.key,
           audio: data.audio,
           muted: data.muted,
+          ...(data.audioOnly ? { audioOnly: true, label: data.label } : {}),
         };
         m.publications.push(p);
       } else {
         p.audio = data.audio;
         p.muted = data.muted;
+        if (data.audioOnly) {
+          p.audioOnly = true;
+          p.label = data.label;
+        } else {
+          delete p.audioOnly;
+          delete p.label;
+        }
       }
       this.broadcast(room);
       return p;
