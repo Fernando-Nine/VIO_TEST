@@ -6,6 +6,7 @@
 use crate::{
     capture::{key, Owned},
     duplication::{self, Duplicator},
+    printwindow::WindowCopier,
     log,
     video::{borderless, Apartment, Gpu, VideoManager},
     wire,
@@ -44,7 +45,7 @@ use windows::{
             },
         },
         System::{
-            Threading::{CreateEventW, SetEvent, WaitForMultipleObjects},
+            Threading::{CreateEventW, SetEvent, WaitForMultipleObjects, WaitForSingleObject},
             WinRT::Direct3D11::IDirect3DDxgiInterfaceAccess,
         },
     },
@@ -101,6 +102,11 @@ pub(crate) struct Frames {
 impl Frames {
     pub fn stopping(&self) -> bool {
         self.stopping.load(Ordering::Acquire)
+    }
+
+    /// Sleeps up to `time`, waking early when the share stops.
+    pub fn sleep(&self, time: Duration) {
+        unsafe { WaitForSingleObject(self.stop_event.0, time.as_millis().min(1000) as u32) };
     }
 
     /// First frame on its way: the page starts reading.
@@ -381,6 +387,11 @@ impl Writer {
         true
     }
 
+    /// Time left before the next frame is due.
+    pub fn wait(&self) -> Duration {
+        self.due.saturating_duration_since(Instant::now() + Duration::from_millis(2))
+    }
+
     /// Converts `source` into the next slot of the shared buffer.
     pub fn write(
         &mut self,
@@ -527,6 +538,15 @@ fn capture(
     result
 }
 
+/// Where a share's frames come from.
+enum Engine {
+    /// Windows 10 screen, Desktop Duplication.
+    Screen(Duplicator),
+    /// Windows 10 window, PrintWindow.
+    Window(WindowCopier),
+    Wgc(GraphicsCaptureItem),
+}
+
 pub struct Stream {
     frames: Arc<Frames>,
     worker: Mutex<Option<JoinHandle<()>>>,
@@ -646,25 +666,30 @@ impl StreamManager {
             let frames = worker_frames;
             let _apartment = Apartment::enter();
             let videos = worker_app.state::<VideoManager>();
-            // Windows 10 screens go through Desktop Duplication (no yellow border); any
-            // failure to set it up falls back to WGC.
-            let duplicator = match videos.monitor(&source) {
-                Ok(Some(monitor)) if duplication::wanted() => Duplicator::open(monitor, options)
+            // Windows 10 screens go through Desktop Duplication and windows through
+            // PrintWindow (no yellow border); any failure to set them up falls back to WGC.
+            let engine = match (videos.monitor(&source), videos.gdi_window(&source)) {
+                (Ok(Some(monitor)), _) if duplication::wanted() => Duplicator::open(monitor, options)
                     .inspect_err(|e| log::write("duplication", &format!("{:#010x}", e.code().0)))
-                    .ok(),
-                Ok(_) => None,
-                Err(message) => {
+                    .ok()
+                    .map(Engine::Screen),
+                (Ok(_), Ok(Some(window))) => WindowCopier::open(window, options)
+                    .inspect_err(|e| log::write("printwindow", &format!("{:#010x}", e.code().0)))
+                    .ok()
+                    .map(Engine::Window),
+                (Err(message), _) | (_, Err(message)) => {
                     frames.set(|t| t.state = 3);
                     let _ = ready.send(Err(message));
                     return;
                 }
+                _ => None,
             };
-            let item = match duplicator {
-                Some(_) => None,
+            let engine = match engine {
+                Some(engine) => engine,
                 None => {
                     borderless();
                     match videos.item(&source) {
-                        Ok(item) => Some(item),
+                        Ok(item) => Engine::Wgc(item),
                         Err(message) => {
                             frames.set(|t| t.state = 3);
                             let _ = ready.send(Err(message));
@@ -675,10 +700,10 @@ impl StreamManager {
             };
             let failed = ready.clone();
             // A panic ends this capture only; the page sees state 3 and ends the share.
-            let result = std::panic::catch_unwind(AssertUnwindSafe(|| match (duplicator, item) {
-                (Some(duplicator), _) => duplicator.run(&frames, options, mapping, ready),
-                (None, Some(item)) => run(&frames, item, options, mapping, ready),
-                (None, None) => unreachable!(),
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| match engine {
+                Engine::Screen(duplicator) => duplicator.run(&frames, options, mapping, ready),
+                Engine::Window(copier) => copier.run(&frames, options, mapping, ready),
+                Engine::Wgc(item) => run(&frames, item, options, mapping, ready),
             }));
             match result {
                 Ok(Ok(())) => frames.set(|t| t.state = t.state.max(2)),
@@ -740,7 +765,7 @@ impl StreamManager {
 mod bench {
     use super::*;
     use windows::Win32::{
-        Foundation::{FILETIME, POINT},
+        Foundation::{FILETIME, HWND, POINT},
         Graphics::Gdi::{MonitorFromPoint, HMONITOR, MONITOR_DEFAULTTOPRIMARY},
         System::{
             Threading::{GetCurrentProcess, GetProcessTimes},
@@ -814,6 +839,81 @@ mod bench {
                 );
             }
         }
+    }
+
+    /// #247: a window drawn by PrintWindow (the Windows 10 path) at 720p30 and 1080p60,
+    /// 6 s each. The window is a plain one of this test, with its own message loop; a
+    /// browser costs more, so real numbers come from the user's PC.
+    /// `cargo test --release -- --ignored --nocapture window_capture_cpu`
+    #[test]
+    #[ignore]
+    fn window_capture_cpu() {
+        use windows::{
+            core::w,
+            Win32::UI::WindowsAndMessaging::{
+                CreateWindowExW, DestroyWindow, DispatchMessageW, GetMessageW, PostThreadMessageW, TranslateMessage, MSG,
+                WINDOW_EX_STYLE, WM_QUIT, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
+            },
+            Win32::System::Threading::GetCurrentThreadId,
+        };
+        let (sender, receiver) = mpsc::channel();
+        let pump = std::thread::spawn(move || unsafe {
+            let window = CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                w!("STATIC"),
+                w!("VIO bench: janela de teste com algum texto para desenhar"),
+                WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                40,
+                40,
+                1280,
+                720,
+                None,
+                None,
+                None,
+                None,
+            )
+            .expect("janela");
+            sender.send((window.0 as isize, GetCurrentThreadId())).unwrap();
+            let mut message = MSG::default();
+            while GetMessageW(&mut message, None, 0, 0).as_bool() {
+                let _ = TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
+            let _ = DestroyWindow(window);
+        });
+        let (handle, thread) = receiver.recv().unwrap();
+        let cores = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
+        for options in [
+            Options { width: 1280, height: 720, fps: 30, cursor: true },
+            Options { width: 1920, height: 1080, fps: 60, cursor: true },
+        ] {
+            let running = Running::spawn(options, move |frames, mapping, ready| {
+                WindowCopier::open(HWND(handle as *mut _), options)?.run(frames, options, mapping, ready)
+            })
+            .expect("captura da janela não iniciou");
+            let (cpu0, wall0) = (cpu(), Instant::now());
+            let mut samples = Vec::new();
+            while wall0.elapsed() < Duration::from_secs(6) {
+                std::thread::sleep(Duration::from_secs(1));
+                samples.push(*running.frames.tick.lock().unwrap());
+            }
+            let (used, wall) = (cpu() - cpu0, wall0.elapsed());
+            running.stop();
+            let share = used.as_secs_f64() / wall.as_secs_f64() * 100.0;
+            println!(
+                "VIO bench (PrintWindow): janela 1280x720 -> {}x{}@{} | CPU {share:.1}% de um núcleo ({:.1}% do PC, {cores} núcleos) | quadros/s {:?} | ms/quadro {:?}",
+                options.width,
+                options.height,
+                options.fps,
+                share / cores,
+                samples.iter().map(|t| t.fps).collect::<Vec<_>>(),
+                samples.iter().map(|t| (t.busy_ms * 10.0).round() / 10.0).collect::<Vec<_>>(),
+            );
+        }
+        unsafe {
+            let _ = PostThreadMessageW(thread, WM_QUIT, Default::default(), Default::default());
+        }
+        pump.join().unwrap();
     }
 
     struct Running {

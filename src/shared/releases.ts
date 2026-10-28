@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.19";
+export const version = "2.11.0-rc.20";
 export const currentRelease: Release = {
   version,
   date: "2026-10-28",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        "App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord). Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.",
         "App Windows: no Windows 10, a tela inteira é transmitida sem a borda amarela (as janelas ainda mostram a borda no Windows 10; no 11, nenhuma). O seletor de Compartilhar carrega as miniaturas três por vez e bem mais rápido, e ao reabrir em poucos segundos elas já aparecem na hora.",
         "App Windows: parar ou trocar uma transmissão com som não fecha mais o app (o erro estava no fim de cada captura de som). Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.",
         "O sino de notificações abre só quando você clica nele, não mais ao passar o mouse; clicar de novo fecha.",
