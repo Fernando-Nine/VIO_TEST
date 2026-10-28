@@ -61,8 +61,7 @@ import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
 import { applyMotion } from "./components/motion";
-import { desktop } from "./desktop/bridge";
-import { NativeShare } from "./desktop/NativeShare";
+import { ShareDialog } from "./components/ShareDialog";
 type Panel =
   | "people"
   | "settings"
@@ -89,7 +88,6 @@ export default function App({ engine }: { engine: Controller }) {
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
   );
-  const [audio, setAudio] = useState(true);
   const [copied, setCopied] = useState(false);
   function showPeople() {
     // The icon toggles the side panel (docs/design/pessoas.md).
@@ -458,14 +456,7 @@ export default function App({ engine }: { engine: Controller }) {
                     people={() => open("color")}
                     diagnostics={() => open("about")}
                     share={() => open("share")}
-                    replaceShare={() =>
-                      desktop
-                        ? open("replace")
-                        : void engine.startScreen(
-                            engine.publications.get("screen")?.audio ?? true,
-                            true,
-                          )
-                    }
+                    replaceShare={() => open("replace")}
                     fullscreen={() => void fullscreen()}
                     isFullscreen={full}
                     interaction={(busy) => {
@@ -772,17 +763,20 @@ export default function App({ engine }: { engine: Controller }) {
               settings: "Ajustes",
               color: "Minha cor na sala",
               about: "Sobre a sala",
-              share: "Compartilhar sua tela",
+              share: "Compartilhar tela",
               replace: "Trocar o que transmito",
               history: "O VIO está crescendo",
             }[panel]
           }
+          centered={panel === "share" || panel === "replace"}
           className={
             panel === "settings"
               ? "sheet-settings"
               : panel === "people"
                 ? "sheet-people"
-                : undefined
+                : panel === "share" || panel === "replace"
+                  ? "sheet-share"
+                  : undefined
           }
           close={() => open(null)}
         >
@@ -797,47 +791,12 @@ export default function App({ engine }: { engine: Controller }) {
               openHistory={() => open("history")}
             />
           )}
-          {panel === "share" && desktop && (
-            <NativeShare engine={engine} close={() => open(null)} />
-          )}
-          {panel === "replace" && desktop && (
-            <NativeShare engine={engine} close={() => open(null)} replace />
-          )}
-          {panel === "share" && !desktop && (
-            <>
-              <div className="share-intro">
-                <MonitorUp size={32} />
-                <p>Você escolhe o que compartilhar no seletor do navegador.</p>
-              </div>
-              <label className="toggle">
-                <span>
-                  Incluir áudio da tela
-                  <small>
-                    A trilha de áudio depende da fonte e do navegador.
-                  </small>
-                </span>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={audio}
-                  onChange={(e) => setAudio(e.target.checked)}
-                />
-              </label>
-              <p className="field-note">
-                Para assistir com som, procure a opção de compartilhar áudio ao
-                escolher a fonte. O som do sistema pode incluir a conversa da
-                sala.
-              </p>
-              <button
-                className="primary full-width"
-                onClick={() => {
-                  void engine.startScreen(audio);
-                  open(null);
-                }}
-              >
-                Escolher tela <ArrowUpRight size={18} />
-              </button>
-            </>
+          {(panel === "share" || panel === "replace") && (
+            <ShareDialog
+              engine={engine}
+              close={() => open(null)}
+              replace={panel === "replace"}
+            />
           )}
           {panel === "color" && <ColorPicker engine={engine} />}
           {panel === "about" && (
