@@ -5,12 +5,14 @@
 // the page's own WebRTC connections.
 use crate::{
     capture::{key, Owned},
+    log,
     video::{borderless, Apartment, Gpu, VideoManager},
     wire,
 };
 use serde::Serialize;
 use std::{
     collections::HashMap,
+    panic::AssertUnwindSafe,
     sync::{
         atomic::{fence, AtomicBool, Ordering},
         mpsc, Arc, Condvar, Mutex,
@@ -134,8 +136,7 @@ enum Path {
 struct Pipeline {
     gpu: Gpu,
     path: Path,
-    width: u32,
-    height: u32,
+    options: Options,
 }
 
 fn texture(gpu: &Gpu, width: u32, height: u32, format: DXGI_FORMAT, staging: bool) -> windows::core::Result<ID3D11Texture2D> {
@@ -216,16 +217,19 @@ impl Pipeline {
                 nv12: vec![0; wire::nv12_size(options.width, options.height)],
             },
         };
-        Ok(Self {
-            gpu,
-            path,
-            width: options.width,
-            height: options.height,
-        })
+        Ok(Self { gpu, path, options })
     }
 
     fn on_gpu(&self) -> bool {
         matches!(self.path, Path::Gpu(_))
+    }
+
+    /// The video processor is built for one input size; a resized source needs a new one.
+    fn resize(&mut self, input: SizeInt32) -> windows::core::Result<()> {
+        if let Path::Gpu(_) = self.path {
+            self.path = Path::Gpu(Processor::new(&self.gpu, input, self.options)?);
+        }
+        Ok(())
     }
 
     /// Scales `source` (letterboxed, aspect kept) into NV12 and hands the planes to `write`.
@@ -236,7 +240,7 @@ impl Pipeline {
             (content.Width.max(1) as u32).min(desc.Width),
             (content.Height.max(1) as u32).min(desc.Height),
         );
-        let (width, height, context) = (self.width, self.height, &self.gpu.context);
+        let (width, height, context) = (self.options.width, self.options.height, &self.gpu.context);
         match &mut self.path {
             Path::Gpu(gpu) => {
                 let scale = (width as f64 / cw as f64).min(height as f64 / ch as f64);
@@ -331,7 +335,7 @@ fn run(
     mapping: Mapping,
     ready: mpsc::SyncSender<Result<(), String>>,
 ) -> windows::core::Result<()> {
-    let mut size = item.Size()?;
+    let size = item.Size()?;
     let mut pipeline = Pipeline::new(size, options)?;
     let pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
         &pipeline.gpu.winrt,
@@ -340,21 +344,48 @@ fn run(
         size,
     )?;
     let signal = frames.frame_event.0 .0 as isize;
-    pool.FrameArrived(&TypedEventHandler::new(move |_, _| {
+    // Both handlers hold the raw event handle: they are removed before `frames` can drop it.
+    let arrived = pool.FrameArrived(&TypedEventHandler::new(move |_, _| {
         unsafe {
             let _ = SetEvent(HANDLE(signal as *mut _));
         }
         Ok(())
     }))?;
     let closed = frames.closed.clone();
-    item.Closed(&TypedEventHandler::new(move |_, _| {
+    let closing = match item.Closed(&TypedEventHandler::new(move |_, _| {
         closed.store(true, Ordering::Release);
         unsafe {
             let _ = SetEvent(HANDLE(signal as *mut _));
         }
         Ok(())
-    }))?;
-    let session = pool.CreateCaptureSession(&item)?;
+    })) {
+        Ok(token) => token,
+        Err(e) => {
+            let _ = pool.RemoveFrameArrived(arrived);
+            let _ = pool.Close();
+            return Err(e);
+        }
+    };
+    let result = capture(frames, &item, &pool, &mut pipeline, size, options, mapping, ready);
+    // The item outlives this call inside Windows; a late Closed must not signal a closed handle.
+    let _ = item.RemoveClosed(closing);
+    let _ = pool.RemoveFrameArrived(arrived);
+    let _ = pool.Close();
+    result
+}
+
+#[allow(clippy::too_many_arguments)]
+fn capture(
+    frames: &Frames,
+    item: &GraphicsCaptureItem,
+    pool: &Direct3D11CaptureFramePool,
+    pipeline: &mut Pipeline,
+    mut size: SizeInt32,
+    options: Options,
+    mapping: Mapping,
+    ready: mpsc::SyncSender<Result<(), String>>,
+) -> windows::core::Result<()> {
+    let session = pool.CreateCaptureSession(item)?;
     let _ = session.SetIsBorderRequired(false);
     let _ = session.SetIsCursorCaptureEnabled(options.cursor);
     let interval = Duration::from_micros(1_000_000 / options.fps as u64);
@@ -408,6 +439,7 @@ fn run(
             if content.Width != size.Width || content.Height != size.Height {
                 size = content;
                 pool.Recreate(&pipeline.gpu.winrt, DirectXPixelFormat::B8G8R8A8UIntNormalized, 2, size)?;
+                pipeline.resize(size)?;
             }
             busy += started.elapsed();
             written += 1;
@@ -428,7 +460,6 @@ fn run(
         Ok(())
     })();
     let _ = session.Close();
-    let _ = pool.Close();
     result
 }
 
@@ -519,7 +550,8 @@ impl StreamManager {
         if !matches!(options.fps, 15 | 30 | 60) {
             return Err("Escolha 15, 30 ou 60 quadros por segundo.".into());
         }
-        if self.0.lock().map_err(|_| "A captura está indisponível.")?.len() >= MAX_STREAMS {
+        // One more than the limit: a swap starts the new image before the old one stops.
+        if self.0.lock().map_err(|_| "A captura está indisponível.")?.len() > MAX_STREAMS {
             return Err("Você já transmite 3 telas. Encerre uma para compartilhar outra.".into());
         }
         let app = window.app_handle().clone();
@@ -559,11 +591,17 @@ impl StreamManager {
                 }
             };
             let failed = ready.clone();
-            if run(&frames, item, options, mapping, ready).is_err() {
-                frames.set(|t| t.state = 3);
-                let _ = failed.send(Err("O Windows interrompeu a captura da imagem.".into()));
-            } else {
-                frames.set(|t| t.state = t.state.max(2));
+            // A panic ends this capture only; the page sees state 3 and ends the share.
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| run(&frames, item, options, mapping, ready)));
+            match result {
+                Ok(Ok(())) => frames.set(|t| t.state = t.state.max(2)),
+                failure => {
+                    if let Ok(Err(e)) = &failure {
+                        log::write("video", &format!("{}x{}@{} {:#010x}", options.width, options.height, options.fps, e.code().0));
+                    }
+                    frames.set(|t| t.state = 3);
+                    let _ = failed.send(Err("O Windows interrompeu a captura da imagem.".into()));
+                }
             }
         });
         let stream = Arc::new(Stream {
@@ -692,6 +730,139 @@ mod bench {
             samples.iter().map(|t| (t.busy_ms * 10.0).round() / 10.0).collect::<Vec<_>>(),
         );
         drop(memory);
+    }
+
+    struct Running {
+        frames: Arc<Frames>,
+        worker: JoinHandle<Result<(), String>>,
+        _memory: Vec<u8>,
+    }
+
+    impl Running {
+        fn start(item: GraphicsCaptureItem, options: Options) -> Self {
+            let size = wire::VIDEO_HEADER + wire::VIDEO_SLOTS as usize * wire::video_slot_size(options.width, options.height);
+            let mut memory = vec![0u8; size];
+            let mapping = Mapping(memory.as_mut_ptr(), size);
+            let frames = Arc::new(Frames {
+                tick: Mutex::new(Tick::default()),
+                changed: Condvar::new(),
+                stopping: AtomicBool::new(false),
+                closed: Arc::new(AtomicBool::new(false)),
+                stop_event: Owned(unsafe { CreateEventW(None, true, false, None) }.unwrap()),
+                frame_event: Owned(unsafe { CreateEventW(None, false, false, None) }.unwrap()),
+            });
+            let worker_frames = frames.clone();
+            let (ready, started) = mpsc::sync_channel(1);
+            let worker = std::thread::spawn(move || {
+                let _apartment = Apartment::enter();
+                run(&worker_frames, item, options, mapping, ready).map_err(|e| format!("{e:?}"))
+            });
+            match started.recv_timeout(Duration::from_secs(5)) {
+                Ok(Ok(())) => {}
+                other => panic!("captura não iniciou: {other:?}"),
+            }
+            Self { frames, worker, _memory: memory }
+        }
+
+        fn sequence(&self) -> u32 {
+            self.frames.tick.lock().unwrap().sequence
+        }
+
+        /// Pumps the test window's messages until a frame newer than `after` arrives.
+        fn frame_after(&self, after: u32) -> bool {
+            let deadline = Instant::now() + Duration::from_secs(3);
+            while Instant::now() < deadline {
+                pump();
+                if self.sequence() > after {
+                    return true;
+                }
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            false
+        }
+
+        fn stop(self) {
+            self.frames.stopping.store(true, Ordering::Release);
+            unsafe {
+                let _ = SetEvent(self.frames.stop_event.0);
+            }
+            self.worker.join().expect("a captura entrou em pânico").expect("a captura falhou");
+        }
+    }
+
+    fn pump() {
+        use windows::Win32::UI::WindowsAndMessaging::{DispatchMessageW, PeekMessageW, TranslateMessage, MSG, PM_REMOVE};
+        let mut message = MSG::default();
+        while unsafe { PeekMessageW(&mut message, None, 0, 0, PM_REMOVE) }.as_bool() {
+            unsafe {
+                let _ = TranslateMessage(&message);
+                DispatchMessageW(&message);
+            }
+        }
+    }
+
+    /// #246: screen → window → screen, the new capture starting before the old one stops
+    /// (as "Trocar" does), plus a window resized mid-share, at 1080p60 and 720p30.
+    /// `cargo test --release -- --ignored --nocapture native_swap`
+    #[test]
+    #[ignore]
+    fn native_swap() {
+        use windows::{
+            core::w,
+            Win32::UI::WindowsAndMessaging::{
+                CreateWindowExW, DestroyWindow, SetWindowPos, SWP_NOMOVE, SWP_NOZORDER, WINDOW_EX_STYLE, WS_OVERLAPPEDWINDOW,
+                WS_VISIBLE,
+            },
+        };
+        let _apartment = Apartment::enter();
+        let interop = windows::core::factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>().unwrap();
+        let screen = || {
+            let monitor = unsafe { MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTOPRIMARY) };
+            unsafe { interop.CreateForMonitor::<GraphicsCaptureItem>(monitor) }.unwrap()
+        };
+        let window = unsafe {
+            CreateWindowExW(
+                WINDOW_EX_STYLE::default(),
+                w!("STATIC"),
+                w!("VIO troca"),
+                WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                100,
+                100,
+                640,
+                360,
+                None,
+                None,
+                None,
+                None,
+            )
+        }
+        .unwrap();
+        pump();
+        let target = || unsafe { interop.CreateForWindow::<GraphicsCaptureItem>(window) }.unwrap();
+        for options in [
+            Options { width: 1920, height: 1080, fps: 60, cursor: true },
+            Options { width: 1280, height: 720, fps: 30, cursor: false },
+        ] {
+            for round in 0..3 {
+                let first = Running::start(screen(), options);
+                assert!(first.frame_after(0), "tela sem quadros ({round})");
+                let second = Running::start(target(), options);
+                assert!(second.frame_after(0), "janela sem quadros ({round})");
+                first.stop();
+                let before = second.sequence();
+                let (w, h) = if round % 2 == 0 { (900, 520) } else { (500, 700) };
+                unsafe { SetWindowPos(window, None, 0, 0, w, h, SWP_NOMOVE | SWP_NOZORDER) }.unwrap();
+                assert!(second.frame_after(before), "janela redimensionada parou ({round})");
+                let third = Running::start(screen(), options);
+                assert!(third.frame_after(0), "tela de volta sem quadros ({round})");
+                second.stop();
+                third.stop();
+            }
+            println!("VIO troca: {}x{}@{} ok", options.width, options.height, options.fps);
+        }
+        unsafe {
+            let _ = DestroyWindow(window);
+        }
     }
 
     fn item_size() -> (i32, i32) {

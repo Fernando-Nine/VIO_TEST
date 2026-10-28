@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.16";
+export const version = "2.11.0-rc.17";
 export const currentRelease: Release = {
   version,
   date: "2026-10-28",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        "App Windows: Trocar o que transmito não fecha mais o app. Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.",
         "O criador da sala continua criador quando o servidor reinicia ou demora a voltar: quem chegar antes fica no cargo só até ele voltar, com aviso na sala, e admins e permissões voltam junto.",
         "Adicionar widget por abas: Assistir, Conversar, Decidir e jogar, Tempo e Comunidade (a última aberta fica lembrada); a busca procura em todas. Cada widget traz Para mim e Para a sala, ou Adicionar quando é só seu. Widgets da sala ficam no botão do rodapé. Personalizado agora se chama Placar e volta ao catálogo. No espaço vazio, cada ícone tem Mim e Sala.",
         "Foco único volta à barra da sala: um clique mostra só o widget em foco, ocupando todo o espaço; outro clique (Voltar ao conjunto) devolve o layout exatamente como estava. Só muda para você.",

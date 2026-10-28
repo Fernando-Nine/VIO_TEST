@@ -5,6 +5,7 @@ use crate::wire;
 use serde::Serialize;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
+    panic::AssertUnwindSafe,
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc, Arc, Condvar, Mutex,
@@ -434,7 +435,13 @@ impl Capture {
                 shared.finish(Err(e));
                 return;
             }
-            let result = shared.run(pid, system, &process);
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| shared.run(pid, system, &process)))
+                .unwrap_or_else(|_| Err(windows::core::Error::from(E_FAIL)));
+            if let Err(e) = &result {
+                if !shared.stopping.load(Ordering::Acquire) {
+                    crate::log::write("audio", &format!("{:#010x}", e.code().0));
+                }
+            }
             shared.finish(result);
             unsafe { CoUninitialize() };
         });
@@ -649,7 +656,38 @@ impl Drop for Manager {
 
 #[cfg(test)]
 mod tests {
-    use super::{audio_conflict, MAX_AUDIO};
+    use super::{audio_conflict, Capture, NativeSource, MAX_AUDIO};
+    use std::time::{Duration, Instant};
+    use windows::Win32::System::Threading::GetCurrentProcessId;
+
+    /// #246: the sound of a share is stopped and taken again on every swap. The runner may
+    /// have no audio device (activation fails); what matters is that nothing hangs or dies.
+    /// `cargo test --release -- --ignored --nocapture audio_swap`
+    #[test]
+    #[ignore]
+    fn audio_swap() {
+        let system = NativeSource {
+            window: 0,
+            started: 0,
+            pid: unsafe { GetCurrentProcessId() },
+            title: String::new(),
+            system: true,
+        };
+        for round in 0..5 {
+            let capture = Capture::start(&system).expect("captura de som");
+            let deadline = Instant::now() + Duration::from_secs(6);
+            let state = loop {
+                let bytes = capture.read().expect("leitura");
+                let state = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
+                if state != 0 || Instant::now() > deadline {
+                    break state;
+                }
+            };
+            assert!(state == 1 || state == 3, "estado {state} na rodada {round}");
+            capture.stop();
+            println!("VIO som: rodada {round}, estado {state}");
+        }
+    }
 
     #[test]
     fn sounds_add_up_without_duplicates() {

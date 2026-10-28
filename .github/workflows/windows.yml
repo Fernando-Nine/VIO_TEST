@@ -64,6 +64,9 @@ jobs:
         run: cargo test --manifest-path src-tauri/Cargo.toml --locked
       # #192: primary screen -> NV12 1080p60 for 10 s. The runner has no GPU (WARP), so
       # this is a ceiling; the real number comes from the user's PC.
+      # #246: swapping screen → window → screen (and the share's sound) must never crash.
+      - name: Native swap
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture --test-threads=1 native_swap audio_swap
       - name: Native capture CPU (1080p60)
         continue-on-error: true
         run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture native_capture_cpu
