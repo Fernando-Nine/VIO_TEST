@@ -39,6 +39,14 @@ use windows::{
 };
 
 const RING_FRAMES: usize = 9600;
+
+/// Step trace for the Windows runner tests (#246); compiled out of the app.
+macro_rules! trace {
+    ($($arg:tt)*) => {
+        #[cfg(test)]
+        eprintln!("[audio] {}", format!($($arg)*));
+    };
+}
 pub(crate) const LIST_COOLDOWN: Duration = Duration::from_millis(700);
 pub(crate) const LIST_VALID: Duration = Duration::from_secs(60);
 /// Windows 10 2004. Microsoft documents 20348, but process loopback works on updated
@@ -305,6 +313,7 @@ impl Shared {
         let (sender, receiver) = mpsc::sync_channel(1);
         let handler: IActivateAudioInterfaceCompletionHandler =
             Activation(Mutex::new(Some(sender))).into();
+        trace!("activate");
         let _operation = unsafe {
             ActivateAudioInterfaceAsync(
                 VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
@@ -314,6 +323,7 @@ impl Shared {
             )
         }?;
         let deadline = Instant::now() + Duration::from_secs(5);
+        trace!("activation requested");
         let client = loop {
             if self.stopping.load(Ordering::Acquire) {
                 return Ok(());
@@ -324,6 +334,7 @@ impl Shared {
                 Err(_) => return Err(windows::core::Error::from(E_FAIL)),
             }
         };
+        trace!("activated");
         let format = WAVEFORMATEX {
             wFormatTag: WAVE_FORMAT_PCM as u16,
             nChannels: 2,
@@ -343,12 +354,14 @@ impl Shared {
                 None,
             )?;
         }
+        trace!("initialized");
         let reader: IAudioCaptureClient = unsafe { client.GetService() }?;
         let samples = Owned(unsafe { CreateEventW(None, false, false, None) }?);
         unsafe {
             client.SetEventHandle(samples.0)?;
             client.Start()?;
         }
+        trace!("started");
         {
             let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
             state.state = 1;
@@ -387,9 +400,11 @@ impl Shared {
             }
             Ok(())
         })();
+        trace!("loop ended {result:?}");
         unsafe {
             let _ = client.Stop();
         }
+        trace!("stopped");
         result
     }
 }
@@ -435,6 +450,7 @@ impl Capture {
                 shared.finish(Err(e));
                 return;
             }
+            trace!("worker");
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| shared.run(pid, system, &process)))
                 .unwrap_or_else(|_| Err(windows::core::Error::from(E_FAIL)));
             if let Err(e) = &result {
@@ -443,7 +459,9 @@ impl Capture {
                 }
             }
             shared.finish(result);
+            trace!("finished");
             unsafe { CoUninitialize() };
+            trace!("uninitialized");
         });
         Ok(Self {
             shared,
@@ -674,6 +692,7 @@ mod tests {
             system: true,
         };
         for round in 0..5 {
+            eprintln!("[test] round {round} start");
             let capture = Capture::start(&system).expect("captura de som");
             let deadline = Instant::now() + Duration::from_secs(6);
             let state = loop {
@@ -683,8 +702,10 @@ mod tests {
                     break state;
                 }
             };
+            eprintln!("[test] state {state}");
             assert!(state == 1 || state == 3, "estado {state} na rodada {round}");
             capture.stop();
+            eprintln!("[test] stopped");
             println!("VIO som: rodada {round}, estado {state}");
         }
     }
