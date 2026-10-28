@@ -1,8 +1,17 @@
 # design — handoff
 
-Atualizado: 2026-10-27 (leva 4, escolhas)
+Atualizado: 2026-10-28 (marca #227 publicada)
 
 ## Agora
+
+**#227 marca/brandbook/design system** publicada, aguardando escolha por comentário:
+canvas **VIO · Marca** https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo (logo A/B/C, paleta A/B,
+tipografia, voz, uso, tokens, componentes) e Figma https://www.figma.com/design/CoylihBjLm50Z2ySHEw3Dp
+(variáveis de cor A e B, medidas, estilos de texto VIO/*, logos, Botão e Selo). Recomendado: logo A +
+paleta A. Plano Figma starter: 1 modo por coleção, por isso A e B são coleções separadas.
+Após o aval: spec `docs/design/marca.md` + issue `frontend` para unificar tokens
+(`styles.css` × `room.css` divergem; ~40 cores soltas; 14 raios). Depois, landing #197.
+
 
 Leva 4 fechada em parte (27 out). Canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
 com a linha "Escolhidas" no topo.
