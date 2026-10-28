@@ -2,53 +2,44 @@
 Atualizado: 2026-10-28
 
 ## Agora
-Sem tarefa em curso. Falta da #192: CPU real 1080p60 no PC do usuário (caminho GPU);
-seletor visual (Frontend, #191); borda amarela no Win10 continua (só o Win11 tira).
+#247 (próxima sessão, por decisão do copiloto). Rascunho já no branch `feat/247-captura-leve`
+(sem PR; refaça merge da main): `duplication.rs` (DXGI Desktop Duplication para telas no
+Win10, sem borda, cursor por GDI, fallback WGC), miniaturas por GDI (PrintWindow
+PW_RENDERFULLCONTENT / StretchBlt, 3 em paralelo, cache 4 s, WGC só se vier preto),
+`Writer` comum aos dois laços em `stream.rs`, JPEG nas miniaturas, benches
+`native_capture_cpu` (WGC×DXGI, 1080p60/720p30) e `thumbnails_speed`. Compila (clippy
+Windows limpo); ainda não rodou no runner. Falta medir e o texto de leveza.
 
 ## Feito recentemente
-- #229 (rc.9): até 3 sons nativos ao mesmo tempo. `capture.rs` `Manager.active` virou
-  `HashMap` (id → pid, sistema, captura); `audio_conflict` recusa 4º som, o mesmo app duas
-  vezes e Todo o PC junto de outro som; `start` recusa a árvore do VIO. Som sem tela:
-  `startNativeSound(engine, {sound, slot})` + `listSoundSources()` em `desktop/share.ts`
-  (usa um slot de tela; publicação `screen` só com áudio — viewers precisam mostrar
-  "só som": sem flag no protocolo, detectar pela falta de trilha de vídeo). No modal da
-  #191 (`ShareDialog.tsx`), aba "Só som" (app com processAudio, fora de "Trocar"); a trava
-  "uma tela com som" virou: até 3 sons e Tela inteira com som só sem outro som.
-- #194 (rc.8): até 3 telas por pessoa. Servidor: telas somam até `MAX_SCREENS` (protocol),
-  a 4ª → `Fault SCREEN_LIMIT`; voz/câmera seguem substituindo. Cliente: `Captures.sources`
-  é `Map<Slot>` (`screen`, `screen:2`, `screen:3`; `slotKind`); `sourceFor(publication)`
-  por `key` em `peers.ts`; miniatura por slot (`keepPreviews`); qualidade por fonte
-  (`qualityOf`; extras nascem em `extraScreenQuality` ≤ Baixa). Nova tela:
-  `engine.startScreen(audio, false, captures.nextScreen())`; nativo:
-  `startNativeShare({..., slot})`; som nativo é um só (2ª tela com som → erro claro).
-  UI (adicionar/parar cada tela, Minha transmissão por tela) é do Frontend com a #191.
-  #192 (PRs #217–#219) mergeada: lista nativa, quadros por SharedBuffer, `startNativeShare`.
-- #162 (PR #211): widget Câmeras (`canvas/CamerasWidget.tsx`, `camera-layout.ts`,
-  `cameras.css`). Câmera segue a **demanda por espectador** na assinatura principal
-  (`cameraEncoding`: small 120 kbps/12 fps/≤240p, fit 300, focus 450; `off` padrão no
-  controlador quando nenhum widget mostra). Servidor aceita `demand` de câmera.
-  `shareVoiceActivity` = um analisador por stream remoto (Pessoas + Câmeras).
-  `engine.cameraRequest(personId)` abre o widget fixado (selo em Pessoas, menu da pessoa).
-- #193 (PR #201) e #160 (PR #206) já em `main`.
+- #246 (PR #249, rc.18): crash ao parar/trocar transmissão **com som** no app. Causa:
+  `Drop` do `PROPVARIANT` (windows-rs) chama `PropVariantClear` → `CoTaskMemFree` do blob
+  na pilha ao fim de cada captura WASAPI. Corrigido com `ManuallyDrop`. Também: troca com
+  som libera só o som anterior (`releaseAudio`), `panic = "unwind"` + `catch_unwind` nas
+  threads, handlers WGC removidos, processador D3D11 recriado no resize, limite nativo +1
+  na troca, `log.rs` (vio.log) e recarga do WebView2 se o renderizador cair.
+- Testes da troca: `tests/desktop-swap.test.ts` (fakes; `nativeApi` em `desktop/capture.ts`
+  é o ponto de troca) e no runner `native_swap`/`audio_swap` (passo "Native swap").
 
 ## Decisões
-- Câmera não usa a prévia (5 fps é só para tela); trocar camada = mudar a demanda, sem PC nova.
-- Dependências aprovadas: as do `package.json` + crates do Tauri/`windows` + `webview2-com` (27 out).
+- Win11 já tira a borda (RequestAccessAsync Borderless + IsBorderRequired=false). Win10:
+  telas sem borda via DXGI; **janelas no Win10 seguem com borda** (WGC não permite; só
+  recortando a tela, o que mostraria o que estiver por cima) — dizer isso ao usuário.
+- Fatal (heap corrompido, fail-fast) não passa por código do app: diagnóstico pelo
+  Visualizador de Eventos; o resto vai para `%LOCALAPPDATA%\<identifier>\logs\vio.log`.
 - Matar servidor local pela porta (`fuser -k PORTA/tcp`), nunca `pkill -f`.
 
 ## Pendente / bloqueios
-- Usuário: testar #193 no Windows 10/11 (PR #201) e as câmeras na prévia (roteiro na #211).
-- Issues da área: #23, #24 (parte feita na #211), #25.
+- Usuário: roteiro manual da #249 no app (troca com/sem som, 3 telas, Só som).
+- Issues da área: #23, #24, #25.
 
 ## Dicas
-- Checar o Rust do Windows no Linux: `rustup target add x86_64-pc-windows-msvc`;
-  `CC_x86_64_pc_windows_msvc=clang-cl-18 AR_x86_64_pc_windows_msvc=llvm-lib` e
-  `CFLAGS_x86_64_pc_windows_msvc="/imsvc <dir>"` com `assert.h`/`string.h`/`stdlib.h` mínimos
-  (o `ring` pede; `stdlib.h` declara `_byteswap_*`); `dist/source.tar.gz` e
-  `dist/desktop/index.html` vazios; `cargo clippy --target x86_64-pc-windows-msvc --locked`.
-- Visual com câmera falsa: Playwright `--use-fake-device-for-media-stream`; convidado
-  precisa de "Ligar a câmera" (Pessoas na sala → Permissões).
+- Rust do Windows no Linux: `rustup target add x86_64-pc-windows-msvc`;
+  `CC_x86_64_pc_windows_msvc=clang-cl-18 AR_x86_64_pc_windows_msvc=llvm-lib`,
+  `CFLAGS_x86_64_pc_windows_msvc="/imsvc <dir>"` com `assert.h`/`string.h`/`stdlib.h`
+  mínimos; `dist/source.tar.gz` e `dist/desktop/index.html` vazios;
+  `cargo clippy --target x86_64-pc-windows-msvc --locked --all-targets`.
+- Bug nativo: reproduza com teste `#[ignore]` no runner (PR com conflito não roda CI).
 - A `main` anda rápido: o `-rc.N` colide; refaça merge e suba o N.
 
 ## Próximo passo
-Issues da área (#23, #24, #25) ou o que o copiloto mandar; apoiar o Frontend na UI de 3 telas.
+Merge da main em `feat/247-captura-leve`, abrir PR, ler os benches do runner e decidir.
