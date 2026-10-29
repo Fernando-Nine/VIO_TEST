@@ -61,17 +61,6 @@ input[type="checkbox"] {
   flex-wrap: nowrap;
   border-bottom: 1px solid var(--line);
 }
-.in-room .brand {
-  font-style: normal;
-  font-size: 2.6rem;
-  letter-spacing: -0.115em;
-  font-weight: 800;
-}
-.in-room .brand-dot {
-  width: 7px;
-  height: 7px;
-  margin-left: 8px;
-}
 .in-room .room-code {
   color: var(--muted);
   min-width: 0;
