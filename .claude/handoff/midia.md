@@ -1,9 +1,9 @@
 # Mídia — handoff
-Atualizado: 2026-10-28
+Atualizado: 2026-10-29
 
 ## Agora
-#247 em fechamento: #250 (rc.19) e #251 (rc.20) mergeadas; #252 Só som (rc.21) e
-#253 H.264 por hardware (rc.22) empilhadas, base `main`, aguardando CI → squash.
+#247 concluída: #250–#253 na main (rc.19–rc.22). #257 (#255, rc.23) em CI com base `main`
+→ squash. Actions voltou em 29/10 (parou por cobrança em 28/10 22:10).
 
 ## Feito recentemente
 - #250: telas do Win10 sem borda por DXGI Desktop Duplication (`duplication.rs`, cursor por
@@ -14,6 +14,10 @@ Atualizado: 2026-10-28
 - #252: Só som = janelas Alt+Tab + processos com sessão de áudio ativa (`programs.rs`), nome
   do FileDescription, ícone por ExtractIconEx (`desktop_sound_icon`).
 - #253: `media/codecs.ts` põe H.264 primeiro quando `encodingInfo` diz powerEfficient.
+- #257 (#255): janela minimizada mostra o ícone do .exe; janelas pulam WS_EX_NOACTIVATE;
+  Só som mapeia app da Store à CoreWindow (suspenso fica fora) e ignora hosts do Windows.
+- #135: recomendado Cloudflare Realtime TURN (1.000 GB/mês grátis, credencial temporária);
+  aguarda aval do usuário para trocar as variáveis no Render.
 
 ## Medidas (runner Windows, 2 núcleos, sem GPU, tela parada)
 - Captura de tela 1080p60/720p30: 0,3–2% de um núcleo (WGC ≈ DXGI).

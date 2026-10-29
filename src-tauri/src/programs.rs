@@ -94,6 +94,27 @@ pub fn descends(pid: u32, set: &HashSet<u32>, parents: &HashMap<u32, u32>) -> bo
     false
 }
 
+/// Windows' own hosts: they own windows or sessions but are never "a program playing"
+/// to the person (#255). Compared by file name, case-insensitively.
+const SHELL_HOSTS: [&str; 10] = [
+    "applicationframehost.exe",
+    "explorer.exe",
+    "lockapp.exe",
+    "searchapp.exe",
+    "searchhost.exe",
+    "shellexperiencehost.exe",
+    "startmenuexperiencehost.exe",
+    "systemsettingsbroker.exe",
+    "textinputhost.exe",
+    "widgets.exe",
+];
+
+pub fn shell_host(path: &[u16]) -> bool {
+    let full = String::from_utf16_lossy(&path[..path.len().saturating_sub(1)]).to_lowercase();
+    let base = full.rsplit(['\\', '/']).next().unwrap_or_default();
+    SHELL_HOSTS.contains(&base)
+}
+
 /// Full path of a process's executable, nul-terminated.
 pub fn executable(process: HANDLE) -> Option<Vec<u16>> {
     let mut buffer = vec![0u16; 1024];
