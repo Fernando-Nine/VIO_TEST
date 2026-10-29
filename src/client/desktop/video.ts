@@ -45,10 +45,9 @@ export function listVideoSources() {
 
 /**
  * Object URL of one native frame of the source; the caller revokes it.
- * Resolves undefined for minimized windows.
+ * A minimized window has no frame: the app sends its program's icon (#255).
  */
 export async function videoThumbnail(source: VideoSource) {
-  if (source.minimized) return undefined;
   const { width, height, rgba } = decodeThumbnail(
     await nativeInvoke<ArrayBuffer>("desktop_video_thumbnail", {
       sourceId: source.id,
@@ -58,8 +57,13 @@ export async function videoThumbnail(source: VideoSource) {
   canvas
     .getContext("2d")
     ?.putImageData(new ImageData(rgba, width, height), 0, 0);
-  // JPEG encodes several times faster than PNG for a 320×180 preview (#247).
+  // JPEG encodes several times faster than PNG for a 320×180 preview (#247);
+  // the icon keeps its transparency.
   return URL.createObjectURL(
-    await canvas.convertToBlob({ type: "image/jpeg", quality: 0.85 }),
+    await canvas.convertToBlob(
+      source.minimized
+        ? { type: "image/png" }
+        : { type: "image/jpeg", quality: 0.85 },
+    ),
   );
 }
