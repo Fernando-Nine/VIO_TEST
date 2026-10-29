@@ -7,6 +7,7 @@ import type {
 import type { Captures, Slot } from "./capture";
 import { mediaDeadline } from "./deadline";
 import { videoEncoding } from "./video-quality";
+import { preferVideoCodecs } from "./codecs";
 import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
 export interface PeerInfo {
   id: string;
@@ -211,7 +212,10 @@ export class Peers {
         if (!stream) throw new Error("A captura foi encerrada.");
         for (const track of stream.getTracks()) {
           const sender = pc.addTrack(track, stream);
-          if (track.kind === "video") peer.videoSender = sender;
+          if (track.kind === "video") {
+            peer.videoSender = sender;
+            await preferVideoCodecs(pc, sender);
+          }
         }
         peer.started = true;
         await this.offer(peer, false);

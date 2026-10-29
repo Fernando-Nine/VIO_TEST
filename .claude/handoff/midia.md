@@ -2,44 +2,46 @@
 Atualizado: 2026-10-28
 
 ## Agora
-#247 (próxima sessão, por decisão do copiloto). Rascunho já no branch `feat/247-captura-leve`
-(sem PR; refaça merge da main): `duplication.rs` (DXGI Desktop Duplication para telas no
-Win10, sem borda, cursor por GDI, fallback WGC), miniaturas por GDI (PrintWindow
-PW_RENDERFULLCONTENT / StretchBlt, 3 em paralelo, cache 4 s, WGC só se vier preto),
-`Writer` comum aos dois laços em `stream.rs`, JPEG nas miniaturas, benches
-`native_capture_cpu` (WGC×DXGI, 1080p60/720p30) e `thumbnails_speed`. Compila (clippy
-Windows limpo); ainda não rodou no runner. Falta medir e o texto de leveza.
+#247 em fechamento: #250 (rc.19) e #251 (rc.20) mergeadas; #252 Só som (rc.21) e
+#253 H.264 por hardware (rc.22) empilhadas, base `main`, aguardando CI → squash.
 
 ## Feito recentemente
-- #246 (PR #249, rc.18): crash ao parar/trocar transmissão **com som** no app. Causa:
-  `Drop` do `PROPVARIANT` (windows-rs) chama `PropVariantClear` → `CoTaskMemFree` do blob
-  na pilha ao fim de cada captura WASAPI. Corrigido com `ManuallyDrop`. Também: troca com
-  som libera só o som anterior (`releaseAudio`), `panic = "unwind"` + `catch_unwind` nas
-  threads, handlers WGC removidos, processador D3D11 recriado no resize, limite nativo +1
-  na troca, `log.rs` (vio.log) e recarga do WebView2 se o renderizador cair.
-- Testes da troca: `tests/desktop-swap.test.ts` (fakes; `nativeApi` em `desktop/capture.ts`
-  é o ponto de troca) e no runner `native_swap`/`audio_swap` (passo "Native swap").
+- #250: telas do Win10 sem borda por DXGI Desktop Duplication (`duplication.rs`, cursor por
+  GDI, reserva WGC); miniaturas por GDI, 3 em paralelo, cache 4 s, JPEG.
+- #251: janelas do Win10 sem borda por PrintWindow numa textura GDI (`printwindow.rs`); WGC
+  se vier preta. `keep_mta()` (CoIncrementMTAUsage): sem ela, threads curtas saindo da MTA
+  derrubavam o processo (ACCESS_VIOLATION no bench de miniaturas).
+- #252: Só som = janelas Alt+Tab + processos com sessão de áudio ativa (`programs.rs`), nome
+  do FileDescription, ícone por ExtractIconEx (`desktop_sound_icon`).
+- #253: `media/codecs.ts` põe H.264 primeiro quando `encodingInfo` diz powerEfficient.
+
+## Medidas (runner Windows, 2 núcleos, sem GPU, tela parada)
+- Captura de tela 1080p60/720p30: 0,3–2% de um núcleo (WGC ≈ DXGI).
+- PrintWindow janela 1280×720: 720p30 ≈ 13% de um núcleo; teto ~30 fps (≈33 ms por quadro
+  esperando o DWM); pedido de 60 entrega 20–27.
+- Miniaturas: 238–310 ms (WGC) → 71–79 ms (GDI). Só som: lista 13 ms, ícone 3 ms.
+- Página em sala parada (Chromium dev): ~12 ms CPU/s, 26 MB heap.
+- Maior gasto real: VP8 por software, uma codificação por espectador (P2P).
 
 ## Decisões
-- Win11 já tira a borda (RequestAccessAsync Borderless + IsBorderRequired=false). Win10:
-  telas sem borda via DXGI; **janelas no Win10 seguem com borda** (WGC não permite; só
-  recortando a tela, o que mostraria o que estiver por cima) — dizer isso ao usuário.
-- Fatal (heap corrompido, fail-fast) não passa por código do app: diagnóstico pelo
-  Visualizador de Eventos; o resto vai para `%LOCALAPPDATA%\<identifier>\logs\vio.log`.
-- Matar servidor local pela porta (`fuser -k PORTA/tcp`), nunca `pkill -f`.
+- Janela no Win10 sem borda custa CPU e limita a ~30 fps; mantido porque o usuário pediu
+  sem borda. Se reclamar de FPS em janela no Win10, alternativa: WGC (com borda) a 60.
+- Codec: só muda a ordem; VP8 continua na lista para quem não tem H.264.
 
 ## Pendente / bloqueios
-- Usuário: roteiro manual da #249 no app (troca com/sem som, 3 telas, Só som).
+- Usuário: aceite no app (roteiros nas PRs #250–#253), CPU real em 1080p60 com 2+ espectadores.
+- Padrões de qualidade por máquina: não feito (padrão já é 720p30).
 - Issues da área: #23, #24, #25.
 
 ## Dicas
 - Rust do Windows no Linux: `rustup target add x86_64-pc-windows-msvc`;
   `CC_x86_64_pc_windows_msvc=clang-cl-18 AR_x86_64_pc_windows_msvc=llvm-lib`,
-  `CFLAGS_x86_64_pc_windows_msvc="/imsvc <dir>"` com `assert.h`/`string.h`/`stdlib.h`
-  mínimos; `dist/source.tar.gz` e `dist/desktop/index.html` vazios;
-  `cargo clippy --target x86_64-pc-windows-msvc --locked --all-targets`.
-- Bug nativo: reproduza com teste `#[ignore]` no runner (PR com conflito não roda CI).
-- A `main` anda rápido: o `-rc.N` colide; refaça merge e suba o N.
+  `CFLAGS_x86_64_pc_windows_msvc="/imsvc <dir> -Wno-implicit-function-declaration"` com
+  `assert.h`/`string.h`/`stdlib.h` mínimos (stdlib com `_byteswap_ulong`); `dist/source.tar.gz`
+  e `dist/desktop/index.html` vazios; `cargo clippy --target x86_64-pc-windows-msvc --locked --all-targets`.
+- O passo de benches do runner é continue-on-error: leia o log, um crash ali fica verde.
+- PRs empilhadas: depois do squash da de baixo, `git merge origin/main` + `checkout --ours`
+  (árvores iguais) e retarget para `main`.
 
 ## Próximo passo
-Merge da main em `feat/247-captura-leve`, abrir PR, ler os benches do runner e decidir.
+Merge de #252 e #253 com CI verde; depois #23–#25 ou o que o copiloto priorizar.

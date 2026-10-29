@@ -2,14 +2,15 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.21] - 2026-10-28
+## [2.11.0-rc.22] - 2026-10-28
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
 ### Somente no vio-test
+- Transmitir pesa bem menos no computador de quem transmite quando ele codifica H.264 por hardware (a maioria das placas de vídeo e processadores recentes): a tela e a câmera passam a ir em H.264 em vez de VP8 por software, e quem assiste também decodifica por hardware. Quem não tem H.264 continua recebendo normalmente.
 - App Windows: "Só som" lista só programas abertos de verdade (com janela, como no Alt+Tab, ou tocando som agora), com o ícone e o nome do programa e, embaixo, o título da janela.
-- App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord). Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.
-- App Windows: no Windows 10, a tela inteira é transmitida sem a borda amarela (as janelas ainda mostram a borda no Windows 10; no 11, nenhuma). O seletor de Compartilhar carrega as miniaturas três por vez e bem mais rápido, e ao reabrir em poucos segundos elas já aparecem na hora.
+- App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord); nesse modo a janela vai a até cerca de 30 quadros por segundo. Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.
+- App Windows: no Windows 10, a tela inteira é transmitida sem a borda amarela. O seletor de Compartilhar carrega as miniaturas três por vez e bem mais rápido, e ao reabrir em poucos segundos elas já aparecem na hora.
 - App Windows: parar ou trocar uma transmissão com som não fecha mais o app (o erro estava no fim de cada captura de som). Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.
 - O sino de notificações abre só quando você clica nele, não mais ao passar o mouse; clicar de novo fecha.
 - O criador da sala continua criador quando o servidor reinicia ou demora a voltar: quem chegar antes fica no cargo só até ele voltar, com aviso na sala, e admins e permissões voltam junto.
