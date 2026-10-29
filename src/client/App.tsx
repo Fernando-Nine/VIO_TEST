@@ -58,7 +58,8 @@ const RoomCanvas = lazy(() =>
     default: module.RoomCanvas,
   })),
 );
-import { Landing } from "./components/Landing";
+import { Landing, LandingAction } from "./components/Landing";
+import { Logo } from "./components/Logo";
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
@@ -75,14 +76,6 @@ type Panel =
   | null;
 const ownerBlockedText =
   "O dono da sala silenciou sua voz para todos. Aguarde ele liberar.";
-function Brand() {
-  return (
-    <span className="brand" aria-label="VIO">
-      vio
-      <span className="brand-dot" />
-    </span>
-  );
-}
 export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
@@ -340,7 +333,7 @@ export default function App({ engine }: { engine: Controller }) {
             title="Voltar à seleção de sala"
             onClick={() => void goHome()}
           >
-            <Brand />
+            <Logo label={false} />
           </button>
           {view.snapshot && (
             <>
@@ -407,17 +400,7 @@ export default function App({ engine }: { engine: Controller }) {
             </button>
           </div>
         ) : (
-          <div className="header-actions">
-            <span className="small-note">De perto, mesmo de longe.</span>
-            <button
-              className="landing-about"
-              aria-label="Como funciona o VIO"
-              onClick={() => open("about")}
-            >
-              <span>Como funciona</span>
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
-          </div>
+          <LandingAction />
         )}
       </header>
       {!view.snapshot && !panel && notice}
@@ -431,6 +414,7 @@ export default function App({ engine }: { engine: Controller }) {
           enter={() => {
             void engine.enter(name, code);
           }}
+          history={() => open("history")}
         />
       ) : (
         <main className="room" id="main-content">

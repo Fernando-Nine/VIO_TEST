@@ -229,23 +229,16 @@ legend {
   justify-content: space-between;
   gap: 20px;
 }
-.brand {
-  position: relative;
-  font-size: 3rem;
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: -0.09em;
-  line-height: 1;
-  display: inline-flex;
-  align-items: flex-end;
-  padding-right: 10px;
+/* Logo (#227): the dot keeps the brand blue in every theme. */
+.brand-logo {
+  display: block;
+  height: 32px;
+  width: auto;
+  overflow: visible;
+  color: var(--text);
 }
-.brand-dot {
-  width: 7px;
-  height: 7px;
-  background: var(--blue);
-  border-radius: 50%;
-  margin: 0 0 9px 7px;
+.brand-logo-dot {
+  fill: var(--blue);
 }
 .header-left,
 .header-actions {
@@ -369,8 +362,8 @@ legend {
   height: 82px;
   padding: 0 4%;
 }
-.in-room .brand {
-  font-size: 2.6rem;
+.in-room .brand-logo {
+  height: 26px;
 }
 .header-divider {
   height: 24px;
@@ -1105,8 +1098,8 @@ legend {
     height: 78px;
     padding: 0 6%;
   }
-  .brand {
-    font-size: 2.6rem;
+  .brand-logo {
+    height: 24px;
   }
   .small-note {
     display: none;
