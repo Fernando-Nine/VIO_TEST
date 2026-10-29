@@ -12,7 +12,7 @@ use std::{
     time::{Duration, Instant},
 };
 use windows::{
-    core::{Interface, BOOL},
+    core::{w, Interface, BOOL},
     Graphics::{
         Capture::{Direct3D11CaptureFramePool, GraphicsCaptureAccess, GraphicsCaptureAccessKind, GraphicsCaptureItem},
         DirectX::{Direct3D11::IDirect3DDevice, DirectXPixelFormat},
@@ -45,9 +45,9 @@ use windows::{
             },
         },
         UI::WindowsAndMessaging::{
-            EnumWindows, GetClassNameW, GetWindow, GetWindowLongPtrW, GetWindowRect, GetWindowTextW,
+            EnumWindows, FindWindowExW, GetClassNameW, GetWindow, GetWindowLongPtrW, GetWindowRect, GetWindowTextW,
             GetWindowThreadProcessId, IsHungAppWindow, IsIconic, IsWindow, IsWindowVisible, GWL_EXSTYLE, GWL_STYLE, GW_OWNER,
-            MONITORINFOF_PRIMARY, WS_CHILD, WS_EX_APPWINDOW, WS_EX_TOOLWINDOW,
+            MONITORINFOF_PRIMARY, WS_CHILD, WS_EX_APPWINDOW, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
         },
     },
 };
@@ -154,6 +154,7 @@ unsafe extern "system" fn visit_window(window: HWND, data: LPARAM) -> BOOL {
     if !unsafe { IsWindowVisible(window) }.as_bool()
         || style & WS_CHILD.0 != 0
         || extended & WS_EX_TOOLWINDOW.0 != 0
+        || (extended & WS_EX_NOACTIVATE.0 != 0 && extended & WS_EX_APPWINDOW.0 == 0)
         || (owned && extended & WS_EX_APPWINDOW.0 == 0)
     {
         return true.into();
@@ -214,12 +215,24 @@ unsafe extern "system" fn visit_window(window: HWND, data: LPARAM) -> BOOL {
 }
 
 /// Alt+Tab windows as (window, PID, process start, title), for the sound list (#247).
+/// Store apps draw inside ApplicationFrameHost; their sound comes from the process of
+/// the CoreWindow inside. Without one the app is suspended and plays nothing (#255).
 pub(crate) fn app_windows() -> Vec<(isize, u32, u64, String)> {
     windows()
         .into_iter()
-        .filter_map(|w| match w.target {
-            Target::Window { window, pid, started } => Some((window, pid, started, w.title)),
-            Target::Screen { .. } => None,
+        .filter_map(|w| {
+            let Target::Window { window, pid, started } = w.target else { return None };
+            let frame = HWND(window as *mut _);
+            let mut class = [0u16; 64];
+            let length = unsafe { GetClassNameW(frame, &mut class) }.max(0) as usize;
+            if String::from_utf16_lossy(&class[..length]) != "ApplicationFrameWindow" {
+                return Some((window, pid, started, w.title));
+            }
+            let core = unsafe { FindWindowExW(Some(frame), None, w!("Windows.UI.Core.CoreWindow"), None) }.ok()?;
+            let mut app = 0u32;
+            unsafe { GetWindowThreadProcessId(core, Some(&mut app)) };
+            let process = open_process(app)?;
+            Some((core.0 as isize, app, process_started(process.0), w.title))
         })
         .collect()
 }
@@ -640,7 +653,12 @@ impl VideoManager {
     pub fn thumbnail(&self, id: &str) -> Result<Vec<u8>, String> {
         let source = self.source(id)?;
         if source.minimized {
-            return Err("Janelas minimizadas não têm miniatura.".into());
+            // No image to show: the program's icon stands in (#255).
+            let Target::Window { pid, .. } = source.target else { unreachable!() };
+            return crate::capture::open_process(pid)
+                .and_then(|process| crate::programs::executable(process.0))
+                .and_then(|path| crate::programs::icon(&path))
+                .ok_or_else(|| "Janelas minimizadas não têm miniatura.".into());
         }
         let key = handle(&source.target);
         if let Some((_, bytes)) = self.recent.lock().ok().and_then(|r| r.get(&key).filter(|(at, _)| at.elapsed() < THUMB_FRESH).cloned()) {

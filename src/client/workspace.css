@@ -3290,7 +3290,7 @@ button.inline-text.is-empty {
   font-size: 12px;
 }
 .catalog-results.is-icons {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
   gap: 4px;
 }
 .catalog.is-compact .catalog-results.is-icons .catalog-item {
@@ -3439,4 +3439,11 @@ button.inline-text.is-empty {
   height: 6px;
   border-radius: 50%;
   background: #a6a9ff;
+}
+
+/* #254: the negative margin made the heading measure the label 0.6em short,
+   so "Pontuação" broke inside the word. */
+.block-heading .inline-text.block-label {
+  margin: 0;
+  overflow-wrap: break-word;
 }

@@ -5,7 +5,14 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { ArrowLeft, Blocks, MonitorUp, Search, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Blocks,
+  MonitorUp,
+  Search,
+  User,
+  Users,
+} from "lucide-react";
 import { widgetRegistry, type WidgetDefinition } from "./widgets";
 import { searchWidgets } from "./catalog-search";
 import { isModule } from "../../shared/room-modules";
@@ -72,8 +79,6 @@ export function WidgetCatalog(props: {
   showScreen?: (id: string) => void;
   /** Footer "Widgets da sala": how many, and the list it opens. */
   roomWidgets?: { count: number; list: ReactNode };
-  /** "Saber mais" on the community entry. */
-  community?: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [tab, setTabState] = useState<Tab>(readTab);
@@ -156,7 +161,14 @@ export function WidgetCatalog(props: {
           title={small ? "Para mim" : undefined}
           onClick={() => props.add(w.id, "individual")}
         >
-          {small ? "Mim" : "Para mim"}
+          {small ? (
+            <>
+              <User size={13} aria-hidden="true" />
+              <span className="catalog-scope-label">Mim</span>
+            </>
+          ) : (
+            "Para mim"
+          )}
         </button>
         <button
           className="primary"
@@ -164,7 +176,14 @@ export function WidgetCatalog(props: {
           title={small ? "Para a sala" : undefined}
           onClick={() => props.add(w.id, "room")}
         >
-          {small ? "Sala" : "Para a sala"}
+          {small ? (
+            <>
+              <Users size={13} aria-hidden="true" />
+              <span className="catalog-scope-label">Sala</span>
+            </>
+          ) : (
+            "Para a sala"
+          )}
         </button>
       </>
     ) : (
@@ -248,18 +267,15 @@ export function WidgetCatalog(props: {
   };
   const current = tabs.find((t) => t.id === tab) ?? tabs[0];
   const items = definitions(current.ids);
+  /** Community widgets don't exist yet: say what they will be (#254). */
   const community = (
-    <div className="catalog-item is-row">
+    <div className="catalog-community">
       <Blocks size={20} aria-hidden="true" />
-      <span className="catalog-text">
-        <strong>Widget personalizado</strong>
-        <span>Widgets criados pela comunidade. Em breve.</span>
-      </span>
-      <span className="catalog-actions">
-        <button className="secondary" onClick={props.community}>
-          Saber mais
-        </button>
-      </span>
+      <p>
+        <strong>Em breve: widgets da comunidade.</strong> Qualquer pessoa vai
+        poder criar widgets com visual e função próprios, ligados a outros
+        serviços, como Spotify, YouTube, estatísticas de partida e chat com IA.
+      </p>
     </div>
   );
   const body = searching ? (
@@ -276,19 +292,7 @@ export function WidgetCatalog(props: {
     >
       {tab === "watch" && screens.map(screenCard)}
       {items.map(tile)}
-      {tab === "community" && (
-        <button
-          className="catalog-item is-tile"
-          title="Widgets criados pela comunidade. Em breve."
-          aria-label="Widget personalizado: saber mais"
-          onClick={props.community}
-        >
-          <Blocks size={20} aria-hidden="true" />
-          <span className="catalog-short" aria-hidden="true">
-            Comunidade
-          </span>
-        </button>
-      )}
+      {tab === "community" && community}
     </div>
   ) : (
     <div className="catalog-results is-rows" role="tabpanel" id="catalog-panel">
