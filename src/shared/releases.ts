@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.22";
+export const version = "2.11.0-rc.23";
 export const currentRelease: Release = {
   version,
   date: "2026-10-28",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        'App Windows: em Compartilhar, uma janela minimizada mostra o ícone do programa no lugar da miniatura vazia. "Só som" deixa de fora partes do próprio Windows (teclado virtual, Explorador de Arquivos, menu Iniciar), janelas auxiliares e aplicativos da Microsoft Store suspensos.',
         "Transmitir pesa bem menos no computador de quem transmite quando ele codifica H.264 por hardware (a maioria das placas de vídeo e processadores recentes): a tela e a câmera passam a ir em H.264 em vez de VP8 por software, e quem assiste também decodifica por hardware. Quem não tem H.264 continua recebendo normalmente.",
         'App Windows: "Só som" lista só programas abertos de verdade (com janela, como no Alt+Tab, ou tocando som agora), com o ícone e o nome do programa e, embaixo, o título da janela.',
         "App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord); nesse modo a janela vai a até cerca de 30 quadros por segundo. Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.",
