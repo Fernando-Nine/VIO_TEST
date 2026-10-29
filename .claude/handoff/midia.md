@@ -2,10 +2,8 @@
 Atualizado: 2026-10-29
 
 ## Agora
-GitHub Actions parado por cobrança desde 28/10 22:10 (usuário vai resolver). Sem CI, sem
-merge. Abertas: #253 (rc.22, H.264, base `main`) e #257 (rc.23, #255, base `feat/247-leveza`).
-#250–#252 já na main. Quando a CI voltar: rodar de novo a #253, squash, retarget da #257
-para main (merge da main + `checkout --ours`), squash.
+#247 concluída: #250–#253 na main (rc.19–rc.22). #257 (#255, rc.23) em CI com base `main`
+→ squash. Actions voltou em 29/10 (parou por cobrança em 28/10 22:10).
 
 ## Feito recentemente
 - #250: telas do Win10 sem borda por DXGI Desktop Duplication (`duplication.rs`, cursor por
