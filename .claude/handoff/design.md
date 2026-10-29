@@ -17,15 +17,12 @@ tipografia, voz, uso, tokens, componentes) e Figma https://www.figma.com/design/
 (variáveis de cor A e B, medidas, estilos de texto VIO/\*, logos, Botão e Selo). Recomendado: logo A +
 paleta A. Plano Figma starter: 1 modo por coleção, por isso A e B são coleções separadas.
 Após o aval: spec `docs/design/marca.md` + issue `frontend` para unificar tokens
-(`styles.css` × `room.css` divergem; ~40 cores soltas; 14 raios). Depois, landing #197.
+(`styles.css` × `room.css` divergem; ~40 cores soltas; 14 raios).
 
 Leva 4 fechada em parte (27 out). Canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
 com a linha "Escolhidas" no topo.
 
-- #197 em aberto. **Landing**: o usuário recusou A e B (perdem o fundo animado). A ideia é
-  manter a 1ª tela e descer com rolagem com snap: Por que instalar → Funcionalidades →
-  Download. O copiloto define o conteúdo e pede a nova leva. **Início do app**: escolhida a
-  C; a criação de sala fica com o roteirista ou o copiloto.
+- #197 fechada na leva 5 (acima).
 
 ## Feito recentemente
 
