@@ -108,6 +108,10 @@ de `.claude/handoff/README.md`, faça commit e avise. O chat novo começa lendo
 - TypeScript estrito, sem `any` solto. Prettier formata. Ícones `lucide-react`.
 - Fontes: Bricolage Grotesque (interface) e IBM Plex Mono (código da sala, ping, números).
 - Erro visível ao usuário: `Fault` com `code` e mensagem em português, nunca stack trace.
+- Movimento: **o ponto da marca conduz as transições** (entrar na sala, trocar de página, abrir
+  widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela. Só
+  `transform`/`opacity`, encaixe perfeito, e `prefers-reduced-motion` + Acessibilidade reduzem a
+  só esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`).
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
   Prefira edição direta, hover e menu de botão direito a painéis de ajustes.
 

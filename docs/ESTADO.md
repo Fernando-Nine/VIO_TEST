@@ -41,6 +41,15 @@ Feito na 2.11 até rc.15: #158, #189, #190, #198, #159 Pessoas, #160 Minha trans
 
 ## Decisões vigentes
 
+- Leva 5 (28 out): landing A (corrigir espaço vazio no celular), início do app B, trancar e
+  convite A, sala A (rever em detalhe numa sessão de Design futura), transição A como padrão.
+- Transições: o ponto conduz tudo (regra no `CLAUDE.md`); o usuário vê antes de fixar cada uma.
+- Temas: padrão **Noite**, escolhido em Ajustes. Futuro: mais temas nossos (só cores) e temas da
+  comunidade, que podem mudar também o arranjo da sala e as animações. Não agora.
+- Widgets da comunidade (futuro): widgets criados pela comunidade, na aparência e na função, usando
+  APIs de outros serviços (Spotify, tela do YouTube, estatísticas de partida, chat com IA…). Exigem
+  isolamento de código antes de existir.
+- Copiloto conversa com o usuário antes de pedir ideias visuais novas a uma área.
 - Correções de segurança vão direto para a produção, sem aval prévio (usuário, 2026-10-24).
 - App Windows: o usuário testa já com a captura de áudio WASAPI.
 
@@ -75,7 +84,6 @@ Feito na 2.11 até rc.15: #158, #189, #190, #198, #159 Pessoas, #160 Minha trans
   celular a definir. Em discussão com o copiloto antes de ir ao Design.
 - Design leva 2 aprovada para rascunho: Pessoas na sala, Ajustes, aviso de transmissões
   (etiqueta + sino), cards de Chamada/Compartilhar e padronização dos widgets.
-- Widget Personalizado/Comunidade: fora de escopo até haver isolamento de código.
 
 ## Referências
 
