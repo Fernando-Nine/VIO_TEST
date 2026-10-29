@@ -91,6 +91,7 @@ import { createWidget, titleOf, widgetRegistry } from "./widgets";
 import { pinCamera } from "./CamerasWidget";
 import { createModule } from "./ModuleWidget";
 import { createContent } from "./CustomWidget";
+import { roomContentKind } from "./room-content";
 import { isModule } from "../../shared/room-modules";
 
 // dnd-kit starts a mouse drag on the handle at pointerdown, so a plain click
@@ -306,7 +307,6 @@ export function RoomCanvas(props: Props) {
   const [catalog, setCatalog] = useState<string | null>(null);
   // The catalog inside an empty slot (the panel uses `catalog`).
   const [slotCatalog, setSlotCatalog] = useState<string | null>(null);
-  const [communityNotice, setCommunityNotice] = useState(false);
   const target = slotCatalog ?? catalog;
   const closeCatalog = () => {
     setCatalog(null);
@@ -850,16 +850,17 @@ export function RoomCanvas(props: Props) {
         : "guestCreate",
     );
   async function addWidget(type: string, scope: Scope) {
-    const scoped = isModule(type) || type === "timer" || type === "custom";
-    if (type === "chat" || (scoped && scope === "room")) {
+    const kind = roomContentKind(type, scope);
+    if (kind) {
       try {
         const widget = await engine.request<SharedWidget>("widget-create", {
           id: freshKey(),
-          content: isModule(type)
-            ? createModule(type)
-            : type === "timer"
-              ? createContent("timer")
-              : { kind: "chat", title: "Chat", blocks: [] },
+          content:
+            kind === "module" && isModule(type)
+              ? createModule(type)
+              : kind === "chat"
+                ? { kind: "chat", title: "Chat", blocks: [] }
+                : createContent(kind),
         });
         engine.receiveSharedWidget(widget);
         openShared(widget);
@@ -2018,7 +2019,6 @@ export function RoomCanvas(props: Props) {
                 </section>
               )
             }
-            community={() => setCommunityNotice(true)}
             roomWidgets={{
               count: snapshot?.widgets?.length ?? 0,
               list: !snapshot?.widgets?.length ? (
@@ -2046,18 +2046,6 @@ export function RoomCanvas(props: Props) {
               ),
             }}
           />
-        </Dialog>
-      )}
-      {catalog && communityNotice && (
-        <Dialog
-          title="Widgets personalizados"
-          centered
-          close={() => setCommunityNotice(false)}
-        >
-          <p>
-            Em breve, você poderá encontrar widgets criados pela comunidade.
-            Esta área vai crescer com novos widgets para a sua sala.
-          </p>
         </Dialog>
       )}
     </div>
