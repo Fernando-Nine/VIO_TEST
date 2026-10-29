@@ -1,22 +1,15 @@
 # design — handoff
 
-Atualizado: 2026-10-28 (leva 5 publicada)
+Atualizado: 2026-10-29 (leva 5 fechada)
 
 ## Agora
 
-**Leva 5** publicada, aguardando escolha por comentário: canvas **VIO · Leva 5**
-https://claude.ai/artifact/6wwRHH5cSppNTGfAm4rKtZ (roteiro `docs/ideias/2026-10-28-roteiro.md`, PR #241).
-
-- #197 Landing C "O ponto": A eixo do ponto (trilha central, CTA no cabeçalho) × B ponto que salta
-  (texto e janela alternados, CTA + navegação de pontos à direita); celular comum; protótipo da
-  viagem do ponto e mini-sala que funciona (roleta, votação, voz) — ambos interativos.
-- #197 Início do app: A tudo ao centro (Criar abre cartão com Trancada) × B Recentes na lateral
-  (menu Renomear/Copiar convite/Esquecer; campo reconhece link); abertura e Criar → palco.
-- #242: A cadeado no topo + aviso "bateu na porta" (Deixar entrar/Agora não) × B porta no painel
-  Pessoas (Aceitar/Recusar, Convidar com validade, Revogar); telas de espera, recusa e expirado.
-- Sala: A ponto discreto × B ponto protagonista (pessoas como pontos no rodapé do palco); 8 momentos;
-  Tweaks troca Noite/Noite azul/Claro.
-  Marca da #227 usada sem mudanças (detalhes do logo seguem em outra sessão Design).
+**Leva 5 fechada** (29 out). Canvas **VIO · Leva 5** https://claude.ai/artifact/6wwRHH5cSppNTGfAm4rKtZ,
+linha "Escolhidas" no topo. Escolhas: landing A (`landing.md`, #258; celular sem o vazio no fim),
+início B (`inicio.md`, #259; Criar e Entrar abrem no lugar), #242 A (`sala-trancada.md`, #260),
+transição A como padrão do VIO (`transicoes.md`, #261; ponto medido no layout real, encaixe
+perfeito; Reduzir movimento em Acessibilidade). Sala A escolhida, mas o detalhe da sala fica
+para uma leva futura: **não começar** sem pedido.
 
 **#227 marca/brandbook/design system** publicada, aguardando escolha por comentário:
 canvas **VIO · Marca** https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo (logo A/B/C, paleta A/B,
@@ -24,15 +17,12 @@ tipografia, voz, uso, tokens, componentes) e Figma https://www.figma.com/design/
 (variáveis de cor A e B, medidas, estilos de texto VIO/\*, logos, Botão e Selo). Recomendado: logo A +
 paleta A. Plano Figma starter: 1 modo por coleção, por isso A e B são coleções separadas.
 Após o aval: spec `docs/design/marca.md` + issue `frontend` para unificar tokens
-(`styles.css` × `room.css` divergem; ~40 cores soltas; 14 raios). Depois, landing #197.
+(`styles.css` × `room.css` divergem; ~40 cores soltas; 14 raios).
 
 Leva 4 fechada em parte (27 out). Canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf,
 com a linha "Escolhidas" no topo.
 
-- #197 em aberto. **Landing**: o usuário recusou A e B (perdem o fundo animado). A ideia é
-  manter a 1ª tela e descer com rolagem com snap: Por que instalar → Funcionalidades →
-  Download. O copiloto define o conteúdo e pede a nova leva. **Início do app**: escolhida a
-  C; a criação de sala fica com o roteirista ou o copiloto.
+- #197 fechada na leva 5 (acima).
 
 ## Feito recentemente
 
