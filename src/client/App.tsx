@@ -61,6 +61,9 @@ const RoomCanvas = lazy(() =>
 import { Landing, LandingAction } from "./components/Landing";
 import { Logo } from "./components/Logo";
 import { Home, Splash } from "./components/Home";
+import { Door } from "./components/Door";
+import { RoomCode } from "./components/RoomLock";
+import { canManageRoom } from "../shared/permissions";
 import { desktop } from "./desktop/bridge";
 import {
   loadName,
@@ -100,6 +103,12 @@ export default function App({ engine }: { engine: Controller }) {
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
   );
+  // Signed invite of the link that opened the page (#242): enters even locked.
+  const [linkInvite] = useState(
+    () => new URLSearchParams(location.search).get("convite") || undefined,
+  );
+  const inviteFor = (room?: string) =>
+    room && room.toUpperCase() === code.toUpperCase() ? linkInvite : undefined;
   const [copied, setCopied] = useState(false);
   function showPeople() {
     // The icon toggles the side panel (docs/design/pessoas.md).
@@ -269,6 +278,33 @@ export default function App({ engine }: { engine: Controller }) {
       setSavedName(true);
     }
   }, [roomCode]);
+  // "Bateu na porta" (#260): the first in line, for the creator and admins.
+  const manages = canManageRoom(view.snapshot, view.id);
+  useEffect(() => {
+    const first = view.knocks[0];
+    if (!manages || !first) {
+      toasts.close("knock", false);
+      return;
+    }
+    const more = view.knocks.length - 1;
+    const answer = (allow: boolean) =>
+      void engine.admit(first.id, allow).catch((e) => engine.fail(e));
+    toasts.push({
+      id: "knock",
+      kind: "important",
+      avatar: first.name,
+      label: `${first.name} bateu na porta.`,
+      text: (
+        <>
+          <strong>{first.name}</strong> bateu na porta.
+          {more > 0 && <span className="toast-tag">+{more} esperando</span>}
+        </>
+      ),
+      duration: 15000,
+      dismiss: { label: "Agora não", run: () => answer(false) },
+      action: { label: "Deixar entrar", run: () => answer(true) },
+    });
+  }, [view.knocks, manages, engine]);
   // "Trancada" in Criar: lock as soon as the new room exists.
   useEffect(() => {
     if (!view.snapshot || !lockOnCreate.current) return;
@@ -353,7 +389,7 @@ export default function App({ engine }: { engine: Controller }) {
   );
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : home ? "home-page" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : view.waiting || view.turnedAway ? "in-door" : home ? "home-page" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
       onPointerDown={wake}
       onKeyDown={wake}
       onFocus={wake}
@@ -372,15 +408,7 @@ export default function App({ engine }: { engine: Controller }) {
           {view.snapshot && (
             <>
               <span className="header-divider" />
-              <button
-                className="room-code"
-                title="Copiar código da sala"
-                aria-label={`Copiar código da sala ${view.snapshot.code}`}
-                onClick={() => void copy(false)}
-              >
-                <span>{view.snapshot.code}</span>
-                <Copy size={14} />
-              </button>
+              <RoomCode engine={engine} copyCode={() => void copy(false)} />
               <RoomTimer engine={engine} />
             </>
           )}
@@ -434,12 +462,14 @@ export default function App({ engine }: { engine: Controller }) {
             </button>
           </div>
         ) : (
-          <LandingAction />
+          !home && !view.waiting && !view.turnedAway && <LandingAction />
         )}
       </header>
       {!view.snapshot && !panel && notice}
       {home && splash && <Splash done={endSplash} />}
-      {home ? (
+      {!view.snapshot && (view.waiting || view.turnedAway) ? (
+        <Door engine={engine} home={() => setCode("")} />
+      ) : home ? (
         <Home
           engine={engine}
           name={name}
@@ -451,7 +481,12 @@ export default function App({ engine }: { engine: Controller }) {
           busy={view.status === "connecting" || view.status === "reconnecting"}
           enter={(entry) => {
             lockOnCreate.current = !!entry.lock;
-            void engine.enter(name.trim(), entry.code, false, entry.invite);
+            void engine.enter(
+              name.trim(),
+              entry.code,
+              false,
+              entry.invite || inviteFor(entry.code),
+            );
           }}
           landing={desktop ? undefined : () => setLanding(true)}
         />
@@ -463,7 +498,7 @@ export default function App({ engine }: { engine: Controller }) {
           setCode={setCode}
           busy={view.status === "connecting" || view.status === "reconnecting"}
           enter={() => {
-            void engine.enter(name, code);
+            void engine.enter(name, code, false, inviteFor(code));
           }}
           history={() => open("history")}
         />
