@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.12.0-rc.1";
+export const version = "2.12.0-rc.2";
 export const currentRelease: Release = {
   version,
   date: "2026-10-30",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        "App Windows: a tela e a janela transmitidas não encolhem mais. Quem assiste recebia a imagem cada vez menor (até 480×270 em segundos) porque o navegador tratava a captura do app como câmera; agora ela vai como tela, em resolução cheia, como no navegador.",
         "Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.",
         "Início novo: depois do primeiro nome, o VIO abre direto em Criar sala e Entrar com código, com as salas recentes ao lado (guardadas só neste aparelho; botão direito renomeia, copia o convite ou esquece). Criar já sorteia o código e pode criar a sala trancada; Entrar aceita o código ou o link colado. O app Windows sempre abre aqui.",
       ],
