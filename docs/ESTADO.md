@@ -1,14 +1,14 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-10-28.
+Atualizado: 2026-10-30.
 
 ## Ambientes
 
-|          | Versão       | Repositório                   | Endereço                       |
-| -------- | ------------ | ----------------------------- | ------------------------------ |
-| Produção | 2.9.0        | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
-| Prévia   | 2.11.0-rc.15 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
+|          | Versão      | Repositório                   | Endereço                       |
+| -------- | ----------- | ----------------------------- | ------------------------------ |
+| Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Prévia   | 2.12.0-rc.6 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
@@ -26,18 +26,18 @@ Ordem completa em `ROADMAP.md`.
 Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
 planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
 
-1. **2.11.0 pronta na prévia (rc.15)**: aguarda o aval do usuário. Aceite humano no app Windows:
-   miniaturas do seletor, nome real do programa em "Só som", CPU em 1080p60.
-2. Brandbook/identidade/design system — Design (canvas https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo).
-3. Ideias de salas e landing (#197) do Roteirista em `docs/ideias/2026-10-28.md` — aguardam escolha
-   (recomendado: trancar + sala de espera e convite assinado; landing depois do logo).
-4. Depois: clips (#208), Ajustes (#168).
+1. **2.11.0 = commit `fa75894` (rc.24)**, pronta para produção. Crash do som corrigido (#246) e
+   confirmado pelo usuário; borda amarela sumiu. Falta o aval final do usuário para publicar.
+2. **2.12.0 na prévia (rc.6)**: landing A (#258), início B (#259), trancar/convite (#260, #242),
+   tela inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps).
+3. Lote do Frontend, só com tudo decidido: transições #261 (Opus no máximo), cursor #266,
+   Baixar direto #268, notificações #270. Teste de responsividade #269 (QA).
+4. Aguardando proposta aprovada: Elephant-Goldfish + entrevista do copiloto + agente crawler.
+5. Depois: TURN Cloudflare (#135, usuário passa as variáveis), app em segundo plano + ícone novo,
+   sala detalhada (Design), assets de marca, clips (#208), Ajustes (#168).
 
-Feito na 2.11 até rc.15: #158, #189, #190, #198, #159 Pessoas, #160 Minha transmissão,
-#162 Câmeras, #193, #207, #209, #192 captura nativa, #194 até 3 telas, #191 compartilhar,
-#221 grade e foco, #228 Foco único de volta, #222 catálogo, #229 até 3 sons nativos e "Só som",
-#226 criador da sala sobrevive a reinício, #236 só som para quem ouve. O usuário decidiu
-**não publicar a 2.10.0**: a próxima produção é a 2.11.0, após aval na prévia.
+Feito na 2.11 (até rc.24): #158, #189, #190, #198, #159, #160, #162, #193, #207, #209, #192,
+#194, #191, #221, #228, #222, #229, #226, #236, #246, #247, #248, #254, #255.
 
 ## Decisões vigentes
 
