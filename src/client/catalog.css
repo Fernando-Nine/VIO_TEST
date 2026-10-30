@@ -93,8 +93,71 @@ div.catalog-item:hover {
   font-size: 10px;
   border-radius: 6px;
 }
+.catalog.is-compact > :is(.catalog-search, .catalog-tabs) {
+  flex: none;
+}
+/* #254: the scope buttons never push the tile wider than its column. */
+.catalog-item.is-tile {
+  min-width: 0;
+}
+.catalog-item.is-tile .catalog-actions {
+  max-width: 100%;
+}
+.catalog-item.is-tile .catalog-actions svg {
+  display: none;
+}
 @container (max-width: 339px) {
+  .catalog.is-compact {
+    grid-auto-rows: max-content;
+  }
   .catalog.is-compact .catalog-tabs {
     grid-column: 1 / -1;
   }
+  .catalog-results.is-icons {
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  }
+  .catalog-item.is-tile .catalog-actions svg {
+    display: block;
+  }
+  .catalog-item.is-tile .catalog-actions .catalog-scope-label {
+    display: none;
+  }
+  .catalog-item.is-tile .catalog-actions :is(.primary, .secondary) {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+/* #254: what the community tab will hold. */
+.catalog-community {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px dashed #33355a;
+  border-radius: 10px;
+  color: #a6a9ff;
+}
+.catalog-community svg {
+  flex: none;
+}
+.catalog-community p {
+  margin: 0;
+  color: #c5cde5;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.catalog-community strong {
+  color: #fff;
+  font-weight: 600;
+}
+.catalog.is-compact .catalog-community {
+  gap: 8px;
+  padding: 8px;
+}
+.catalog.is-compact .catalog-community p {
+  font-size: 12px;
+  line-height: 1.4;
 }

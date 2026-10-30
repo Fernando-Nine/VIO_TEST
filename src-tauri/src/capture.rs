@@ -162,7 +162,7 @@ fn enumerate(names: &mut HashMap<Vec<u16>, String>) -> Vec<NativeSource> {
     let mut seen = HashSet::new();
     let mut found = Vec::new();
     let mut add = |window: isize, pid: u32, started: u64, detail: String, process: &Owned| {
-        let Some(path) = programs::executable(process.0) else { return };
+        let Some(path) = programs::executable(process.0).filter(|p| !programs::shell_host(p)) else { return };
         let title = names.entry(path.clone()).or_insert_with(|| programs::name(&path)).clone();
         found.push(NativeSource {
             window,

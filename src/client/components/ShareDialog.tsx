@@ -497,7 +497,13 @@ export function ShareDialog({
                         >
                           <span className="share-thumb">
                             {thumb ? (
-                              <img src={thumb} alt="" />
+                              <img
+                                className={
+                                  source.minimized ? "share-icon" : undefined
+                                }
+                                src={thumb}
+                                alt=""
+                              />
                             ) : thumb === null ? (
                               <Icon size={28} aria-hidden="true" />
                             ) : null}
