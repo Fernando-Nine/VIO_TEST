@@ -2,11 +2,12 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.12.0-rc.3] - 2026-10-30
+## [2.12.0-rc.4] - 2026-10-30
 
 Prévia · Landing nova e Início
 
 ### Somente no vio-test
+- App Windows: em "Só som", aplicativos da Microsoft Store aparecem com o nome que o Windows mostra, no idioma dele (por exemplo, Reprodutor de Mídia em vez de microsoft.media.player), e com o ícone do aplicativo. Uma janela minimizada desses aplicativos também mostra o ícone certo.
 - App Windows: a tela e a janela transmitidas não encolhem mais. Quem assiste recebia a imagem cada vez menor (até 480×270 em segundos) porque o navegador tratava a captura do app como câmera; agora ela vai como tela, em resolução cheia, como no navegador.
 - Sala trancada: quem cuida da sala clica no código (agora com cadeado) para trancar, copiar um convite que vale 1 hora, 1 dia ou 7 dias e entra direto mesmo trancada, ou revogar os convites. Quem chega sem convite espera na porta; a sala recebe o aviso "bateu na porta" com Agora não e Deixar entrar, também em Pessoas › Na porta, com um som próprio. Quem espera vê Pedindo para entrar…, e um aviso claro se não entrar ou se o convite tiver expirado.
 - Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.
