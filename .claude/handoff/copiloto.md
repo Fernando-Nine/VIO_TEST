@@ -1,19 +1,33 @@
 # Copiloto — handoff
 
-Atualizado: 2026-10-28
+Atualizado: 2026-10-30
 
 ## Agora
 
-Copiloto: `session_01K4nnLTF5gUKwkjx99XxmGX`. Sessões abertas (tag `vio-team`):
+Copiloto `session_01K4nnLTF5gUKwkjx99XxmGX` (passou de 390 mil tokens: trocar de chat).
+Nenhuma área trabalhando. Sessões encerradas em 30 out: Frontend 14, Mídia 9, Design leva 5.
+Design brandbook `session_01K4nnLQc9rnHwwaU5Jshvv4` parado em "Posso seguir?" (logo: usuário
+fala direto com ele; o Frontend já aplicou a N3).
 
-- Design brandbook `session_01K4nnLQc9rnHwwaU5Jshvv4` — canvas "VIO · Marca", issue #227.
-- Encerradas em 28 out: Frontend 12 (#191, #221, #228, #222), Frontend 13 (#236), Mídia 6
-  (#194, #229), Backend (#226), Roteirista (ideias, PR #230), Design leva 4.
-- **2.11.0 pronta na prévia (rc.15)**, aguarda aval. Aceite humano no app: miniaturas do seletor,
-  nome do programa em "Só som", CPU 1080p60. Com o aval: release no VIO (ver Próximo passo).
-- Aguardam o usuário: ideias de sala (recomendado trancar + convite, depois grupo de bolso) e
-  narrativa da landing (#197; Roteirista recomenda C "O ponto", depende do logo).
-- Jurídico: primeira tarefa sugerida = parecer de clips (#208) e base de termos/política.
+- **2.11.0**: produção sai do commit `fa75894` (rc.24). Crash corrigido e confirmado. Com o aval:
+  PR de release no VIO com a árvore desse commit (`git checkout fa75894 -- .`) e a versão `2.11.0`
+  estável em `releases.ts`/`package.json`/lock; tag `v2.11.0` pelo usuário.
+- **2.12.0** na prévia (rc.6). Linha de versão: `2.12.0-rc.N`.
+- **Aguardam o usuário**: (1) proposta Elephant-Goldfish + entrevista + crawler (resumo abaixo);
+  (2) app em segundo plano = fechar janela deixa na bandeja, continua na chamada; ícone novo;
+  (3) nomes das variáveis TURN no Render → trocar para Cloudflare (#135, recomendação da Mídia);
+  (4) aviso de convite revogado (#260 só "bate na porta").
+- **Lote do Frontend** (abrir só com tudo decidido; animações no Opus, avisar o usuário para pôr o
+  raciocínio no máximo): #261, #266, #268, #270 (+ #258 pendências: tamanho do instalador = Backend).
+- QA: #269 responsividade (Playwright na CI), #20, #21, #22 (CI agora grátis: VIO_TEST público).
+
+Proposta Elephant-Goldfish (não aprovada ainda): tema novo → entrevista curta do copiloto →
+plano em `docs/planos/<tema>.md` → aprovação → goldfish (sessão nova, modelo barato, lê só o plano)
+critica → áreas caras executam em lote. Crawler: agente só leitura, modelo barato, usa
+`code-review`/`security-review`, devolve arquivo:linha; antes de produção e semanal.
+
+Custo por área (27–30 out, preço de tabela): Mídia ~61, Frontend ~50, Design ~28, copiloto ~23,
+Backend ~8, Roteirista ~6 (US$). Maior causa: chats acima de 200 mil tokens.
 
 ## Feito recentemente
 
