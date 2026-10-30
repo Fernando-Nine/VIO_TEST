@@ -7,7 +7,7 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.12.0-rc.5";
+export const version = "2.12.0-rc.6";
 export const currentRelease: Release = {
   version,
   date: "2026-10-30",
@@ -16,6 +16,7 @@ export const currentRelease: Release = {
     {
       title: "Somente no vio-test",
       items: [
+        'Quem transmite a tela para muita gente não satura mais a própria internet: o envio de todas as suas telas tem um teto, dividido entre quem assiste (quem vê numa miniatura gasta menos e sobra para os outros). Com 6 pessoas assistindo em Alta, o envio cai de cerca de 18 para 8 Mbps e o processador trabalha a metade. Quando o teto reduz a qualidade, Minha transmissão mostra "dividido" embaixo de Envio.',
         "Os indicadores de fala de todas as pessoas dividem um único processamento de áudio no seu navegador, em vez de um por pessoa: numa sala com 8 pessoas na chamada, o gasto de processador desses indicadores cai para menos da metade, e o Safari deixa de esbarrar no limite de contextos de áudio.",
         'App Windows: em "Só som", aplicativos da Microsoft Store aparecem com o nome que o Windows mostra, no idioma dele (por exemplo, Reprodutor de Mídia em vez de microsoft.media.player), e com o ícone do aplicativo. Uma janela minimizada desses aplicativos também mostra o ícone certo.',
         "App Windows: a tela e a janela transmitidas não encolhem mais. Quem assiste recebia a imagem cada vez menor (até 480×270 em segundos) porque o navegador tratava a captura do app como câmera; agora ela vai como tela, em resolução cheia, como no navegador.",
