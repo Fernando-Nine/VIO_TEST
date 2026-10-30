@@ -7,16 +7,32 @@ export interface Release {
   systemChange?: boolean;
   sections: { title: string; items: string[] }[];
 }
-export const version = "2.11.0-rc.25";
+export const version = "2.12.0-rc.3";
 export const currentRelease: Release = {
   version,
-  date: "2026-10-28",
+  date: "2026-10-30",
+  title: "Prévia · Landing nova e Início",
+  sections: [
+    {
+      title: "Somente no vio-test",
+      items: [
+        "App Windows: a tela e a janela transmitidas não encolhem mais. Quem assiste recebia a imagem cada vez menor (até 480×270 em segundos) porque o navegador tratava a captura do app como câmera; agora ela vai como tela, em resolução cheia, como no navegador.",
+        'Sala trancada: quem cuida da sala clica no código (agora com cadeado) para trancar, copiar um convite que vale 1 hora, 1 dia ou 7 dias e entra direto mesmo trancada, ou revogar os convites. Quem chega sem convite espera na porta; a sala recebe o aviso "bateu na porta" com Agora não e Deixar entrar, também em Pessoas › Na porta, com um som próprio. Quem espera vê Pedindo para entrar…, e um aviso claro se não entrar ou se o convite tiver expirado.',
+        "Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.",
+        "Início novo: depois do primeiro nome, o VIO abre direto em Criar sala e Entrar com código, com as salas recentes ao lado (guardadas só neste aparelho; botão direito renomeia, copia o convite ou esquece). Criar já sorteia o código e pode criar a sala trancada; Entrar aceita o código ou o link colado. O app Windows sempre abre aqui.",
+      ],
+    },
+  ],
+};
+/** Next stable: the 2.11.0 previews, awaiting the user's approval. */
+const stable2110Release: Release = {
+  version: "2.11.0",
+  date: null,
   title: "Prévia · Pessoas, Minha transmissão e Câmeras",
   sections: [
     {
       title: "Somente no vio-test",
       items: [
-        "Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.",
         "Adicionar widget no espaço vazio cabe em qualquer tamanho: em espaço estreito, Mim e Sala viram ícones e os itens quebram linha em vez de sair do quadro. Placar → Para a sala cria o Placar (antes abria o Chat). A aba Comunidade explica o que vem por aí.",
         'App Windows: em Compartilhar, uma janela minimizada mostra o ícone do programa no lugar da miniatura vazia. "Só som" deixa de fora partes do próprio Windows (teclado virtual, Explorador de Arquivos, menu Iniciar), janelas auxiliares e aplicativos da Microsoft Store suspensos.',
         "Transmitir pesa bem menos no computador de quem transmite quando ele codifica H.264 por hardware (a maioria das placas de vídeo e processadores recentes): a tela e a câmera passam a ir em H.264 em vez de VP8 por software, e quem assiste também decodifica por hardware. Quem não tem H.264 continua recebendo normalmente.",
@@ -575,6 +591,7 @@ const systemRelease: Release = {
 };
 export const releases: Release[] = [
   currentRelease,
+  stable2110Release,
   stable2100Release,
   stable290Release,
   widgetsPreviewRelease,

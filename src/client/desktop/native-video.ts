@@ -156,6 +156,19 @@ export interface NativeVideo {
   stop(): void;
 }
 
+/**
+ * A generator track is not a screencast to Chrome: without a hint the encoder treats
+ * it as a camera and its quality scaler shrinks a 1080p screen to 480×270 within
+ * seconds (#267). "detail" keeps the resolution and drops frame rate instead, as
+ * getDisplayMedia does.
+ */
+export function asScreenContent<T extends { contentHint: string }>(
+  track: T,
+): T {
+  track.contentHint = "detail";
+  return track;
+}
+
 export async function startNativeVideo(
   source: VideoSource,
   options: NativeVideoOptions,
@@ -182,7 +195,9 @@ export async function startNativeVideo(
   let stopped = false;
   let stats = { fps: 0, busyMs: 0, gpu: true };
   let maxFps: number = options.fps;
-  const generator = new MediaStreamTrackGenerator({ kind: "video" });
+  const generator = asScreenContent(
+    new MediaStreamTrackGenerator({ kind: "video" }),
+  );
   const writer = generator.writable.getWriter();
   const stop = () => {
     if (stopped) return;
