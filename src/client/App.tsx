@@ -60,6 +60,18 @@ const RoomCanvas = lazy(() =>
 );
 import { Landing, LandingAction } from "./components/Landing";
 import { Logo } from "./components/Logo";
+import { Home, Splash } from "./components/Home";
+import { Door } from "./components/Door";
+import { RoomCode } from "./components/RoomLock";
+import { canManageRoom } from "../shared/permissions";
+import { desktop } from "./desktop/bridge";
+import {
+  loadName,
+  loadRecent,
+  saveName,
+  saveRecent,
+  touchRecent,
+} from "./room/recent-rooms";
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
@@ -80,10 +92,23 @@ export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
   const [replaceSlot, setReplaceSlot] = useState<CaptureSlot>("screen");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(loadName);
+  // Início (#259): the app always; the browser once a name was saved.
+  const [savedName, setSavedName] = useState(() => !!loadName());
+  const [landing, setLanding] = useState(false);
+  const home = !view.snapshot && (desktop || (savedName && !landing));
+  const lockOnCreate = useRef(false);
+  const [splash, setSplash] = useState(desktop);
+  const endSplash = useCallback(() => setSplash(false), []);
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
   );
+  // Signed invite of the link that opened the page (#242): enters even locked.
+  const [linkInvite] = useState(
+    () => new URLSearchParams(location.search).get("convite") || undefined,
+  );
+  const inviteFor = (room?: string) =>
+    room && room.toUpperCase() === code.toUpperCase() ? linkInvite : undefined;
   const [copied, setCopied] = useState(false);
   function showPeople() {
     // The icon toggles the side panel (docs/design/pessoas.md).
@@ -241,7 +266,52 @@ export default function App({ engine }: { engine: Controller }) {
     await engine.leave();
     setCode("");
     setPanel(null);
+    setLanding(false);
   }
+  // Every room entered goes to Recentes, on this device only.
+  const roomCode = view.snapshot?.code;
+  useEffect(() => {
+    if (!roomCode) return;
+    saveRecent(touchRecent(loadRecent(), roomCode));
+    if (name.trim()) {
+      saveName(name);
+      setSavedName(true);
+    }
+  }, [roomCode]);
+  // "Bateu na porta" (#260): the first in line, for the creator and admins.
+  const manages = canManageRoom(view.snapshot, view.id);
+  useEffect(() => {
+    const first = view.knocks[0];
+    if (!manages || !first) {
+      toasts.close("knock", false);
+      return;
+    }
+    const more = view.knocks.length - 1;
+    const answer = (allow: boolean) =>
+      void engine.admit(first.id, allow).catch((e) => engine.fail(e));
+    toasts.push({
+      id: "knock",
+      kind: "important",
+      avatar: first.name,
+      label: `${first.name} bateu na porta.`,
+      text: (
+        <>
+          <strong>{first.name}</strong> bateu na porta.
+          {more > 0 && <span className="toast-tag">+{more} esperando</span>}
+        </>
+      ),
+      duration: 15000,
+      dismiss: { label: "Agora não", run: () => answer(false) },
+      action: { label: "Deixar entrar", run: () => answer(true) },
+    });
+  }, [view.knocks, manages, engine]);
+  // "Trancada" in Criar: lock as soon as the new room exists.
+  useEffect(() => {
+    if (!view.snapshot || !lockOnCreate.current) return;
+    lockOnCreate.current = false;
+    if (view.snapshot.creatorId === view.id)
+      void engine.setLocked(true).catch((e) => engine.fail(e));
+  }, [view.snapshot, view.id, engine]);
   async function copy(link = true) {
     try {
       const url = invite(view.snapshot!.code);
@@ -319,7 +389,7 @@ export default function App({ engine }: { engine: Controller }) {
   );
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : view.waiting || view.turnedAway ? "in-door" : home ? "home-page" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
       onPointerDown={wake}
       onKeyDown={wake}
       onFocus={wake}
@@ -338,15 +408,7 @@ export default function App({ engine }: { engine: Controller }) {
           {view.snapshot && (
             <>
               <span className="header-divider" />
-              <button
-                className="room-code"
-                title="Copiar código da sala"
-                aria-label={`Copiar código da sala ${view.snapshot.code}`}
-                onClick={() => void copy(false)}
-              >
-                <span>{view.snapshot.code}</span>
-                <Copy size={14} />
-              </button>
+              <RoomCode engine={engine} copyCode={() => void copy(false)} />
               <RoomTimer engine={engine} />
             </>
           )}
@@ -400,11 +462,35 @@ export default function App({ engine }: { engine: Controller }) {
             </button>
           </div>
         ) : (
-          <LandingAction />
+          !home && !view.waiting && !view.turnedAway && <LandingAction />
         )}
       </header>
       {!view.snapshot && !panel && notice}
-      {!view.snapshot ? (
+      {home && splash && <Splash done={endSplash} />}
+      {!view.snapshot && (view.waiting || view.turnedAway) ? (
+        <Door engine={engine} home={() => setCode("")} />
+      ) : home ? (
+        <Home
+          engine={engine}
+          name={name}
+          setName={(value) => {
+            setName(value);
+            saveName(value);
+          }}
+          initialCode={code}
+          busy={view.status === "connecting" || view.status === "reconnecting"}
+          enter={(entry) => {
+            lockOnCreate.current = !!entry.lock;
+            void engine.enter(
+              name.trim(),
+              entry.code,
+              false,
+              entry.invite || inviteFor(entry.code),
+            );
+          }}
+          landing={desktop ? undefined : () => setLanding(true)}
+        />
+      ) : !view.snapshot ? (
         <Landing
           name={name}
           code={code}
@@ -412,7 +498,7 @@ export default function App({ engine }: { engine: Controller }) {
           setCode={setCode}
           busy={view.status === "connecting" || view.status === "reconnecting"}
           enter={() => {
-            void engine.enter(name, code);
+            void engine.enter(name, code, false, inviteFor(code));
           }}
           history={() => open("history")}
         />

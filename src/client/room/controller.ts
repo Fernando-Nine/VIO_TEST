@@ -64,12 +64,25 @@ export interface View {
   notice: string;
   signalingPing?: number;
   /** At the door of a locked room until someone admits us (#242). */
-  waiting?: { expiresAt: number };
+  waiting?: { expiresAt: number; code?: string };
+  /** Why the door stayed closed (#260): turned away, or the invite expired. */
+  turnedAway?: "refused" | "expired";
   /** People waiting to enter; only sent to the creator and admins. */
   knocks: WaitingPerson[];
 }
 const cameraOff: VideoDemand = { video: "off", height: 120 };
 /** A screen slot with sound and no image is published as a named sound (#236). */
+/** The invite's own expiry; the server still decides (revoked ones only knock). */
+export function inviteExpired(token?: string, now = Date.now()) {
+  if (!token) return false;
+  try {
+    const body = token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/");
+    const { exp } = JSON.parse(atob(body)) as { exp?: unknown };
+    return typeof exp === "number" && exp <= now;
+  } catch {
+    return false;
+  }
+}
 function soundOnly({ kind, stream, label }: LocalSource) {
   if (
     kind !== "screen" ||
@@ -356,6 +369,15 @@ export class Controller {
     };
     this.bump();
   }
+  /** Color chosen outside a room (Início, #259): used on the next entry. */
+  chooseColor(value: string) {
+    const color = normalizeColor(value);
+    if (!color) return;
+    this.savedColor = color;
+    this.roomColor = color;
+    this.savePreferences();
+    this.bump();
+  }
   async setColor(value: string) {
     const color = normalizeColor(value);
     if (!color) throw new Error("Use uma cor HEX válida, como #2727F5.");
@@ -612,21 +634,22 @@ export class Controller {
       });
       socket.on("waiting", (event: { expiresAt: number }) => {
         if (!current() || !Number.isFinite(event?.expiresAt)) return;
-        this.view.waiting = { expiresAt: event.expiresAt };
+        this.view.waiting = {
+          expiresAt: event.expiresAt,
+          code: this.intent?.code,
+        };
         this.bump();
       });
       socket.on("admission", (event: Admission) => {
         if (!current() || !this.view.waiting) return;
         this.view.waiting = undefined;
         if (event?.allowed) void this.rejoin();
-        else {
-          this.view.status = "failed";
-          this.view.error = event?.message || "Sua entrada não foi aceita.";
-          this.bump();
-        }
+        else void this.turnAway("refused");
       });
       socket.on("waiting-list", (list: WaitingPerson[]) => {
         if (!current() || !Array.isArray(list)) return;
+        const known = new Set(this.view.knocks.map((k) => k.id));
+        if (list.some((k) => !known.has(k.id))) void this.playCue("knock");
         this.view.knocks = list;
         this.bump();
       });
@@ -847,12 +870,35 @@ export class Controller {
       if (!current()) return;
       // Locked room: stay connected and wait for the "admission" event.
       if (recoveryCode(e) === "WAITING") {
-        this.view.waiting ||= { expiresAt: Date.now() + 5 * 60000 };
+        // An expired invite only knocks; say so instead of waiting (#260).
+        if (inviteExpired(this.intent.invite)) {
+          void this.turnAway("expired");
+          return;
+        }
+        this.view.waiting ||= {
+          expiresAt: Date.now() + 5 * 60000,
+          code: this.intent.code,
+        };
         this.bump();
+        return;
+      }
+      if (["ENTRY_REFUSED", "WAITING_FULL"].includes(recoveryCode(e) || "")) {
+        void this.turnAway("refused");
         return;
       }
       this.scheduleRecovery(e);
     }
+  }
+  /** Leaves the door of a locked room and says why (#260). */
+  private async turnAway(reason: "refused" | "expired") {
+    await this.leave(false);
+    this.view.turnedAway = reason;
+    this.bump();
+  }
+  /** Back from the "couldn't enter" screen. */
+  dismissTurnedAway() {
+    this.view.turnedAway = undefined;
+    this.bump();
   }
   /** Locks or unlocks the room; creator and admins only (#242). */
   setLocked(locked: boolean) {
