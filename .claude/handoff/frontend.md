@@ -5,7 +5,7 @@ Atualizado: 2026-10-29 (Frontend 14)
 ## Agora
 
 Bloco 2.12.0 entregue em PRs encadeadas: #254 (PR #263, rc.24), #258 (PR #264, rc.25),
-#259 (PR #265, 2.12.0-rc.1), #260 (PR #266?, 2.12.0-rc.2). #261 (transições) é de outra sessão.
+#259 (PR #265, 2.12.0-rc.1), #260 (PR #274, 2.12.0-rc.2). #261 (transições) é de outra sessão.
 
 ## Feito recentemente
 
