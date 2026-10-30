@@ -6,7 +6,7 @@ import type {
 } from "../../shared/protocol";
 import type { Captures, Slot } from "./capture";
 import { mediaDeadline } from "./deadline";
-import { videoEncoding } from "./video-quality";
+import { splitBudget, videoEncoding } from "./video-quality";
 import { preferVideoCodecs } from "./codecs";
 import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
 export interface PeerInfo {
@@ -27,6 +27,8 @@ export interface PeerInfo {
   bytes?: number;
   loss?: number;
   error?: string;
+  /** The upload cap lowered this viewer's bitrate (#23). */
+  capped?: boolean;
   attempts: number;
   localCandidates?: number;
   remoteCandidates?: number;
@@ -51,6 +53,9 @@ interface Peer {
   lastBytes?: number;
   lastTime?: number;
   sourceHeight?: number;
+  /** kbps this viewer would get without the upload cap, and what the cap gave it. */
+  wanted?: number;
+  share?: number;
   info: PeerInfo;
   events: AbortController;
 }
@@ -385,6 +390,12 @@ export class Peers {
           ),
         );
     }
+    if (peer.sub.tier === "main" && peer.sub.publication.kind === "screen") {
+      peer.wanted = active ? quality.bitrate : 0;
+      peer.share = this.screenShare(peer);
+      peer.info.capped = active && peer.share < quality.bitrate;
+      quality.bitrate = Math.min(quality.bitrate, peer.share);
+    }
     const p = sender.getParameters();
     if (!p.encodings?.length) {
       if (!active) await sender.replaceTrack(null);
@@ -415,6 +426,18 @@ export class Peers {
         peer.info.error =
           "O navegador limitou os parâmetros do envio; confira as estatísticas efetivas.";
     }
+  }
+  /** This viewer's part of the upload cap, shared with every other screen viewer. */
+  private screenShare(peer: Peer) {
+    const viewers = [...this.entries.values()].filter(
+      (p) =>
+        p.outgoing &&
+        p.sub.tier === "main" &&
+        p.sub.publication.kind === "screen" &&
+        p.sub.demand?.video !== "off",
+    );
+    const shares = splitBudget(viewers.map((p) => p.wanted ?? 0));
+    return shares[viewers.indexOf(peer)] ?? Infinity;
   }
   async update(kind: string) {
     for (const peer of this.entries.values())
@@ -500,7 +523,11 @@ export class Peers {
               .sourceFor(peer.sub.publication)
               ?.stream.getVideoTracks()[0]
               ?.getSettings().height;
-            if (height !== peer.sourceHeight)
+            // A viewer arrived or left, or another one changed demand: the cap splits anew.
+            if (
+              height !== peer.sourceHeight ||
+              this.screenShare(peer) !== peer.share
+            )
               await this.serial(peer, () => this.parameters(peer));
           }
           const stats = await peer.pc.getStats();
