@@ -1,13 +1,60 @@
+/** One indicator's reading, run on every shared tick. */
+type Meter = () => void;
+
+/**
+ * Every speaking indicator shares one AudioContext and one timer (#24): a context
+ * per person kept a render callback each, and Safari caps how many can exist.
+ * The context closes when the last indicator goes away.
+ */
+const voice = {
+  context: undefined as AudioContext | undefined,
+  sink: undefined as GainNode | undefined,
+  meters: new Set<Meter>(),
+  timer: undefined as ReturnType<typeof setInterval> | undefined,
+};
+const resumeVoice = () => {
+  void voice.context?.resume().catch(() => {});
+};
+function voiceContext() {
+  if (!voice.context) {
+    voice.context = new AudioContext();
+    // Analysers only run when pulled to the destination; silence keeps them inaudible.
+    voice.sink = voice.context.createGain();
+    voice.sink.gain.value = 0;
+    voice.sink.connect(voice.context.destination);
+    window.addEventListener("pointerdown", resumeVoice);
+    window.addEventListener("keydown", resumeVoice);
+  }
+  resumeVoice();
+  return { context: voice.context, sink: voice.sink! };
+}
+function addMeter(meter: Meter) {
+  voice.meters.add(meter);
+  voice.timer ??= setInterval(() => {
+    for (const each of voice.meters) each();
+  }, 80);
+}
+function removeMeter(meter: Meter) {
+  voice.meters.delete(meter);
+  if (voice.meters.size) return;
+  clearInterval(voice.timer);
+  voice.timer = undefined;
+  window.removeEventListener("pointerdown", resumeVoice);
+  window.removeEventListener("keydown", resumeVoice);
+  voice.sink?.disconnect();
+  void voice.context?.close().catch(() => {});
+  voice.context = undefined;
+  voice.sink = undefined;
+}
+
 /** Tracks can arrive after the MediaStream object is first rendered. */
 export function observeVoiceActivity(
   stream: MediaStream | undefined,
   changed: (speaking: boolean) => void,
   localLevel?: () => number,
 ) {
-  let context: AudioContext | undefined;
   let source: MediaStreamAudioSourceNode | undefined;
   let analyser: AnalyserNode | undefined;
-  let silence: GainNode | undefined;
   let track: MediaStreamTrack | undefined;
   let hold = 0;
   let previous = false;
@@ -17,9 +64,6 @@ export function observeVoiceActivity(
       previous = value;
       changed(value);
     }
-  };
-  const resume = () => {
-    void context?.resume().catch(() => {});
   };
   const attach = () => {
     if (localLevel) return;
@@ -32,32 +76,23 @@ export function observeVoiceActivity(
     hold = 0;
     report(false);
     if (!track || !stream) return;
-    context ??= new AudioContext();
+    const { context, sink } = voiceContext();
     if (!analyser) {
       analyser = context.createAnalyser();
       analyser.fftSize = 256;
-      silence = context.createGain();
-      silence.gain.value = 0;
-      analyser.connect(silence);
-      silence.connect(context.destination);
+      analyser.connect(sink);
     }
     source = context.createMediaStreamSource(new MediaStream([track]));
     source.connect(analyser);
     track.addEventListener("ended", attach);
-    resume();
   };
-  stream?.addEventListener("addtrack", attach);
-  stream?.addEventListener("removetrack", attach);
-  window.addEventListener("pointerdown", resume);
-  window.addEventListener("keydown", resume);
-  attach();
-  const timer = setInterval(() => {
+  const meter = () => {
     let level = localLevel?.() || 0;
     if (
       analyser &&
       track?.readyState === "live" &&
       !track.muted &&
-      context?.state === "running"
+      voice.context?.state === "running"
     ) {
       analyser.getFloatTimeDomainData(buffer);
       level =
@@ -66,18 +101,18 @@ export function observeVoiceActivity(
     }
     if (level > 0.025) hold = Date.now() + 200;
     report(Date.now() < hold);
-  }, 80);
+  };
+  stream?.addEventListener("addtrack", attach);
+  stream?.addEventListener("removetrack", attach);
+  addMeter(meter);
+  attach();
   return () => {
-    clearInterval(timer);
     stream?.removeEventListener("addtrack", attach);
     stream?.removeEventListener("removetrack", attach);
     track?.removeEventListener("ended", attach);
-    window.removeEventListener("pointerdown", resume);
-    window.removeEventListener("keydown", resume);
     source?.disconnect();
     analyser?.disconnect();
-    silence?.disconnect();
-    void context?.close().catch(() => {});
+    removeMeter(meter);
   };
 }
 
