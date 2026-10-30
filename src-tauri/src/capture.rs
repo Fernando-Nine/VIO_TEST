@@ -150,6 +150,8 @@ struct NativeSource {
     detail: String,
     /// Executable, nul-terminated, for the icon; empty for the whole PC.
     path: Vec<u16>,
+    /// Application User Model ID of a Store app, nul-terminated; empty otherwise (#271).
+    app: Vec<u16>,
     /// Everything the PC plays except this process tree (WebView2 renders the call there).
     system: bool,
 }
@@ -163,7 +165,12 @@ fn enumerate(names: &mut HashMap<Vec<u16>, String>) -> Vec<NativeSource> {
     let mut found = Vec::new();
     let mut add = |window: isize, pid: u32, started: u64, detail: String, process: &Owned| {
         let Some(path) = programs::executable(process.0).filter(|p| !programs::shell_host(p)) else { return };
-        let title = names.entry(path.clone()).or_insert_with(|| programs::name(&path)).clone();
+        let app = programs::package_app(process.0).unwrap_or_default();
+        let key = if app.is_empty() { &path } else { &app };
+        let title = names
+            .entry(key.clone())
+            .or_insert_with(|| programs::app_name(&app).unwrap_or_else(|| programs::name(&path)))
+            .clone();
         found.push(NativeSource {
             window,
             started,
@@ -171,6 +178,7 @@ fn enumerate(names: &mut HashMap<Vec<u16>, String>) -> Vec<NativeSource> {
             title,
             detail,
             path,
+            app,
             system: false,
         });
     };
@@ -546,6 +554,7 @@ fn system_source() -> NativeSource {
         title: SYSTEM_TITLE.into(),
         detail: String::new(),
         path: Vec::new(),
+        app: Vec::new(),
         system: true,
     }
 }
@@ -588,6 +597,7 @@ impl Manager {
                 title,
                 detail: String::new(),
                 path: Vec::new(),
+                app: Vec::new(),
                 system: false,
             },
             None => system_source(),
@@ -608,17 +618,23 @@ impl Manager {
         let path = {
             let inner = self.0.lock().map_err(|_| "A captura está indisponível.")?;
             let source = inner.sources.get(source_id).ok_or("Escolha um programa da lista atual.")?;
-            if let Some(cached) = inner.icons.get(&source.path) {
+            let key = if source.app.is_empty() { &source.path } else { &source.app };
+            if let Some(cached) = inner.icons.get(key) {
                 return cached.clone().ok_or_else(missing);
             }
-            source.path.clone()
+            (source.path.clone(), source.app.clone())
         };
+        let (path, app) = path;
         if path.is_empty() {
             return Err(missing());
         }
-        let icon = programs::icon(&path);
+        // A Store app's executable icon is a generic one; its package logo is the real one.
+        let icon = match app.is_empty() {
+            true => programs::icon(&path),
+            false => programs::app_icon(&app).or_else(|| programs::icon(&path)),
+        };
         if let Ok(mut inner) = self.0.lock() {
-            inner.icons.insert(path, icon.clone());
+            inner.icons.insert(if app.is_empty() { path } else { app }, icon.clone());
         }
         icon.ok_or_else(missing)
     }

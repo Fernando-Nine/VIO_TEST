@@ -5,22 +5,29 @@ use std::collections::{HashMap, HashSet};
 use windows::{
     core::{Interface, HSTRING, PCWSTR, PWSTR},
     Win32::{
-        Foundation::{HANDLE, S_OK},
+        Foundation::{ERROR_SUCCESS, HANDLE, SIZE, S_OK},
         Graphics::Gdi::{
-            CreateDIBSection, GdiFlush, GetDC, ReleaseDC, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
+            CreateDIBSection, DeleteObject, GdiFlush, GetDC, GetDIBits, ReleaseDC, BITMAPINFO, BITMAPINFOHEADER, BI_RGB,
+            DIB_RGB_COLORS,
         },
         Media::Audio::{
             eRender, AudioSessionStateActive, IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator,
             MMDeviceEnumerator, DEVICE_STATE_ACTIVE,
         },
-        Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW},
+        Storage::{
+            FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW},
+            Packaging::Appx::GetApplicationUserModelId,
+        },
         System::{
-            Com::{CoCreateInstance, CLSCTX_ALL},
+            Com::{CoCreateInstance, CoInitializeEx, CoTaskMemFree, CoUninitialize, CLSCTX_ALL, COINIT_APARTMENTTHREADED},
             Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS},
             Threading::{QueryFullProcessImageNameW, PROCESS_NAME_WIN32},
         },
         UI::{
-            Shell::ExtractIconExW,
+            Shell::{
+                ExtractIconExW, IShellItem, IShellItemImageFactory, SHCreateItemFromParsingName, SIGDN_NORMALDISPLAY,
+                SIIGBF_ICONONLY,
+            },
             WindowsAndMessaging::{DestroyIcon, DrawIconEx, DI_NORMAL, HICON},
         },
     },
@@ -167,6 +174,95 @@ pub fn name(path: &[u16]) -> String {
     stem()
 }
 
+/// The Application User Model ID of a packaged (Store) app, nul-terminated; `None` for
+/// a plain program. Its executable carries no useful name: the Media Player's
+/// FileDescription is "microsoft.media.player" (#271).
+pub fn package_app(process: HANDLE) -> Option<Vec<u16>> {
+    // APPLICATION_USER_MODEL_ID_MAX_LENGTH, nul included.
+    let mut buffer = vec![0u16; 130];
+    let mut length = buffer.len() as u32;
+    if unsafe { GetApplicationUserModelId(process, &mut length, Some(PWSTR(buffer.as_mut_ptr()))) } != ERROR_SUCCESS {
+        return None;
+    }
+    let end = buffer.iter().position(|&c| c == 0)?;
+    (end > 0).then(|| {
+        buffer.truncate(end + 1);
+        buffer
+    })
+}
+
+/// Shell calls on their own STA thread: some shell extensions refuse the MTA.
+fn on_sta<T: Send>(work: impl FnOnce() -> Option<T> + Send) -> Option<T> {
+    std::thread::scope(|scope| {
+        scope
+            .spawn(|| {
+                if unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) }.is_err() {
+                    return None;
+                }
+                let result = work();
+                unsafe { CoUninitialize() };
+                result
+            })
+            .join()
+            .ok()
+            .flatten()
+    })
+}
+
+/// The app as the Start menu lists it (`shell:AppsFolder`), where the Windows language applies.
+fn app_item(app: &[u16]) -> Option<IShellItem> {
+    let id = String::from_utf16_lossy(&app[..app.len().saturating_sub(1)]);
+    unsafe { SHCreateItemFromParsingName(&HSTRING::from(format!("shell:AppsFolder\\{id}")), None) }.ok()
+}
+
+/// A packaged app's display name in the Windows language ("Reprodutor de Mídia").
+pub fn app_name(app: &[u16]) -> Option<String> {
+    on_sta(|| {
+        let text = unsafe { app_item(app)?.GetDisplayName(SIGDN_NORMALDISPLAY) }.ok()?;
+        let name = unsafe { text.to_string() }.ok();
+        unsafe { CoTaskMemFree(Some(text.0 as *const _)) };
+        name.map(|n| n.trim().to_string()).filter(|n| !n.is_empty() && !n.contains('!'))
+    })
+}
+
+/// A packaged app's icon from its manifest logo, as `VIOT` + RGBA.
+pub fn app_icon(app: &[u16]) -> Option<Vec<u8>> {
+    on_sta(|| {
+        let factory: IShellItemImageFactory = app_item(app)?.cast().ok()?;
+        let size = SIZE { cx: ICON as i32, cy: ICON as i32 };
+        let bitmap = unsafe { factory.GetImage(size, SIIGBF_ICONONLY) }.ok()?;
+        let screen = unsafe { GetDC(None) };
+        let mut info = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: ICON as i32,
+                biHeight: -(ICON as i32),
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: BI_RGB.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let mut bgra = vec![0u8; (ICON * ICON * 4) as usize];
+        let lines = unsafe { GetDIBits(screen, bitmap, 0, ICON, Some(bgra.as_mut_ptr() as *mut _), &mut info, DIB_RGB_COLORS) };
+        unsafe {
+            ReleaseDC(None, screen);
+            let _ = DeleteObject(bitmap.into());
+        }
+        (lines == ICON as i32).then(|| {
+            // Premultiplied BGRA → straight RGBA.
+            let mut rgba = Vec::with_capacity(bgra.len());
+            for p in bgra.chunks_exact(4) {
+                let alpha = p[3] as u32;
+                let color = |c: u8| if alpha == 0 { 0 } else { (c as u32 * 255 / alpha).min(255) as u8 };
+                rgba.extend_from_slice(&[color(p[2]), color(p[1]), color(p[0]), p[3]]);
+            }
+            wire::icon(&rgba, ICON, ICON)
+        })
+    })
+}
+
 /// One draw of `icon` over a solid background, as top-down BGRA.
 fn draw(icon: HICON, background: u8) -> Option<Vec<u8>> {
     let screen = unsafe { GetDC(None) };
@@ -224,4 +320,25 @@ pub fn icon(path: &[u16]) -> Option<Vec<u8>> {
         rgba.extend_from_slice(&[color(b[2]), color(b[1]), color(b[0]), alpha as u8]);
     }
     Some(wire::icon(&rgba, ICON, ICON))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// #271: a Store app shows its display name and package logo, not its executable's.
+    /// Settings is packaged on every Windows, Server included.
+    /// `cargo test --release -- --ignored --nocapture store_app_name`
+    #[test]
+    #[ignore]
+    fn store_app_name() {
+        let app: Vec<u16> = "windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"
+            .encode_utf16()
+            .chain([0])
+            .collect();
+        let name = app_name(&app).expect("nome do pacote");
+        let icon = app_icon(&app).expect("ícone do pacote");
+        println!("VIO app da Store: {name:?}, ícone {} bytes", icon.len());
+        assert!(!name.contains('.') && !name.contains('!'), "{name}");
+    }
 }
