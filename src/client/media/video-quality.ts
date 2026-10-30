@@ -46,3 +46,36 @@ export function videoEncoding(
     scaleResolutionDownBy: screenScale(height, quality.resolution),
   };
 }
+
+/**
+ * Upload cap for every screen this person sends, in kbps (#23). Each viewer gets its
+ * own encoding (P2P), so Alta to six viewers would ask ~24 Mbps of a home upload.
+ */
+export const screenUploadBudget = 8000;
+/** No viewer is pushed below this, even when the cap is crowded. */
+const minimumShare = 300;
+
+/**
+ * Splits `budget` among viewers wanting `wanted` kbps each: whoever wants less than
+ * an equal share keeps it, and the rest is shared again among the others.
+ */
+export function splitBudget(wanted: number[], budget = screenUploadBudget) {
+  const shares = wanted.map(() => 0);
+  let left = budget;
+  let open = wanted.map((_, i) => i);
+  while (open.length) {
+    const equal = left / open.length;
+    const small = open.filter((i) => wanted[i] <= equal);
+    if (!small.length) {
+      for (const i of open)
+        shares[i] = Math.max(minimumShare, Math.floor(equal));
+      break;
+    }
+    for (const i of small) {
+      shares[i] = wanted[i];
+      left -= wanted[i];
+    }
+    open = open.filter((i) => wanted[i] > equal);
+  }
+  return shares;
+}

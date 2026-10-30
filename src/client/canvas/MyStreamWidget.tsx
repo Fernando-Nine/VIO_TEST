@@ -222,6 +222,7 @@ export function MyStreamWidget({
         .filter((i) => i.sending && i.publicationId === current.id)
     : [];
   const numbers = stats(infos);
+  const capped = infos.some((i) => i.capped);
   const viewerIds = new Set(snapshot?.screenViewers?.[current?.id || ""] || []);
   const viewers = (snapshot?.participants || []).filter((p) =>
     viewerIds.has(p.id),
@@ -270,6 +271,10 @@ export function MyStreamWidget({
       label: "Envio",
       value: numbers.bitrate === undefined ? "—" : mbps(numbers.bitrate),
       unit: "Mbps",
+      extra: capped ? "dividido" : undefined,
+      title: capped
+        ? "A qualidade foi dividida entre quem assiste para não saturar a sua internet."
+        : undefined,
     },
     ...(sound
       ? []
@@ -425,7 +430,7 @@ export function MyStreamWidget({
               {cells.map((c) => (
                 <div key={c.label}>
                   <dt>{c.label}</dt>
-                  <dd>
+                  <dd title={"title" in c ? c.title : undefined}>
                     <span className="stream-mono">{c.value}</span>{" "}
                     <small>{c.unit}</small>
                     {c.extra && (
