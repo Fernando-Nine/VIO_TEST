@@ -5,7 +5,7 @@ Atualizado: 2026-10-29 (Frontend 14)
 ## Agora
 
 Bloco 2.12.0 entregue em PRs encadeadas: #254 (PR #263, rc.24), #258 (PR #264, rc.25),
-#259 (PR #265, rc.26), #260 (PR desta branch, rc.27). #261 (transições) é de outra sessão.
+#259 (PR #265, 2.12.0-rc.1), #260 (PR #266?, 2.12.0-rc.2). #261 (transições) é de outra sessão.
 
 ## Feito recentemente
 
@@ -29,7 +29,8 @@ Bloco 2.12.0 entregue em PRs encadeadas: #254 (PR #263, rc.24), #258 (PR #264, r
   pessoa, logo, espera) para a #261 medir origem/destino.
 - Download: produção baixa `VIO-x64-setup.exe` direto; prévia abre a release `beta`.
 - Convite revogado ainda só "bate" (servidor não distingue); vencido é lido do token.
-- Versão seguiu "rc seguinte" (2.11.0-rc.N); copiloto decide se vira 2.12.0-rc.1.
+- Regra do usuário (30 out): Frontend trabalha em lote, só com tudo planejado (bugs são exceção).
+- Linha agora é 2.12.0-rc.N (copiloto); a 2.11.0 de produção sai do commit da rc.24.
 
 ## Pendente / bloqueios
 
