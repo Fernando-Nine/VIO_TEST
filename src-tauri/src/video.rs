@@ -656,8 +656,10 @@ impl VideoManager {
             // No image to show: the program's icon stands in (#255).
             let Target::Window { pid, .. } = source.target else { unreachable!() };
             return crate::capture::open_process(pid)
-                .and_then(|process| crate::programs::executable(process.0))
-                .and_then(|path| crate::programs::icon(&path))
+                .and_then(|process| {
+                    let app = crate::programs::package_app(process.0).and_then(|app| crate::programs::app_icon(&app));
+                    app.or_else(|| crate::programs::executable(process.0).and_then(|path| crate::programs::icon(&path)))
+                })
                 .ok_or_else(|| "Janelas minimizadas não têm miniatura.".into());
         }
         let key = handle(&source.target);

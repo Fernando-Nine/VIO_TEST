@@ -9,6 +9,7 @@ import { windowsCapture } from "./desktop/capture";
 import "./styles.css";
 import "./landing.css";
 import "./home.css";
+import "./door.css";
 import "./room.css";
 import "./finish.css";
 import "./multiscreen.css";

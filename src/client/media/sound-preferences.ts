@@ -64,6 +64,11 @@ export const soundEvents = [
     label: "Fim do cronômetro",
     description: "Quando um cronômetro chega ao final.",
   },
+  {
+    cue: "knock",
+    label: "Bateu na porta",
+    description: "Quando alguém pede para entrar na sala trancada.",
+  },
 ] as const;
 export type Cue = (typeof soundEvents)[number]["cue"];
 export type SoundEvents = Record<Cue, boolean>;
@@ -110,6 +115,7 @@ export const notificationRows: {
     balloon: "people",
     cues: ["room-enter", "room-leave"],
   },
+  { label: "Bateu na porta", hint: "Sala trancada.", cues: ["knock"] },
   { label: "Nova tela", balloon: "screens", cues: ["screen-new"] },
   {
     label: "Widgets",

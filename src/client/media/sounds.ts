@@ -15,6 +15,7 @@ const notes: Record<Cue, number[]> = {
   "poll-open": [587.33, 880, 587.33, 880],
   "poll-end": [523.25, 659.25, 783.99, 1046.5],
   "timer-end": [880, 660, 880, 660, 880],
+  knock: [262, 262],
 };
 export class SoundCues {
   private context?: AudioContext;

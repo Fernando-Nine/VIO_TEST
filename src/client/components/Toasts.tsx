@@ -21,6 +21,8 @@ export interface Toast {
   label: string;
   avatar?: string;
   action?: { label: string; run: () => void };
+  /** Quiet answer before the action ("Agora não"). */
+  dismiss?: { label: string; run: () => void };
   /** Milliseconds until it leaves; omitted = stays until ×. */
   duration?: number;
   onClose?: () => void;
@@ -130,6 +132,17 @@ export function ToastStack({ queue = toasts }: { queue?: ToastQueue }) {
             </span>
           )}
           <p>{toast.text}</p>
+          {toast.dismiss && (
+            <button
+              className="text-button"
+              onClick={() => {
+                toast.dismiss!.run();
+                queue.close(toast.id, false);
+              }}
+            >
+              {toast.dismiss.label}
+            </button>
+          )}
           {toast.action && (
             <button
               className="primary"

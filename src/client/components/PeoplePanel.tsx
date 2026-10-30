@@ -1,3 +1,4 @@
+import { Avatar } from "./Avatar";
 import { useCallback, useRef, useState } from "react";
 import {
   AudioLines,
@@ -208,6 +209,45 @@ export function PeoplePanel({
               <span>{members.length} pessoas</span>
               <RoomLimit count={members.length} />
             </div>
+          )}
+          {manages && engine.view.knocks.length > 0 && (
+            <section
+              className="people-door"
+              aria-labelledby="people-door-title"
+            >
+              <h3 id="people-door-title">
+                Na porta
+                <span className="mono">{engine.view.knocks.length}</span>
+              </h3>
+              <ul>
+                {engine.view.knocks.map((knock) => (
+                  <li key={knock.id}>
+                    <Avatar name={knock.name} color={knock.color} />
+                    <span className="people-door-name">{knock.name}</span>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        void engine
+                          .admit(knock.id, false)
+                          .catch((e) => engine.fail(e))
+                      }
+                    >
+                      Agora não
+                    </button>
+                    <button
+                      className="primary"
+                      onClick={() =>
+                        void engine
+                          .admit(knock.id, true)
+                          .catch((e) => engine.fail(e))
+                      }
+                    >
+                      Deixar entrar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
           <ul className="people-panel-list">
             {members.map((person) => (

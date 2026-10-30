@@ -4,6 +4,7 @@ import { StereoQueue } from "../src/client/desktop/pcm-worklet.js";
 import { decodePacket } from "../src/client/desktop/bridge";
 import { decodeThumbnail } from "../src/client/desktop/video";
 import {
+  asScreenContent,
   checkVideoBuffer,
   nv12Size,
   readSlot,
@@ -128,4 +129,8 @@ test("captura nativa usa 15, 30 ou 60 quadros e a trilha limita o resto", () => 
     [10, 15, 24, 30, 45, 60, 120].map(captureRate),
     [15, 15, 30, 30, 60, 60, 60],
   );
+});
+
+test("trilha nativa é conteúdo de tela: o Chrome não encolhe a resolução (#267)", () => {
+  assert.equal(asScreenContent({ contentHint: "" }).contentHint, "detail");
 });

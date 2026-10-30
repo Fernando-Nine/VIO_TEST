@@ -69,7 +69,7 @@ jobs:
         run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture --test-threads=1 native_swap audio_swap
       - name: Native capture CPU and thumbnails
         continue-on-error: true
-        run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture --test-threads=1 native_capture_cpu window_capture_cpu thumbnails_speed sound_sources
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --locked -- --ignored --nocapture --test-threads=1 native_capture_cpu window_capture_cpu thumbnails_speed sound_sources store_app_name
       - name: Build NSIS installer
         shell: pwsh
         env:
