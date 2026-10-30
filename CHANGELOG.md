@@ -2,12 +2,19 @@
 
 > **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.
 
-## [2.11.0-rc.25] - 2026-10-28
+## [2.12.0-rc.1] - 2026-10-30
+
+Prévia · Landing nova e Início
+
+### Somente no vio-test
+- Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.
+- Início novo: depois do primeiro nome, o VIO abre direto em Criar sala e Entrar com código, com as salas recentes ao lado (guardadas só neste aparelho; botão direito renomeia, copia o convite ou esquece). Criar já sorteia o código e pode criar a sala trancada; Entrar aceita o código ou o link colado. O app Windows sempre abre aqui.
+
+## [2.11.0] - prevista
 
 Prévia · Pessoas, Minha transmissão e Câmeras
 
 ### Somente no vio-test
-- Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.
 - Adicionar widget no espaço vazio cabe em qualquer tamanho: em espaço estreito, Mim e Sala viram ícones e os itens quebram linha em vez de sair do quadro. Placar → Para a sala cria o Placar (antes abria o Chat). A aba Comunidade explica o que vem por aí.
 - App Windows: em Compartilhar, uma janela minimizada mostra o ícone do programa no lugar da miniatura vazia. "Só som" deixa de fora partes do próprio Windows (teclado virtual, Explorador de Arquivos, menu Iniciar), janelas auxiliares e aplicativos da Microsoft Store suspensos.
 - Transmitir pesa bem menos no computador de quem transmite quando ele codifica H.264 por hardware (a maioria das placas de vídeo e processadores recentes): a tela e a câmera passam a ir em H.264 em vez de VP8 por software, e quem assiste também decodifica por hardware. Quem não tem H.264 continua recebendo normalmente.

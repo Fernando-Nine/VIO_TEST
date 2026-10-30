@@ -356,6 +356,15 @@ export class Controller {
     };
     this.bump();
   }
+  /** Color chosen outside a room (Início, #259): used on the next entry. */
+  chooseColor(value: string) {
+    const color = normalizeColor(value);
+    if (!color) return;
+    this.savedColor = color;
+    this.roomColor = color;
+    this.savePreferences();
+    this.bump();
+  }
   async setColor(value: string) {
     const color = normalizeColor(value);
     if (!color) throw new Error("Use uma cor HEX válida, como #2727F5.");
