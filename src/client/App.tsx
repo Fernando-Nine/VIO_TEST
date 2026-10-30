@@ -60,6 +60,15 @@ const RoomCanvas = lazy(() =>
 );
 import { Landing, LandingAction } from "./components/Landing";
 import { Logo } from "./components/Logo";
+import { Home, Splash } from "./components/Home";
+import { desktop } from "./desktop/bridge";
+import {
+  loadName,
+  loadRecent,
+  saveName,
+  saveRecent,
+  touchRecent,
+} from "./room/recent-rooms";
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, version } from "../shared/releases";
 import { api, invite } from "./endpoint";
@@ -80,7 +89,14 @@ export default function App({ engine }: { engine: Controller }) {
   const view = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const [panel, setPanel] = useState<Panel>(null);
   const [replaceSlot, setReplaceSlot] = useState<CaptureSlot>("screen");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(loadName);
+  // Início (#259): the app always; the browser once a name was saved.
+  const [savedName, setSavedName] = useState(() => !!loadName());
+  const [landing, setLanding] = useState(false);
+  const home = !view.snapshot && (desktop || (savedName && !landing));
+  const lockOnCreate = useRef(false);
+  const [splash, setSplash] = useState(desktop);
+  const endSplash = useCallback(() => setSplash(false), []);
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
   );
@@ -241,7 +257,25 @@ export default function App({ engine }: { engine: Controller }) {
     await engine.leave();
     setCode("");
     setPanel(null);
+    setLanding(false);
   }
+  // Every room entered goes to Recentes, on this device only.
+  const roomCode = view.snapshot?.code;
+  useEffect(() => {
+    if (!roomCode) return;
+    saveRecent(touchRecent(loadRecent(), roomCode));
+    if (name.trim()) {
+      saveName(name);
+      setSavedName(true);
+    }
+  }, [roomCode]);
+  // "Trancada" in Criar: lock as soon as the new room exists.
+  useEffect(() => {
+    if (!view.snapshot || !lockOnCreate.current) return;
+    lockOnCreate.current = false;
+    if (view.snapshot.creatorId === view.id)
+      void engine.setLocked(true).catch((e) => engine.fail(e));
+  }, [view.snapshot, view.id, engine]);
   async function copy(link = true) {
     try {
       const url = invite(view.snapshot!.code);
@@ -319,7 +353,7 @@ export default function App({ engine }: { engine: Controller }) {
   );
   return (
     <div
-      className={`app ${view.snapshot ? "in-room" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
+      className={`app ${view.snapshot ? "in-room" : home ? "home-page" : "landing-page"} ${!active && !panel && view.snapshot ? "idle" : ""}`}
       onPointerDown={wake}
       onKeyDown={wake}
       onFocus={wake}
@@ -404,7 +438,24 @@ export default function App({ engine }: { engine: Controller }) {
         )}
       </header>
       {!view.snapshot && !panel && notice}
-      {!view.snapshot ? (
+      {home && splash && <Splash done={endSplash} />}
+      {home ? (
+        <Home
+          engine={engine}
+          name={name}
+          setName={(value) => {
+            setName(value);
+            saveName(value);
+          }}
+          initialCode={code}
+          busy={view.status === "connecting" || view.status === "reconnecting"}
+          enter={(entry) => {
+            lockOnCreate.current = !!entry.lock;
+            void engine.enter(name.trim(), entry.code, false, entry.invite);
+          }}
+          landing={desktop ? undefined : () => setLanding(true)}
+        />
+      ) : !view.snapshot ? (
         <Landing
           name={name}
           code={code}
