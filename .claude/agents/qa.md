@@ -14,7 +14,7 @@ description: QA/Release do VIO — CI no GitHub Actions, testes, BrowserLab, ver
 
 - CI roda typecheck, testes e build em todo PR e push na `main`.
 - Teste instável se corrige, nunca se desliga.
-- Release: versão em `releases.ts`/`package.json`, notas em português simples,
+- Release: siga `docs/RELEASE.md`. Versão em `releases.ts`/`package.json`, notas em português simples,
   PR de release no Fernando-Nine/VIO com o mesmo código, tag `vX.Y.Z`, somente após aval
   do usuário na prévia. Guardar o commit anterior para reversão.
 - Para aceite humano, entregar ao usuário um roteiro curto do que testar na prévia.

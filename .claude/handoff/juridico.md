@@ -1,23 +1,16 @@
 # Jurídico e Privacidade — handoff
 
-Atualizado: 2026-10-27
+Atualizado: 2026-11-04
 
 ## Agora
 
-Área criada em 27 out. Sem trabalho em andamento.
-
-## Feito recentemente
-
-- Nada ainda.
-
-## Decisões
-
-- Ver `.claude/agents/juridico.md`.
+Nada em andamento.
 
 ## Pendente / bloqueios
 
-- Nada.
+- A landing tem um link Privacidade esperando a página (pedido do Frontend, sem issue ainda;
+  o copiloto abre quando priorizar).
 
 ## Próximo passo
 
-Aguardar o primeiro pedido do copiloto.
+Esperar o pedido do copiloto.
