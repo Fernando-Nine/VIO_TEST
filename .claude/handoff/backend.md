@@ -1,77 +1,28 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-10-28 (#242)
+Atualizado: 2026-11-04
 
 ## Agora
 
-Nada em andamento. #242 (servidor/protocolo) entregue na rc.16; interface fica com o Frontend.
-
-## Feito recentemente
-
-- #242: `permissions.locked` (opcional: credenciais antigas seguem válidas; fora de
-  `defaultPermissions` para não virar switch). Trancada: entram membros atuais, `Room.known`
-  (quem já esteve, 500), `restoredAdmins`, credencial de criador e convite; o resto vai a
-  `Room.waiting` (`join` → Fault `WAITING` + evento `waiting {expiresAt}`). Comandos `admit
-  {id, allow}`, `invite-create {ttl: 1h|1d|7d}` → `{invite, expiresAt}`, `invite-revoke`.
-  Eventos: `waiting-list` (só criador/admins; `[]` para quem perde o cargo), `admission
-  {allowed, message?}` (aceito = refazer `join`). Convite `issueInvite/verifyInvite`
-  (prefixo `invite.`, `gen` da sala; revogadas só em memória). `sign/verifySigned` em
-  `security.ts` servem credencial e convite. Cliente: `view.waiting`, `view.knocks`,
-  `setLocked`, `admit`, `createInvite`, `revokeInvites`, `enter(nome, código, false,
-  convite)`, `invite(code, token)` em `endpoint.ts` (`?convite=`). Testes `room-lock*.test.ts`.
-
-- #226: credencial de cargo da sala (`issueRoomCredential`/`verifyRoomCredential` em
-  `security.ts`, HMAC com prefixo `room.`). Portadora, atrelada ao código (ids de sessão
-  mudam por aba/expiração). `rank` = quando o cargo foi dado; provisório assina 0.
-  `Room.creatorRank/provisional/fresh/restoredAdmins/lentFromAdmin`. Vence quem tem
-  `rank` maior, ou ≥ se o criador atual é provisório. Transferência e `leave` explícito
-  dão `rank` novo; tolerância vencida só empresta. Evento `room-credential` (null =
-  esquecer); `JoinResult.credential`. Cliente guarda em `localStorage`
-  `vio:room-credentials` (20 salas). Testes: `room-credential*.test.ts`.
-
-- #158: `widget-delete` guarda o widget 8 s (`RoomWidgets.closed`, `closedWidgetHold`);
-  `widget-updated.closed { by, byName, until }`; `widget-restore` só para quem fechou ou
-  pode fechar, respeitando limites.
-- #122: comando `moderate { participantId, voiceBlocked }` só do criador; encerra só a
-  `voice`; `Participant.voiceBlocked`; `publish` de voz recusado com `VOICE_BLOCKED`;
-  `transfer` limpa o bloqueio.
-- #104: removidos `widget-review`, `shareRequests`, `guestShare`, `guestRequest`.
-  `widget-create` = widget da sala; convidado precisa de `guestCreate`, admin de
-  `adminCreate`. Pessoal nunca vai ao servidor.
-- #83: body-parser 2.4.0 (#85) e zod 4.6.7 (#86); 2.8.1 em produção.
-- #83: zod 3 → 4 sem mudança de schema; exposição era baixa (sem body parser montado,
-  Socket.IO 64 KB, arrays com `max` pequeno). `freshKey` gera UUID v4 válido p/ zod 4.
-- #71 (PR #73): `RoomPermissions` em `protocol.ts` (padrões da issue), comando
-  `room-permissions`, helpers em `permissions.ts` (`roleAllows`, `canSetPermission`,
-  `canUseWidget`, `roomRole`, `permissionText`). Servidor valida controlar vs editar
-  widgets, chat, compartilhar (direto/pedido), tela/voz/câmera, admins criar/encerrar.
-  Desligar mídia ou rebaixar encerra publicações. Permissão por widget (E7) vale por cima.
-- #30 (PR #62): `chat-message` incremental; snapshots de sala sem `widgets`.
-- #53 (PR #58): votos ocultos até encerrar (`moduleState.voters`, reveal agendado).
-- #19 (PR #56): `proxy-addr` 2.0.8; patch do VIO descrito na issue (VIO intocado).
-- #28/#31 (PR #33): orçamento de memória por sala; sucessão prefere quem está online.
-
-## Decisões
-
-- Dono de widget (convidado que compartilhou) não ganha controle/edição automática:
-  segue a permissão da sala ou a por widget.
-- Câmera de convidado desligada por padrão (tabela aprovada na #71).
-- `widget-updated` de votação vai por pessoa (`Rooms.emitWidget` + `view`).
-- Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
+Nada em andamento.
 
 ## Pendente / bloqueios
 
-- Frontend (#242): ler `?convite=` e passar ao `enter`; tela de espera (`view.waiting`),
-  aviso com Aceitar/Recusar (`view.knocks`), Trancar, Copiar convite e Revogar.
-
-- Frontend: interface dos switches da #71 e usar `canEditPublic(..., "guestControl")`
-  nos controles de cronômetro, votação e tarefas.
-- 1 alta só em dev: `vite` 8.3.x → QA.
+- #242 (P2, `aguarda-usuario`): convite revogado ainda só "bate na porta"; o servidor não
+  distingue revogado de trancado (revogações só em memória).
+- Frontend pede o tamanho do instalador para a landing: endpoint ou ajuste de CSP.
+- Conferir se o Frontend já usa `canEditPublic(..., "guestControl")` nos controles de
+  cronômetro, votação e tarefas (#71).
+- Widgets e avisos da sala se perdem num reinício (só memória; espera banco de dados).
 - Teto global de memória / `MAX_ROOMS` com base no uso real (nota em #28).
-- Teste em navegador: código de sala novo a cada execução (sala anterior fica viva no
-  período de reconexão).
+
+## Decisões da área
+
+- Dono de widget não ganha controle/edição automática: vale a permissão da sala ou a do widget.
+- Câmera de convidado desligada por padrão (tabela da #71).
+- `widget-updated` de votação vai por pessoa (`Rooms.emitWidget` + `view`).
+- Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 
 ## Próximo passo
 
-Widgets e avisos da sala ainda se perdem num reinício (fora da #226; só em memória).
-Revisar PRs do Frontend que usem as permissões.
+Primeira issue `backend` da Fila. Mecanismos de #242, #226, #158, #122, #104, #71: `docs/notas/backend.md`.
