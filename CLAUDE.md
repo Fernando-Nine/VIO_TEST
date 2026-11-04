@@ -60,6 +60,14 @@ conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada �
   chamada parada) · **P1** bug com contorno · **P2** ajuste de layout ou de função existente ·
   **P3** feature nova. Não se começa um nível com o de cima aberto na mesma área. A ordem fica na
   seção Fila do `ESTADO.md`; a área pega a primeira com a sua etiqueta.
+- **Em andamento**: no máximo **1 issue por área** ao mesmo tempo. Issue parada esperando decisão
+  ou ação do usuário leva a etiqueta `aguarda-usuario` (e sai da vez da área).
+- **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `releases.ts` se quem usa
+  percebe; `ESTADO.md`/handoff atualizados se mudou estado ou decisão; issue fechada **quando
+  entra na prévia** (com o número da PR).
+- **Release** para produção: siga `docs/RELEASE.md`, sem pular passo.
+- **Incidente**: todo P0 resolvido ganha revisão sem culpa em `docs/incidentes/` e, se couber,
+  um teste ou uma regra nova.
 - **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` → CI verde → o próprio agente
   faz **squash merge**. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
   e os testes do que mudou.
@@ -155,6 +163,13 @@ npm run test:media       # bancada de mídia no navegador (tests/BrowserLab.tsx)
 
 Teste de servidor não prova interface: em mudança visual, **olhe a tela** (BrowserLab ou
 screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
+
+## Regras que crescem
+
+Erro de agente que uma regra teria evitado, ou algo que o usuário precisou explicar no chat, vira
+uma linha curta neste arquivo (no lugar certo, sem duplicar). O copiloto revisa este arquivo uma
+vez por mês: tira o que ficou velho e atualiza a data abaixo.
+Última revisão: 2026-11-04.
 
 ## Travas
 
