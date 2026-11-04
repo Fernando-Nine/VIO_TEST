@@ -56,6 +56,10 @@ conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada �
 
 - **Tarefas** são Issues no VIO_TEST, com etiqueta de área (`frontend`, `midia`, `backend`,
   `qa`, `docs`) e Milestone da versão. Não existem mais "rodadas".
+- **Prioridade**: toda issue tem um nível. **P0** quebra (crash, segurança, perda de dados, sala ou
+  chamada parada) · **P1** bug com contorno · **P2** ajuste de layout ou de função existente ·
+  **P3** feature nova. Não se começa um nível com o de cima aberto na mesma área. A ordem fica na
+  seção Fila do `ESTADO.md`; a área pega a primeira com a sua etiqueta.
 - **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` → CI verde → o próprio agente
   faz **squash merge**. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
   e os testes do que mudou.

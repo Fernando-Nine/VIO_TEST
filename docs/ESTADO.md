@@ -18,6 +18,17 @@ nunca publicada sozinha). Tag `v2.11.0`: o usuário cria em Releases. `ALLOWED_A
 
 - Transmissão de tela e áudio funcionando (confirmado em 2026-10-22).
 
+## Fila
+
+Níveis P0–P3 (regra no `CLAUDE.md`). Etiquetas no GitHub; a área pega a primeira da sua.
+
+- **P0**: nenhuma.
+- **P1**: #280 Flutuante no app · #281 avisos empurram o layout · #266 cursor some · #268 Baixar direto.
+- **P2**: #261 transições · #270 notificações · #242 aviso de convite revogado · #269 responsividade ·
+  #20 Prettier na CI · #25 conferir TURN.
+- **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips · #168 Ajustes ·
+  #135 TURN Cloudflare · #21 conferência pós-deploy · #22 BrowserLab na CI.
+
 ## Prioridades atuais
 
 Ordem completa em `ROADMAP.md`.
