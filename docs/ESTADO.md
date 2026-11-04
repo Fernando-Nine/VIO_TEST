@@ -1,19 +1,18 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-10-30.
+Atualizado: 2026-11-04.
 
 ## Ambientes
 
 |          | Versão      | Repositório                   | Endereço                       |
 | -------- | ----------- | ----------------------------- | ------------------------------ |
-| Produção | 2.9.0       | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
+| Produção | 2.11.0      | Fernando-Nine/VIO `main`      | https://vio-quest.onrender.com |
 | Prévia   | 2.12.0-rc.6 | Fernando-Nine/VIO_TEST `main` | https://vio-test.onrender.com  |
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
-Produção 2.9.0 = VIO_TEST `bbb5c23` (rc.20), VIO PR #4, aprovada em 2026-10-27. A prévia 2.10.0-rc.1
-tem grade 3×4 (#166), avisos no topo (#164) e catálogo novo (#165). Tag `v2.9.0` criada pelo usuário; as
-anteriores não serão criadas (decisão antiga). `ALLOWED_APP_ORIGINS` já está nos dois Render.
+Produção 2.11.0 = VIO_TEST `fa75894` (rc.24), VIO PR #5, aval do usuário em 2026-11-04 (inclui a 2.10.0,
+nunca publicada sozinha). Tag `v2.11.0`: o usuário cria em Releases. `ALLOWED_APP_ORIGINS` já está nos dois Render.
 
 ## Validado pelo usuário
 
@@ -26,13 +25,13 @@ Ordem completa em `ROADMAP.md`.
 Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
 planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
 
-1. **2.11.0 = commit `fa75894` (rc.24)**, pronta para produção. Crash do som corrigido (#246) e
-   confirmado pelo usuário; borda amarela sumiu. Falta o aval final do usuário para publicar.
+1. **Proposta aguardando o usuário**: fila P0–P3, Elephant-Goldfish e agentes Crawler e Pesquisador
+   (`docs/planos/fila-e-agentes.md`). Com o aval, vira etiquetas e uma seção Fila aqui.
 2. **2.12.0 na prévia (rc.6)**: landing A (#258), início B (#259), trancar/convite (#260, #242),
    tela inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps).
 3. Lote do Frontend, só com tudo decidido: transições #261 (Opus no máximo), cursor #266,
    Baixar direto #268, notificações #270. Teste de responsividade #269 (QA).
-4. Aguardando proposta aprovada: Elephant-Goldfish + entrevista do copiloto + agente crawler.
+4. Bugs novos: Flutuante no app (#280), avisos empurram o layout (#281). App na bandeja + ícone (#282).
 5. Depois: TURN Cloudflare (#135, usuário passa as variáveis), app em segundo plano + ícone novo,
    sala detalhada (Design), assets de marca, clips (#208), Ajustes (#168).
 
