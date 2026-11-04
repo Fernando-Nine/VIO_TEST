@@ -63,6 +63,39 @@ Backend ~8, Roteirista ~6 (US$). Maior causa: chats acima de 200 mil tokens.
 - Tags v2.7.2, v2.8.0, v2.8.1: não criar (decisão antiga). Próximas tags o usuário cria em Releases.
 - Grid celular e pauta futura de Design (landing/página de download).
 
+## Recados do usuário (4 nov) — tratar primeiro no chat novo
+
+Decidido:
+
+- **Aval da 2.11.0 confirmado**: publicar no VIO a partir de `fa75894` (rc.24) — ver Próximo passo.
+- **Segundo plano confirmado**: fechar a janela deixa o app na bandeja, continua na chamada/transmissão;
+  sair pelo menu da bandeja. Ícone novo do app (logo da #227). Abrir issue `midia` (desktop).
+- **Regras novas** (já no `CLAUDE.md`): troca de chat obrigatória nos 200 mil; áreas trabalham em
+  silêncio (só relatório final ou erro que dependa do usuário).
+- **Servidor próprio** (futuro, não agora): começar com servidor próprio nosso (manutenção e
+  segurança nossas); terceirizar depois, com verba. Vale para TURN/SFU.
+- TURN: o usuário não sabe trocar para Cloudflare; explicar passo a passo quando ele pedir.
+
+Pedidos para o chat novo:
+
+1. **Fila e prioridades**: propor um sistema de níveis e uma fila única e clara (ex.: P0 crash/segurança,
+   P1 bugs, P2 layout e ajustes de funções existentes, P3 features novas). Bugs e layout antes de feature.
+   Mostrar ao usuário antes de adotar (etiquetas no GitHub + seção no ESTADO).
+2. **Elephant-Goldfish**: fazer **pesquisa real e detalhada** (plugin do Google, out/2026; repo
+   vshvedov/elephant-goldfish; artigo UMD CMSC389A) e propor duas skills: `elephant-copilot`
+   (copiloto entrevista, guia e escreve o plano) e `goldfish-copilot` (revisor sem memória). Memórias
+   separadas. Dizer como economiza créditos e quando usar. Mostrar antes de criar.
+3. **Agentes novos (propor, depois criar)**: _crawler_ (só leitura, modelo barato: bugs, código em
+   desuso, mal otimizado ou fora do padrão; acionado quando citam um bug) e _pesquisador_ (busca em
+   Reddit, fóruns, docs por problemas parecidos e alternativas de implementação).
+4. **Bugs novos** (abrir issues): (a) botão Flutuante não funciona no app (pode mudar com a nova tela
+   da sala); (b) erros e notificações empurram o layout para baixo — devem sobrepor, e as mensagens
+   de erro devem ser claras e na voz do brandbook (#227).
+5. **Captura**: a tela pequena talvez tenha sido do Valorant/Riot (anti-cheat); o usuário quer saber se
+   a captura nativa é o melhor caminho ou se há outro melhor; vai testar com o Valorant. Pedir à Mídia
+   (com o pesquisador) um parecer curto quando houver fila.
+6. Lote do Frontend (#261 transições no Opus máximo, #266, #268, #270) só depois da fila definida.
+
 ## Próximo passo
 
 Com o aval da 2.11.0: subir a versão estável em `releases.ts` + `package.json` no VIO_TEST, depois

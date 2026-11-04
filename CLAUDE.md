@@ -37,6 +37,9 @@ Agentes são **autônomos**. Corrigiu um erro pequeno? Corrija e siga, sem relat
 Pergunte ao usuário **apenas** quando a decisão puder prejudicar usuários em geral
 (privacidade, segurança, perda de dados, custo) ou mudar a visão do produto.
 Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão exigir.
+**Áreas trabalham em silêncio**: sem narrar passos nem mandar avisos parciais. Uma mensagem ao
+copiloto só no fim do bloco (≤ 4 linhas) ou quando houver erro que a área não resolve ou que
+depende do usuário. Só o copiloto mantém conversa longa.
 
 **Economia de créditos:** rode só os testes ligados ao que mudou (a CI roda o resto) e não
 releia arquivos que não mudaram desde a última leitura. Suíte completa, BrowserLab e
@@ -68,7 +71,7 @@ conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada �
 ## Contexto e troca de chat
 
 Chats são substituídos para poupar créditos: cada mensagem relê todo o contexto, então um
-chat longo custa mais a cada passo. Troque ao passar de **~200 mil tokens** (`/context`)
+chat longo custa mais a cada passo. **Obrigatório** trocar ao passar de **200 mil tokens** (`/context`)
 ou ao concluir um bloco de 3–4 issues, o que vier primeiro: atualize seu `.claude/handoff/<área>.md` no formato
 de `.claude/handoff/README.md`, faça commit e avise. O chat novo começa lendo
 `CLAUDE.md`, papel e handoff — nada mais é necessário.
