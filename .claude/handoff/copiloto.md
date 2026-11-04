@@ -15,6 +15,11 @@ Copiloto `session_01K4nnLSxASaRLsvR8RRDPnQ`. Nenhuma área trabalhando.
   `elephant-copilot`/`goldfish-copilot`, agentes Crawler e Pesquisador). Com o aval: criar etiquetas,
   seção Fila no ESTADO, as duas skills e os dois agentes; depois pedir à Mídia+Pesquisador o parecer
   sobre captura x anti-cheat (Valorant) e abrir o lote do Frontend (#261 no Opus máximo, #266, #268, #270).
+- **Processo adotado (4 nov)**: P0–P3 + Fila no ESTADO, Pronto, 1 issue por área, `aguarda-usuario`,
+  `docs/RELEASE.md`, `docs/incidentes/`, regras que crescem + revisão mensal do `CLAUDE.md`
+  (próxima: ~4 dez). Falta, no modo de alto esforço (usuário troca): **ADRs** (`docs/decisoes/`,
+  migrar as Decisões do ESTADO) e **modelos de issue** (bug/feature em `.github/ISSUE_TEMPLATE/`).
+  O `CLAUDE.md` do VIO recebe tudo na próxima release.
 - Ainda pendentes: TURN Cloudflare (#135, explicar passo a passo quando o usuário pedir); aviso de
   convite revogado (#260).
 
