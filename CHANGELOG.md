@@ -15,34 +15,33 @@ Prévia · Landing nova e Início
 - Página inicial nova: além da abertura de sempre, ela desce por Por que instalar, O que tem na sala (com uma roleta e uma votação que funcionam ali mesmo) e Baixar para Windows. No celular, termina no rodapé, sem espaço vazio. Logo nova do VIO em todo o app.
 - Início novo: depois do primeiro nome, o VIO abre direto em Criar sala e Entrar com código, com as salas recentes ao lado (guardadas só neste aparelho; botão direito renomeia, copia o convite ou esquece). Criar já sorteia o código e pode criar a sala trancada; Entrar aceita o código ou o link colado. O app Windows sempre abre aqui.
 
-## [2.11.0] - prevista
+## [2.11.0] - 2026-11-04
 
-Prévia · Pessoas, Minha transmissão e Câmeras
+Pessoas, Minha transmissão, Câmeras e várias telas
 
-### Somente no vio-test
-- Adicionar widget no espaço vazio cabe em qualquer tamanho: em espaço estreito, Mim e Sala viram ícones e os itens quebram linha em vez de sair do quadro. Placar → Para a sala cria o Placar (antes abria o Chat). A aba Comunidade explica o que vem por aí.
-- App Windows: em Compartilhar, uma janela minimizada mostra o ícone do programa no lugar da miniatura vazia. "Só som" deixa de fora partes do próprio Windows (teclado virtual, Explorador de Arquivos, menu Iniciar), janelas auxiliares e aplicativos da Microsoft Store suspensos.
-- Transmitir pesa bem menos no computador de quem transmite quando ele codifica H.264 por hardware (a maioria das placas de vídeo e processadores recentes): a tela e a câmera passam a ir em H.264 em vez de VP8 por software, e quem assiste também decodifica por hardware. Quem não tem H.264 continua recebendo normalmente.
-- App Windows: "Só som" lista só programas abertos de verdade (com janela, como no Alt+Tab, ou tocando som agora), com o ícone e o nome do programa e, embaixo, o título da janela.
-- App Windows: no Windows 10, a janela de um programa também é transmitida sem a borda amarela (o app pede para a janela se desenhar, como o Discord); nesse modo a janela vai a até cerca de 30 quadros por segundo. Se a janela vier preta (vídeo protegido, jogo em tela cheia), o app volta ao modo anterior, com borda.
-- App Windows: no Windows 10, a tela inteira é transmitida sem a borda amarela. O seletor de Compartilhar carrega as miniaturas três por vez e bem mais rápido, e ao reabrir em poucos segundos elas já aparecem na hora.
-- App Windows: parar ou trocar uma transmissão com som não fecha mais o app (o erro estava no fim de cada captura de som). Se a troca com som falhar, quem assiste continua vendo a tela anterior. Uma falha na captura encerra só aquela transmissão, e o app guarda um registro local (sem nomes) para o diagnóstico.
-- O sino de notificações abre só quando você clica nele, não mais ao passar o mouse; clicar de novo fecha.
-- O criador da sala continua criador quando o servidor reinicia ou demora a voltar: quem chegar antes fica no cargo só até ele voltar, com aviso na sala, e admins e permissões voltam junto.
-- Adicionar widget por abas: Assistir, Conversar, Decidir e jogar, Tempo e Comunidade (a última aberta fica lembrada); a busca procura em todas. Cada widget traz Para mim e Para a sala, ou Adicionar quando é só seu. Widgets da sala ficam no botão do rodapé. Personalizado agora se chama Placar e volta ao catálogo. No espaço vazio, cada ícone tem Mim e Sala.
-- Foco único volta à barra da sala: um clique mostra só o widget em foco, ocupando todo o espaço; outro clique (Voltar ao conjunto) devolve o layout exatamente como estava. Só muda para você.
-- Grade: passe o mouse num espaço e arraste a alça do canto para juntar espaços vizinhos (o fantasma mostra o tamanho, como 2 × 2); soltar junta, e o widget coberto vai para o próximo espaço livre ou para Não exibidos. Para separar, arraste de volta para 1 × 1 ou use Separar espaços no botão direito. Pelo teclado: setas na alça e Enter. Em Layout, as posições do foco viram miniaturas, e passar o mouse mostra o resultado na própria sala. Arrastando um widget com Shift até a borda, aparece o fantasma de Foco + tira daquele lado; soltar aplica, com o widget no foco.
-- Compartilhar abre uma janela no centro, já com a imagem: escolha Tela inteira ou Janela do aplicativo (e Aba do navegador no Chrome e no Edge), a qualidade (480p, 720p, 1080p ou Fonte), a taxa de quadros (15, 30 ou 60 FPS) e se vai com som ou sem som. No app, as telas e janelas aparecem com miniatura e um clique em Compartilhar começa, sem o seletor do Windows; no navegador, Compartilhar abre o seletor dele. As escolhas ficam lembradas, e Trocar o que transmito usa a mesma janela. Transmitindo, o + ao lado de Parar tela (ou Compartilhar outra tela no menu de Minha transmissão) abre outra tela, até 3; cada uma tem Pausar, Silenciar, Trocar e Parar em Minha transmissão.
-- Widget Câmeras: quem fala fica em destaque (troca depois de 1,5 s de fala, sem piscar) e as outras câmeras ligadas ficam ao lado; na Tira, só a câmera de quem fala. Botão direito numa câmera fixa só ela, com o nome no cabeçalho; Mostrar todas volta ao automático. O selo de câmera em Pessoas, ou Abrir câmera no menu da pessoa, abre o widget já fixado. Nenhuma câmera é esticada, e a sua aparece espelhada só para você. Câmera pequena chega mais leve, e câmera que ninguém está vendo não gasta o envio de quem a ligou.
-- Widget Pessoas no lugar de Pessoas na sala, Pessoas na chamada e Mixer de volume. Quem está na chamada aparece em bolhas, com anel quando fala e selos de transmitindo, microfone desligado e câmera ligada; embaixo, o nome e o volume de cada voz para você, sempre à vista, de 0 a 200%. Quem está fora da chamada fica no grupo Na sala. O menu da pessoa abre só pelo botão direito (toque longo no celular). Quem já tinha um dos três widgets abertos fica com Pessoas no mesmo espaço.
-- Widget Minha transmissão no lugar de Meus espectadores, Conexão e Minha tela: prévia da sua tela com AO VIVO e a fonte, Pausar, Silenciar o som (quem assiste vê a tela, sem som; o microfone não muda), Trocar o que transmito (a nova fonte entra sem derrubar quem assiste) e Parar. Ao lado, quem assiste e Envio, Quadros, Ping e Perda. Em foco, a conexão de cada pessoa, o gráfico do envio do último minuto e a qualidade; na tira, só a prévia, com os controles no botão direito. Quem já tinha um dos três widgets abertos fica com Minha transmissão no mesmo espaço.
-- Base para transmitir até 3 telas ao mesmo tempo: cada tela é uma transmissão própria, quem assiste escolhe qual ver, e a partir da 2ª tela a qualidade começa em Baixa para poupar o envio. A 4ª é recusada com aviso. O botão para adicionar outra tela chega com o novo seletor de compartilhar.
-- Som sem tela chega como som, não como tela vazia: quem ouve vê um chip na barra da sala com o nome do programa e um indicador de som; o clique abre o volume, Silenciar e Parar de ouvir. O aviso diz "começou a transmitir o som de…" com Ouvir, e Pessoas mostra uma nota no lugar do selo de tela. Em Minha transmissão, o som aparece com o nome do programa, sem Pausar, Trocar nem Quadros.
-- App Windows: até 3 sons ao mesmo tempo, inclusive som sem tela (por exemplo, o jogo na tela e a música à parte). Na janela de compartilhar, a aba Só som lista os aplicativos com som. O mesmo aplicativo não entra duas vezes, Todo o som do computador não se soma a outro som, e o VIO nunca transmite o próprio som.
-- Chat: entre o contorno colorido e o avatar volta a ficar um espaço vazio, sem o anel azul.
-- Sino com os grupos Agora (última hora) e Antes, botão Limpar e um ponto nas notificações ainda não lidas.
-- No celular, segurar o cabeçalho de um widget abre o menu dele por baixo da tela; para mover, arraste.
-- Quem não controla o Cronômetro da sala vê o estado (Em andamento, Pausado, Parado ou Concluído) no lugar dos botões.
+### Telas e som
+- Compartilhar abre uma janela já com a imagem: Tela inteira, Janela ou Aba do navegador, qualidade até 1080p ou Fonte, 15 a 60 FPS, com ou sem som. As escolhas ficam lembradas.
+- Até 3 telas ao mesmo tempo, cada uma com Pausar, Silenciar, Trocar e Parar; quem assiste escolhe qual ver.
+- Som sem tela chega como som: um chip na barra da sala com o nome do programa, volume, Silenciar e Parar de ouvir.
+- Transmitir pesa menos: tela e câmera vão em H.264 quando o computador codifica por hardware.
+
+### Widgets
+- Pessoas junta Pessoas na sala, Pessoas na chamada e o Mixer: bolhas com anel de fala, selos e o volume de cada voz, de 0 a 200%.
+- Minha transmissão junta Meus espectadores, Conexão e Minha tela: prévia ao vivo, controles, quem assiste e a conexão de cada pessoa.
+- Câmeras com quem fala em destaque; o botão direito fixa uma câmera.
+- Adicionar widget por abas (Assistir, Conversar, Decidir e jogar, Tempo e Comunidade), com busca em todas e Para mim ou Para a sala em cada widget. Personalizado virou Placar.
+- Quem não controla o Cronômetro da sala vê o estado no lugar dos botões.
+
+### Sala
+- Grade: arraste a alça do canto para juntar espaços vizinhos. Foco único volta à barra da sala e devolve o layout como estava.
+- O criador continua criador quando o servidor reinicia, com admins e permissões.
+- O sino abre no clique, com Agora e Antes, Limpar e um ponto nas notificações não lidas.
+- No celular, segurar o cabeçalho de um widget abre o menu dele.
+
+### App Windows
+- Tela e janela sem a borda amarela também no Windows 10, e o seletor carrega as miniaturas bem mais rápido.
+- Até 3 sons ao mesmo tempo, inclusive som sem tela; Só som lista os programas abertos de verdade, com ícone e nome.
+- Parar ou trocar uma transmissão com som não fecha mais o app.
 
 ## [2.10.0] - prevista
 
