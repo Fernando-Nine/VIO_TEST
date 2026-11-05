@@ -13,7 +13,9 @@ by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24
 2. `docs/ESTADO.md` — versão em cada ambiente, prioridades e decisões. **Fonte única de estado.**
 3. Seu papel em `.claude/agents/<área>.md` e seu handoff em `.claude/handoff/<área>.md`.
 
-O resto de `docs/` é referência técnica; `docs/arquivo/` é histórico e **não** descreve o presente.
+O resto de `docs/` é referência técnica. `docs/catalogo/` retrata o código por tema (como funciona,
+números, mercado, achados): leia só a ficha da tarefa; o `GUIA.md` de lá explica os porquês.
+`docs/arquivo/` é histórico e **não** descreve o presente.
 
 ## Equipe
 
@@ -79,8 +81,9 @@ subagentes para leitura pesada.
 - **Em andamento**: no máximo **1 issue por área** ao mesmo tempo. Issue parada esperando decisão
   ou ação do usuário leva a etiqueta `aguarda-usuario` (e sai da vez da área).
 - **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `changes/` se quem usa
-  percebe; `ESTADO.md`/handoff atualizados se mudou estado ou decisão; issue fechada **quando
-  entra na prévia** (com o número da PR).
+  percebe; `ESTADO.md`/handoff atualizados se mudou estado ou decisão; ficha de `docs/catalogo/`
+  atualizada se mudou o que ela descreve; issue fechada **quando entra na prévia** (com o número
+  da PR).
 - **Incidente**: todo P0 resolvido ganha revisão sem culpa em `docs/incidentes/` e, se couber,
   um teste ou uma regra nova.
 - **Plano na issue**: issue P3, de protocolo/segurança ou que cruze áreas traz no corpo objetivo,
@@ -131,7 +134,8 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Streams remotos: usar `media/remote-stream.ts` (`addTrack` por script não emite eventos).
 - Captura: `fonte → analisador → portão → destino`; analisador **antes** do portão; limiar em dB.
 - Volume geral multiplica só a reprodução local, nunca o que é enviado.
-- Negociação _perfect negotiation_ com `round`; todo sinal passa por `signalSchema`.
+- Negociação: ofertante único (o dono da publicação) com `round` e fila serial por conexão;
+  rollback só no ofertante, antes de ICE restart. Todo sinal passa por `signalSchema`.
 - Identidade estável por token HMAC (não `socket.id`); `epoch` mudou = refazer tudo.
 - Service worker nunca intercepta navegação, sala, sessão ou socket.
 - Widget compartilhado é **um só estado para a sala**: toda ação (iniciar, pausar, desligar
