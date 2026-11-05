@@ -1,24 +1,20 @@
 # Copiloto — handoff
 
-Atualizado: 2026-11-05 (2)
+Atualizado: 2026-11-05 (3)
 
 ## Agora
 
-Auto-merge ligado e verificado; plugins/conectores removidos; release `v2.11.0` feita (usuário, 5 nov).
-#242 fechada (aviso de convite revogado descartado). Novas: #285 (P1 frontend, `Home` no navegador),
-#286 (P1 backend, saída fica "reconectando"; espera o tema 02 da #287), #287 (catálogo técnico,
-plano revisado pelo `goldfish`, `aguarda-usuario`: respostas do elephant + o usuário põe no máximo).
+#287 entregue: `docs/catalogo/` com 11 fichas por tema, `dependencias.md` e o `GUIA.md` (versão
+explicada). PR com auto-merge. `CLAUDE.md`, `ESTADO.md`, ADRs 016–017 e o handoff do QA já
+apontam o catálogo.
 
-## Aguardam o usuário
+## Pendente / bloqueios
 
-- Respostas às perguntas da #287 e aval do plano.
-- #135: avisar o usuário quando chegar a vez (ele passa as variáveis).
-
-## Depois
-
-- #287 etapas 1–5; em paralelo, área frontend pode pegar #285 (Sonnet).
-- Fila P1: #281, #266, #268, #280 (com Mídia); depois #261, #270.
-- Mídia + `pesquisador`: parecer captura nativa x anti-cheat (entra na pesquisa da #287).
+- Triagem dos achados (`docs/catalogo/README.md`, "Principais achados"): o usuário escolhe quais
+  viram issue; nenhuma aberta ainda.
+- #135 (TURN da Cloudflare): avisar o usuário quando chegar a vez (ele passa as variáveis).
+- Parecer captura nativa x anti-cheat (Mídia + `pesquisador`): partir do achado 10.2; falta teste
+  num jogo protegido.
 - Revisão mensal do `CLAUDE.md`: ~4 dez.
 
 ## Decisões do copiloto
@@ -28,8 +24,11 @@ plano revisado pelo `goldfish`, `aguarda-usuario`: respostas do elephant + o usu
 - Respostas ao usuário curtas, um tópico por vez quando houver vários.
 - `git push` sempre com o nome do branch (`git push -u origin <branch>`): o branch criado a partir
   de `origin/main` herda `main` como upstream e o push sem nome falha calado.
-- Ao abrir sessão de área: passar o modelo da tabela do `CLAUDE.md` e 1–2 issues.
+- Ao abrir sessão de área: passar o modelo da tabela do `CLAUDE.md`, 1–2 issues e a ficha do
+  catálogo do tema.
+- Antes de implementar, revisar o código do tema, não só a ficha (usuário, 5 nov).
 
 ## Próximo passo
 
-Com o aval da #287: crawlers (etapa 1) em segundo plano.
+#286: revisar o código de saída e reconexão a partir da ficha 02 (achados 02.1–02.5), escrever o
+plano na issue (toca o protocolo: `goldfish` antes) e abrir a sessão do Backend (Opus).
