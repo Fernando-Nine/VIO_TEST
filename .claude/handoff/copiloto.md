@@ -6,8 +6,9 @@ Atualizado: 2026-11-05
 
 Revisão de processo aprovada pelo usuário em 5 nov e entregue na PR VIO_TEST #284: compactação
 automática aos 200 mil, subagentes `goldfish`/`crawler`/`pesquisador`, modelo por tarefa, plano na
-issue, modelos de issue, notas da versão em `changes/` e ADRs em `docs/decisoes/`. Nenhuma área
-trabalhando.
+issue, modelos de issue, notas da versão em `changes/` e ADRs em `docs/decisoes/`. A #284 entrou
+na `main` (`b64de0c`) 3 min após aberta, com merge pelo usuário: auto-merge ainda não confirmado.
+Nenhuma área trabalhando.
 
 ## Aguardam o usuário (mostrar um tópico por vez, curto)
 
@@ -40,4 +41,4 @@ trabalhando.
 
 ## Próximo passo
 
-Conferir o merge da #284 e abrir o tópico 1 com o usuário.
+Tópico 1 aberto com o usuário (auto-merge); depois tópicos 2 e 3, e a fila P1.
