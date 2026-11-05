@@ -56,7 +56,7 @@ export const defaultPermissions: RoomPermissions = {
   adminCreate: true,
   adminClose: true,
 };
-/** Random per page load (`crypto.randomUUID()`), only matches a farewell. */
+/** Random per page load (`freshKey()`, UUID v4), only matches a farewell. */
 const pageId = z.string().regex(/^[A-Za-z0-9-]{1,64}$/);
 /**
  * Body of `POST /api/leave` (#286): the page that is in a room says it is

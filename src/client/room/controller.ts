@@ -161,7 +161,7 @@ export class Controller {
   private credentials: Record<string, string> = {};
   private roomEntered = false;
   /** This page load (#286): a farewell only counts from the page in the room. */
-  private readonly page = crypto.randomUUID();
+  private readonly page = freshKey();
   /** Room this page joined and has not left; it says goodbye on the way out. */
   private joinedRoom?: string;
   /** "Entrar nesta aba": joins like a new tab, without the creator credential. */

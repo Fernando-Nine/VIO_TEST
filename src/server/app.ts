@@ -133,9 +133,16 @@ export async function createApp(config: Config = readConfig(), dev = false) {
       res: express.Response,
       _next: express.NextFunction,
     ) => {
-      const status = error?.status === 413 ? 413 : 400;
+      const given = Number(error?.status);
+      const status =
+        Number.isInteger(given) && given >= 400 && given < 500 ? given : 500;
       res.status(status).json({
-        message: status === 413 ? "Pedido grande demais." : "Pedido inválido.",
+        message:
+          status === 413
+            ? "Pedido grande demais."
+            : status < 500
+              ? "Pedido inválido."
+              : "Não foi possível sair agora.",
       });
     },
   );

@@ -5,6 +5,7 @@ import { io, type Socket } from "socket.io-client";
 import { createApp } from "../src/server/app";
 import { readConfig } from "../src/server/config";
 import { issueToken } from "../src/server/security";
+import { freshKey } from "../src/client/id";
 import {
   participantFields,
   type JoinResult,
@@ -114,6 +115,12 @@ test("rota de saída: origem, corpo, tamanho e token", async () => {
       (await farewell(app, good, { type: "application/json" })).status,
       400,
     );
+    // Parser errors keep their 4xx (bad charset = 415), never a 400 for all.
+    assert.equal(
+      (await farewell(app, good, { type: "text/plain; charset=x-nope" }))
+        .status,
+      415,
+    );
     const big = await farewell(app, { ...good, page: "x".repeat(3000) });
     assert.equal(big.status, 413);
     const text = await big.text();
@@ -121,6 +128,19 @@ test("rota de saída: origem, corpo, tamanho e token", async () => {
     assert.doesNotMatch(text, /at |Error/);
     const ok = await farewell(app, good);
     assert.equal(ok.status, 204);
+    // Insecure context (http on a LAN IP): no randomUUID, the fallback id passes.
+    Object.defineProperty(crypto, "randomUUID", {
+      value: undefined,
+      configurable: true,
+    });
+    let page: string;
+    try {
+      page = freshKey();
+    } finally {
+      delete (crypto as { randomUUID?: unknown }).randomUUID;
+    }
+    assert.match(page, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab]/);
+    assert.equal((await farewell(app, { ...good, page })).status, 204);
   } finally {
     await app.close();
   }
@@ -320,6 +340,36 @@ test("reentrar de outra página derruba as transmissões da página antiga", asy
     const me = back.snapshot.participants.find((p) => p.id === a.id)!;
     assert.deepEqual(me.publications, []);
     close(sb, next);
+  } finally {
+    await app.close();
+  }
+});
+
+test("join recusado de página nova não derruba a mídia", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    await request<Publication>(sa, "publish", {
+      kind: "screen",
+      key: crypto.randomUUID(),
+      audio: false,
+      muted: false,
+    });
+    room(app, code).members.get(a.id)!.inCall = true;
+    const next = await connect(app, ta);
+    await assert.rejects(
+      join(next, { name: "Ana", code, page: "pa2" }),
+      /SESSION_IN_USE/,
+    );
+    await assert.rejects(
+      join(next, { name: "Ana", code: "ZZZZZZ", page: "pa2" }),
+      /ALREADY_JOINED/,
+    );
+    const me = member(app, code, a.id)!;
+    assert.equal(me.publications.length, 1);
+    assert.equal(me.inCall, true);
+    assert.equal(me.page, "pa");
+    close(sa, sb, next);
   } finally {
     await app.close();
   }

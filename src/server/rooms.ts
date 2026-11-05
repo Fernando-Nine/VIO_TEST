@@ -796,6 +796,7 @@ export class Rooms {
       }
       const restoredAdmin = room.restoredAdmins.delete(socket.data.id);
       // Another page (a reload) has none of the old captures or peers (02.4).
+      // Only here, past every refusal: a refused join must not touch media.
       if (member && member.page !== data.page) this.dropMedia(room, member);
       member = {
         id: socket.data.id,
