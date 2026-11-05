@@ -56,6 +56,20 @@ export const defaultPermissions: RoomPermissions = {
   adminCreate: true,
   adminClose: true,
 };
+/** Random per page load (`crypto.randomUUID()`), only matches a farewell. */
+const pageId = z.string().regex(/^[A-Za-z0-9-]{1,64}$/);
+/**
+ * Body of `POST /api/leave` (#286): the page that is in a room says it is
+ * going away. The token proves who; `page` proves it is the page in the room.
+ * `explicit` is the Sair button without a connected socket.
+ */
+export const farewellSchema = z
+  .object({
+    token: z.string().max(600),
+    page: pageId,
+    explicit: z.literal(true).optional(),
+  })
+  .strict();
 export const schemas = {
   ...widgetSchemas,
   "room-permissions": z
@@ -83,6 +97,8 @@ export const schemas = {
       credential: z.string().max(2048).optional(),
       /** Signed invite of this room (#242). */
       invite: z.string().max(512).optional(),
+      /** Random id of the page that joins (#286); never identifies the person. */
+      page: pageId.optional(),
     })
     .strict(),
   /** Admit or turn away someone in the waiting room (#242). */
@@ -196,6 +212,28 @@ export interface Participant {
   /** Silenced for everyone by the room owner: voice publishing is refused. */
   voiceBlocked?: boolean;
 }
+/**
+ * The only member fields a snapshot carries (#286). Server-side fields (socket,
+ * page, farewell deadline) stay out because the snapshot is built from this list.
+ */
+export const participantFields = [
+  "id",
+  "name",
+  "color",
+  "online",
+  "inCall",
+  "publications",
+  "pingMs",
+  "role",
+  "avatarUrl",
+  "voiceBlocked",
+] as const satisfies readonly (keyof Participant)[];
+// Adding a field to Participant without listing it fails here.
+const _everyField: Record<
+  Exclude<keyof Participant, (typeof participantFields)[number]>,
+  never
+> = {};
+void _everyField;
 export interface Snapshot {
   epoch: string;
   code: string;

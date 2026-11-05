@@ -2,8 +2,9 @@
 
 > **Resumo:** O cliente abre um socket Socket.IO (só WebSocket) com um token HMAC de sessão, entra na sala com o
 > comando `join` e recebe um `snapshot`. A identidade (id do token) sobrevive a quedas e recargas; o servidor segura
-> quem caiu por 90 s como "offline" antes de removê-lo. Só o comando `leave` tira a pessoa na hora: fechar a aba,
-> recarregar ou perder a rede viram "reconectando" para os outros até o grace acabar (causa provável da #286).
+> quem caiu por 90 s como "offline" antes de removê-lo. Desde a #286, fechar a aba ou recarregar manda uma despedida
+> (`POST /api/leave`): com outra pessoa online, quem saiu é removido em 8 s (`FAREWELL_SECONDS`) se não voltar; sozinho,
+> vale o grace inteiro. Só a rede caída, sem despedida, ainda espera o grace.
 >
 > **Arquivos-chave:** `src/client/room/controller.ts` (`enter`, `rejoin`, `scheduleRecovery`, `retry`, `newSession`,
 > `leave`, `heartbeat`, `getSession`), `src/client/room/recovery.ts` (backoff e erros permanentes),
@@ -18,7 +19,7 @@
 > **Docs:** `docs/SEGURANCA.md` (~L85, grace de 90 s), `docs/DEPLOY.md` (~L68 Render Free dorme; ~L171 salas em memória),
 > `docs/ESTADO.md` (Fila: #286 depende da #287), README (`RECONNECT_GRACE_SECONDS`).
 >
-> **Retrato:** commit `8bdc516` (5 nov 2026). Mudou o que esta ficha descreve? Atualize-a no mesmo PR.
+> **Retrato:** commit `8bdc516` (5 nov 2026), atualizado pela #286 (seção G). Mudou o que esta ficha descreve? Atualize-a no mesmo PR.
 
 ## Como funciona hoje
 
@@ -111,6 +112,24 @@
    ~40 s + 90–100 s.
 4. Quem reentra antes disso: `join` reaproveita o membro (sem remover/readicionar), então os outros não veem saída.
 
+### D2. Despedida da página (#286)
+
+1. Cada `Controller` gera um `page` (`crypto.randomUUID()`) e o manda em todo `join`; o servidor guarda em `Member.page`.
+2. `pagehide` (`App.tsx`) chama `engine.farewell()`: grava a sala da aba em `sessionStorage` (`vio:room`, com
+   `hiddenAt`) e envia `fetch(POST /api/leave, keepalive)` com `{ token, page }`. Não usa `sendBeacon` (sem `Origin`
+   sob `no-referrer`). O corpo vai como `text/plain` (sem preflight), até 2 KB, e passa por `farewellSchema` (`.strict()`).
+3. A rota confere origem, limite por IP (30/min, chave `ip:leave`), token HMAC e então `rooms.farewell(id, page)`.
+   Só age se `page` for a da página que está na sala: uma despedida atrasada da página velha não derruba a nova.
+4. `farewell` derruba o socket que sobrou, tira publicações e assinaturas (`dropMedia`) e marca `leavesAt = agora + 8 s`.
+   `clean()` remove o membro quando `leavesAt` passou **e** há outra pessoa online; sozinho na sala, ninguém é removido
+   antes do grace (a sala, os widgets e as permissões ficam como estavam).
+5. `leave()` com o socket fora do ar (02.2) ou sem ack manda a despedida com `explicit: true`: saída imediata.
+6. Recarregar até 60 s depois do `pagehide`, sem link para outra sala, volta sozinho (`engine.resume`, `tab-room.ts`).
+   Microfone e câmera nunca reabrem sozinhos. Página nova indo para outra sala pede sessão nova (02.14).
+7. `join` com `page` diferente da guardada solta as publicações da página anterior antes de reaproveitar o membro (02.4).
+8. `SESSION_IN_USE`/`ALREADY_JOINED` tentam de novo após 1 s e 2 s (dentro do prazo da despedida) e então param com
+   "Entrar nesta aba", que entra com sessão nova e **sem** a credencial de criador (`enterHere`).
+
 ### E. O que os outros veem e as PeerConnections
 
 - Membro offline continua em `participants` com `online:false`. UI: `PeopleWidget` (bolha `is-offline`, aria
@@ -157,6 +176,10 @@
 | Parâmetro | Valor | Onde |
 | --- | --- | --- |
 | Grace de reconexão | 90 s (10–300; env `RECONNECT_GRACE_SECONDS`) | `server/config.ts` › `grace` (~L167) |
+| Prazo depois da despedida | 8 s (2–60; env `FAREWELL_SECONDS`), só com outra pessoa online | `server/config.ts` › `farewell` |
+| Volta sozinho depois de recarregar | até 60 s depois do `pagehide` | `client/room/tab-room.ts` › `RESUME_WINDOW` |
+| Conflito de sessão | 2 tentativas (1 s, 2 s), depois "Entrar nesta aba" | `client/room/recovery.ts` › `conflictDelay` |
+| `POST /api/leave` | 2 KB, 30/min por IP | `server/app.ts` |
 | Varredura de membros offline | a cada 10 s, remove se `> grace` | `server/app.ts` (`cleanup`), `rooms.ts` › `clean` |
 | engine.io ping do servidor | `pingInterval` 20000 ms, `pingTimeout` 20000 ms | `server/app.ts` (~L105) |
 | Transporte | só `websocket` (cliente e servidor) | `controller.ts` ~L569, `app.ts` |
@@ -231,19 +254,20 @@ reconectando"). Rastro: evento → servidor → interface.
 
 | ID | Achado | Tipo | Confiança | Onde |
 | --- | --- | --- | --- | --- |
-| 02.1 | **Causa principal da #286.** Fechar a aba ou recarregar só chama `socket.disconnect()` no `beforeunload`, sem `leave`. O servidor trata todo `disconnect` como queda: marca `online=false` e mantém o membro por 90–100 s (grace + varredura `clean` a cada 10 s). Nesse tempo os outros veem "reconectando", não há som de saída, e telas e voz dele continuam listadas (publicações só caem em `leave`); quem assistia vê o chip "Reconectando" até `publication-ended`. O desenho existe porque a recarga precisa do grace para manter a identidade. | bug | alta | `App.tsx` (~L188); `rooms.ts` › `disconnect` (~L612), `clean` (~L498); `config.ts` (~L167) |
-| 02.2 | `leave()` só envia `leave` se `socket.connected`. Reconectando, ou com o pacote perdido, sobra só `disconnect()`; o tempo limite de 1,5 s do ack também desconecta sem confirmação. Como a identidade é descartada na hora (`session` e `sessionStorage` limpos), ninguém reivindica o membro antigo: fica fantasma o grace inteiro. | bug | média | `controller.ts` › `leave` (~L1533–1543) |
-| 02.3 | Aba duplicada copia o `sessionStorage` e usa o mesmo token; o servidor responde `SESSION_IN_USE`, que não está entre os erros permanentes (`FORBIDDEN`, `INVALID_REQUEST`, `ROOM_FULL`). `rejoin` agenda `scheduleRecovery` sem fim, e a aba nova fica "reconectando" para sempre. | bug | alta | `recovery.ts` › `permanentRecoveryError`; `rooms.ts` › `join` (~L700) |
-| 02.4 | As publicações do membro offline ficam no servidor e são herdadas pelo próximo `join` do mesmo id (`publications: member?.publications`). Depois de recarregar, o cliente novo não tem as capturas, mas as publicações antigas continuam (sem `unpublish`) até `leave` ou fim do grace; se ele volta a tempo, viram transmissões mortas. Não achei limpeza posterior. | bug | média | `rooms.ts` › `join` (~L762); `controller.ts` › `rejoin` |
+| 02.1 | **Resolvido (#286): despedida da página, seção D2.** **Causa principal da #286.** Fechar a aba ou recarregar só chama `socket.disconnect()` no `beforeunload`, sem `leave`. O servidor trata todo `disconnect` como queda: marca `online=false` e mantém o membro por 90–100 s (grace + varredura `clean` a cada 10 s). Nesse tempo os outros veem "reconectando", não há som de saída, e telas e voz dele continuam listadas (publicações só caem em `leave`); quem assistia vê o chip "Reconectando" até `publication-ended`. O desenho existe porque a recarga precisa do grace para manter a identidade. | bug | alta | `App.tsx` (~L188); `rooms.ts` › `disconnect` (~L612), `clean` (~L498); `config.ts` (~L167) |
+| 02.2 | **Resolvido (#286): despedida explícita quando o `leave` não sai.** `leave()` só envia `leave` se `socket.connected`. Reconectando, ou com o pacote perdido, sobra só `disconnect()`; o tempo limite de 1,5 s do ack também desconecta sem confirmação. Como a identidade é descartada na hora (`session` e `sessionStorage` limpos), ninguém reivindica o membro antigo: fica fantasma o grace inteiro. | bug | média | `controller.ts` › `leave` (~L1533–1543) |
+| 02.3 | **Resolvido (#286): duas tentativas e "Entrar nesta aba".** Aba duplicada copia o `sessionStorage` e usa o mesmo token; o servidor responde `SESSION_IN_USE`, que não está entre os erros permanentes (`FORBIDDEN`, `INVALID_REQUEST`, `ROOM_FULL`). `rejoin` agenda `scheduleRecovery` sem fim, e a aba nova fica "reconectando" para sempre. | bug | alta | `recovery.ts` › `permanentRecoveryError`; `rooms.ts` › `join` (~L700) |
+| 02.4 | **Em parte (#286): `join` de página nova solta as publicações da anterior; a reconexão da mesma página ainda herda.** As publicações do membro offline ficam no servidor e são herdadas pelo próximo `join` do mesmo id (`publications: member?.publications`). Depois de recarregar, o cliente novo não tem as capturas, mas as publicações antigas continuam (sem `unpublish`) até `leave` ou fim do grace; se ele volta a tempo, viram transmissões mortas. Não achei limpeza posterior. | bug | média | `rooms.ts` › `join` (~L762); `controller.ts` › `rejoin` |
 | 02.5 | `presenceCues` ignora `online`: não há aviso quando alguém cai, e o som `room-leave` só toca no fim do grace (90–100 s depois de a pessoa fechar a aba). | lacuna | alta | `room/presence-cues.ts` |
 | 02.6 | Pior caso do fantasma: queda real ≈ 40 s (ping do engine, 20 s + 20 s) + 90–100 s = 130–140 s; aba fechada ≈ 90–100 s. Quem fica vê "reconectando" sem prazo. | desempenho | alta | `app.ts` (~L105); `rooms.ts` › `clean` (~L498) |
-| 02.7 | Sem `pagehide` nem `visibilitychange`: no celular e no Safari o `beforeunload` falha (bfcache, aba descartada) e o socket só morre por tempo de ping. | lacuna | média (não confirmado em aparelho) | `App.tsx` (~L188) |
-| 02.8 | Trocar de sala é `leave` + sessão nova: deixa fantasma na sala velha só nos casos de 02.2 (socket não conectado, ou `enter` durante `reconnecting`/`connecting`). Conectado, o caminho é limpo (`RoomSwitchLab` cobre o ack atrasado). | bug | média | `controller.ts` › `enter` (~L518); `tests/RoomSwitchLab.tsx` |
+| 02.7 | **Em parte (#286): `pagehide` manda a despedida; `visibilitychange` e bfcache sem teste em aparelho.** Sem `pagehide` nem `visibilitychange`: no celular e no Safari o `beforeunload` falha (bfcache, aba descartada) e o socket só morre por tempo de ping. | lacuna | média (não confirmado em aparelho) | `App.tsx` (~L188) |
+| 02.8 | **Resolvido (#286): `leave` sem socket manda a despedida explícita; outra sala pede sessão nova.** Trocar de sala é `leave` + sessão nova: deixa fantasma na sala velha só nos casos de 02.2 (socket não conectado, ou `enter` durante `reconnecting`/`connecting`). Conectado, o caminho é limpo (`RoomSwitchLab` cobre o ack atrasado). | bug | média | `controller.ts` › `enter` (~L518); `tests/RoomSwitchLab.tsx` |
 | 02.9 | Entrar e sair rápido está protegido por `generation`; não achei corrida determinística. Só sobra fantasma se o `leave` sair com o socket desconectado depois de o servidor criar o membro, ou se o `leave` se perder. O mais provável é cair em 02.1 (fechar a aba logo depois de entrar). | risco | baixa | `controller.ts` › `enter`, `rejoin`; `rooms.ts` (~L698–780) |
-| 02.10 | Nenhum teste cobre grace nem `clean` (busca por `grace` em `tests/` vazia); `epoch` só é provado em `recovery.test.ts`, que reinicia o servidor e confere id e contagem. | lacuna | alta | `tests/recovery.test.ts`; `tests/server.test.ts` |
+| 02.10 | **Resolvido (#286): `tests/farewell.test.ts` cobre prazo, grace e `clean`.** Nenhum teste cobre grace nem `clean` (busca por `grace` em `tests/` vazia); `epoch` só é provado em `recovery.test.ts`, que reinicia o servidor e confere id e contagem. | lacuna | alta | `tests/recovery.test.ts`; `tests/server.test.ts` |
 | 02.11 | Dois níveis de reconexão (Manager do Socket.IO e `scheduleRecovery`) com atrasos diferentes; `reconnect_failed` nunca dispara (`reconnectionAttempts: Infinity`): ouvinte morto. | código morto | alta | `controller.ts` (~L572, ~L622, ~L744) |
 | 02.12 | `leave()` é `async` e `enter` chama `void this.leave()` sem esperar. Seguro hoje porque o corpo é síncrono; quebra em silêncio se alguém acrescentar um `await`. | risco | baixa | `controller.ts` (~L518, ~L1514) |
-| 02.13 | `docs/SEGURANCA.md` descreve o grace de 90 s, mas não diz que fechar a aba também cai nele. | doc desatualizado | média | `docs/SEGURANCA.md` (~L85) |
+| 02.13 | **Resolvido (#286): `docs/SEGURANCA.md` descreve a despedida e a rota.** `docs/SEGURANCA.md` descreve o grace de 90 s, mas não diz que fechar a aba também cai nele. | doc desatualizado | média | `docs/SEGURANCA.md` (~L85) |
+| 02.14 | **Resolvido (#286).** Página nova da mesma aba indo para outra sala reusava a sessão do `sessionStorage` e batia em `ALREADY_JOINED` enquanto o membro antigo existia. Agora pede sessão nova quando a sala da aba (`vio:room`) é outra. | bug | alta | `controller.ts` › `enter`; `tab-room.ts` › `needsFreshSession` |
 
 ## Perguntas em aberto
 

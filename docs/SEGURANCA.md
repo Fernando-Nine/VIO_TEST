@@ -85,6 +85,17 @@ do membro, dono de publicação/assinatura, origem e validação estrita permane
 Após perda de rede, a presença antiga pode ficar offline durante o grace de 90 s;
 isso não mantém captura local nem uma conexão ativa da interface que saiu.
 
+Fechar a aba ou recarregar (#286) envia `POST /api/leave` com `fetch` + `keepalive` no
+`pagehide` (não `sendBeacon`, que sob `no-referrer` chega com `Origin: null`). A rota
+aceita só `text/plain` até 2 KB, valida `farewellSchema` (`.strict()`), exige origem
+permitida, limita 30 pedidos por minuto por IP e confere o token HMAC; responde 204
+sem corpo. O pedido só vale para a página que está na sala (`page`, um id por página
+enviado no `join`): quem não tem o token não despede ninguém, e uma despedida atrasada
+não derruba a página nova. A despedida tira na hora publicações e assinaturas e
+remove o membro em `FAREWELL_SECONDS` (8 s) se houver outra pessoa online; sozinho, vale
+o grace inteiro. Reentrar dentro do prazo preserva papel e `voiceBlocked`. Na mesma sala
+em duas abas, "Entrar nesta aba" usa sessão nova e não envia a credencial de criador.
+
 Os limites são por IP, não prova de identidade humana. Redes compartilhadas dividem
 o orçamento; reduzi-lo globalmente para cinco bloquearia salas legítimas nessa rede.
 Não há promessa de impedir todo abuso distribuído. Esta atualização não desativa
