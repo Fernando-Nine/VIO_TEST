@@ -38,6 +38,7 @@ import {
   type RoomPermissions,
   schemas,
   commandSchema,
+  participantFields,
   signalSchema,
   type Participant,
   type Publication,
@@ -53,6 +54,17 @@ import {
 interface Member extends Participant {
   socketId?: string;
   lastSeen: number;
+  /** Page that joined last (#286): only its farewell counts. */
+  page?: string;
+  /** Said goodbye: leaves at this time if someone else is online (#286). */
+  leavesAt?: number;
+}
+/** Allowlist, so server-side member fields never reach the snapshot (#286). */
+function publicMember(member: Member): Participant {
+  const out: Partial<Record<keyof Participant, unknown>> = {};
+  for (const key of participantFields)
+    if (member[key] !== undefined) out[key] = member[key];
+  return out as Participant;
 }
 interface Room {
   code: string;
@@ -209,9 +221,7 @@ export class Rooms {
       creatorId: room.creatorId,
       permissions: room.permissions,
       screenViewers: this.screenViewers(room),
-      participants: [...room.members.values()].map(
-        ({ socketId, lastSeen, ...member }) => member,
-      ),
+      participants: [...room.members.values()].map(publicMember),
     };
   }
   private role(room: Room, id: string): RoomRole {
@@ -451,9 +461,7 @@ export class Rooms {
       }
   }
   private leave(room: Room, member: Member, explicit = false) {
-    for (const p of [...member.publications]) this.removePublication(room, p);
-    for (const sub of [...room.subscriptions.values()])
-      if (sub.viewer === member.id) this.closeSub(room, sub);
+    this.dropMedia(room, member);
     room.members.delete(member.id);
     room.widgets.forget(member.id);
     if (!room.members.size) {
@@ -508,11 +516,52 @@ export class Rooms {
             message: "Ninguém respondeu a tempo. Tente entrar de novo.",
           });
       for (const m of room.members.values())
-        if (!m.online && now - m.lastSeen > this.config.grace)
+        if (
+          !m.online &&
+          (now - m.lastSeen > this.config.grace ||
+            // Alone, the room keeps the full grace: the last leave() resets it.
+            (m.leavesAt !== undefined &&
+              now >= m.leavesAt &&
+              [...room.members.values()].some((o) => o !== m && o.online)))
+        )
           this.leave(room, m);
       if (!room.members.size && now - room.touched > this.config.roomTtl)
         this.rooms.delete(room.code);
     }
+  }
+  /** Drops what the member's page published or watched; the page is gone. */
+  private dropMedia(room: Room, member: Member) {
+    for (const p of [...member.publications]) this.removePublication(room, p);
+    for (const sub of [...room.subscriptions.values()])
+      if (sub.viewer === member.id) this.closeSub(room, sub);
+    member.inCall = false;
+  }
+  /**
+   * `POST /api/leave` (#286): the page in the room is going away. Only the
+   * member of this token, and only from the page that joined; anyone else
+   * (another page, the waiting room, a client without `page`) changes nothing.
+   */
+  farewell(id: string, page: string, explicit = false) {
+    const code = this.membership.get(id);
+    const room = code ? this.rooms.get(code) : undefined;
+    const member = room?.members.get(id);
+    if (!room || !member?.page || member.page !== page) return;
+    if (member.socketId) {
+      const socket = this.io.sockets.sockets.get(member.socketId);
+      member.online = false;
+      member.socketId = undefined;
+      socket?.disconnect(true);
+    }
+    member.online = false;
+    member.lastSeen = Date.now();
+    this.dropMedia(room, member);
+    if (explicit) {
+      this.leave(room, member, true);
+      return;
+    }
+    member.leavesAt = Date.now() + this.config.farewell;
+    this.broadcast(room);
+    setTimeout(() => this.clean(), this.config.farewell + 50).unref();
   }
   bind(socket: Socket) {
     const rates: Record<Action, number> = {
@@ -746,6 +795,9 @@ export class Rooms {
         room.lentFromAdmin = undefined;
       }
       const restoredAdmin = room.restoredAdmins.delete(socket.data.id);
+      // Another page (a reload) has none of the old captures or peers (02.4).
+      // Only here, past every refusal: a refused join must not touch media.
+      if (member && member.page !== data.page) this.dropMedia(room, member);
       member = {
         id: socket.data.id,
         name: data.name,
@@ -760,7 +812,10 @@ export class Rooms {
         inCall: member?.inCall || false,
         lastSeen: Date.now(),
         publications: member?.publications || [],
+        // Coming back must not lift the owner's silence.
+        voiceBlocked: member?.voiceBlocked,
         socketId: socket.id,
+        page: data.page,
       };
       room.members.set(member.id, member);
       this.membership.set(member.id, code);

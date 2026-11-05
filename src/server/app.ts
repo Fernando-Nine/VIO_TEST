@@ -9,6 +9,7 @@ import { Rooms } from "./rooms";
 import { Fault, Limits, verifyToken, issueToken, log } from "./security";
 import { readConfig, type Config } from "./config";
 import { version } from "../shared/releases";
+import { farewellSchema } from "../shared/protocol";
 export async function createApp(config: Config = readConfig(), dev = false) {
   const app = express();
   const http = createServer(app);
@@ -91,6 +92,60 @@ export async function createApp(config: Config = readConfig(), dev = false) {
         .json({ message: e instanceof Error ? e.message : "Pedido inválido." });
     }
   });
+  // Farewell of a page that leaves (#286). Sent with fetch keepalive, not
+  // sendBeacon: a no-cors beacon under no-referrer carries `Origin: null`.
+  // text/plain keeps it a simple request; the token never goes in the URL.
+  app.post(
+    "/api/leave",
+    express.text({ type: "text/plain", limit: "2kb" }),
+    (req, res) => {
+      const refuse = (status: number, message: string) =>
+        res.status(status).json({ message });
+      if (!origemPermitida(req.headers.origin))
+        return refuse(403, "Origem não permitida.");
+      try {
+        limits.take((req.ip || "unknown") + ":leave", 30);
+      } catch {
+        return refuse(429, "Muitos pedidos. Aguarde um instante.");
+      }
+      let body: unknown = null;
+      try {
+        if (typeof req.body === "string") body = JSON.parse(req.body);
+      } catch {}
+      const parsed = farewellSchema.safeParse(body);
+      if (!parsed.success) return refuse(400, "Pedido inválido.");
+      let id: string;
+      try {
+        id = verifyToken(config.secret, parsed.data.token).id;
+      } catch {
+        return refuse(403, "Sessão inválida.");
+      }
+      rooms.farewell(id, parsed.data.page, !!parsed.data.explicit);
+      res.status(204).end();
+    },
+  );
+  // Body parser errors (too large, bad charset) of this route only, no stack.
+  app.use(
+    "/api/leave",
+    (
+      error: { status?: number },
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction,
+    ) => {
+      const given = Number(error?.status);
+      const status =
+        Number.isInteger(given) && given >= 400 && given < 500 ? given : 500;
+      res.status(status).json({
+        message:
+          status === 413
+            ? "Pedido grande demais."
+            : status < 500
+              ? "Pedido inválido."
+              : "Não foi possível sair agora.",
+      });
+    },
+  );
   const trust =
     typeof config.trustProxy === "number"
       ? (_ip: string, i: number) => i < (config.trustProxy as number)

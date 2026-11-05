@@ -99,18 +99,18 @@ Detalhes: [ficha 01](01-salas-identidade-presenca.md).
 - **Recentes só no aparelho:** sem contas, a lista de salas recentes fica no próprio aparelho; desde
   a #285 só o app do Windows a mostra.
 
-**O problema de hoje (#286)**
+**Saída rápida (#286, resolvido)**
 
-Fechar a aba, recarregar ou entrar e sair depressa não avisa o servidor. A pessoa fica de 90 a 100
-segundos como "reconectando", com telas e voz ainda listadas, e ninguém é avisado quando alguém cai
-(achados 02.1 a 02.5).
+Fechar a aba ou recarregar manda um último recado ao servidor (a "despedida"). Telas e voz somem na
+hora; se ninguém voltar em 8 segundos e houver outra pessoa na sala, a pessoa sai. Sozinha na sala,
+ela guarda o lugar pelo tempo inteiro, para não perder a sala numa recarga. Recarregar volta sozinho
+(sem reabrir microfone nem câmera), e a mesma sala em duas abas para de tentar e oferece "Entrar
+nesta aba". Só quem perde a rede, sem chance de se despedir, ainda espera os 90 segundos.
 
 **O que pode vir depois**
 
-- **Para a #286, tudo código nosso:** mandar um último recado de saída quando a página fecha (o
-  navegador entrega mesmo com a página morrendo); tolerância curta para quem saiu e longa para quem
-  caiu; voltar sozinho quando uma aba congelada ou guardada pelo navegador é reaberta; perceber a
-  mesma sala aberta em duas abas.
+- **Ainda aberto da #286:** aviso quando alguém cai (02.5) e medir em celular e Safari se a
+  despedida chega (02.7).
 - **Mais adiante:** contagem regressiva no "Reconectando" e um ping mais curto, depois de medir o
   tráfego no Render.
 - **Não vale:** recuperação de conexão pronta do Socket.IO, porque o VIO já reenvia a foto inteira

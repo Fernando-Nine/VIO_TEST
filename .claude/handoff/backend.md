@@ -1,10 +1,10 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-11-04
+Atualizado: 2026-11-05
 
 ## Agora
 
-Nada em andamento.
+#286 (saída rápida): PR aberta, aguarda revisão sem memória do copiloto antes do auto-merge.
 
 ## Pendente / bloqueios
 
@@ -14,6 +14,8 @@ Nada em andamento.
 - Conferir se o Frontend já usa `canEditPublic(..., "guestControl")` nos controles de
   cronômetro, votação e tarefas (#71).
 - Widgets e avisos da sala se perdem num reinício (só memória; espera banco de dados).
+- Da #286 ainda abertos: aviso quando alguém cai (02.5, Frontend) e conferir em celular/Safari
+  se a despedida do `pagehide` chega (02.7, aceite humano na prévia).
 - Teto global de memória / `MAX_ROOMS` com base no uso real (nota em #28).
 
 ## Decisões da área
@@ -21,6 +23,9 @@ Nada em andamento.
 - Dono de widget não ganha controle/edição automática: vale a permissão da sala ou a do widget.
 - Câmera de convidado desligada por padrão (tabela da #71).
 - `widget-updated` de votação vai por pessoa (`Rooms.emitWidget` + `view`).
+- Saída rápida (#286): despedida `POST /api/leave` por `page`; prazo `FAREWELL_SECONDS` (8 s) só
+  com outra pessoa online; sozinho vale o grace. Snapshot de participante por allowlist
+  (`participantFields`).
 - Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 
 ## Próximo passo
