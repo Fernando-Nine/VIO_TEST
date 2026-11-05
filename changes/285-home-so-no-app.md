@@ -1,0 +1,1 @@
+A tela inicial com as salas recentes agora aparece só no aplicativo para Windows. No navegador, o VIO sempre abre na página de boas-vindas, já com o seu nome preenchido, para criar uma sala ou entrar com um código.
