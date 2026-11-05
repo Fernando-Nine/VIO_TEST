@@ -2,30 +2,21 @@ import { build as viteBuild } from "vite";
 import { build as esbuild } from "esbuild";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
-import { releases, version } from "../src/shared/releases.ts";
+import { renderChangelog, writeBuildInfo } from "./build-info.ts";
 // A local development .env must never include the test lab in a release build.
 process.env.NODE_ENV = "production";
+// releases.ts imports the generated build-info.json, so it must exist first.
+writeBuildInfo();
+const { registeredReleases, version } = await import(
+  "../src/shared/releases.ts"
+);
 const pkg = JSON.parse(await readFile("package.json", "utf8"));
 if (pkg.version !== version)
   throw new Error("Sincronize package.json com src/shared/releases.ts.");
-const changelog =
-  "# VIO — histórico de versões\n\n" +
-  "> **MUDANÇA DE SISTEMA NA 2.0.0:** nova implementação, criada do zero. O histórico anterior foi preservado integralmente a partir somente do CHANGELOG.md de Fernando-Nine/VIO_2.\n\n" +
-  releases
-    .filter((release) => !release.legacy)
-    .map(
-      (release) =>
-        `## [${release.version}] - ${release.date ?? "prevista"}\n\n${release.title}\n\n` +
-        release.sections
-          .map(
-            (section) =>
-              `### ${section.title}\n${section.items.map((item) => `- ${item}`).join("\n")}`,
-          )
-          .join("\n\n"),
-    )
-    .join("\n\n") +
-  "\n\n---\n\n# Registro integral do sistema anterior\n\nFonte: https://github.com/Fernando-Nine/VIO_2/blob/main/CHANGELOG.md\nBlob Git: `458665f5a357c0f0f1c261d055e5e18429839d9c`\n\n" +
-  (await readFile("docs/CHANGELOG-VIO_2.md", "utf8"));
+const changelog = renderChangelog(
+  registeredReleases,
+  await readFile("docs/CHANGELOG-VIO_2.md", "utf8"),
+);
 await writeFile("CHANGELOG.md", changelog);
 await viteBuild();
 await esbuild({
@@ -46,6 +37,7 @@ const sources = [
   "tests",
   "scripts",
   "docs",
+  "changes",
   "src-tauri/src",
   "src-tauri/icons",
   "src-tauri/capabilities",

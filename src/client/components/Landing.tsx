@@ -12,7 +12,7 @@ import {
 import { InstallApp } from "./InstallApp";
 import { MiniRoom } from "./MiniRoom";
 import { desktop } from "../desktop/bridge";
-import { version } from "../../shared/releases";
+import { version, versionLabel } from "../../shared/releases";
 import { api } from "../endpoint";
 import { Logo } from "./Logo";
 
@@ -371,7 +371,7 @@ function LandingFooter({ history }: { history: () => void }) {
           Código aberto (AGPL)
         </a>
         <button className="version" onClick={history}>
-          v{version}
+          v{versionLabel}
           <ArrowUpRight size={12} aria-hidden="true" />
         </button>
       </span>

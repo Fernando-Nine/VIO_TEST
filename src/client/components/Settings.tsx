@@ -33,7 +33,7 @@ import {
   ParticipantColors,
 } from "./ApplicationSettings";
 import { applyMotion } from "./motion";
-import { version } from "../../shared/releases";
+import { versionLabel } from "../../shared/releases";
 import { ColorPicker } from "./ColorPicker";
 import { Dialog } from "./Dialog";
 import { outputError } from "../media/audio-output";
@@ -425,7 +425,7 @@ function AppPage({ openHistory }: { openHistory: () => void }) {
   return (
     <Group title="VIO">
       <p className="settings-version">
-        Versão <output>{version}</output>
+        Versão <output>{versionLabel}</output>
       </p>
       <div className="room-invite">
         <button type="button" className="secondary" onClick={openHistory}>

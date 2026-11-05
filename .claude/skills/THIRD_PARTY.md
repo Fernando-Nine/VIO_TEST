@@ -11,8 +11,7 @@ Para atualizar, copie de novo da origem; não edite aqui.
 | web-design-guidelines, vercel-react-best-practices | github.com/vercel-labs/agent-skills | ver origem |
 | emil-design-eng | github.com/emilkowalski/skills | MIT |
 | ui-ux-pro-max | github.com/nextlevelbuilder/ui-ux-pro-max-skill | MIT |
-| systematic-debugging, verification-before-completion, test-driven-development, writing-plans | github.com/obra/superpowers | MIT |
-| grill-with-docs, handoff | github.com/mattpocock/skills | MIT |
+| systematic-debugging, verification-before-completion, test-driven-development | github.com/obra/superpowers | MIT |
 | pre-mortem, prioritize-features | github.com/phuryn/pm-skills | MIT |
 | typescript-advanced-types, github-actions-templates | github.com/wshobson/agents | MIT |
 | playwright-cli | github.com/microsoft/playwright-cli | Apache-2.0 |

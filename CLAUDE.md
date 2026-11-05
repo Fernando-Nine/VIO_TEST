@@ -17,16 +17,17 @@ O resto de `docs/` é referência técnica; `docs/arquivo/` é histórico e **n�
 
 ## Equipe
 
-| Área              | Papel                                                              | Handoff         |
-| ----------------- | ------------------------------------------------------------------ | --------------- |
-| Copiloto          | Chat central: decisões, prioridades, escopo, revisão e coordenação | `copiloto.md`   |
-| Frontend/UX       | Interface, canvas, widgets, sons de interface, acessibilidade      | `frontend.md`   |
-| Mídia             | WebRTC, captura, áudio, TURN, futuro app Windows/celular           | `midia.md`      |
-| Backend/Segurança | Servidor, protocolo, permissões, limites, revisão de segurança     | `backend.md`    |
-| QA/Release        | CI, testes, BrowserLab, versões, promoção para o VIO               | `qa.md`         |
-| Design/Produto    | Rascunhos visuais, landing, página de download, identidade         | `design.md`     |
-| Jurídico          | LGPD, menores, direitos autorais, termos e política de privacidade | `juridico.md`   |
-| Roteirista        | Ideias novas e crítica de funções antigas; propõe, não implementa  | `roteirista.md` |
+| Área               | Papel                                                                                     | Handoff         |
+| ------------------ | ----------------------------------------------------------------------------------------- | --------------- |
+| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                        | `copiloto.md`   |
+| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                             | `frontend.md`   |
+| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                  | `midia.md`      |
+| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                            | `backend.md`    |
+| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                      | `qa.md`         |
+| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                | `design.md`     |
+| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                        | `juridico.md`   |
+| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                         | `roteirista.md` |
+| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web) | sem handoff     |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
@@ -46,6 +47,21 @@ releia arquivos que não mudaram desde a última leitura. Suíte completa, Brows
 screenshots só quando a mudança tocar aquela parte. Leia trechos (grep, offset) em vez de
 arquivos inteiros; para varreduras amplas use um subagente (Explore), que devolve só a
 conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada área).
+**Saídas de ferramenta:** peça só os campos necessários (`fields`, `minimal_output`,
+`tail_lines`, `head`); nunca liste eventos de outra sessão sem filtro (`kinds`, `limit`).
+
+**Copiloto conversa, subagentes executam.** O copiloto delega a execução (release, pesquisa,
+arrumação de issues e docs, varreduras) a subagentes (ferramenta Agent, em segundo plano), que
+devolvem ≤ 10 linhas; cria subagentes sem pedir ao usuário (aval de 5 nov). As áreas também usam
+subagentes para leitura pesada.
+
+**Modelo por tarefa** (o copiloto passa o modelo ao abrir a sessão da área):
+
+| Modelo | Tarefas                                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------- |
+| Opus   | Mídia/WebRTC, segurança, interface complexa e animações (animações com raciocínio no máximo)                  |
+| Sonnet | QA, textos/docs, Jurídico, Roteirista, Backend de rotina, bugs P1 simples, `goldfish`/`crawler`/`pesquisador` |
+| Haiku  | Buscas simples                                                                                                |
 
 ## Ambientes e fluxo
 
@@ -55,38 +71,43 @@ conclusão. Carregue só as skills da tarefa (`.claude/skills/`, papel de cada �
 | Produção | Fernando-Nine/VIO      | https://vio-quest.onrender.com       |
 
 - **Tarefas** são Issues no VIO_TEST, com etiqueta de área (`frontend`, `midia`, `backend`,
-  `qa`, `docs`) e Milestone da versão. Não existem mais "rodadas".
+  `qa`, `docs`) e Milestone da versão.
 - **Prioridade**: toda issue tem um nível. **P0** quebra (crash, segurança, perda de dados, sala ou
   chamada parada) · **P1** bug com contorno · **P2** ajuste de layout ou de função existente ·
   **P3** feature nova. Não se começa um nível com o de cima aberto na mesma área. A ordem fica na
   seção Fila do `ESTADO.md`; a área pega a primeira com a sua etiqueta.
 - **Em andamento**: no máximo **1 issue por área** ao mesmo tempo. Issue parada esperando decisão
   ou ação do usuário leva a etiqueta `aguarda-usuario` (e sai da vez da área).
-- **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `releases.ts` se quem usa
+- **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `changes/` se quem usa
   percebe; `ESTADO.md`/handoff atualizados se mudou estado ou decisão; issue fechada **quando
   entra na prévia** (com o número da PR).
-- **Release** para produção: siga `docs/RELEASE.md`, sem pular passo.
 - **Incidente**: todo P0 resolvido ganha revisão sem culpa em `docs/incidentes/` e, se couber,
   um teste ou uma regra nova.
-- **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` → CI verde → o próprio agente
-  faz **squash merge**. Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
+- **Plano na issue**: issue P3, de protocolo/segurança ou que cruze áreas traz no corpo objetivo,
+  fora do escopo, arquivos prováveis, invariantes tocados e aceite (`feature.yml`) e passa pelo
+  `goldfish` antes de a área começar; o diff dela passa por revisão sem memória (`code-review` ou
+  `goldfish` em modo diff) antes do merge. Bugs P0–P2 pequenos não precisam.
+- **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` com `Closes #N` → ativar auto-merge
+  (squash) → encerrar, sem esperar a CI no chat. Se a CI falhar, quem abriu corrige (pode usar
+  `subscribe_pr_activity`). Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
   e os testes do que mudou.
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
-- **Versão**: semver. Fonte única `src/shared/releases.ts` (+ `package.json`). Correção =
-  PATCH, funcionalidade = MINOR. Prévias usam `-rc.N`. Histórico em `legacy-releases.json`
-  e a marca `systemChange` da 2.0.0 **nunca** são apagados.
-- **Produção**: o VIO recebe o **mesmo código** do VIO_TEST, só depois do aval do usuário
-  na prévia. QA/copiloto abre a PR de release no VIO e cria a tag `vX.Y.Z`. Nunca push
-  direto na `main` do VIO. **Exceção:** correções de segurança vão direto para a produção
-  (hotfix PATCH sobre a versão de produção), sem esperar aval.
+- **Versão**: semver; correção = PATCH, funcionalidade = MINOR. PR comum **não** sobe a versão:
+  cria `changes/<issue>-<slug>.md` com um parágrafo (`changes/README.md`), mostrado na prévia com o
+  commit do build. O QA fecha a prévia (`-rc.N` em `src/shared/releases.ts` + `package.json`).
+  Histórico em `legacy-releases.json` e a marca `systemChange` da 2.0.0 **nunca** são apagados.
+- **Produção**: o VIO recebe o **mesmo código** do VIO_TEST, só depois do aval do usuário na
+  prévia, seguindo `docs/RELEASE.md` sem pular passo; QA/copiloto abre a PR de release no VIO e
+  cria a tag `vX.Y.Z`. Nunca push direto na `main` do VIO. **Exceção:** correções de segurança
+  vão direto para a produção (hotfix PATCH sobre a versão de produção), sem esperar aval.
 
-## Contexto e troca de chat
+## Contexto
 
-Chats são substituídos para poupar créditos: cada mensagem relê todo o contexto, então um
-chat longo custa mais a cada passo. **Obrigatório** trocar ao passar de **200 mil tokens** (`/context`)
-ou ao concluir um bloco de 3–4 issues, o que vier primeiro: atualize seu `.claude/handoff/<área>.md` no formato
-de `.claude/handoff/README.md`, faça commit e avise. O chat novo começa lendo
-`CLAUDE.md`, papel e handoff — nada mais é necessário.
+O chat se resume sozinho (compactação automática) aos 200 mil tokens, configurado em
+`.claude/settings.json`; ninguém troca de chat nem arquiva. **Áreas: 1–2 issues por sessão** (o
+copiloto abre a sessão); ao fim, atualize o handoff (formato em `.claude/handoff/README.md`) e faça
+commit. **Copiloto**: continua no mesmo chat; `/compact` antes de pausar por horas (depois de 1 h
+parado o cache expira e a próxima mensagem relê tudo).
 
 ## Arquitetura (resumo)
 
@@ -175,3 +196,9 @@ vez por mês: tira o que ficou velho e atualiza a data abaixo.
 
 `.claude/settings.json` + `.claude/hooks/guard.mjs` bloqueiam: commit de `.env`/segredos,
 force push e push direto na `main`. O resto deste arquivo é regra, não portão — cumpra.
+
+# Compact instructions
+
+Ao compactar, preserve: decisões e pedidos do usuário ainda abertos; issues, PRs e branches em
+andamento, com números; o próximo passo; o que está em `aguarda-usuario`. Descarte: saídas de
+ferramentas, logs, conteúdo de arquivos já commitados e passos concluídos.

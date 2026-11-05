@@ -1,0 +1,66 @@
+name: Função nova ou mudança
+description: O plano na issue — objetivo, limites e aceite antes de começar.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue P3, de protocolo ou segurança, ou que cruze áreas passa pelo subagente `goldfish`
+        antes de a área começar (regra no `CLAUDE.md`).
+  - type: textarea
+    id: goal
+    attributes:
+      label: Objetivo
+      description: O que muda para quem usa, e por quê.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Fora do escopo
+      description: O que esta issue não faz.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Arquivos prováveis
+      placeholder: src/client/canvas/..., src/shared/protocol.ts
+  - type: textarea
+    id: invariants
+    attributes:
+      label: Invariantes tocados
+      description: Quais invariantes técnicos ou regras de segurança do CLAUDE.md esta mudança toca. "Nenhum" também vale.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Aceite
+      description: Como saber que está pronto (testes, tela conferida, o que o usuário confere na prévia).
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade
+      options:
+        - P3 — função nova
+        - P2 — ajuste de layout ou de função existente
+        - P1 — bug com contorno
+        - P0 — quebra
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      multiple: true
+      options:
+        - frontend
+        - midia
+        - backend
+        - qa
+        - docs
+    validations:
+      required: true
