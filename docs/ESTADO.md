@@ -12,7 +12,7 @@ Atualizado: 2026-11-05.
 
 Ambos: Render Free, Virginia, uma instância, deploy automático da `main`.
 Produção 2.11.0 = VIO_TEST `fa75894` (rc.24), VIO PR #5, aval do usuário em 2026-11-04 (inclui a 2.10.0,
-nunca publicada sozinha). Tag `v2.11.0`: o usuário cria em Releases. `ALLOWED_APP_ORIGINS` já está nos dois Render.
+nunca publicada sozinha). Release `v2.11.0` publicada pelo usuário. `ALLOWED_APP_ORIGINS` já está nos dois Render.
 
 ## Validado pelo usuário
 
@@ -24,14 +24,16 @@ Níveis P0–P3 (regra no `CLAUDE.md`). Etiquetas no GitHub; a área pega a prim
 Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
-- **P1**: #281 avisos empurram o layout · #266 cursor some · #268 Baixar direto · #280 Flutuante
+- **P1**: #285 tela do app no navegador · #286 saída fica como "reconectando" (depois da #287) ·
+  #281 avisos empurram o layout · #266 cursor some · #268 Baixar direto · #280 Flutuante
   no app (com Mídia).
-- **P2**: #261 transições (Opus no máximo) · #270 notificações · #242 aviso de convite revogado ·
+- **P2**: #287 catálogo técnico + mercado (copiloto; plano aguarda o usuário) · #261 transições
+  (Opus no máximo) · #270 notificações ·
   #269 responsividade (QA) · #20 Prettier na CI · #25 conferir TURN.
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
-  #168 Ajustes · #135 TURN Cloudflare (usuário passa as variáveis) · #21 conferência pós-deploy ·
+  #168 Ajustes · #135 TURN Cloudflare (avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
   #22 BrowserLab na CI.
-- Na prévia (2.12.0-rc.6): landing A (#258), início B (#259), trancar/convite (#260, #242), tela
+- Na prévia (2.12.0-rc.6): landing A (#258), início B (#259), trancar/convite (#260; #242 fechada), tela
   inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps).
 - Fora de issue: parecer captura nativa x anti-cheat (Mídia + Pesquisador) · app em segundo plano
   e ícone novo · sala detalhada (Design) · assets de marca.
