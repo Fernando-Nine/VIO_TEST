@@ -1,32 +1,24 @@
 # Copiloto — handoff
 
-Atualizado: 2026-11-05
+Atualizado: 2026-11-05 (2)
 
 ## Agora
 
-Revisão de processo aprovada pelo usuário em 5 nov e entregue na PR VIO_TEST #284: compactação
-automática aos 200 mil, subagentes `goldfish`/`crawler`/`pesquisador`, modelo por tarefa, plano na
-issue, modelos de issue, notas da versão em `changes/` e ADRs em `docs/decisoes/`. Nenhuma área
-trabalhando.
+Auto-merge ligado e verificado; plugins/conectores removidos; release `v2.11.0` feita (usuário, 5 nov).
+#242 fechada (aviso de convite revogado descartado). Novas: #285 (P1 frontend, `Home` no navegador),
+#286 (P1 backend, saída fica "reconectando"; espera o tema 02 da #287), #287 (catálogo técnico,
+plano revisado pelo `goldfish`, `aguarda-usuario`: respostas do elephant + o usuário põe no máximo).
 
-## Aguardam o usuário (mostrar um tópico por vez, curto)
+## Aguardam o usuário
 
-1. **Auto-merge**: conferir se a #284 entrou sozinha. Se não, passos para o usuário (VIO_TEST e
-   depois o mesmo no VIO):
-   - Settings → General → marcar "Allow auto-merge".
-   - Settings → Rules → Rulesets → New branch ruleset na branch padrão: "Require a pull request"
-     (0 aprovações), "Require status checks to pass" só com `check`, "Block force pushes", bypass
-     para Repository admin.
-2. **Plugins e conectores sem uso**: pedir ao usuário para remover nas sessões do VIO (marketing,
-   Adobe, Canva, Miro, Gmail, Slack, Drive) e a cópia duplicada das skills (plugin "VIO:" igual a
-   `.claude/skills/`). Cada um soma tokens fixos em todo chat.
-3. Tag `v2.11.0` em Releases (usuário).
+- Respostas às perguntas da #287 e aval do plano.
+- #135: avisar o usuário quando chegar a vez (ele passa as variáveis).
 
 ## Depois
 
-- Fila do `ESTADO.md`: P1 #281, #266, #268, #280 (com Mídia); depois #261 (Opus máximo), #270.
-- Mídia + `pesquisador`: parecer captura nativa x anti-cheat (Valorant).
-- QA fecha a prévia (`changes/README.md`) quando o usuário for testar.
+- #287 etapas 1–5; em paralelo, área frontend pode pegar #285 (Sonnet).
+- Fila P1: #281, #266, #268, #280 (com Mídia); depois #261, #270.
+- Mídia + `pesquisador`: parecer captura nativa x anti-cheat (entra na pesquisa da #287).
 - Revisão mensal do `CLAUDE.md`: ~4 dez.
 
 ## Decisões do copiloto
@@ -40,4 +32,4 @@ trabalhando.
 
 ## Próximo passo
 
-Conferir o merge da #284 e abrir o tópico 1 com o usuário.
+Com o aval da #287: crawlers (etapa 1) em segundo plano.
