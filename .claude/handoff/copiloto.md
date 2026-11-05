@@ -1,31 +1,32 @@
 # Copiloto — handoff
 
-Atualizado: 2026-11-04
+Atualizado: 2026-11-05
 
 ## Agora
 
-Chat `session_01K4nnLSxASaRLsvR8RRDPnQ` encerrado (passou de 200 mil). Nenhuma área trabalhando.
-PR VIO_TEST #283 (processo + limpeza dos handoffs): squash quando a CI ficar verde, se ainda aberta.
+Revisão de processo aprovada pelo usuário em 5 nov e entregue na PR VIO_TEST #284: compactação
+automática aos 200 mil, subagentes `goldfish`/`crawler`/`pesquisador`, modelo por tarefa, plano na
+issue, modelos de issue, notas da versão em `changes/` e ADRs em `docs/decisoes/`. Nenhuma área
+trabalhando.
 
 ## Aguardam o usuário (mostrar um tópico por vez, curto)
 
-1. **Contexto dos chats** (medido em 4 nov): todo chat começa com ~71–81 mil tokens fixos
-   (instruções, ferramentas, skills, os dois `CLAUDE.md`); papel + handoff + ESTADO somam ~10 mil.
-   O que leva a 180–250 mil é o trabalho na 1ª mensagem (Mídia 9: 114 passos, US$ 8,56). Propostas:
-   (a) 1–2 issues por chat e troca aos 150 mil; (b) auto-merge da PR em vez de esperar a CI no chat
-   (exige regra de branch com `check` obrigatório no VIO_TEST, agora público); (c) usuário desligar
-   conectores e plugins sem uso nas sessões do VIO (marketing, Adobe, Canva, Miro, Gmail, Slack,
-   Drive) e a cópia duplicada das skills (plugin "VIO:" igual a `.claude/skills/`).
-2. **Elephant-Goldfish + Crawler + Pesquisador**: proposta em `docs/planos/fila-e-agentes.md`
-   (seções 2 e 3). Com o aval: criar as skills e os agentes.
-3. **ADRs** (`docs/decisoes/`, migrar Decisões do ESTADO) e **modelos de issue**
-   (`.github/ISSUE_TEMPLATE/` bug e feature): aprovados, fazer em alto esforço.
-4. Tag `v2.11.0` em Releases (usuário).
+1. **Auto-merge**: conferir se a #284 entrou sozinha. Se não, passos para o usuário (VIO_TEST e
+   depois o mesmo no VIO):
+   - Settings → General → marcar "Allow auto-merge".
+   - Settings → Rules → Rulesets → New branch ruleset na branch padrão: "Require a pull request"
+     (0 aprovações), "Require status checks to pass" só com `check`, "Block force pushes", bypass
+     para Repository admin.
+2. **Plugins e conectores sem uso**: pedir ao usuário para remover nas sessões do VIO (marketing,
+   Adobe, Canva, Miro, Gmail, Slack, Drive) e a cópia duplicada das skills (plugin "VIO:" igual a
+   `.claude/skills/`). Cada um soma tokens fixos em todo chat.
+3. Tag `v2.11.0` em Releases (usuário).
 
 ## Depois
 
-- Mídia + Pesquisador: parecer captura nativa x anti-cheat (Valorant).
-- Lote do Frontend pela Fila: P1 #281, #266, #268, #280 (com Mídia); depois #261 (Opus máximo), #270.
+- Fila do `ESTADO.md`: P1 #281, #266, #268, #280 (com Mídia); depois #261 (Opus máximo), #270.
+- Mídia + `pesquisador`: parecer captura nativa x anti-cheat (Valorant).
+- QA fecha a prévia (`changes/README.md`) quando o usuário for testar.
 - Revisão mensal do `CLAUDE.md`: ~4 dez.
 
 ## Decisões do copiloto
@@ -35,7 +36,8 @@ PR VIO_TEST #283 (processo + limpeza dos handoffs): squash quando a CI ficar ver
 - Respostas ao usuário curtas, um tópico por vez quando houver vários.
 - `git push` sempre com o nome do branch (`git push -u origin <branch>`): o branch criado a partir
   de `origin/main` herda `main` como upstream e o push sem nome falha calado.
+- Ao abrir sessão de área: passar o modelo da tabela do `CLAUDE.md` e 1–2 issues.
 
 ## Próximo passo
 
-Abrir o tópico 1 com o usuário.
+Conferir o merge da #284 e abrir o tópico 1 com o usuário.
