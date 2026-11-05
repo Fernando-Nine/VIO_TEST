@@ -259,7 +259,6 @@ export function Home({
   initialCode,
   busy,
   enter,
-  landing,
 }: {
   engine: Controller;
   name: string;
@@ -268,8 +267,6 @@ export function Home({
   initialCode: string;
   busy: boolean;
   enter: (entry: HomeEntry) => void;
-  /** Browser only: the logo goes back to the landing page. */
-  landing?: () => void;
 }) {
   const [rooms, setRooms] = useState(loadRecent);
   const [card, setCard] = useState<Card>(initialCode ? "join" : null);
@@ -305,19 +302,9 @@ export function Home({
   return (
     <main className="home" id="main-content">
       <aside className="home-side" aria-label="Você e suas salas">
-        {landing ? (
-          <button
-            className="home-logo"
-            aria-label="VIO · Conheça o VIO"
-            onClick={landing}
-          >
-            <Logo label={false} />
-          </button>
-        ) : (
-          <span className="home-logo">
-            <Logo />
-          </span>
-        )}
+        <span className="home-logo">
+          <Logo />
+        </span>
         <div className="home-me">
           <AvatarButton engine={engine} name={name} />
           <NameField name={name} setName={setName} />

@@ -93,10 +93,8 @@ export default function App({ engine }: { engine: Controller }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [replaceSlot, setReplaceSlot] = useState<CaptureSlot>("screen");
   const [name, setName] = useState(loadName);
-  // Início (#259): the app always; the browser once a name was saved.
-  const [savedName, setSavedName] = useState(() => !!loadName());
-  const [landing, setLanding] = useState(false);
-  const home = !view.snapshot && (desktop || (savedName && !landing));
+  // Início (#259/#285): only the Windows app; the browser always gets the landing.
+  const home = !view.snapshot && desktop;
   const lockOnCreate = useRef(false);
   const [splash, setSplash] = useState(desktop);
   const endSplash = useCallback(() => setSplash(false), []);
@@ -266,17 +264,13 @@ export default function App({ engine }: { engine: Controller }) {
     await engine.leave();
     setCode("");
     setPanel(null);
-    setLanding(false);
   }
   // Every room entered goes to Recentes, on this device only.
   const roomCode = view.snapshot?.code;
   useEffect(() => {
     if (!roomCode) return;
     saveRecent(touchRecent(loadRecent(), roomCode));
-    if (name.trim()) {
-      saveName(name);
-      setSavedName(true);
-    }
+    if (name.trim()) saveName(name);
   }, [roomCode]);
   // "Bateu na porta" (#260): the first in line, for the creator and admins.
   const manages = canManageRoom(view.snapshot, view.id);
@@ -488,7 +482,6 @@ export default function App({ engine }: { engine: Controller }) {
               entry.invite || inviteFor(entry.code),
             );
           }}
-          landing={desktop ? undefined : () => setLanding(true)}
         />
       ) : !view.snapshot ? (
         <Landing
