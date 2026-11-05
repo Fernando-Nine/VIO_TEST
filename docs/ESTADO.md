@@ -1,7 +1,7 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-11-04.
+Atualizado: 2026-11-05.
 
 ## Ambientes
 
@@ -21,72 +21,40 @@ nunca publicada sozinha). Tag `v2.11.0`: o usuário cria em Releases. `ALLOWED_A
 ## Fila
 
 Níveis P0–P3 (regra no `CLAUDE.md`). Etiquetas no GitHub; a área pega a primeira da sua.
+Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
-- **P1**: #280 Flutuante no app · #281 avisos empurram o layout · #266 cursor some · #268 Baixar direto.
-- **P2**: #261 transições · #270 notificações · #242 aviso de convite revogado · #269 responsividade ·
-  #20 Prettier na CI · #25 conferir TURN.
-- **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips · #168 Ajustes ·
-  #135 TURN Cloudflare · #21 conferência pós-deploy · #22 BrowserLab na CI.
+- **P1**: #281 avisos empurram o layout · #266 cursor some · #268 Baixar direto · #280 Flutuante
+  no app (com Mídia).
+- **P2**: #261 transições (Opus no máximo) · #270 notificações · #242 aviso de convite revogado ·
+  #269 responsividade (QA) · #20 Prettier na CI · #25 conferir TURN.
+- **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
+  #168 Ajustes · #135 TURN Cloudflare (usuário passa as variáveis) · #21 conferência pós-deploy ·
+  #22 BrowserLab na CI.
+- Na prévia (2.12.0-rc.6): landing A (#258), início B (#259), trancar/convite (#260, #242), tela
+  inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps).
+- Fora de issue: parecer captura nativa x anti-cheat (Mídia + Pesquisador) · app em segundo plano
+  e ícone novo · sala detalhada (Design) · assets de marca.
 
-## Prioridades atuais
+## Decisões
 
-Ordem completa em `ROADMAP.md`.
+Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de lá).
 
-Ordem do usuário (27 out): 1) entregar o já pedido, 2) bugs, 3) novos agentes e
-planejamento, 4) brandbook/identidade/design system, 5) features novas. Sem pressa; qualidade.
-
-1. **Proposta aguardando o usuário**: fila P0–P3, Elephant-Goldfish e agentes Crawler e Pesquisador
-   (`docs/planos/fila-e-agentes.md`). Com o aval, vira etiquetas e uma seção Fila aqui.
-2. **2.12.0 na prévia (rc.6)**: landing A (#258), início B (#259), trancar/convite (#260, #242),
-   tela inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps).
-3. Lote do Frontend, só com tudo decidido: transições #261 (Opus no máximo), cursor #266,
-   Baixar direto #268, notificações #270. Teste de responsividade #269 (QA).
-4. Bugs novos: Flutuante no app (#280), avisos empurram o layout (#281). App na bandeja + ícone (#282).
-5. Depois: TURN Cloudflare (#135, usuário passa as variáveis), app em segundo plano + ícone novo,
-   sala detalhada (Design), assets de marca, clips (#208), Ajustes (#168).
-
-Feito na 2.11 (até rc.24): #158, #189, #190, #198, #159, #160, #162, #193, #207, #209, #192,
-#194, #191, #221, #228, #222, #229, #226, #236, #246, #247, #248, #254, #255.
-
-## Decisões vigentes
-
-- Leva 5 (28 out): landing A (corrigir espaço vazio no celular), início do app B, trancar e
-  convite A, sala A (rever em detalhe numa sessão de Design futura), transição A como padrão.
-- Transições: o ponto conduz tudo (regra no `CLAUDE.md`); o usuário vê antes de fixar cada uma.
-- Temas: padrão **Noite**, escolhido em Ajustes. Futuro: mais temas nossos (só cores) e temas da
-  comunidade, que podem mudar também o arranjo da sala e as animações. Não agora.
-- Widgets da comunidade (futuro): widgets criados pela comunidade, na aparência e na função, usando
-  APIs de outros serviços (Spotify, tela do YouTube, estatísticas de partida, chat com IA…). Exigem
-  isolamento de código antes de existir.
-- Copiloto conversa com o usuário antes de pedir ideias visuais novas a uma área.
-- Correções de segurança vão direto para a produção, sem aval prévio (usuário, 2026-10-24).
-- App Windows: o usuário testa já com a captura de áudio WASAPI.
-
-- Instaladores do app Windows ficam no repositório público Fernando-Nine/vio-releases (criado em 2026-10-24)
-  (GitHub Releases), também usado pelo atualizador automático. Assinatura só ao abrir ao público.
-- Permissões da sala no estilo cargos do Discord (#71, antiga E12): criador e admins
-  controlam widgets da sala; convidados conforme switches da sala.
-- Widgets compartilhados: um só estado para a sala (regra no `CLAUDE.md`).
-- Rodapé: Entrar na chamada, Compartilhar e Flutuante juntos à esquerda, nessa ordem;
-  volume fica em cada tela, não no rodapé (#145).
-- Fechar widget (#146): widget da sala tem − (minimizar, só para você) e × (fechar para
-  todos) para dono da sala, admins e criador; os demais só −. Widget pessoal só ×.
-- Agentes novos (27 out): Jurídico e Privacidade (sem verba para advogado agora) e Roteirista.
-- Clips (#208): no aparelho, até 3 min, vozes de todos, edição rápida em ms, marca d'água.
-- Desativar áudio (#149): como no Discord, desliga microfone e vozes, mas não as telas.
-- Widgets são **pessoais** (só quem criou vê) ou **da sala** (criador/admins; convidados se
-  a sala permitir). Escolha na criação; não existe compartilhar widget pessoal (#104).
-- Visual novo dos widgets passa por rascunhos da área Design antes do código.
-
-- Contas, banco de dados e gravação no servidor: **adiados**, não proibidos.
-  Clips gravados no aparelho são objetivo futuro.
-- Sem teto de participantes por enquanto; aviso de carga P2P a partir de 6.
-  Um teto (ex.: 50) pode vir depois, sem prioridade.
-- App Windows é a próxima plataforma; celular depois. Base em `docs/DESKTOP-WASAPI.md`.
-- Comunidade e monetização são objetivos futuros, preservando a originalidade.
-- Fluxo: Issues + PR por tarefa + CI + squash merge pelo agente. Produção recebe o mesmo
-  código da prévia, por PR de release no VIO e tag, após aval do usuário.
+- [001](decisoes/001-permissoes-e-widgets.md) Permissões tipo cargos; widget pessoal ou da sala; fechar e rodapé.
+- [002](decisoes/002-leva-5-e-movimento.md) Leva 5 de design; o ponto da marca conduz as transições.
+- [003](decisoes/003-temas.md) Tema Noite; temas nossos e da comunidade depois.
+- [004](decisoes/004-widgets-da-comunidade.md) Widgets da comunidade só com isolamento de código.
+- [005](decisoes/005-seguranca-direto-a-producao.md) Correção de segurança vai direto à produção.
+- [006](decisoes/006-app-windows.md) App Windows primeiro, WASAPI, instaladores no vio-releases.
+- [007](decisoes/007-clips.md) Clips no aparelho, até 3 min, com marca d'água.
+- [008](decisoes/008-desativar-audio.md) Desativar áudio desliga microfone e vozes, não as telas.
+- [009](decisoes/009-contas-e-banco-adiados.md) Contas, banco e gravação no servidor adiados.
+- [010](decisoes/010-participantes-e-p2p.md) Sem teto de participantes; aviso P2P a partir de 6.
+- [011](decisoes/011-fluxo-de-trabalho.md) Issues, PR por tarefa, squash; produção recebe o mesmo código.
+- [012](decisoes/012-prioridade-e-pronto.md) P0–P3, pronto, 1 issue por área, incidentes, regras que crescem.
+- [013](decisoes/013-contexto-subagentes-modelo.md) Compactação aos 200 mil, subagentes, modelo por tarefa, auto-merge.
+- [014](decisoes/014-elephant-goldfish.md) Plano na issue revisado pelo `goldfish`; agentes de apoio.
+- [015](decisoes/015-notas-por-arquivo.md) Notas da versão em `changes/`; QA fecha a prévia.
 
 ## Em aberto (aguardam o usuário)
 
@@ -100,4 +68,4 @@ Feito na 2.11 (até rc.24): #158, #189, #190, #198, #159, #160, #162, #193, #207
 Roadmap `ROADMAP.md` ·
 Arquitetura do canvas `CANVAS.md` · deploy `DEPLOY.md` · segurança `SEGURANCA.md` ·
 TURN `TURN.md` · navegadores `NAVEGADORES.md` · validações `VALIDACAO.md` ·
-histórico das rodadas C–E `arquivo/`.
+decisões `decisoes/` · histórico das rodadas C–E `arquivo/`.

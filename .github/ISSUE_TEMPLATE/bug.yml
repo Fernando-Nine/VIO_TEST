@@ -1,0 +1,66 @@
+name: Bug
+description: Algo que funcionava, ou deveria funcionar, deu errado.
+labels: [bug]
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: O que aconteceu
+      description: O que você viu, com a mensagem de erro se houver.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos
+      placeholder: |
+        1. Entre numa sala com duas pessoas.
+        2. Compartilhe a tela.
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que era esperado
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Onde
+      description: Navegador ou app Windows, com a versão do VIO (Ajustes › Versão).
+      placeholder: Chrome 142, VIO 2.12.0-rc.6 · 8bd04e1
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Ambiente
+      options:
+        - Prévia (vio-test)
+        - Produção (vio-quest)
+        - Local
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade sugerida
+      options:
+        - P0 — quebra (crash, segurança, perda de dados, sala ou chamada parada)
+        - P1 — bug com contorno
+        - P2 — ajuste de layout ou de função existente
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - frontend
+        - midia
+        - backend
+        - qa
+        - docs
+        - Não sei

@@ -1,6 +1,7 @@
 ---
 name: juridico
 description: Jurídico e Privacidade do VIO — LGPD, ECA Digital, Marco Civil, direitos autorais, termos, política de privacidade e proteção de quem usa e de quem cria o app. Orienta e escreve; não implementa no app.
+model: sonnet
 ---
 
 # Jurídico e Privacidade

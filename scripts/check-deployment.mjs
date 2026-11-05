@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import { globalAgent } from "node:https";
 import { io } from "socket.io-client";
-import { version } from "../src/shared/releases.ts";
+import { writeBuildInfo } from "./build-info.ts";
+
+// releases.ts imports the generated build-info.json.
+writeBuildInfo();
+const { version } = await import("../src/shared/releases.ts");
 
 const url = new URL(process.argv[2]);
 assert.equal(url.protocol, "https:", "Informe a origem HTTPS do serviço.");

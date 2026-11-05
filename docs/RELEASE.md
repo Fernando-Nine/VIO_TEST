@@ -3,9 +3,10 @@
 Só com o aval do usuário na prévia (exceção: hotfix de segurança). Siga na ordem.
 
 1. Anote o commit aprovado do VIO_TEST (`<sha>`, versão `X.Y.Z-rc.N`).
-2. **VIO_TEST**: em `src/shared/releases.ts`, o registro `X.Y.Z` ganha data e notas estáveis
-   (curtas, por seção, para quem usa). Rode `npm run build` para gerar o `CHANGELOG.md` (a CI
-   falha se ele ficar desatualizado). PR, CI verde, squash.
+2. **VIO_TEST**: feche a prévia (`changes/README.md`): as notas de `changes/` entram no registro
+   `X.Y.Z` de `src/shared/releases.ts`, que ganha data e notas estáveis (curtas, por seção, para
+   quem usa); os arquivos de `changes/` são apagados. Rode `npm run build` para gerar o
+   `CHANGELOG.md` (a CI falha se ele ficar desatualizado). PR, CI verde, squash.
 3. **VIO**: branch novo a partir da `main`; `git rm -rq . && git checkout <sha> -- .`; confira
    `git write-tree` = `git rev-parse <sha>^{tree}`.
 4. No VIO, mude só: `version` e `currentRelease` em `releases.ts` (mesmas notas do passo 2),

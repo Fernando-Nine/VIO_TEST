@@ -73,7 +73,7 @@ import {
   touchRecent,
 } from "./room/recent-rooms";
 import { ToastStack, toasts } from "./components/Toasts";
-import { releases, version } from "../shared/releases";
+import { releases, versionLabel } from "../shared/releases";
 import { api, invite } from "./endpoint";
 import { applyMotion } from "./components/motion";
 import { ShareDialog } from "./components/ShareDialog";
@@ -748,7 +748,7 @@ export default function App({ engine }: { engine: Controller }) {
                         className="dock-credits dock-wide dock-end"
                         onClick={() => open("history")}
                       >
-                        NerdQuest · v{version}
+                        NerdQuest · v{versionLabel}
                       </button>
                     )}
                     <button
@@ -801,7 +801,7 @@ export default function App({ engine }: { engine: Controller }) {
                             ]
                           : []),
                         {
-                          label: `Novidades · v${version}`,
+                          label: `Novidades · v${versionLabel}`,
                           icon: ArrowUpRight,
                           run: () => open("history"),
                         },
@@ -858,7 +858,7 @@ export default function App({ engine }: { engine: Controller }) {
           by <strong>NerdQuest Studios</strong> · fundado por Nine
         </span>
         <button onClick={() => open("history")} className="version">
-          v{version}
+          v{versionLabel}
           <ArrowUpRight size={12} />
         </button>
       </footer>
