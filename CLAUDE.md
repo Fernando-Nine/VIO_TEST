@@ -73,11 +73,12 @@ subagentes para leitura pesada.
 | Produção | Fernando-Nine/VIO      | https://vio-quest.onrender.com       |
 
 - **Tarefas** são Issues no VIO_TEST, com etiqueta de área (`frontend`, `midia`, `backend`,
-  `qa`, `docs`) e Milestone da versão.
+  `qa`, `docs`, `design`) e Milestone da versão.
 - **Prioridade**: toda issue tem um nível. **P0** quebra (crash, segurança, perda de dados, sala ou
   chamada parada) · **P1** bug com contorno · **P2** ajuste de layout ou de função existente ·
   **P3** feature nova. Não se começa um nível com o de cima aberto na mesma área. A ordem fica na
-  seção Fila do `ESTADO.md`; a área pega a primeira com a sua etiqueta.
+  seção Fila do `ESTADO.md`; a área pega a primeira com a sua etiqueta. Dentro do mesmo nível, desempate: afeta mais gente →
+  desbloqueia outras tarefas → sai mais barato.
 - **Em andamento**: no máximo **1 issue por área** ao mesmo tempo. Issue parada esperando decisão
   ou ação do usuário leva a etiqueta `aguarda-usuario` (e sai da vez da área).
 - **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `changes/` se quem usa
@@ -90,6 +91,10 @@ subagentes para leitura pesada.
   fora do escopo, arquivos prováveis, invariantes tocados e aceite (`feature.yml`) e passa pelo
   `goldfish` antes de a área começar; o diff dela passa por revisão sem memória (`code-review` ou
   `goldfish` em modo diff) antes do merge. Bugs P0–P2 pequenos não precisam.
+- **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
+  rascunho do Design (2–3 opções em tamanho real, etiqueta `design`) e só vira issue de
+  frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
+  já existe não precisam.
 - **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` com `Closes #N` → ativar auto-merge
   (squash) → encerrar, sem esperar a CI no chat. Se a CI falhar, quem abriu corrige (pode usar
   `subscribe_pr_activity`). Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
