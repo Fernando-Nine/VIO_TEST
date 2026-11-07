@@ -362,14 +362,24 @@ input[type="checkbox"] {
   min-height: 28px;
 }
 /* Inline notices (landing, Home, sheets) float above the page (#281): they
-   never take space in the flow, so nothing below them moves. */
+   never take space in the flow, so nothing below them moves. On the page the
+   notice is fixed just under the header (--notice-top per page); inside a
+   sheet it is anchored under the sheet header. */
 .notice {
   position: fixed;
-  top: calc(12px + env(safe-area-inset-top, 0px));
-  left: 50%;
+  top: calc(var(--notice-top, 84px) + env(safe-area-inset-top, 0px));
+  left: calc(
+    50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2
+  );
   translate: -50% 0;
   z-index: 300;
-  width: min(600px, calc(100% - 24px));
+  width: min(
+    600px,
+    calc(
+      100% - 24px - env(safe-area-inset-left, 0px) -
+        env(safe-area-inset-right, 0px)
+    )
+  );
   max-width: none;
   margin: 0;
   max-height: 35dvh;
@@ -377,6 +387,14 @@ input[type="checkbox"] {
   align-items: center;
   box-shadow: 0 10px 30px #0007;
   animation: vio-notice-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sheet .notice {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  translate: none;
+  width: auto;
+  top: calc(var(--sheet-head, 78px) + 8px);
 }
 @keyframes vio-notice-in {
   from {
@@ -388,6 +406,9 @@ input[type="checkbox"] {
   .notice {
     animation: none;
   }
+}
+:root[data-motion="reduce"] .notice {
+  animation: none;
 }
 .notice > span {
   min-width: 0;
@@ -781,4 +802,16 @@ input[type="checkbox"] {
   border: 1px solid #6b2f3a;
   background: #3a1e2a;
   color: #ff8a96;
+}
+
+.landing-page {
+  --notice-top: 84px;
+}
+.home-page {
+  --notice-top: 106px;
+}
+@media (max-width: 679px) {
+  .landing-page {
+    --notice-top: 72px;
+  }
 }
