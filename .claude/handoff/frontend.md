@@ -4,7 +4,7 @@ Atualizado: 2026-11-07
 
 ## Agora
 
-#309 (Voltar do navegador sai do VIO) em PR: `room/room-history.ts` empilha uma entrada por visita à sala (`history.state.vioRoom`); `popstate` no `App` sai como o Sair ou reentra no Avançar; `resume` só volta se a entrada atual é a da sala. Diff sem goldfish (sem ferramenta Agent): o copiloto roda antes do merge.
+#309 (Voltar do navegador sai do VIO) em PR: `room/room-history.ts` empilha uma entrada por visita à sala (`history.state.vioRoom`); `popstate` no `App` sai como o Sair ou reentra no Avançar; `resume` só volta se a entrada atual é a da sala. Goldfish revisado pelo copiloto (entrada no início de `enter`, fila serial com `late`); auto-merge ativado.
 
 #300 (vagas somem na tela cheia ociosa) e #285 (Home só no app) em PR. Bloco 2.12 (#254, #258, #259, #260) entregue na prévia.
 

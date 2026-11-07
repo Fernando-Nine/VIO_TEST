@@ -33,6 +33,10 @@ export class RoomHistory {
   private ownsStart = false;
   /** Resolves the `back()` this class asked for, when its popstate comes. */
   private returning?: () => void;
+  /** That `back()` timed out: its popstate may still come, once. */
+  private late = false;
+  /** The room entry shown since the last leave, to restore after a late back. */
+  private shown?: { entry: RoomEntry; url: URL | string };
   private queue = Promise.resolve();
   constructor(
     private readonly history: History,
@@ -54,6 +58,7 @@ export class RoomHistory {
   show(room: string, url: URL | string) {
     return this.then(() => {
       const entry: RoomEntry = { vioRoom: room };
+      this.shown = { entry, url };
       if (isRoomEntry(this.history.state)) {
         this.history.replaceState(entry, "", url);
         return;
@@ -69,18 +74,21 @@ export class RoomHistory {
    */
   leave() {
     return this.then(() => {
+      this.shown = undefined;
+      this.late = false;
       if (!isRoomEntry(this.history.state) || !this.ownsStart) {
         this.history.replaceState(null, "", this.start());
         return;
       }
       this.ownsStart = false;
       return new Promise<void>((resolve) => {
-        const done = () => {
+        const done = (late = false) => {
           clearTimeout(timer);
+          this.late = late;
           this.returning = undefined;
           resolve();
         };
-        const timer = setTimeout(done, this.wait);
+        const timer = setTimeout(() => done(true), this.wait);
         this.returning = done;
         this.history.back();
       });
@@ -92,6 +100,16 @@ export class RoomHistory {
       this.returning();
       return "ignore";
     }
+    if (this.late && !isRoomEntry(state)) {
+      // Our timed-out `back()` landed after all: put back the newer room.
+      this.late = false;
+      if (this.shown) {
+        this.history.pushState(this.shown.entry, "", this.shown.url);
+        this.ownsStart = true;
+      }
+      return "ignore";
+    }
+    this.late = false;
     if (!isRoomEntry(state)) return "start";
     // A popstate never crosses documents: Forward to a room entry lands over
     // the start page this document pushed it on.

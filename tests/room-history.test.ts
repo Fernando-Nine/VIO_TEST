@@ -12,7 +12,7 @@ import {
  * A tab's session history. Like a browser, `back()` lands later (a task
  * after the call) and then fires popstate through `pop`.
  */
-function tab(first: string) {
+function tab(first: string, delay = 5) {
   const entries: { url: string; state: unknown }[] = [
     { url: first, state: null },
   ];
@@ -40,7 +40,7 @@ function tab(first: string) {
         if (index === 0) return;
         index--;
         pop(entries[index].state);
-      }, 5);
+      }, delay);
     },
   };
   const t = {
@@ -130,6 +130,24 @@ test("room history: a new room right after Sair waits for the back (#309)", asyn
     ["/", room("WXYZ")],
   );
   assert.equal(roomEntry(t.history.state), "WXYZ");
+});
+
+test("room history: a back later than the wait keeps the new room (#309)", async () => {
+  const t = tab("https://vio.test/", 60);
+  const bar = new RoomHistory(t.history, () => "/", 10);
+  const popped: unknown[] = [];
+  t.onPop((state) => popped.push(bar.popped(state)));
+  await bar.show("ABCD", room("ABCD"));
+  await bar.leave();
+  await bar.show("WXYZ", room("WXYZ"));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  // The late popstate is swallowed and the new room's entry comes back.
+  assert.deepEqual(popped, ["ignore"]);
+  assert.equal(roomEntry(t.history.state), "WXYZ");
+  assert.equal(t.url, room("WXYZ"));
+  // Only the first late one: a real Back afterwards is the start again.
+  t.goBack();
+  assert.equal(popped.at(-1), "start");
 });
 
 test("room history: without a start of this page, the entry becomes it", async () => {

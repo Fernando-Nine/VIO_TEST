@@ -44,13 +44,7 @@ import {
 import { presenceCues } from "./presence-cues";
 import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
-import {
-  api,
-  socketOrigin,
-  invite,
-  invite as roomUrl,
-  embedded,
-} from "../endpoint";
+import { api, socketOrigin, invite as roomUrl, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
 import { ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
@@ -67,7 +61,7 @@ import {
   resumeCode,
   writeTabRoom,
 } from "./tab-room";
-import { RoomHistory, resumes, type Popped } from "./room-history";
+import { RoomHistory, resumes, roomEntry, type Popped } from "./room-history";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -955,7 +949,7 @@ export class Controller {
       // Replaces the entry of `enter` (or pushes it again after a failure).
       void this.address?.show(
         result.snapshot.code,
-        invite(result.snapshot.code),
+        roomUrl(result.snapshot.code),
       );
     } catch (e) {
       if (!current()) return;
@@ -1710,6 +1704,10 @@ export class Controller {
   /** Entering, at the door or in a room: Back from the browser leaves it (#309). */
   get inRoom() {
     return !!this.intent;
+  }
+  /** True while the browser shows the entry of the room we are in. */
+  showsRoom(state: unknown) {
+    return !!this.intent?.code && roomEntry(state) === this.intent.code;
   }
   /** What a popstate means for the room (#309); our own `back()` is ignored. */
   popped(state: unknown): Popped {

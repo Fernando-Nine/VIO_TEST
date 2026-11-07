@@ -287,7 +287,7 @@ export default function App({ engine }: { engine: Controller }) {
     const popped = engine.popped(event.state);
     if (popped === "ignore") return;
     if (popped === "start") {
-      if (engine.inRoom) void goHome();
+      if (engine.inRoom && !engine.showsRoom(history.state)) void goHome();
       return;
     }
     const room = popped.room;
