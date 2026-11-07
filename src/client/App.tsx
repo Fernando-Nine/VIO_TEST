@@ -185,8 +185,16 @@ export default function App({ engine }: { engine: Controller }) {
       engine.captures.stopAll();
       engine.socket?.disconnect();
     };
+    // Also when persisted: beforeunload already dropped socket and captures.
+    const hide = () => engine.farewell();
     window.addEventListener("beforeunload", unload);
-    return () => window.removeEventListener("beforeunload", unload);
+    window.addEventListener("pagehide", hide);
+    // A reload goes back to the room (#286); mic and camera stay closed.
+    engine.resume(name, code, inviteFor);
+    return () => {
+      window.removeEventListener("beforeunload", unload);
+      window.removeEventListener("pagehide", hide);
+    };
   }, [engine]);
   const people = view.snapshot?.participants || [];
   const all = people.flatMap((m) => m.publications);
@@ -358,20 +366,27 @@ export default function App({ engine }: { engine: Controller }) {
       label: text,
       text,
       action: failed
-        ? { label: "Reconectar", run: () => void engine.retry() }
+        ? view.conflict
+          ? { label: "Entrar nesta aba", run: () => void engine.enterHere() }
+          : { label: "Reconectar", run: () => void engine.retry() }
         : undefined,
       onClose: () => engine.dismiss(),
     });
-  }, [inRoom, panel, view.error, view.notice, failed, engine]);
+  }, [inRoom, panel, view.error, view.notice, failed, view.conflict, engine]);
   const notice = (view.error || view.notice) && (
     <div
       className={`notice ${view.error ? "error" : ""}`}
       role={view.error ? "alert" : "status"}
     >
       <span>{view.error || view.notice}</span>
-      {view.status === "failed" && (
-        <button onClick={() => void engine.retry()}>Reconectar</button>
-      )}
+      {view.status === "failed" &&
+        (view.conflict ? (
+          <button onClick={() => void engine.enterHere()}>
+            Entrar nesta aba
+          </button>
+        ) : (
+          <button onClick={() => void engine.retry()}>Reconectar</button>
+        ))}
       <button
         className="icon-button"
         aria-label="Dispensar aviso"

@@ -52,7 +52,15 @@ import {
   recoveryDelay,
   recoveryCode,
   permanentRecoveryError,
+  conflictDelay,
+  conflictText,
 } from "./recovery";
+import {
+  needsFreshSession,
+  readTabRoom,
+  resumeCode,
+  writeTabRoom,
+} from "./tab-room";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -69,6 +77,8 @@ export interface View {
   turnedAway?: "refused" | "expired";
   /** People waiting to enter; only sent to the creator and admins. */
   knocks: WaitingPerson[];
+  /** Same session elsewhere (#286): the way out is "Entrar nesta aba". */
+  conflict?: boolean;
 }
 const cameraOff: VideoDemand = { video: "off", height: 120 };
 /** A screen slot with sound and no image is published as a named sound (#236). */
@@ -150,6 +160,14 @@ export class Controller {
   /** Signed creator seats by room code (#226); survive a server restart. */
   private credentials: Record<string, string> = {};
   private roomEntered = false;
+  /** This page load (#286): a farewell only counts from the page in the room. */
+  private readonly page = freshKey();
+  /** Room this page joined and has not left; it says goodbye on the way out. */
+  private joinedRoom?: string;
+  /** "Entrar nesta aba": joins like a new tab, without the creator credential. */
+  private withoutCredential = false;
+  private conflictAttempt = 0;
+  private resumed = false;
   roomColor = defaultColor;
   /** The color chosen last, kept on this device and applied when entering a room. */
   savedColor = "";
@@ -529,6 +547,10 @@ export class Controller {
       ...(invite && { invite }),
     };
     this.recoveryAttempt = previousAttempts;
+    if (!recovering) {
+      this.conflictAttempt = 0;
+      this.withoutCredential = false;
+    }
     if (typeof window !== "undefined") {
       const online = () => {
         if (!current()) return;
@@ -557,7 +579,10 @@ export class Controller {
     try {
       await this.initialize();
       if (!current()) return;
-      const session = await this.getSession();
+      // Another room than the one this tab is in: a session of its own (02.14).
+      const session = await this.getSession(
+        !this.session && needsFreshSession(this.tabStorage(), this.intent.code),
+      );
       if (!current()) return;
       this.view.id = session.id;
       this.socket?.removeAllListeners();
@@ -748,17 +773,29 @@ export class Controller {
       this.fail(error);
       return;
     }
+    const code = recoveryCode(error) || "";
+    const conflict = Object.hasOwn(conflictText, code)
+      ? conflictDelay(this.conflictAttempt++)
+      : 0;
+    if (conflict === undefined) {
+      this.view.status = "failed";
+      this.view.conflict = true;
+      this.view.notice = "";
+      this.view.error = conflictText[code];
+      this.bump();
+      return;
+    }
     const generation = this.generation;
     this.view.status = "reconnecting";
     this.view.error = "";
     this.view.notice =
       "Reconectando automaticamente. Suas capturas continuam abertas.";
     this.bump();
-    const delay = ["RATE_LIMIT", "CONNECTION_LIMIT"].includes(
-      recoveryCode(error) || "",
-    )
-      ? 60000
-      : recoveryDelay(soon ? 0 : this.recoveryAttempt++);
+    const delay = conflict
+      ? conflict
+      : ["RATE_LIMIT", "CONNECTION_LIMIT"].includes(code)
+        ? 60000
+        : recoveryDelay(soon ? 0 : this.recoveryAttempt++);
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       if (generation !== this.generation || !this.intent || this.disposed)
@@ -791,6 +828,19 @@ export class Controller {
     } finally {
       if (this.sessionRefresh === pending) this.sessionRefresh = undefined;
     }
+  }
+  /**
+   * "Entrar nesta aba" (#286): a new session and no creator credential, as a
+   * new tab would. With the credential it could take the seat and the
+   * `room-credential: null` that follows would erase the one tabs share.
+   */
+  enterHere() {
+    this.withoutCredential = true;
+    this.conflictAttempt = 0;
+    this.view.conflict = undefined;
+    this.view.error = "";
+    this.bump();
+    return this.retry(true);
   }
   async retry(newSession = false) {
     if (!this.intent) return;
@@ -825,13 +875,22 @@ export class Controller {
       !!this.intent;
     try {
       const code = this.intent.code;
-      const credential = code ? this.loadCredentials()[code] : undefined;
+      const credential =
+        code && !this.withoutCredential
+          ? this.loadCredentials()[code]
+          : undefined;
       const result = await this.request<JoinResult>("join", {
         ...this.intent,
         ...(credential && { credential }),
+        page: this.page,
       });
       if (!current() || !this.intent) return;
       this.intent.code = result.snapshot.code;
+      this.joinedRoom = result.snapshot.code;
+      this.conflictAttempt = 0;
+      this.view.conflict = undefined;
+      if (this.persist)
+        writeTabRoom({ code: result.snapshot.code }, this.tabStore());
       if (result.credential)
         this.storeCredential(result.snapshot.code, result.credential);
       this.view.id = result.id;
@@ -1511,7 +1570,60 @@ export class Controller {
       this.fail(e);
     }
   }
+  /**
+   * The page is going away (pagehide) or leaving without a socket (#286): tell
+   * the server over HTTP, so the others stop seeing it "reconectando".
+   */
+  farewell(explicit = false) {
+    if (!this.joinedRoom || !this.session) return;
+    if (!explicit && this.persist)
+      writeTabRoom(
+        { code: this.joinedRoom, hiddenAt: Date.now() },
+        this.tabStore(),
+      );
+    this.sendFarewell(this.session.token, explicit);
+  }
+  private sendFarewell(token: string, explicit: boolean) {
+    // fetch keepalive, not sendBeacon: a no-cors beacon goes out under
+    // no-referrer with `Origin: null`, which the route refuses.
+    void fetch(api("/api/leave"), {
+      method: "POST",
+      body: JSON.stringify({
+        token,
+        page: this.page,
+        ...(explicit && { explicit: true }),
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
+  /** Reload (#286): back to the room this tab just left, never to the call. */
+  resume(
+    name: string,
+    link: string,
+    invite?: (code: string) => string | undefined,
+  ) {
+    if (this.resumed || !this.persist || this.intent || !name.trim()) return;
+    this.resumed = true;
+    const code = resumeCode(this.tabStorage(), link);
+    if (code) void this.enter(name.trim(), code, false, invite?.(code));
+  }
+  private tabStore() {
+    try {
+      return sessionStorage;
+    } catch {
+      return undefined;
+    }
+  }
+  private tabStorage() {
+    return this.persist ? readTabRoom(this.tabStore()) : undefined;
+  }
   async leave(announce = true) {
+    const token = this.session?.token,
+      joined = this.joinedRoom;
+    this.joinedRoom = undefined;
+    this.withoutCredential = false;
+    this.conflictAttempt = 0;
+    if (this.persist) writeTabRoom(undefined, this.tabStore());
     this.cues.cancel();
     if (announce && this.roomEntered) void this.playCue("room-leave");
     this.roomEntered = false;
@@ -1530,13 +1642,25 @@ export class Controller {
     socket?.removeAllListeners();
     socket?.io.removeAllListeners("reconnect_failed");
     // Release the local room now; the old socket owns only its own acknowledgement.
+    // Without a socket or an ack, the HTTP farewell takes the place out (02.2).
+    const goodbye = () => {
+      if (joined && token) this.sendFarewell(token, true);
+    };
     if (socket?.connected)
       socket
         .timeout(1500)
-        .emit("command", { action: "leave", data: {} }, () =>
-          socket.disconnect(),
+        .emit(
+          "command",
+          { action: "leave", data: {} },
+          (error: Error | null) => {
+            socket.disconnect();
+            if (error) goodbye();
+          },
         );
-    else socket?.disconnect();
+    else {
+      socket?.disconnect();
+      goodbye();
+    }
     this.session = undefined;
     if (this.persist)
       try {

@@ -153,6 +153,7 @@ isolamento de áudio universal. [Limites e fontes](docs/NAVEGADORES.md).
 | `MAX_ROOMS` | 200 | Limite de salas em memória |
 | `MAX_SOCKETS_PER_IP` | 20 | Conexões simultâneas por IP |
 | `RECONNECT_GRACE_SECONDS` | 90 | Preserva presença durante queda temporária |
+| `FAREWELL_SECONDS` | 8 | Prazo para voltar depois de fechar a aba ou recarregar |
 | `ROOM_TTL_SECONDS` | 300 | Expiração de salas vazias |
 | `WEB_CONCURRENCY` | 1 | Exige uma instância |
 | `ENABLE_TEST_LAB` | 0 | Laboratório somente em desenvolvimento |

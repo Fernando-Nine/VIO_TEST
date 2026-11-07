@@ -45,6 +45,7 @@
 | `GET /healthz` | `{ok:true, version}` (health check do Render) | `app.ts` ~L71 |
 | `GET /api/config` | `{signalingUrl, socketPath, maxParticipants:null, recommendedParticipants, maxPreviews, testLab}` | ~L72 |
 | `POST /api/session` | Token `{token,id,expiresAt}`; exige `Origin` permitida (web ou app) senão 403; 30/min/IP (429) | ~L82 |
+| `POST /api/leave` | Despedida da página (#286): `text/plain` ≤ 2 KB, `farewellSchema` `{token, page, explicit?}`; exige `Origin` permitida (403), 30/min/IP (429), token HMAC válido (403); 204 sem corpo. Erros em JSON sem stack (413/400) | `app.ts` |
 | `/api/*` (todas) | `Cache-Control: no-store`; CORS só devolve `Access-Control-Allow-Origin` para origem permitida (`Vary: Origin`) | ~L53 |
 | `GET /sw.js` (prod) | arquivo do cliente, `no-cache` | ~L164 |
 | `GET /source.tar.gz` (prod) | download `vio-<versão>-source.tar.gz` (AGPL), 404 com texto se não houver build | ~L169 |
@@ -83,6 +84,7 @@
 | `TRUST_PROXY` | `false` | número de saltos 0–5 ou CIDRs; `true` recusado |
 | `SESSION_TTL_SECONDS` | 3600 | 300–86400 |
 | `RECONNECT_GRACE_SECONDS` | 90 | 10–300 |
+| `FAREWELL_SECONDS` | 8 | 2–60; prazo depois da despedida, só com outra pessoa online |
 | `ROOM_TTL_SECONDS` | 300 | 10–3600 |
 | `MAX_ROOMS` | 200 | 1–10000 |
 | `MAX_SOCKETS_PER_IP` | 20 | 4–200 |

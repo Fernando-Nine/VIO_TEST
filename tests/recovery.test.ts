@@ -5,7 +5,18 @@ import { io } from "socket.io-client";
 import { Controller } from "../src/client/room/controller";
 import { createApp } from "../src/server/app";
 import { readConfig } from "../src/server/config";
-import { recoveryDelay } from "../src/client/room/recovery";
+import {
+  conflictDelay,
+  conflictText,
+  recoveryDelay,
+} from "../src/client/room/recovery";
+import {
+  needsFreshSession,
+  readTabRoom,
+  RESUME_WINDOW,
+  resumeCode,
+  writeTabRoom,
+} from "../src/client/room/tab-room";
 import type { Action } from "../src/shared/protocol";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -97,4 +108,51 @@ test("recuperação automática supera oito tentativas, reentra após restart e 
       Object.defineProperty(globalThis, "location", locationDescriptor);
     else Reflect.deleteProperty(globalThis, "location");
   }
+});
+
+test("conflito de sessão: duas tentativas curtas e depois para (#286)", () => {
+  assert.equal(conflictDelay(0), 1000);
+  assert.equal(conflictDelay(1), 2000);
+  assert.equal(conflictDelay(2), undefined);
+  assert.ok(Object.hasOwn(conflictText, "SESSION_IN_USE"));
+  assert.ok(Object.hasOwn(conflictText, "ALREADY_JOINED"));
+  assert.ok(!Object.hasOwn(conflictText, "toString"));
+});
+
+test("sala da aba: recarregar volta sozinho, outra sala pede sessão nova (#286)", () => {
+  const now = 1_000_000;
+  const room = { code: "ABCDE", hiddenAt: now - 5000 };
+  assert.equal(resumeCode(room, "", now), "ABCDE");
+  assert.equal(resumeCode(room, " abcde ", now), "ABCDE");
+  assert.equal(resumeCode(room, "OTHER", now), undefined);
+  assert.equal(resumeCode({ code: "ABCDE" }, "", now), undefined);
+  assert.equal(
+    resumeCode({ code: "ABCDE", hiddenAt: now - RESUME_WINDOW - 1 }, "", now),
+    undefined,
+  );
+  assert.equal(
+    resumeCode({ code: "ABCDE", hiddenAt: now + 1 }, "", now),
+    undefined,
+  );
+  assert.equal(resumeCode(undefined, "", now), undefined);
+
+  assert.equal(needsFreshSession(undefined, "ABCDE"), false);
+  assert.equal(needsFreshSession(room, "abcde"), false);
+  assert.equal(needsFreshSession(room, "OTHER"), true);
+  assert.equal(needsFreshSession(room, undefined), true);
+
+  const data = new Map<string, string>();
+  const storage = {
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => void data.set(k, v),
+    removeItem: (k: string) => void data.delete(k),
+  } as Storage;
+  writeTabRoom(room, storage);
+  assert.deepEqual(readTabRoom(storage), room);
+  data.set("vio:room", '{"code":1}');
+  assert.equal(readTabRoom(storage), undefined);
+  data.set("vio:room", "not json");
+  assert.equal(readTabRoom(storage), undefined);
+  writeTabRoom(undefined, storage);
+  assert.equal(data.size, 0);
 });

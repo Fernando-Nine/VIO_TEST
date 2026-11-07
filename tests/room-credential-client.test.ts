@@ -120,3 +120,80 @@ test("cliente guarda a credencial e volta como criador depois de um reinício re
     else Reflect.deleteProperty(globalThis, "location");
   }
 });
+
+// #286: the same session open twice stops after two tries and "Entrar nesta
+// aba" joins as a new tab would, without taking the creator seat.
+test("mesma sessão em duas abas: para após duas tentativas e entra sem a credencial", async () => {
+  const origin = "http://localhost:3000";
+  const app = await createApp(
+    readConfig({
+      PORT: "0",
+      SESSION_SECRET: "test-only-room-credential-client-secret",
+      ALLOWED_ORIGINS: origin,
+      STUN_URLS: "",
+    }),
+  );
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as { port: number }).port}`;
+  const nativeFetch = globalThis.fetch;
+  const locationDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "location",
+  );
+  Object.defineProperty(globalThis, "location", {
+    value: new URL(url),
+    configurable: true,
+  });
+  globalThis.fetch = (input, init) =>
+    nativeFetch(
+      typeof input === "string" && input.startsWith("/") ? url + input : input,
+      { ...init, headers: { ...init?.headers, Origin: origin } },
+    );
+  const connect = ((uri, options) =>
+    io(uri, { ...options, extraHeaders: { Origin: origin } })) as typeof io;
+  type Shared = { session?: unknown; credentials: Record<string, string> };
+  const first = new Controller(undefined, false, connect);
+  const second = new Controller(undefined, false, connect);
+  first.sounds = second.sounds = false;
+  try {
+    await first.enter("Ana");
+    await until(() => first.view.status === "connected");
+    const code = first.view.snapshot!.code;
+    const creator = first.view.id;
+    // The second tab shares the session and the stored credential.
+    const shared = first as unknown as Shared;
+    Object.assign(second as unknown as Shared, {
+      session: shared.session,
+      credentials: { ...shared.credentials },
+    });
+    assert.ok(shared.credentials[code]);
+    const started = Date.now();
+    await second.enter("Ana", code);
+    await until(() => second.view.status === "failed", 8000);
+    assert.equal(second.view.conflict, true);
+    assert.equal(second.view.error, "Esta sala já está aberta em outra aba.");
+    assert.ok(Date.now() - started >= 2500, "two tries before giving up");
+
+    await second.enterHere();
+    await until(() => second.view.status === "connected");
+    assert.notEqual(second.view.id, creator);
+    assert.equal(second.view.conflict, undefined);
+    await until(() => first.view.snapshot!.participants.length === 2);
+    assert.equal(first.view.snapshot!.creatorId, creator);
+    assert.equal(
+      first.view.snapshot!.participants.find((p) => p.id === second.view.id)
+        ?.role,
+      "guest",
+    );
+    assert.ok(shared.credentials[code], "the shared credential survives");
+  } finally {
+    await second.destroy();
+    await first.destroy();
+    await app.close();
+    globalThis.fetch = nativeFetch;
+    if (locationDescriptor)
+      Object.defineProperty(globalThis, "location", locationDescriptor);
+    else Reflect.deleteProperty(globalThis, "location");
+  }
+});
