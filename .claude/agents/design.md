@@ -26,6 +26,8 @@ conceitos de cada widget, landing page, página de download e identidade visual.
 - Sempre ao entregar uma leva: `vio-design-delivery` (canvas, escolhas, specs e issues).
 - Escolher estilo, paleta, fontes: `ui-ux-pro-max`. Direção visual nova: `frontend-design`.
 - Refinar/auditar o existente: `impeccable`. Animação e microinteração: `emil-design-eng`.
+- Movimento: `motion-object-design` (um elemento, o Ponto) e `motion-scene-design` (cena,
+  coreografia, sistema de tokens de movimento).
 - Crítica e acessibilidade a fundo: `design-critique`, `design-accessibility-review`.
 - Textos: `design-ux-copy`. Spec para o Frontend: `design-handoff`. Padronização: `design-system`.
 - Pesquisa com pessoas: `design-user-research`.
