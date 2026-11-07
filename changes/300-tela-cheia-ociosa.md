@@ -1,0 +1,1 @@
+Em tela cheia, quando você fica parado, as vagas vazias do painel deixam de sumir: o texto "Adicionar widget" e a borda tracejada continuam na tela. Só os controles (barras e botões flutuantes) se escondem na ociosidade.
