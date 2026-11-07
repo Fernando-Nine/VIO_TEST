@@ -114,6 +114,7 @@
     O host é um nó estável criado uma vez em `App.tsx` (~L121), logo nenhum `<video>`/`<audio>` é recriado. Sem Document PiP, cai no
     PiP nativo de vídeo (`video.requestPictureInPicture`) na tela em foco, exigindo `videoWidth > 0` (senão erro "Aguarde o vídeo carregar…").
     Abrir qualquer painel (`open(panel)`) fecha o PiP. O placeholder "A sessão está na janela flutuante" tem botão "Trazer de volta".
+    No app Windows (`desktop` de `desktop/bridge.ts`) `supported` é sempre falso: somem o botão Flutuante da doca e o item de PiP do menu de mais opções (`App.tsx` ~L837, renomeado de "Janela flutuante" para "Picture-in-picture"). O "Janela flutuante" do menu do widget de tela (`WidgetFrame.tsx` ~L249) é a vaga solta do canvas e continua (#280; ver [10](10-app-windows.md), 10.13).
 24. Tela cheia (`App.tsx` › `fullscreen` ~L323): `player.requestFullscreen()` (a sala toda, não só o vídeo) com o dock em modo `is-fullscreen`;
     fallback iOS: `webkitEnterFullscreen` no vídeo em foco; sem nenhum: erro "Tela cheia indisponível neste navegador.".
 

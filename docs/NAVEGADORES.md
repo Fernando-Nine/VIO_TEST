@@ -46,7 +46,8 @@ Document PiP oferece uma janela com HTML e controles da sessão quando a API é
 detectada. O VIO copia estilos e move o host do player sem trocar publicações.
 Fechar a janela devolve o host; o navegador pode restringir tamanho e posicionamento.
 Sem Document PiP, usa PiP de vídeo quando disponível. Não há promessa de paridade
-de controles no fallback ou em toda PWA instalada.
+de controles no fallback ou em toda PWA instalada. No app Windows (WebView2 no Tauri 2)
+o botão Flutuante não aparece: o app recusa janelas novas e o PiP não abre (#280).
 [Chrome: Document Picture-in-Picture](https://developer.chrome.com/docs/web-platform/document-picture-in-picture).
 
 Seletores continuam sendo elementos nativos. `appearance: base-select` e
