@@ -20,7 +20,12 @@ import {
   soundEvents,
   volumePreference,
 } from "../src/client/media/sound-preferences";
-import { presenceCues } from "../src/client/room/presence-cues";
+import {
+  nextQuiet,
+  presenceCues,
+  RESTART_QUIET_MS,
+  type RestartQuiet,
+} from "../src/client/room/presence-cues";
 
 test("cores personalizadas preservam HEX, bloqueiam conteúdo livre e mantêm contraste AA", () => {
   assert.equal(normalizeColor(" f0c "), "#FF00CC");
@@ -126,6 +131,120 @@ test("sons de presença ignoram duplicatas, quedas, reconexões e troca de inst�
     [],
   );
   assert.deepEqual(presenceCues(a, snapshot([person("friend")]), "self"), []);
+});
+
+/** Feeds snapshots in order, as `receiveSnapshot` does, and keeps the cues. */
+function listener(self = "self") {
+  let previous: Snapshot | null = null;
+  let quiet: RestartQuiet | undefined;
+  return (next: Snapshot, now = 0) => {
+    const cues = presenceCues(previous, next, self, quiet, now);
+    quiet = nextQuiet(previous, next, self, quiet, now);
+    previous = next;
+    return cues;
+  };
+}
+const before = snapshot([person("self"), person("ana"), person("bia")]);
+
+test("#292 (a): quem volta depois de um reinício não toca som", () => {
+  const hear = listener();
+  hear(before);
+  assert.deepEqual(hear(snapshot([person("self")], "two")), []);
+  assert.deepEqual(hear(snapshot([person("self"), person("ana")], "two")), []);
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana"), person("bia")], "two")),
+    [],
+  );
+  // Everyone is back: the silence is over and a real arrival sounds.
+  assert.deepEqual(
+    hear(
+      snapshot(
+        [person("self"), person("ana"), person("bia"), person("caio")],
+        "two",
+      ),
+    ),
+    ["room-enter"],
+  );
+});
+
+test("#292 (b): quem é novo durante a janela do reinício toca som", () => {
+  const hear = listener();
+  hear(before);
+  hear(snapshot([person("self")], "two"));
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana"), person("caio")], "two")),
+    ["room-enter"],
+  );
+  // A real leave of someone online still sounds inside the window.
+  assert.deepEqual(hear(snapshot([person("self"), person("ana")], "two")), [
+    "room-leave",
+  ]);
+});
+
+test("#292 (c): depois da janela, quem volta toca som de novo", () => {
+  const hear = listener();
+  hear(before, 0);
+  hear(snapshot([person("self")], "two"), 0);
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana")], "two"), RESTART_QUIET_MS),
+    ["room-enter"],
+  );
+});
+
+test("#292 (d): outra sala não herda o silêncio do reinício", () => {
+  const hear = listener();
+  hear(before);
+  hear(snapshot([person("self")], "two"));
+  hear(snapshot([person("self")], "two", "OTHER"));
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana")], "two", "OTHER")),
+    ["room-enter"],
+  );
+});
+
+test("#292: a mesma aba com identidade nova troca de id em silêncio", () => {
+  const hear = listener();
+  const gone = snapshot([person("self"), person("ana", false)]);
+  hear(gone);
+  assert.deepEqual(hear(snapshot([person("self"), person("ana-2")])), []);
+  // An offline member leaving alone (grace or farewell) still sounds.
+  hear(gone);
+  assert.deepEqual(hear(snapshot([person("self")])), ["room-leave"]);
+});
+
+test("#292: telas de quem volta do reinício não tocam o som de tela nova", () => {
+  const screen = (owner: string, id: string): Participant => ({
+    ...person(owner),
+    publications: [
+      { id, owner, kind: "screen", key: id, audio: false, muted: false },
+    ],
+  });
+  const hear = listener();
+  hear(snapshot([person("self"), screen("ana", "s1")]));
+  hear(snapshot([person("self")], "two"));
+  assert.deepEqual(hear(snapshot([person("self"), person("ana")], "two")), []);
+  assert.deepEqual(
+    hear(snapshot([person("self"), screen("ana", "s1")], "two")),
+    [],
+  );
+  assert.deepEqual(
+    hear(
+      snapshot(
+        [
+          person("self"),
+          {
+            ...screen("ana", "s1"),
+            publications: [
+              ...screen("ana", "s1").publications,
+              ...screen("ana", "s9").publications,
+            ],
+          },
+        ],
+        "two",
+      ),
+    ),
+    ["screen-new"],
+  );
 });
 
 test("som de transmissão nova só para telas de outras pessoas", () => {

@@ -585,3 +585,96 @@ test("aviso atrasado da página que já voltou derruba a mídia (por isso o bfca
     await app.close();
   }
 });
+
+// #292: the same page load under a new identity (expired token, "Entrar nesta
+// aba") takes the old id's place at once: no duplicate, no leave in between.
+function names(socket: Socket) {
+  const seen: string[][] = [];
+  socket.on("snapshot", (s: JoinResult["snapshot"]) =>
+    seen.push(s.participants.map((p) => p.name)),
+  );
+  return seen;
+}
+const unique = (seen: string[][]) =>
+  seen.every((names) => new Set(names).size === names.length);
+
+test("#292: mesma página com id novo assume o lugar sem duplicata nem sonda", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    const seen = names(sb);
+    const old = member(app, code, a.id)!;
+    const sa2 = await connect(app, token());
+    const gone = event(sa, "disconnect");
+    const started = Date.now();
+    const next = await join(sa2, { name: "Ana", code, page: "pa" });
+    // No probe: the page is the tab's secret.
+    assert.ok(Date.now() - started < PROBE);
+    await gone;
+    assert.notEqual(next.id, a.id);
+    assert.equal(member(app, code, a.id), undefined);
+    assert.equal(app.rooms.membership.get(a.id), undefined);
+    const now = member(app, code, next.id)!;
+    assert.equal(now.role, "creator");
+    assert.equal(room(app, code).creatorId, next.id);
+    assert.equal(now.color, old.color);
+    assert.ok(next.credential);
+    await delay(50);
+    assert.ok(seen.length > 0 && unique(seen), JSON.stringify(seen));
+    assert.deepEqual(seen.at(-1)!.sort(), ["Ana", "Bia"]);
+    // The old identity's late farewell changes nothing.
+    await farewell(app, { token: ta, page: "pa", explicit: true });
+    assert.ok(member(app, code, next.id));
+    close(sa2, sb);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: sem page ou com page diferente, id novo é outra pessoa", async () => {
+  const app = await server();
+  try {
+    const s1 = await connect(app, token()),
+      s2 = await connect(app, token()),
+      s3 = await connect(app, token());
+    const a = await join(s1, { name: "Ana" });
+    const code = a.snapshot.code;
+    const b = await join(s2, { name: "Bia", code });
+    assert.ok(member(app, code, a.id) && member(app, code, b.id));
+    const c = await join(s3, { name: "Caio", code, page: "pc" });
+    assert.equal(room(app, code).members.size, 3);
+    assert.ok(member(app, code, c.id));
+    close(s1, s2, s3);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: corrida do aviso de 'Entrar nesta aba' com o join novo, nas duas ordens", async () => {
+  for (const order of ["aviso antes", "join antes"]) {
+    const app = await server();
+    try {
+      const { ta, sa, sb, a, code } = await pair(app);
+      const seen = names(sb);
+      sa.close();
+      await delay(50);
+      const sa2 = await connect(app, token());
+      let next: JoinResult;
+      if (order === "aviso antes") {
+        await farewell(app, { token: ta, page: "pa", explicit: true });
+        next = await join(sa2, { name: "Ana", code, page: "pa" });
+      } else {
+        next = await join(sa2, { name: "Ana", code, page: "pa" });
+        await farewell(app, { token: ta, page: "pa", explicit: true });
+      }
+      await delay(50);
+      assert.equal(member(app, code, a.id), undefined, order);
+      assert.ok(member(app, code, next.id)?.online, order);
+      assert.equal(room(app, code).members.size, 2, order);
+      assert.ok(unique(seen), order);
+      close(sa2, sb);
+    } finally {
+      await app.close();
+    }
+  }
+});

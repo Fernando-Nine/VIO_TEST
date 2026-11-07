@@ -41,7 +41,7 @@ import {
   volumePreference,
   type Cue,
 } from "../media/sound-preferences";
-import { presenceCues } from "./presence-cues";
+import { nextQuiet, presenceCues, type RestartQuiet } from "./presence-cues";
 import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite, embedded } from "../endpoint";
@@ -160,6 +160,8 @@ export class Controller {
   /** Signed creator seats by room code (#226); survive a server restart. */
   private credentials: Record<string, string> = {};
   private roomEntered = false;
+  /** Who may come back in silence after a server restart (#292). */
+  private quiet: RestartQuiet | undefined;
   /**
    * This page load (#286): a farewell only counts from the page in the room.
    * Renewed when the page comes back from the bfcache (#301).
@@ -541,6 +543,7 @@ export class Controller {
     if (this.intent || this.socket) void this.leave();
     const generation = ++this.generation;
     const current = () => generation === this.generation && !this.disposed;
+    this.quiet = undefined;
     if (this.sounds) this.cues.unlock();
     this.view.status = "connecting";
     this.view.error = "";
@@ -821,6 +824,7 @@ export class Controller {
       this.publications.clear();
       this.subscriptions.clear();
       this.sentVideo.clear();
+      this.quiet = undefined;
       this.view.id = session.id;
       socket.auth = { token: session.token };
       socket.disconnect().connect();
@@ -993,10 +997,12 @@ export class Controller {
         this.view.snapshot,
         snapshot,
         this.view.id,
+        this.quiet,
       ))
         void this.playCue(cue);
     // Room broadcasts omit widgets; they arrive through widget events.
     const previous = this.view.snapshot;
+    this.quiet = nextQuiet(previous, snapshot, this.view.id, this.quiet);
     this.view.snapshot =
       snapshot.widgets ||
       !previous ||
@@ -1623,6 +1629,7 @@ export class Controller {
   restored() {
     if (!this.intent) return;
     this.page = freshKey();
+    this.quiet = undefined;
     this.joinAttempt++;
     this.peers.closeAll();
     this.publications.clear();
@@ -1742,6 +1749,7 @@ export class Controller {
     this.captures.deaf = false;
     this.dropRoomMedia();
     this.canvas.resetRoom();
+    this.quiet = undefined;
     this.view = {
       revision: 0,
       status: "idle",

@@ -4,10 +4,9 @@ Atualizado: 2026-11-07
 
 ## Agora
 
-#301 (aviso falso de outra aba): #305 na `main`; continuação `fix/301-sonda` (sonda com silêncio de
-12 s, 3ª tentativa, `restored()` sem limpar o canvas) com auto-merge. Conferir na prévia: troca de rede
-(Wi-Fi ↔ 4G) com tela compartilhada, voltar/avançar do navegador (bfcache), duas abas reais e
-`pagehide` no celular/Safari.
+#292 (reinício duplicava pessoas e tocava sons): PR `fix/292-reinicio` aberta sem auto-merge; o
+copiloto roda o goldfish no diff e liga o auto-merge. Conferir na prévia: deploy com 3 pessoas na
+sala, sem duplicata e sem som de entrar/sair; uma entrada real ainda toca.
 
 ## Pendente / bloqueios
 
@@ -33,6 +32,10 @@ Atualizado: 2026-11-07
   diferente sonda o socket preso (`presence-probe`, 2 s) e o solta se mudo e sem tráfego há 12 s
   (`holderProbe`/`holderQuiet` no `Config`, curtos nos testes). `enterHere` manda a
   despedida explícita antes; bfcache (`pageshow` persistido) troca o `page`.
+- #292: `join` com o mesmo `page` e id novo troca o id velho em silêncio (herda papel, cor,
+  chamada, widgets); `page` é segredo da aba. `io.use` só manda `SESSION_EXPIRED` para token
+  ruim; outro erro vira `CONNECTION_ERROR` (o cliente tenta com o mesmo token). Limite: no deploy
+  do Render as duas instâncias coexistem ~60 s.
 - Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 
 ## Próximo passo

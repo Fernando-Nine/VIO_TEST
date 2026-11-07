@@ -200,6 +200,18 @@ export class RoomWidgets {
     return [next, true];
   }
   /** Drops a departed participant from per-widget editor lists. */
+  /** The same tab under a new identity (#292) keeps what it owned or edited. */
+  rename(from: string, to: string) {
+    for (const [id, widget] of this.entries)
+      if (widget.owner === from || widget.guestEditors?.includes(from))
+        this.entries.set(id, {
+          ...widget,
+          owner: widget.owner === from ? to : widget.owner,
+          ...(widget.guestEditors && {
+            guestEditors: widget.guestEditors.map((v) => (v === from ? to : v)),
+          }),
+        });
+  }
   forget(participantId: string) {
     for (const [id, widget] of this.entries)
       if (widget.guestEditors?.includes(participantId))

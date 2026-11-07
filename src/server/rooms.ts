@@ -803,6 +803,21 @@ export class Rooms {
             );
         }
       }
+      // The same page load under a new identity (#292): an expired token or
+      // "Entrar nesta aba" gave this tab a new id while its old one is still
+      // here. `page` is the tab's secret (a `freshKey()` kept in memory and
+      // never broadcast, see `participantFields`), so only that tab can name
+      // it: the new id takes the old one's place at once, without a probe and
+      // without a leave, instead of leaving a duplicate for the whole grace.
+      // Both pages must be set: two clients without `page` are not one tab.
+      const sibling =
+        !member &&
+        data.page &&
+        !(room.refused.get(socket.data.id)! > Date.now())
+          ? [...room.members.values()].find(
+              (m) => m.page === data.page && m.id !== socket.data.id,
+            )
+          : undefined;
       const empty = !room.members.size;
       const claim = verifyRoomCredential(
         this.config.secret,
@@ -811,7 +826,7 @@ export class Rooms {
       );
       if (socket.data.waiting && socket.data.waiting !== code)
         this.stopWaiting(socket);
-      if (room.permissions.locked && !empty && !member && !claim) {
+      if (room.permissions.locked && !empty && !member && !sibling && !claim) {
         const invite = verifyInvite(this.config.secret, data.invite, code);
         if (
           !room.known.has(socket.data.id) &&
@@ -821,6 +836,22 @@ export class Rooms {
           this.knock(room, socket, data.name, data.color);
       }
       if (socket.data.waiting) this.stopWaiting(socket);
+      // Past every refusal: hand the old id's seat over without a broadcast;
+      // the one below shows the swap in a single snapshot.
+      let inherited: { inCall: boolean; socketId?: string } | undefined;
+      if (sibling) {
+        inherited = { inCall: sibling.inCall, socketId: sibling.socketId };
+        this.dropMedia(room, sibling);
+        room.members.delete(sibling.id);
+        this.membership.delete(sibling.id);
+        room.widgets.rename(sibling.id, socket.data.id);
+        if (room.creatorId === sibling.id) room.creatorId = socket.data.id;
+        if (room.lentFromAdmin === sibling.id)
+          room.lentFromAdmin = socket.data.id;
+        if (room.restoredAdmins.delete(sibling.id))
+          room.restoredAdmins.add(socket.data.id);
+        member = { ...sibling, publications: [] };
+      }
       if (empty) room.creatorId = socket.data.id;
       const reclaim =
         !!claim &&
@@ -862,7 +893,7 @@ export class Rooms {
               : member?.role || "guest",
         color: member?.color || data.color || defaultColor,
         online: true,
-        inCall: member?.inCall || false,
+        inCall: inherited?.inCall || member?.inCall || false,
         lastSeen: Date.now(),
         publications: member?.publications || [],
         // Coming back must not lift the owner's silence.
@@ -875,6 +906,9 @@ export class Rooms {
       // `await socket.join` below: member.socketId already names this socket,
       // so the old one's disconnect handler leaves the member alone.
       replaced?.disconnect(true);
+      // Its membership is gone, so its disconnect handler changes nothing.
+      if (inherited?.socketId && inherited.socketId !== socket.id)
+        this.io.sockets.sockets.get(inherited.socketId)?.disconnect(true);
       this.membership.set(member.id, code);
       this.remember(room, member.id);
       if (previous) {
