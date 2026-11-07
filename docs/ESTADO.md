@@ -61,6 +61,7 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [016](decisoes/016-catalogo-tecnico.md) Catálogo técnico por tema; a ficha muda no mesmo PR que o código.
 - [017](decisoes/017-custo-e-codigo-nosso.md) Pago só com receita ou ao abrir ao público; código nosso antes.
 - [018](decisoes/018-ver-antes-de-codar.md) Ver antes de codar (rascunho do Design e aval); desempate dentro do nível.
+- [019](decisoes/019-idade-minima.md) Idade mínima 13+ por autodeclaração no aceite enquanto o app for só de amigos; antes do público, verificação terceirizada.
 
 ## Em aberto (aguardam o usuário)
 
