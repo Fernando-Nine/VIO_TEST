@@ -199,3 +199,50 @@ test("a cópia do widget fechado expira sozinha em 8 s", () => {
     mock.timers.reset();
   }
 });
+
+test("#292: rename leva dono, editores, autoria, fechados e o limite de mensagens", () => {
+  const widgets = new RoomWidgets();
+  const note = crypto.randomUUID(),
+    chat = crypto.randomUUID(),
+    other = crypto.randomUUID();
+  widgets.create("old", note, { title: "Nota", blocks: [] });
+  widgets.create("old", chat, { kind: "chat", title: "Chat", blocks: [] });
+  widgets.create("bia", other, { title: "Placar", blocks: [] });
+  const sentAt = Date.now();
+  widgets.message(chat, {
+    id: crypto.randomUUID(),
+    authorId: "old",
+    authorName: "Ana",
+    color: "#ffffff",
+    text: "oi",
+    sentAt,
+  });
+  widgets.close(note, "old", "Ana");
+  const changed = widgets.rename("old", "new");
+  assert.deepEqual(
+    changed.map((w) => w.id),
+    [chat],
+  );
+  const moved = widgets.list().find((w) => w.id === chat)!;
+  assert.equal(moved.owner, "new");
+  assert.equal(moved.revision, 2);
+  assert.equal(moved.messages![0].authorId, "new");
+  assert.equal(widgets.list().find((w) => w.id === other)!.owner, "bia");
+  const held = widgets.closed.get(note)!;
+  assert.equal(held.widget.owner, "new");
+  assert.equal(held.by, "new");
+  // The throttle follows the person: the new id cannot post right away.
+  assert.throws(
+    () =>
+      widgets.message(chat, {
+        id: crypto.randomUUID(),
+        authorId: "new",
+        authorName: "Ana",
+        color: "#ffffff",
+        text: "de novo",
+        sentAt: sentAt + 10,
+      }),
+    { code: "RATE_LIMIT" },
+  );
+  for (const entry of widgets.closed.values()) clearTimeout(entry.timer);
+});

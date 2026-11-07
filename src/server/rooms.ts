@@ -838,13 +838,16 @@ export class Rooms {
       if (socket.data.waiting) this.stopWaiting(socket);
       // Past every refusal: hand the old id's seat over without a broadcast;
       // the one below shows the swap in a single snapshot.
-      let inherited: { inCall: boolean; socketId?: string } | undefined;
+      let inherited: { socketId?: string } | undefined;
+      let renamed: ReturnType<RoomWidgets["rename"]> = [];
       if (sibling) {
-        inherited = { inCall: sibling.inCall, socketId: sibling.socketId };
+        inherited = { socketId: sibling.socketId };
+        // Not `inCall`: the page announces the call again after the join
+        // (`rejoin`), so nobody is left "in the call" without audio.
         this.dropMedia(room, sibling);
         room.members.delete(sibling.id);
         this.membership.delete(sibling.id);
-        room.widgets.rename(sibling.id, socket.data.id);
+        renamed = room.widgets.rename(sibling.id, socket.data.id);
         if (room.creatorId === sibling.id) room.creatorId = socket.data.id;
         if (room.lentFromAdmin === sibling.id)
           room.lentFromAdmin = socket.data.id;
@@ -893,7 +896,7 @@ export class Rooms {
               : member?.role || "guest",
         color: member?.color || data.color || defaultColor,
         online: true,
-        inCall: inherited?.inCall || member?.inCall || false,
+        inCall: member?.inCall || false,
         lastSeen: Date.now(),
         publications: member?.publications || [],
         // Coming back must not lift the owner's silence.
@@ -925,6 +928,8 @@ export class Rooms {
         );
       await socket.join(code);
       this.broadcast(room, member.id);
+      // Peers hold the widgets under the old id; the joiner got them above.
+      for (const widget of renamed) this.emitWidget(room, widget.id, widget);
       if (room.waiting.size && this.manages(room, member.id))
         this.emitWaiting(room);
       for (const sub of room.subscriptions.values())

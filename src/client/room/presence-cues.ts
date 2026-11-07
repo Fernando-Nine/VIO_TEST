@@ -7,12 +7,17 @@ export const RESTART_QUIET_MS = 120000;
 /**
  * A server restart (#292): who was in this room before it and has not come
  * back yet, and the screens they showed. Tied to one room and one epoch.
+ * `slots` counts the arrivals still allowed in silence: someone may come back
+ * under a new id (new tab, lost token), so up to that many never-seen ids
+ * arrive quietly and each one spends a slot. The price: a real newcomer in
+ * the window may arrive without a sound.
  */
 export interface RestartQuiet {
   code: string;
   epoch: string;
   pending: Set<string>;
   screens: Set<string>;
+  slots: number;
   until: number;
 }
 
@@ -53,9 +58,14 @@ export function presenceCues(
   const gone = [...before.values()].filter(
     (p) => p.id !== self && !after.has(p.id),
   );
-  const arrived = [...after].filter(
-    (id) => id !== self && !before.has(id) && !back?.pending.has(id),
+  const incoming = [...after].filter((id) => id !== self && !before.has(id));
+  const fresh = incoming.filter((id) => !back?.pending.has(id));
+  // Expected ids spend their own slots first; what is left covers new ids.
+  const spare = Math.max(
+    0,
+    (back?.slots ?? 0) - (incoming.length - fresh.length),
   );
+  const arrived = fresh.slice(spare);
   const swaps = Math.min(gone.filter((p) => !p.online).length, arrived.length);
   const cues: Cue[] = [];
   if (gone.length > swaps) cues.push("room-leave");
@@ -87,11 +97,24 @@ export function nextQuiet(
         previous.participants.map((p) => p.id).filter((id) => id !== self),
       ),
       screens: new Set(screens(previous, self)),
+      slots: 0,
       until: now + RESTART_QUIET_MS,
     };
   const current = active(quiet, next, now);
   if (!current) return undefined;
+  if (current.epoch !== previous?.epoch) current.slots = current.pending.size;
+  const seen = new Set(
+    current.epoch === previous?.epoch
+      ? previous.participants.map((p) => p.id)
+      : [],
+  );
   for (const p of next.participants) {
+    if (
+      p.id !== self &&
+      !seen.has(p.id) &&
+      (current.pending.has(p.id) || current.slots > 0)
+    )
+      current.slots = Math.max(0, current.slots - 1);
     current.pending.delete(p.id);
     for (const pub of p.publications) current.screens.delete(pub.id);
   }

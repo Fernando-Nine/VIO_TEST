@@ -199,19 +199,79 @@ export class RoomWidgets {
     this.entries.set(id, next);
     return [next, true];
   }
-  /** Drops a departed participant from per-widget editor lists. */
-  /** The same tab under a new identity (#292) keeps what it owned or edited. */
+  /**
+   * The same tab under a new identity (#292) keeps what it owned, edited,
+   * wrote and voted, open or held for "Desfazer". Returns the open widgets
+   * that changed (with a new revision) so the room can be told.
+   */
   rename(from: string, to: string) {
-    for (const [id, widget] of this.entries)
-      if (widget.owner === from || widget.guestEditors?.includes(from))
-        this.entries.set(id, {
-          ...widget,
-          owner: widget.owner === from ? to : widget.owner,
-          ...(widget.guestEditors && {
-            guestEditors: widget.guestEditors.map((v) => (v === from ? to : v)),
-          }),
-        });
+    const swap = (v: string) => (v === from ? to : v);
+    const moved = (widget: SharedWidget): SharedWidget | undefined => {
+      const votes = widget.moduleState?.votes;
+      const touched =
+        widget.owner === from ||
+        widget.guestEditors?.includes(from) ||
+        widget.messages?.some((m) => m.authorId === from) ||
+        (votes && Object.hasOwn(votes, from)) ||
+        widget.moduleState?.voterIds?.includes(from);
+      if (!touched) return undefined;
+      return {
+        ...widget,
+        owner: swap(widget.owner),
+        ...(widget.guestEditors && {
+          guestEditors: widget.guestEditors.map(swap),
+        }),
+        ...(widget.messages && {
+          messages: widget.messages.map((m) =>
+            m.authorId === from ? { ...m, authorId: to } : m,
+          ),
+        }),
+        ...(widget.moduleState && {
+          moduleState: {
+            ...widget.moduleState,
+            ...(votes && {
+              votes: Object.fromEntries(
+                Object.entries(votes).map(([k, v]) => [swap(k), v]),
+              ),
+            }),
+            ...(widget.moduleState.voterIds && {
+              voterIds: widget.moduleState.voterIds.map(swap),
+            }),
+          },
+        }),
+        revision: widget.revision + 1,
+      };
+    };
+    const changed: SharedWidget[] = [];
+    for (const [id, widget] of this.entries) {
+      const next = moved(widget);
+      if (!next) continue;
+      this.entries.set(id, next);
+      changed.push(next);
+    }
+    for (const entry of this.closed.values()) {
+      entry.widget = moved(entry.widget) || entry.widget;
+      entry.by = swap(entry.by);
+    }
+    // Throttles follow the person, so a new id is no way around them.
+    for (const [key, at] of [...this.lastMessages]) {
+      const next =
+        key === from
+          ? to
+          : key.startsWith(`module:${from}:`)
+            ? `module:${to}:` + key.slice(`module:${from}:`.length)
+            : undefined;
+      if (next) {
+        this.lastMessages.delete(key);
+        this.lastMessages.set(
+          next,
+          Math.max(at, this.lastMessages.get(next) || 0),
+        );
+      }
+    }
+    return changed;
   }
+  /** Drops a departed participant from per-widget editor lists. */
   forget(participantId: string) {
     for (const [id, widget] of this.entries)
       if (widget.guestEditors?.includes(participantId))

@@ -142,8 +142,11 @@
    jeito).
 11. **#292, mesma aba com id novo**: `join` com `page` igual à de outro membro da sala (id diferente; os dois `page`
     definidos) troca o id velho pelo novo **num só snapshot**, sem sonda e sem `leave`: o novo herda papel (inclusive
-    criador e `lentFromAdmin`), cor, `voiceBlocked`, `inCall` e widgets; a mídia do velho cai (`dropMedia`), o
-    `membership` dele é apagado e o socket velho, se vivo, é derrubado. Vem de `newSession` (token vencido) ou de
+    criador, `lentFromAdmin` e `restoredAdmins`), cor, `voiceBlocked` e widgets (dono, editores, autoria do chat,
+    votos, os fechados de "Desfazer" e o limite de mensagens; `revision`+1 e `widget-updated` para a sala). **Não**
+    herda `inCall`: o `rejoin` anuncia a chamada de novo. A mídia do velho cai (`dropMedia`), o
+    `membership` dele é apagado e o socket velho, se vivo, é derrubado. Sala trancada: a troca entra sem bater.
+    `page` aceita 16–64 caracteres `[A-Za-z0-9-]`. Vem de `newSession` (token vencido) ou de
     "Entrar nesta aba". Premissa: **`page` é segredo da aba** (`freshKey()` em memória, fora de `participantFields`,
     nunca difundido); o join ainda exige token válido e respeita `refused`. Sem `page`, ou com `page` diferente, é
     outra pessoa, como antes. A despedida atrasada do id velho não acha mais nada.
@@ -162,9 +165,14 @@
   Ignora `epoch`/`code` diferentes e primeiro snapshot. `screen-new` se surgir publicação de tela de outra pessoa.
   Troca da mesma aba (D2.11): um id offline que some junto com um id novo no mesmo snapshot não toca nada.
 - **Reinício (#292)**: no snapshot com `epoch` novo, `nextQuiet` guarda os ids e telas do snapshot anterior
-  (`RestartQuiet`, por `code` e `epoch`, no controller). Quem desses volta não toca `room-enter` nem `screen-new`;
-  quem é novo toca. A janela fecha quando todos voltam ou em 120 s (`RESTART_QUIET_MS`, `performance.now()`); é
-  descartada em `enter`, `leave`, `restored()` e `newSession`. Uma saída de quem está online toca normalmente.
+  (`RestartQuiet`, por `code` e `epoch`, no controller). Quem desses volta não toca `room-enter` nem `screen-new`.
+  Quem volta com id novo (aba nova, token perdido) também não: até `pending.size` ids nunca vistos entram calados,
+  e cada chegada (esperada ou não) gasta uma vaga. **Limite aceito**: alguém realmente novo nessa janela pode entrar
+  sem som; esgotadas as vagas, o próximo novo toca. A tela nova de quem volta com id novo **toca** `screen-new` (o
+  id da publicação é outro). A janela fecha quando todos os ids antigos e telas voltam ou em 120 s
+  (`RESTART_QUIET_MS`, `performance.now()`): se alguém nunca volta (ou volta com id novo), ela fica aberta os 120 s
+  inteiros. É descartada em `enter`, `leave`, `restored()` e `newSession`. Uma saída de quem está online toca
+  normalmente. No controller, `presenceCues` roda antes de `nextQuiet` (lê a janela como estava).
 - **Limite do Render**: no deploy a instância nova sobe ao lado e a antiga vive ~60 s até o SIGTERM. Quem reconecta
   nesse meio-tempo cai na nova enquanto os outros seguem na velha: por até ~60 s a pessoa pode aparecer
   "reconectando" na velha. A garantia de "uma vez só" vale **dentro de uma instância**.

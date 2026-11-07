@@ -167,18 +167,40 @@ test("#292 (a): quem volta depois de um reinício não toca som", () => {
   );
 });
 
-test("#292 (b): quem é novo durante a janela do reinício toca som", () => {
+test("#292 (b): ids novos na janela gastam as vagas de quem falta", () => {
   const hear = listener();
   hear(before);
+  hear(snapshot([person("self")], "two"));
+  // Bia may be back under a new id: Caio spends her slot in silence.
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana"), person("caio")], "two")),
+    [],
+  );
+  // No slot left: a further newcomer sounds.
+  assert.deepEqual(
+    hear(
+      snapshot(
+        [person("self"), person("ana"), person("caio"), person("dani")],
+        "two",
+      ),
+    ),
+    ["room-enter"],
+  );
+  // A real leave of someone online still sounds inside the window.
+  assert.deepEqual(
+    hear(snapshot([person("self"), person("ana"), person("caio")], "two")),
+    ["room-leave"],
+  );
+});
+
+test("#292 (b2): quem volta e um novo no mesmo instante usam uma vaga cada", () => {
+  const hear = listener();
+  hear(snapshot([person("self"), person("ana")]));
   hear(snapshot([person("self")], "two"));
   assert.deepEqual(
     hear(snapshot([person("self"), person("ana"), person("caio")], "two")),
     ["room-enter"],
   );
-  // A real leave of someone online still sounds inside the window.
-  assert.deepEqual(hear(snapshot([person("self"), person("ana")], "two")), [
-    "room-leave",
-  ]);
 });
 
 test("#292 (c): depois da janela, quem volta toca som de novo", () => {

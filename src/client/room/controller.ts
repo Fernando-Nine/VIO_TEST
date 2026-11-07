@@ -992,6 +992,10 @@ export class Controller {
       (this.intent.code && snapshot.code !== this.intent.code)
     )
       return;
+    // Order matters: the cues read the silence as it stood before this
+    // snapshot, and only then does `nextQuiet` spend the slots and drop the
+    // ids it brings. Swapped, a returner would close the window before being
+    // heard as expected, and the restart sounds would come back (#292).
     if (announce && this.roomEntered && this.view.status === "connected")
       for (const cue of presenceCues(
         this.view.snapshot,
