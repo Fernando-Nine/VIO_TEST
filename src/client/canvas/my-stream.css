@@ -96,7 +96,7 @@
   background: var(--raised);
   color: var(--text);
   font: 600 0.75rem var(--font);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .stream-control:hover {
   border-color: #525b80;
@@ -255,7 +255,7 @@
   border: 0;
   background: none;
   color: inherit;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 
 /* Strip: the preview alone; controls are in the right-click menu. */

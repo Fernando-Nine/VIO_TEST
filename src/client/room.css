@@ -477,6 +477,9 @@ input[type="checkbox"] {
 .cards-handle:active {
   transform: none;
 }
+.is-dragging .cards-handle {
+  cursor: grabbing;
+}
 .cards-pin {
   display: grid;
   place-items: center;

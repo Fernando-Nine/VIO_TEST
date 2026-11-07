@@ -421,7 +421,7 @@
   border: 1px solid #777e9b;
   border-radius: 999px;
   background: #292d42;
-  cursor: var(--cursor-hand, pointer);
+  cursor: var(--cursor-hand);
 }
 :is(.toggle, .notification-table) input[type="checkbox"]::before {
   content: "";
@@ -443,7 +443,7 @@
 }
 :is(.toggle, .notification-table) input[type="checkbox"]:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: var(--cursor-pointer);
 }
 .sheet select {
   width: 100%;
@@ -728,7 +728,7 @@
 }
 .volume-slider input[type="range"]:disabled {
   opacity: 0.45;
-  cursor: default;
+  cursor: var(--cursor-pointer);
 }
 .volume-slider input::-webkit-slider-thumb {
   -webkit-appearance: none;

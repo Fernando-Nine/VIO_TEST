@@ -46,7 +46,7 @@
 }
 .share-dialog .segmented button:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: var(--cursor-pointer);
 }
 .share-choices button {
   font-family: var(--mono);
@@ -207,7 +207,7 @@
 }
 .share-actions .primary:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: var(--cursor-pointer);
 }
 @media (max-width: 759px) {
   .share-grid {

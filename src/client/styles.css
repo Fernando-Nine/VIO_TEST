@@ -55,6 +55,41 @@
 * {
   box-sizing: border-box;
 }
+/* VIO cursor (#266): global, so portals (popovers, context menus) and the
+   floating window get it too. Functional cursors (text, grab, resize,
+   crosshair, hidden while idle) stay native. */
+:root {
+  --cursor-pointer: default;
+  --cursor-hand: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root {
+    --cursor-pointer: url("/cursors/vio-pointer.svg") 4 3, default;
+    --cursor-hand: url("/cursors/vio-hand.svg") 13 3, pointer;
+  }
+}
+html {
+  cursor: var(--cursor-pointer);
+}
+label {
+  cursor: inherit;
+}
+label:has(> input:is([type="checkbox"], [type="radio"]):not(:disabled)) {
+  cursor: var(--cursor-hand);
+}
+:where(:root)
+  :where(
+    button,
+    a[href],
+    summary,
+    select,
+    [role="button"],
+    [role="menuitem"],
+    [role="tab"],
+    input:is([type="range"], [type="checkbox"], [type="radio"], [type="color"])
+  ):where(:not(:disabled, [aria-disabled="true"])) {
+  cursor: var(--cursor-hand);
+}
 body {
   margin: 0;
   min-width: 300px;
@@ -71,14 +106,17 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 button {
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   color: inherit;
   border: 0;
   background: none;
 }
 button:disabled {
-  cursor: not-allowed;
+  cursor: var(--cursor-pointer);
   opacity: 0.45;
+}
+button[aria-disabled="true"] {
+  cursor: var(--cursor-pointer);
 }
 a {
   color: var(--blue-light);
@@ -160,7 +198,7 @@ input[type="range"] {
   width: 100%;
   accent-color: #777bff;
   height: 32px;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   margin: 8px 0 16px;
 }
 input[type="checkbox"] {
@@ -168,7 +206,7 @@ input[type="checkbox"] {
   height: 23px;
   flex-shrink: 0;
   accent-color: var(--blue);
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 select {
   color-scheme: dark;
@@ -1669,7 +1707,7 @@ legend {
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   min-height: 32px;
   color: #bfc2ee;
 }

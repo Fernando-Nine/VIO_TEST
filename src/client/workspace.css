@@ -1597,7 +1597,7 @@
   flex-wrap: wrap;
 }
 .public-permissions summary {
-  cursor: pointer;
+  cursor: var(--cursor-hand);
   padding: 8px 0;
 }
 .widget-permission {
@@ -1763,7 +1763,7 @@
 }
 .module-history summary,
 .dice-guide dt {
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .module-tasks {
   display: grid;
@@ -1879,11 +1879,12 @@
   font: 12px var(--mono);
   color: #f1f2fa;
   margin-top: 10px;
-  cursor: auto;
+  cursor: text;
   overflow-wrap: anywhere;
 }
 .dice-guide dd {
   margin: 0;
+  cursor: text;
   color: #bcc1da;
   font-size: 13px;
   line-height: 1.5;
@@ -3526,7 +3527,7 @@ button.inline-text.is-empty {
   color: #eef0ff;
   font-weight: 600;
   pointer-events: auto;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .slot-pick > span {
   padding: 8px 14px;

@@ -4,6 +4,8 @@ Atualizado: 2026-11-07
 
 ## Agora
 
+#266 (cursor do VIO some) em PR: regra do cursor global em `styles.css`, variáveis `--cursor-pointer`/`--cursor-hand` no lugar de `pointer`/`not-allowed`/`default`; vale em portais e rótulos.
+
 #281 (avisos empurram o layout) em PR: `.notice` agora é `position: fixed` (sobrepõe); textos de `Fault` do servidor revistos.
 
 #309 (Voltar do navegador sai do VIO) em PR: `room/room-history.ts` empilha uma entrada por visita à sala (`history.state.vioRoom`); `popstate` no `App` sai como o Sair ou reentra no Avançar; `resume` só volta se a entrada atual é a da sala. Goldfish revisado pelo copiloto (entrada no início de `enter`, fila serial com `late`); auto-merge ativado.
@@ -23,6 +25,7 @@ Atualizado: 2026-11-07
 
 - `data-ponto` marca cada "ponto que fica" (landing, inicio, ao-vivo, download, baixar,
   pessoa, logo, espera) para a #261 medir origem e destino.
+- Cursor: CSS novo usa `var(--cursor-hand)`/`var(--cursor-pointer)`; nativos só os de função (texto, arrastar, redimensionar, cor).
 - Download: produção baixa `VIO-x64-setup.exe` direto; prévia abre a release `beta`.
 - Histórico (#309): a sala se reconhece pelo `history.state`, nunca pela URL; uma entrada por visita, reconexão e recarga só substituem.
 - Trabalha em lote, só com tudo decidido (bugs são exceção).

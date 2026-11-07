@@ -1,0 +1,1 @@
+O cursor do VIO não volta mais para o do Windows em menus de botão direito, popovers, rótulos de ajustes, campo de busca do catálogo e botões desativados. Só os cursores de função continuam os do sistema: digitar texto, arrastar, redimensionar e escolher cor.
