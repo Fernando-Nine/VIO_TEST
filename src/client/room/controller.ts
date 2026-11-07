@@ -160,8 +160,11 @@ export class Controller {
   /** Signed creator seats by room code (#226); survive a server restart. */
   private credentials: Record<string, string> = {};
   private roomEntered = false;
-  /** This page load (#286): a farewell only counts from the page in the room. */
-  private readonly page = freshKey();
+  /**
+   * This page load (#286): a farewell only counts from the page in the room.
+   * Renewed when the page comes back from the bfcache (#301).
+   */
+  private page = freshKey();
   /** Room this page joined and has not left; it says goodbye on the way out. */
   private joinedRoom?: string;
   /** "Entrar nesta aba": joins like a new tab, without the creator credential. */
@@ -835,6 +838,10 @@ export class Controller {
    * `room-credential: null` that follows would erase the one tabs share.
    */
   enterHere() {
+    // Let go of the old identity if this page still holds it (#301), e.g. in
+    // another room after ALREADY_JOINED; the server checks the page, so a tab
+    // that is really open keeps its place.
+    if (this.session) this.sendFarewell(this.session.token, true);
     this.withoutCredential = true;
     this.conflictAttempt = 0;
     this.view.conflict = undefined;
@@ -1596,6 +1603,42 @@ export class Controller {
       keepalive: true,
     }).catch(() => {});
   }
+  /**
+   * Back from the bfcache (#301). The pagehide farewell dropped this page's
+   * media on the server, maybe after it was back: a new page id makes a late
+   * farewell harmless, and the media state starts over as after a reload.
+   * Mic, camera and the call stay closed.
+   */
+  restored() {
+    if (!this.intent) return;
+    this.page = freshKey();
+    this.joinAttempt++;
+    this.dropRoomMedia();
+    this.view.conflict = undefined;
+    this.view.error = "";
+    this.callGeneration++;
+    this.inCall = false;
+    this.voicePending = false;
+    this.cameraPending = false;
+    this.captures.micMuted = true;
+    this.captures.deaf = false;
+    this.bump();
+    return this.retry();
+  }
+  /** Peers and the room's media bookkeeping; captures and the canvas stay. */
+  private dropRoomMedia() {
+    this.screenLevels.clear();
+    this.peers.closeAll();
+    this.publications.clear();
+    this.subscriptions.clear();
+    this.screenCatalog.clear();
+    this.desiredVideo.clear();
+    this.sentVideo.clear();
+    this.previewSources.clear();
+    this.missingScreens.clear();
+    this.missingSince.clear();
+    this.visiblePreviews.clear();
+  }
   /** Reload (#286): back to the room this tab just left, never to the call. */
   resume(
     name: string,
@@ -1677,18 +1720,8 @@ export class Controller {
     this.cameraPending = false;
     this.captures.micMuted = true;
     this.captures.deaf = false;
-    this.screenLevels.clear();
-    this.peers.closeAll();
-    this.publications.clear();
-    this.subscriptions.clear();
-    this.screenCatalog.clear();
-    this.desiredVideo.clear();
-    this.sentVideo.clear();
+    this.dropRoomMedia();
     this.canvas.resetRoom();
-    this.previewSources.clear();
-    this.missingScreens.clear();
-    this.missingSince.clear();
-    this.visiblePreviews.clear();
     this.view = {
       revision: 0,
       status: "idle",

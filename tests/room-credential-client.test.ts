@@ -145,11 +145,14 @@ test("mesma sessão em duas abas: para após duas tentativas e entra sem a crede
     value: new URL(url),
     configurable: true,
   });
-  globalThis.fetch = (input, init) =>
-    nativeFetch(
+  const leaves: { token: string; page: string; explicit?: true }[] = [];
+  globalThis.fetch = (input, init) => {
+    if (input === "/api/leave") leaves.push(JSON.parse(String(init?.body)));
+    return nativeFetch(
       typeof input === "string" && input.startsWith("/") ? url + input : input,
       { ...init, headers: { ...init?.headers, Origin: origin } },
     );
+  };
   const connect = ((uri, options) =>
     io(uri, { ...options, extraHeaders: { Origin: origin } })) as typeof io;
   type Shared = { session?: unknown; credentials: Record<string, string> };
@@ -175,7 +178,15 @@ test("mesma sessão em duas abas: para após duas tentativas e entra sem a crede
     assert.equal(second.view.error, "Esta sala já está aberta em outra aba.");
     assert.ok(Date.now() - started >= 2500, "two tries before giving up");
 
+    const oldToken = (shared.session as { token: string }).token;
     await second.enterHere();
+    // #301: the old identity is let go explicitly; the server keeps it for
+    // the tab that is really open (another page).
+    // (A late goodbye of the previous test may land here too: filter.)
+    assert.deepEqual(
+      leaves.filter((l) => l.token === oldToken).map((l) => l.explicit),
+      [true],
+    );
     await until(() => second.view.status === "connected");
     assert.notEqual(second.view.id, creator);
     assert.equal(second.view.conflict, undefined);
@@ -190,6 +201,84 @@ test("mesma sessão em duas abas: para após duas tentativas e entra sem a crede
   } finally {
     await second.destroy();
     await first.destroy();
+    await app.close();
+    globalThis.fetch = nativeFetch;
+    if (locationDescriptor)
+      Object.defineProperty(globalThis, "location", locationDescriptor);
+    else Reflect.deleteProperty(globalThis, "location");
+  }
+});
+
+// #301: back from the bfcache, the page is a new one for the server, so the
+// late farewell of the pagehide does not take it out of the room again.
+test("voltar do bfcache troca a página e o aviso atrasado não derruba a sala", async () => {
+  const origin = "http://localhost:3000";
+  const app = await createApp({
+    ...readConfig({
+      PORT: "0",
+      SESSION_SECRET: "test-only-room-credential-client-secret",
+      ALLOWED_ORIGINS: origin,
+      STUN_URLS: "",
+    }),
+    farewell: 300,
+  });
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as { port: number }).port}`;
+  const nativeFetch = globalThis.fetch;
+  const locationDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "location",
+  );
+  Object.defineProperty(globalThis, "location", {
+    value: new URL(url),
+    configurable: true,
+  });
+  const held: { input: string; init?: RequestInit }[] = [];
+  let hold = false;
+  const send = (input: string, init?: RequestInit) =>
+    nativeFetch(input.startsWith("/") ? url + input : input, {
+      ...init,
+      headers: { ...init?.headers, Origin: origin },
+    });
+  globalThis.fetch = (input, init) => {
+    if (hold && input === "/api/leave") {
+      held.push({ input, init });
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    return send(String(input), init);
+  };
+  const connect = ((uri, options) =>
+    io(uri, { ...options, extraHeaders: { Origin: origin } })) as typeof io;
+  const ana = new Controller(undefined, false, connect);
+  const bia = new Controller(undefined, false, connect);
+  ana.sounds = bia.sounds = false;
+  try {
+    await ana.enter("Ana");
+    await until(() => ana.view.status === "connected");
+    const code = ana.view.snapshot!.code;
+    await bia.enter("Bia", code);
+    await until(() => bia.view.status === "connected");
+    // pagehide into the bfcache: the farewell is held back (slow network).
+    hold = true;
+    ana.farewell();
+    ana.socket?.disconnect();
+    await until(() => ana.view.status !== "connected");
+    await ana.restored();
+    await until(() => ana.view.status === "connected");
+    hold = false;
+    assert.equal(held.length, 1);
+    assert.equal((await send(held[0].input, held[0].init)).status, 204);
+    await delay(600);
+    app.rooms.clean();
+    assert.equal(ana.view.status, "connected");
+    const me = app.rooms.rooms.get(code)!.members.get(ana.view.id);
+    assert.equal(me?.online, true);
+    assert.equal(me?.socketId, ana.socket?.id);
+    assert.equal(ana.inCall, false);
+  } finally {
+    await bia.destroy();
+    await ana.destroy();
     await app.close();
     globalThis.fetch = nativeFetch;
     if (locationDescriptor)
