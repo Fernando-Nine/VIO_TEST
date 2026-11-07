@@ -125,9 +125,13 @@ jobs:
             # Installer first, feed last: the old feed keeps pointing at a valid file.
             gh release upload beta -R $env:REPO "out/$name" "out/$name.sig" --clobber
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            # Fixed-name copy for the landing's direct download link (never read by the updater).
+            Copy-Item "out/$name" "out/VIO-Teste-x64-setup.exe"
+            gh release upload beta -R $env:REPO "out/VIO-Teste-x64-setup.exe" --clobber
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             gh release upload beta -R $env:REPO "out/$feed" --clobber
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             gh release edit beta -R $env:REPO --notes "$product $version"
-            $old = gh release view beta -R $env:REPO --json assets -q '.assets[].name' | Where-Object { $_ -like '*-setup.exe*' -and $_ -notlike "$name*" }
+            $old = gh release view beta -R $env:REPO --json assets -q '.assets[].name' | Where-Object { $_ -like '*-setup.exe*' -and $_ -notlike "$name*" -and $_ -ne 'VIO-Teste-x64-setup.exe' }
             foreach ($asset in $old) { gh release delete-asset beta $asset -R $env:REPO -y }
           }

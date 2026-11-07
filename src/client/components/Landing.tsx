@@ -18,11 +18,11 @@ import { Logo } from "./Logo";
 
 const releases = "https://github.com/Fernando-Nine/vio-releases/releases";
 /**
- * Production downloads the stable installer directly; the preview's "VIO Teste"
- * installer changes name on every build, so it opens the beta release page.
+ * Direct installer links, never the GitHub page. The preview's versioned "VIO Teste"
+ * installer also ships as a fixed-name copy (windows.yml) so this link stays stable.
  */
 export const installer = version.includes("-")
-  ? `${releases}/tag/beta`
+  ? `${releases}/download/beta/VIO-Teste-x64-setup.exe`
   : `${releases}/latest/download/VIO-x64-setup.exe`;
 
 /** Scrolls to "Chega mais" and puts the cursor in the name. */
