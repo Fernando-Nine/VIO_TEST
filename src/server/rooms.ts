@@ -110,8 +110,6 @@ const WAIT_TTL = 5 * 60 * 1000;
 const MAX_WAITING = 20;
 const REFUSED_FOR = 60 * 1000;
 const MAX_KNOWN = 500;
-/** A tab that is really open answers within this (#301). */
-const HOLDER_PROBE = 2000;
 const inviteTtl: Record<InviteTtl, number> = {
   "1h": 3600 * 1000,
   "1d": 24 * 3600 * 1000,
@@ -566,6 +564,10 @@ export class Rooms {
     setTimeout(() => this.clean(), this.config.farewell + 50).unref();
   }
   bind(socket: Socket) {
+    // Any packet in, the engine's pongs included: the holder probe (#301)
+    // only lets go of a socket that has been quiet as well as mute.
+    socket.data.lastSeen = Date.now();
+    socket.conn.on("packet", () => (socket.data.lastSeen = Date.now()));
     const rates: Record<Action, number> = {
       role: 20,
       moderate: 30,
@@ -690,17 +692,26 @@ export class Rooms {
     });
   }
   /**
-   * Another page wants this identity (#301): a tab that is really open
-   * answers the probe; a page gone without a word (lost farewell, dead
-   * connection) does not, and its socket is let go so the next try enters.
+   * Another page wants this identity (#301). True when the holder is gone: it
+   * does not answer the probe **and** sent nothing for `holderQuiet`. A tab
+   * that is open answers; one that is frozen or stuck in a dialog for a moment
+   * is mute but was heard recently, so it keeps its place. Left over: a tab
+   * frozen longer than `holderQuiet` loses its place to the other page (the
+   * engine's own ping timeout would drop it a little later anyway).
+   * Joins that race on the same holder share one probe.
    */
-  private probeHolder(held: Socket) {
-    if (held.data.holderProbe) return;
-    held.data.holderProbe = true;
-    held.timeout(HOLDER_PROBE).emit("presence-probe", (error: Error | null) => {
-      held.data.holderProbe = false;
-      if (error) held.disconnect(true);
-    });
+  private holderGone(held: Socket): Promise<boolean> {
+    held.data.holderProbe ??= held
+      .timeout(this.config.holderProbe)
+      .emitWithAck("presence-probe")
+      .then(
+        () => false,
+        () =>
+          !held.connected ||
+          Date.now() - held.data.lastSeen >= this.config.holderQuiet,
+      )
+      .finally(() => (held.data.holderProbe = undefined));
+    return held.data.holderProbe;
   }
   private async command(
     socket: Socket,
@@ -762,18 +773,34 @@ export class Rooms {
       let member = room.members.get(socket.data.id);
       let replaced: Socket | undefined;
       if (member?.socketId && member.socketId !== socket.id) {
-        const held = this.io.sockets.sockets.get(member.socketId);
-        // The same page load on a new connection (#301): the one the server
-        // still holds is half-open (network change). Take its place, media
-        // included: the page still has its captures and peers. The old
-        // socket goes only past every refusal (below).
-        if (!held || (data.page && member.page === data.page)) replaced = held;
-        else {
-          this.probeHolder(held);
-          throw new Fault(
-            "SESSION_IN_USE",
-            "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
-          );
+        let held = this.io.sockets.sockets.get(member.socketId);
+        // Another page: wait for the probe (at most `holderProbe`, inside
+        // the client's 10 s command timeout) instead of refusing at once.
+        if (
+          held &&
+          !(data.page && member.page === data.page) &&
+          (await this.holderGone(held))
+        ) {
+          // Re-read: the room and the member may have moved while waiting.
+          if (this.rooms.get(code) !== room || !socket.connected)
+            throw new Fault("SESSION_IN_USE", "Tente novamente.");
+          member = room.members.get(socket.data.id);
+          if (member?.socketId !== held.id) held = undefined;
+          else replaced = held;
+        }
+        const holder = member?.socketId;
+        if (holder && holder !== socket.id && holder !== replaced?.id) {
+          held = this.io.sockets.sockets.get(holder);
+          // The same page load on a new connection: the one the server still
+          // holds is half-open (network change). Take its place, media
+          // included: the page still has its captures and peers.
+          if (!held || (data.page && member!.page === data.page))
+            replaced = held;
+          else
+            throw new Fault(
+              "SESSION_IN_USE",
+              "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
+            );
         }
       }
       const empty = !room.members.size;
@@ -844,7 +871,9 @@ export class Rooms {
         page: data.page,
       };
       room.members.set(member.id, member);
-      // Its disconnect handler sees another socketId and keeps the member.
+      // The old socket goes only here, past every refusal. Safe before the
+      // `await socket.join` below: member.socketId already names this socket,
+      // so the old one's disconnect handler leaves the member alone.
       replaced?.disconnect(true);
       this.membership.set(member.id, code);
       this.remember(room, member.id);

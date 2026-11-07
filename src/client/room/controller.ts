@@ -220,6 +220,8 @@ export class Controller {
     { publication: Publication; name: string; color: string }
   >();
   private missingScreens = new Map<string, number>();
+  /** Set by `restored()`: the next snapshot drops screens it no longer lists. */
+  private restoring = false;
   constructor(
     adapter?: CaptureAdapter,
     private persist = true,
@@ -756,9 +758,7 @@ export class Controller {
               publications: person.publications.filter((p) => p.id !== id),
             })),
           };
-        this.screenCatalog.delete(id);
-        this.visiblePreviews.delete(id);
-        this.stopWatching(id);
+        this.endScreen(id);
       });
       socket.on("signal", (signal) => void this.peers.signal(signal));
       socket.connect();
@@ -1025,8 +1025,13 @@ export class Controller {
           });
           this.missingScreens.delete(publication.id);
         }
-    for (const id of this.view.watching)
-      if (!present.has(id) && !this.missingScreens.has(id))
+    // Back from the bfcache, a missing screen ended while the page was frozen.
+    const restoring = this.restoring;
+    this.restoring = false;
+    for (const id of [...this.view.watching])
+      if (present.has(id)) continue;
+      else if (restoring) this.endScreen(id);
+      else if (!this.missingScreens.has(id))
         this.missingScreens.set(id, Date.now());
     for (const id of this.screenCatalog.keys())
       if (!present.has(id) && !this.view.watching.includes(id))
@@ -1291,6 +1296,11 @@ export class Controller {
     this.view.selected = next.selected;
     this.bump();
     void this.reconcile();
+  }
+  private endScreen(id: string) {
+    this.screenCatalog.delete(id);
+    this.visiblePreviews.delete(id);
+    this.stopWatching(id);
   }
   stopWatching(id: string) {
     const next = unwatchScreen(this.view, id);
@@ -1606,14 +1616,24 @@ export class Controller {
   /**
    * Back from the bfcache (#301). The pagehide farewell dropped this page's
    * media on the server, maybe after it was back: a new page id makes a late
-   * farewell harmless, and the media state starts over as after a reload.
-   * Mic, camera and the call stay closed.
+   * farewell harmless, and the peer state starts over as after a reload.
+   * Mic, camera and the call stay closed. The canvas keeps its widgets and
+   * video hosts; screens the server no longer lists leave on the next snapshot.
    */
   restored() {
     if (!this.intent) return;
     this.page = freshKey();
     this.joinAttempt++;
-    this.dropRoomMedia();
+    this.peers.closeAll();
+    this.publications.clear();
+    this.subscriptions.clear();
+    this.sentVideo.clear();
+    this.missingSince.clear();
+    this.restoring = true;
+    this.conflictAttempt = 0;
+    this.withoutCredential = false;
+    if (this.persist && this.joinedRoom)
+      writeTabRoom({ code: this.joinedRoom }, this.tabStore());
     this.view.conflict = undefined;
     this.view.error = "";
     this.callGeneration++;

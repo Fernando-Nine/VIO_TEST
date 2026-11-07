@@ -4,7 +4,8 @@ Atualizado: 2026-11-07
 
 ## Agora
 
-#301 (aviso falso de outra aba): PR aberta com auto-merge. Conferir na prévia: troca de rede
+#301 (aviso falso de outra aba): #305 na `main`; continuação `fix/301-sonda` (sonda com silêncio de
+12 s, 3ª tentativa, `restored()` sem limpar o canvas) com auto-merge. Conferir na prévia: troca de rede
 (Wi-Fi ↔ 4G) com tela compartilhada, voltar/avançar do navegador (bfcache), duas abas reais e
 `pagehide` no celular/Safari.
 
@@ -29,7 +30,8 @@ Atualizado: 2026-11-07
   com outra pessoa online; sozinho vale o grace. Snapshot de participante por allowlist
   (`participantFields`).
 - #301: `join` da mesma `page` com socket velho preso assume o lugar com a mídia; página
-  diferente sonda o socket preso (`presence-probe`, 2 s) e o solta se mudo. `enterHere` manda a
+  diferente sonda o socket preso (`presence-probe`, 2 s) e o solta se mudo e sem tráfego há 12 s
+  (`holderProbe`/`holderQuiet` no `Config`, curtos nos testes). `enterHere` manda a
   despedida explícita antes; bfcache (`pageshow` persistido) troca o `page`.
 - Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 

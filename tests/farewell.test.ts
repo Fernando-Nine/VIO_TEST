@@ -18,6 +18,8 @@ const origin = "http://localhost:3000";
 const secret = "test-only-farewell-secret-value-0123456789";
 const FAREWELL = 300;
 const GRACE = 1200;
+const PROBE = 200;
+const QUIET = 800;
 async function server() {
   const app = await createApp({
     ...readConfig({
@@ -28,6 +30,8 @@ async function server() {
     }),
     farewell: FAREWELL,
     grace: GRACE,
+    holderProbe: PROBE,
+    holderQuiet: QUIET,
   });
   app.http.listen(0, "127.0.0.1");
   await once(app.http, "listening");
@@ -482,19 +486,22 @@ test("mesma página com o socket velho preso assume o lugar e mantém a mídia",
   }
 });
 
-test("página nova e socket velho mudo: o servidor sonda, solta e a página entra", async () => {
+test("página nova e socket velho mudo: o servidor sonda, espera o silêncio e a página entra", async () => {
   const app = await server();
   try {
     const { ta, sa, sb, a, code } = await pair(app);
-    // `sa` never answers the probe: the old page is gone without a word.
+    // `sa` never answers the probe, but it just talked: maybe only frozen.
     const next = await connect(app, ta);
-    const dropped = event(sa, "disconnect");
     await assert.rejects(
       join(next, { name: "Ana", code, page: "pa2" }),
       /SESSION_IN_USE/,
     );
-    await dropped;
+    assert.equal(sa.connected, true);
+    await delay(QUIET);
+    // Mute and quiet: the join waits for the probe and enters in the same call.
+    const dropped = event(sa, "disconnect");
     const back = await join(next, { name: "Ana", code, page: "pa2" });
+    await dropped;
     assert.equal(back.snapshot.creatorId, a.id);
     assert.equal(member(app, code, a.id)?.socketId, next.id);
     close(sb, next);
@@ -513,14 +520,32 @@ test("página nova com a aba antiga viva segue em conflito", async () => {
       join(next, { name: "Ana", code, page: "pa2" }),
       /SESSION_IN_USE/,
     );
-    await delay(2300);
-    assert.equal(sa.connected, true);
-    assert.equal(member(app, code, a.id)?.socketId, sa.id);
+    await delay(QUIET);
     await assert.rejects(
       join(next, { name: "Ana", code, page: "pa2" }),
       /SESSION_IN_USE/,
     );
+    assert.equal(sa.connected, true);
+    assert.equal(member(app, code, a.id)?.socketId, sa.id);
     close(sa, sb, next);
+  } finally {
+    await app.close();
+  }
+});
+
+test("saída explícita depois de 'Entrar nesta aba': só a mesma página tira a pessoa", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    // Another page's explicit goodbye leaves this one in place.
+    await farewell(app, { token: ta, page: "pa9", explicit: true });
+    await delay(50);
+    assert.equal(member(app, code, a.id)?.socketId, sa.id);
+    // The same page (enterHere without a socket) leaves for good.
+    await farewell(app, { token: ta, page: "pa", explicit: true });
+    await delay(50);
+    assert.equal(member(app, code, a.id), undefined);
+    close(sa, sb);
   } finally {
     await app.close();
   }

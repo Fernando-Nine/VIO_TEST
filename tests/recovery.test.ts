@@ -110,10 +110,11 @@ test("recuperação automática supera oito tentativas, reentra após restart e 
   }
 });
 
-test("conflito de sessão: duas tentativas curtas e depois para (#286)", () => {
+test("conflito de sessão: três tentativas curtas e depois para (#286)", () => {
   assert.equal(conflictDelay(0), 1000);
   assert.equal(conflictDelay(1), 2000);
-  assert.equal(conflictDelay(2), undefined);
+  assert.equal(conflictDelay(2), 4000);
+  assert.equal(conflictDelay(3), undefined);
   assert.ok(Object.hasOwn(conflictText, "SESSION_IN_USE"));
   assert.ok(Object.hasOwn(conflictText, "ALREADY_JOINED"));
   assert.ok(!Object.hasOwn(conflictText, "toString"));

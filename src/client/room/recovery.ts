@@ -21,9 +21,11 @@ export const conflictText: Record<string, string> = {
   ALREADY_JOINED: "Esta aba ainda está em outra sala.",
 };
 /**
- * Two tries, 1 s and 2 s later: both inside the farewell window, so a join
- * that beat the old page's farewell still finds the member. Then it stops.
+ * Three tries, 1 s, 2 s and 4 s later. The first two fall inside the farewell
+ * window, so a join that beat the old page's farewell still finds the member.
+ * With the server's probe (2 s each), the last one lands past its 12 s quiet
+ * mark (#301), so a dead holder is let go before the page gives up.
  */
 export function conflictDelay(attempt: number) {
-  return attempt < 2 ? 1000 * (attempt + 1) : undefined;
+  return attempt < 3 ? 1000 * 2 ** attempt : undefined;
 }
