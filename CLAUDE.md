@@ -102,7 +102,8 @@ subagentes para leitura pesada.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
   rascunho do Design (2–3 opções em tamanho real, etiqueta `design`) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
-  já existe não precisam.
+  já existe não precisam. Vale também para transição e animação. O copiloto confere o aval na issue
+  antes de abrir a sessão da área, mesmo que a issue seja a próxima da Fila.
 - **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` com `Closes #N` → ativar auto-merge
   (squash) → encerrar, sem esperar a CI no chat. Se a CI falhar, quem abriu corrige (pode usar
   `subscribe_pr_activity`). Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
