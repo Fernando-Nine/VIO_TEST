@@ -28,7 +28,8 @@
 9. **Auto-merge e regras de PR** (ADRs 011–013, CLAUDE.md): um branch curto por tarefa → PR no VIO_TEST com `Closes #N` → auto-merge squash ativado → o agente encerra sem esperar a CI; se falhar, quem abriu corrige (`subscribe_pr_activity`). Sem revisão humana obrigatória. Antes do push: `npm run typecheck` + testes do que mudou. Travas locais em `.claude/hooks/guard.mjs` (bloqueia `.env`/segredos, force push, push na `main`). Proteção de branch e auto-merge "ficam possíveis" com o repositório público (`handoff/qa.md`); se o ruleset está ativado no GitHub **não é verificável pelo código** (não confirmado).
 10. **Prettier.** `prettier` 3.6.2 é devDependency e há `.prettierignore`, mas **não há script** `format`/`lint` no `package.json` e **nenhum passo** na CI. Issue #20 "Prettier na CI" está aberta (ESTADO). Código é formatado à mão/pelo editor.
 11. **`npm audit`.** CI: `--omit=dev --audit-level=high` (falha só em vulnerabilidade alta/crítica de dependência de produção). Também existe `npm run audit:production` (`npm audit --omit=dev`, qualquer nível).
-12. **Casos de borda:** `server.test.ts` usa portas efêmeras; testes de CHANGELOG dependem de `npm run build` na CI; `release-notes.test.ts` valida o formato de `changes/` (um parágrafo, nome `<issue>-<slug>.md`, ignora README).
+12. **Etiquetas.** `.github/labels.yml` é a fonte das etiquetas (nome, cor, descrição); `.github/workflows/labels.yml` as cria ou atualiza com o `gh` do runner em push na `main` que o altera ou por `workflow_dispatch`, sem apagar as que não estão no arquivo.
+13. **Casos de borda:** `server.test.ts` usa portas efêmeras; testes de CHANGELOG dependem de `npm run build` na CI; `release-notes.test.ts` valida o formato de `changes/` (um parágrafo, nome `<issue>-<slug>.md`, ignora README).
 
 ## Arquivos de teste (`tests/*.test.ts`)
 

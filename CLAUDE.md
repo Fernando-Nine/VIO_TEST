@@ -14,7 +14,9 @@ by NerdQuest Studios · fundado por Nine · AGPLv3 · Node 24
 3. Seu papel em `.claude/agents/<área>.md` e seu handoff em `.claude/handoff/<área>.md`.
 
 O resto de `docs/` é referência técnica. `docs/catalogo/` retrata o código por tema (como funciona,
-números, mercado, achados): leia só a ficha da tarefa; o `GUIA.md` de lá explica os porquês.
+números, mercado, achados) e é a **primeira consulta** para saber onde e como algo está: veja o
+`mapa.md` (onde fica cada arquivo e quem chama quem) e leia só a ficha da tarefa, antes de varrer o
+código ou mandar um `crawler`. O `GUIA.md` de lá explica os porquês para leigos.
 `docs/arquivo/` é histórico e **não** descreve o presente.
 
 ## Equipe
@@ -83,7 +85,8 @@ subagentes para leitura pesada.
   ou ação do usuário leva a etiqueta `aguarda-usuario` (e sai da vez da área).
 - **Pronto** quando: CI verde; tela conferida se mudou interface; nota em `changes/` se quem usa
   percebe; `ESTADO.md`/handoff atualizados se mudou estado ou decisão; ficha de `docs/catalogo/`
-  atualizada se mudou o que ela descreve; issue fechada **quando entra na prévia** (com o número
+  atualizada (e o `mapa.md`, se mudou arquivo) se mudou o que ela descreve; `docs/catalogo/GUIA.md`
+  atualizado, em linguagem para leigos, se mudou uma decisão ou algo que ele explica; issue fechada **quando entra na prévia** (com o número
   da PR).
 - **Incidente**: todo P0 resolvido ganha revisão sem culpa em `docs/incidentes/` e, se couber,
   um teste ou uma regra nova.
@@ -91,6 +94,11 @@ subagentes para leitura pesada.
   fora do escopo, arquivos prováveis, invariantes tocados e aceite (`feature.yml`) e passa pelo
   `goldfish` antes de a área começar; o diff dela passa por revisão sem memória (`code-review` ou
   `goldfish` em modo diff) antes do merge. Bugs P0–P2 pequenos não precisam.
+- **Elephant-Goldfish com o usuário**: em brainstorming, feature nova e mudança de visão, a entrevista
+  (Elephant), as perguntas e as revisões do plano são feitas com o usuário. O `goldfish` subagente
+  serve para o copiloto e as áreas se situarem e para revisar diff e plano técnico.
+- **Pesquisar antes de insistir**: diante de bug difícil ou solução incerta, rode o `pesquisador`
+  (fóruns, Reddit, issues de bibliotecas, docs) antes de trocar código por tentativa.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
   rascunho do Design (2–3 opções em tamanho real, etiqueta `design`) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
@@ -200,6 +208,7 @@ screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
 Erro de agente que uma regra teria evitado, ou algo que o usuário precisou explicar no chat, vira
 uma linha curta neste arquivo (no lugar certo, sem duplicar). O copiloto revisa este arquivo uma
 vez por mês: tira o que ficou velho e atualiza a data abaixo.
+Toda área anota em `docs/aprendizados/` o que foi difícil, o que ajudou e o que evitar, no mesmo PR.
 Última revisão: 2026-11-04.
 
 ## Travas

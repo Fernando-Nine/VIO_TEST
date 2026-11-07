@@ -4,6 +4,9 @@ O VIO explicado sem código: o que é cada parte, por que ela é assim e o que p
 números, os arquivos e os problemas encontrados estão nas fichas do [catálogo](README.md); cada
 seção aponta a sua.
 
+> Este guia é a versão para leigos do catálogo: cada termo técnico é explicado quando aparece, e ele
+> é atualizado junto com as fichas a cada decisão.
+>
 > **Retrato:** commit `8bdc516`, 5 nov 2026 (prévia `2.12.0-rc.6`, produção `2.11.0`). Mudou uma
 > decisão ou uma parte descrita aqui? Atualize o guia no mesmo PR.
 
@@ -465,6 +468,9 @@ Detalhes: [ficha 10](10-app-windows.md).
 
 - **CI:** um robô que, a cada mudança, confere se o código compila e se os testes passam antes de
   ela entrar.
+- **Etiquetas por arquivo:** as etiquetas das tarefas (como `frontend`, `P1`, `design`) ficam num arquivo
+  do projeto. Um robô as cria ou atualiza no GitHub quando o arquivo muda, para que cor e descrição
+  não dependam de ninguém clicar no site.
 - **Auto-merge:** a mudança entra sozinha assim que o robô aprova.
 - **Laboratório (BrowserLab):** uma página escondida, só para desenvolvimento, que simula pessoas e
   telas falsas para testar a conexão no navegador.
