@@ -56,7 +56,7 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [011](decisoes/011-fluxo-de-trabalho.md) Issues, PR por tarefa, squash; produção recebe o mesmo código.
 - [012](decisoes/012-prioridade-e-pronto.md) P0–P3, pronto, 1 issue por área, incidentes, regras que crescem.
 - [013](decisoes/013-contexto-subagentes-modelo.md) Compactação aos 200 mil, subagentes, modelo por tarefa, auto-merge.
-- [014](decisoes/014-elephant-goldfish.md) Plano na issue revisado pelo `goldfish`; agentes de apoio.
+- [014](decisoes/014-elephant-goldfish.md) Plano na issue revisado pelo `goldfish`; agentes de apoio; entrevista e plano de ideias novas com o usuário (emenda 7 nov).
 - [015](decisoes/015-notas-por-arquivo.md) Notas da versão em `changes/`; QA fecha a prévia.
 - [016](decisoes/016-catalogo-tecnico.md) Catálogo técnico por tema; a ficha muda no mesmo PR que o código.
 - [017](decisoes/017-custo-e-codigo-nosso.md) Pago só com receita ou ao abrir ao público; código nosso antes.

@@ -1,0 +1,34 @@
+name: Etiquetas
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/labels.yml"]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Criar ou atualizar etiquetas
+        run: |
+          # Reads the fixed three-line format of labels.yml; never deletes labels.
+          name="" color=""
+          while IFS= read -r line; do
+            case "$line" in
+              "- name: "*) name=$(printf '%s' "${line#- name: }" | jq -r .) ;;
+              "  color: "*) color=$(printf '%s' "${line#  color: }" | jq -r .) ;;
+              "  description: "*)
+                desc=$(printf '%s' "${line#  description: }" | jq -r .)
+                gh label create "$name" --color "$color" --description "$desc" --force
+                ;;
+            esac
+          done < .github/labels.yml

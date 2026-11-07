@@ -18,6 +18,9 @@ publicados de ganho e a revisão custa tokens a mais.
 - Agentes de apoio, só leitura, sem handoff: `goldfish`, `crawler` (varredura de bug ou área e
   antes de release) e `pesquisador` (web, com fontes). Ficam em `.claude/agents/`.
 - Sem skills novas nem dependência: o plano mora na issue.
+- Emenda (7 nov): em brainstorming, feature nova e mudança de visão, a entrevista (Elephant), as
+  perguntas e as revisões do plano são feitas com o usuário; o `goldfish` subagente serve para o
+  copiloto e as áreas se situarem e para revisar diff e plano técnico.
 
 ## Motivo
 

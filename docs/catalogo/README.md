@@ -23,12 +23,15 @@ existe. Para a versão explicada, sem código, leia o [GUIA](GUIA.md).
 | [09](09-hospedagem-deploy-release.md) | Hospedagem, deploy, build e release: Render, Docker, VIO_TEST → VIO |
 | [10](10-app-windows.md) | App Windows (Tauri 2): captura nativa, WASAPI, atualização, canais |
 | [11](11-testes-e-ci.md) | Testes e CI: `node --test`, BrowserLab, workflows |
+| [Mapa](mapa.md) | Onde está cada pasta e arquivo, o que faz e quem chama quem |
 | [Dependências](dependencias.md) | Cada pacote do `package.json` e do `Cargo.toml` e para que serve |
 | [GUIA](GUIA.md) | Versão explicada: conceitos, por que é assim, o que pode vir depois |
 
 ## Como usar
 
-- Leia só a ficha do tema da tarefa e as que ela aponta; não leia o catálogo inteiro.
+- **Antes de varrer o código ou mandar um crawler, consulte o catálogo (mapa + ficha).** Crawler só
+  para o que o catálogo não responde; o que ele achar de novo entra na ficha.
+- Comece pelo [mapa](mapa.md) para achar o arquivo; depois leia só a ficha do tema da tarefa e as que ela aponta; não leia o catálogo inteiro.
 - O código manda. A ficha é um retrato: `~L123` é dica, procure pela função.
 - Caminho curto (`rooms.ts`, `media/capture.ts`, `shell.rs`) fica em `src/server/`,
   `src/client/`, `src/shared/` ou `src-tauri/src/`.
