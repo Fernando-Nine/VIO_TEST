@@ -21,7 +21,7 @@
     "publisher": "NerdQuest Studios",
     "shortDescription": "Compartilhe a tela, converse e assista junto.",
     "category": "SocialNetworking",
-    "licenseFile": "../LICENSE",
+    "licenseFile": "../docs/juridico/termo-instalador.txt",
     "icon": ["icons/icon-beta.ico"],
     "resources": {
       "../dist/source.tar.gz": "source.tar.gz"
