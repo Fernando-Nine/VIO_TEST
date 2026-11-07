@@ -62,7 +62,8 @@ quebrável: quebre, diga qual, por quê e quanto custa.
 
 Fonte única: Ajustes › Acessibilidade › **Reduzir movimento** + `src/client/components/motion.ts`
 (`data-motion="reduce"` no `<html>` com "Sempre"; `reducedMotion()` soma o `prefers-reduced-motion`).
-Toda animação declara a variante reduzida: **estático**, **esmaecer** (≤ 150 ms) ou **removido**.
+Toda animação declara a variante reduzida: padrão **esmaecer** (≤ 150 ms), como na `CLAUDE.md`;
+**estático** ou **removido** só para loops e ambiente.
 Nada de política de acessibilidade própria do componente.
 
 No rascunho, simule o switch com um seletor "Movimento: completo / reduzido" que põe

@@ -5,7 +5,7 @@ Efeitos de cena montados sobre a fundação (`fundacao.md`): todo efeito entra p
 custo, variante reduzida, exceções aprovadas na issue.
 
 **Onde cabe:** landing, Início, página de download, splash — à vontade. **Sala:** nada de ambiente
-sobre vídeo ao vivo, nada que rode por quadro atrás de uma transmissão (`composicao-e-coreografia.md`
+sobre vídeo ao vivo (só se a issue registrar o aval do usuário), nada que rode por quadro atrás de uma transmissão (`composicao-e-coreografia.md`
 da `motion-scene-design` tem os tetos por superfície). Na dúvida, a sala fica quieta.
 
 ## 1. Rolagem

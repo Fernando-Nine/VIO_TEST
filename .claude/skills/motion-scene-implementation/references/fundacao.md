@@ -4,14 +4,14 @@ A base que a `motion-scene-implementation` constrói **primeiro** e que a
 `motion-object-implementation` usa. Tudo mora junto de `src/client/components/motion.ts`, que já é
 a fonte única da preferência: esta base **estende** esse arquivo, nunca cria um segundo switch.
 
-| Peça                | Arquivo sugerido                          | Expõe                                                                 |
-| ------------------- | ----------------------------------------- | --------------------------------------------------------------------- |
-| Tokens CSS          | `:root` de `src/client/styles.css`        | `--motion-*`, `--motion-energy`; `--ease` mantido                     |
-| Tokens TS           | `src/client/components/motion-tokens.ts`  | `motion`, `springEasing()`, `energy()`                                |
-| Switch (já existe)  | `src/client/components/motion.ts`         | `applyMotion`, `reducedMotion` + `onMotionChange`, `useReducedMotion` |
-| Ticker único        | `src/client/components/motion-ticker.ts`  | `ticker(win).add(fn)`                                                 |
-| Registro de efeitos | `src/client/components/motion-effects.ts` | `registerEffect()`, `useSceneEffect()`                                |
-| Stores globais      | `src/client/components/motion-stores.ts`  | `pointer`, `trackPointer()`, `scrollOf()`, `viewport`                 |
+| Peça                | Arquivo sugerido                          | Expõe                                                                        |
+| ------------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| Tokens CSS          | `:root` de `src/client/styles.css`        | `--motion-*`, `--motion-energy`; `--ease` mantido                            |
+| Tokens TS           | `src/client/components/motion-tokens.ts`  | `motion`, `springEasing()`, `energy()`                                       |
+| Switch (já existe)  | `src/client/components/motion.ts`         | `applyMotion`, `reducedMotion` + `onMotionChange`; hook em `motion-react.ts` |
+| Ticker único        | `src/client/components/motion-ticker.ts`  | `ticker(win).add(fn)`                                                        |
+| Registro de efeitos | `src/client/components/motion-effects.ts` | `registerEffect()`, `useSceneEffect()`                                       |
+| Stores globais      | `src/client/components/motion-stores.ts`  | `pointer`, `trackPointer()`, `scrollOf()`, `viewport`                        |
 
 Nomes e lugares são sugestão: se o Frontend já organizou de outro jeito, siga o que existe. Criou
 arquivo? Atualize `docs/catalogo/mapa.md` e os itens 14 (Movimento) e 15 (Ponto) de
@@ -120,12 +120,15 @@ var(--motion-energy))`. Por região: `.landing-hero { --motion-energy: 1.3; }`. 
 Acrescente ao `motion.ts` existente (sem mexer em `applyMotion`/`reducedMotion`):
 
 ```ts
-// src/client/components/motion.ts — additions
-import { useSyncExternalStore } from "react";
+// src/client/components/motion.ts — additions (stays pure: no React import)
 
 const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
 
-/** Calls `listener` whenever reduced motion turns on or off (system setting or Ajustes). */
+/**
+ * Calls `listener` whenever reduced motion turns on or off (system setting or Ajustes).
+ * `win` only picks whose matchMedia is watched (PiP has its own); the Ajustes flag is always
+ * read from the main document.
+ */
 export function onMotionChange(
   listener: (reduced: boolean) => void,
   win: Window = window,
@@ -144,8 +147,16 @@ export function onMotionChange(
     media.removeEventListener("change", notify);
   };
 }
+```
 
-/** React: re-renders when reduced motion changes. Use for structure, not per frame. */
+O hook React fica num arquivo próprio, para `motion.ts` seguir puro (sem React):
+
+```ts
+// src/client/components/motion-react.ts
+import { useSyncExternalStore } from "react";
+import { onMotionChange, reducedMotion } from "./motion";
+
+/** React: re-renders when reduced motion changes. `win` only affects matchMedia (PiP). */
 export function useReducedMotion(win: Window = window) {
   return useSyncExternalStore(
     (onChange) => onMotionChange(onChange, win),

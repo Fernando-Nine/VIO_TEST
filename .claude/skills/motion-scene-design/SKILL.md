@@ -65,7 +65,7 @@ pode ser quebrada, desde que você diga qual, por quê e quanto custa.
 | **Invariante**              | toda peça tem variante reduzida, ligada ao switch que já existe                       |
 | Padrão quebrável            | só `transform`/`opacity` (exceção marcada com motivo e custo, decidida com o usuário) |
 | Padrão quebrável            | sequência inteira ≤ 800 ms                                                            |
-| Padrão quebrável            | nada de ambiente na sala; nada por cima de vídeo                                      |
+| Padrão quebrável            | nada de ambiente na sala; sobre vídeo, só com aval do usuário registrado na issue     |
 | Padrão quebrável            | escala de tokens de `references/sistema.md`                                           |
 
 **Exceção a `transform`/`opacity`:** marque na tabela de exceções da spec (efeito, propriedade, por
@@ -77,8 +77,8 @@ implementa a exceção sem esse aval registrado na issue.
 O VIO já tem a fonte única: Ajustes › Acessibilidade › **Reduzir movimento** e
 `src/client/components/motion.ts` (`applyMotion` põe `data-motion="reduce"` no `<html>` quando a
 pessoa escolhe "Sempre"; `reducedMotion()` soma isso ao `prefers-reduced-motion`). Toda camada,
-coreografia e transição declara a variante reduzida: **estático**, **esmaecer** (≤ 150 ms) ou
-**removido**. A energia global (`--motion-energy`) não substitui a variante reduzida.
+coreografia e transição declara a variante reduzida: padrão **esmaecer** (≤ 150 ms), como na `CLAUDE.md`;
+**estático** ou **removido** só para loops e ambiente. A energia global (`--motion-energy`) não substitui a variante reduzida.
 
 ## Dependências
 

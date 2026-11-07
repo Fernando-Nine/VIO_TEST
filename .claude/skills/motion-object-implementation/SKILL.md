@@ -75,7 +75,7 @@ nativo e avise o copiloto.
 - **Só `transform`/`opacity`.** Nada fora disso entra sem a exceção aprovada na issue. Sem aval, a
   alternativa dentro da regra da spec (máscara movida, camada cruzada), ou avise o copiloto.
 - **Um switch só:** `src/client/components/motion.ts` (`reducedMotion(win)`, e da base
-  `useReducedMotion`/`onMotionChange`) + Ajustes › Acessibilidade. Nada de política própria do
+  `onMotionChange`; `useReducedMotion` em `motion-react.ts`) + Ajustes › Acessibilidade. Nada de política própria do
   componente. Toda peça implementa a variante reduzida da spec. CSS reduzido com **dois
   seletores** (`@media (prefers-reduced-motion: reduce)` e `:root[data-motion="reduce"]`);
   esmaecer reduzido por `el.animate` (as regras globais zeram `transition`); nunca
@@ -85,8 +85,11 @@ nativo e avise o copiloto.
   resposta no `pointerdown`; texto animado continua legível para leitor de tela; erro visível
   junto de um `Fault` em português.
 
-Todo o resto (tempos, curvas, amplitude, quantidade de passos) segue a spec; se não couber,
+Todo o resto (tempos, curvas, amplitude, quantidade de passos) segue a spec, salvo desvio com motivo registrado na spec; se não couber,
 proponha a alternativa mais fiel e diga exatamente o que mudou.
+
+**Campos mínimos da spec** (faltou um: peça ao copiloto antes de implementar): estados (e
+gatilhos), tokens, variante reduzida, exceções aprovadas e aceite.
 
 ## Fluxo
 

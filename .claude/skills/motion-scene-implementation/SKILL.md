@@ -26,7 +26,7 @@ viagem entre as telas, põe as linhas de velocidade e o vento, e decide quando t
    **exceções aprovadas** (só valem as registradas na issue).
 2. `docs/design/transicoes.md` (o Ponto conduz; tempos; lugares). O guia do Ponto em
    `docs/design/`, quando existir, é a fonte sobre o personagem e vence esta skill.
-3. `docs/design/movimento.md` (sistema aprovado), se existir; senão o formato de
+3. `docs/design/movimento.md` (sistema aprovado, **fonte dos tokens**: CSS e TS derivam dele), se existir; senão o formato de
    `.claude/skills/motion-scene-design/references/sistema.md`.
 4. `docs/catalogo/07-cliente-e-interface.md`, itens 14 (Movimento) e 15 (Ponto), e o `mapa.md`.
 5. Só o que a tarefa pede de `references/`:
@@ -90,17 +90,21 @@ pesado, import só do necessário (tree-shaking), versão exata no `package.json
   propriedade, motivo, custo). Sem aval, use a alternativa dentro da regra que a spec trouxe, ou
   avise o copiloto.
 - **Um switch só:** Ajustes › Acessibilidade › Reduzir movimento + `src/client/components/motion.ts`
-  (`applyMotion`, `reducedMotion`). Estenda esse arquivo (`onMotionChange`, `useReducedMotion`);
-  nunca crie outro. Toda peça implementa a variante reduzida da spec (estático, esmaecer ≤ 150 ms
-  ou removido). CSS reduzido com **dois seletores** (media query e `:root[data-motion="reduce"]`);
+  (`applyMotion`, `reducedMotion`). Estenda esse arquivo (`onMotionChange`, puro) e ponha o hook
+  `useReducedMotion` em `motion-react.ts`;
+  nunca crie outro. Toda peça implementa a variante reduzida da spec (padrão esmaecer ≤ 150 ms;
+  estático ou removido só em loops e ambiente). CSS reduzido com **dois seletores** (media query e `:root[data-motion="reduce"]`);
   esmaecer reduzido com `el.animate` (as regras globais zeram `transition`); nunca
   `animationend`/`transitionend` como timer (bug 07.1).
 - **Tokens:** nenhuma duração, curva ou distância que um token cubra fica escrita à mão. Token
   faltando: crie no formato do sistema e diga no relatório.
 - **Segurança** (`CLAUDE.md`): nada de segredo no código; a interface não decide permissão.
 
-Todo o resto da spec (tempos, teto de 800 ms, energia, quantidade de camadas) segue o Design; se
+Todo o resto da spec (tempos, teto de 800 ms, energia, quantidade de camadas) segue o Design, salvo desvio com motivo registrado na spec; se
 não couber, proponha a alternativa mais fiel e diga exatamente o que mudou.
+
+**Campos mínimos da spec** (faltou um: peça ao copiloto antes de implementar): estados (e
+gatilhos), tokens, variante reduzida, exceções aprovadas e aceite.
 
 ## Fluxo
 
@@ -118,8 +122,9 @@ não couber, proponha a alternativa mais fiel e diga exatamente o que mudou.
 ## Pronto quando (Frontend, `CLAUDE.md`)
 
 - Branch curto, worktree próprio se houver outra área em paralelo; Conventional Commits.
-- `npm run typecheck` e os testes do que mudou (ex.: `tests/motion-tokens.test.ts` para a base:
-  `springEasing`, paridade de tokens CSS ↔ TS). A CI roda o resto.
+- `npm run typecheck` e os testes do que mudou. **Obrigatório** se tocou tokens:
+  `tests/motion-tokens.test.ts` (paridade CSS ↔ TS, ambos derivados de `docs/design/movimento.md`,
+  e `springEasing`). A CI roda o resto.
 - **Tela conferida:** BrowserLab (`npm run test:media`) se tocou a sala; senão `webapp-testing`
   ou `playwright-cli`. Desktop e celular, completo e reduzido, e um quadro no meio da transição.
 - `changes/<issue>-<slug>.md` com um parágrafo para quem usa, se quem usa percebe.
@@ -144,7 +149,7 @@ Dependências: nenhuma (ou: <lib>, aval na issue). Otimização possível a pedi
 - Vários `requestAnimationFrame` concorrentes; um ouvinte de `scroll` por elemento.
 - Efeito que não desmonta ao trocar de tela; WebGL rodando fora da vista ou com a aba oculta.
 - Valores de token copiados à mão; segundo switch de movimento; política própria do componente.
-- Ambiente competindo com o conteúdo; qualquer ambiente sobre vídeo ao vivo.
+- Ambiente competindo com o conteúdo; ambiente sobre vídeo ao vivo sem aval do usuário na issue.
 - Rolagem sequestrada que prende a pessoa; âncoras quebradas por seção presa.
 - View Transition por cima da sala (congela o vídeo).
 - Lógica pendurada em `animationend`; `setState` do React a cada quadro.

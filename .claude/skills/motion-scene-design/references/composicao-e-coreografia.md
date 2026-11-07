@@ -16,7 +16,8 @@ diferente, porque o que a pessoa veio fazer é diferente.
 | Widget                   | usa uma ferramenta da sala | funcional: abrir, fechar, feedback; nada de ambiente                        |
 | Janela PiP e app Windows | assiste em janela pequena  | mínimo: mesmos tokens, menos camadas                                        |
 
-Regra prática: **nada ambiente por cima de vídeo ao vivo**. Ambiente na sala só fora do palco (fundo
+Regra prática: **nada ambiente por cima de vídeo ao vivo**; quebrar só com aval do
+usuário registrado na issue. Ambiente na sala só fora do palco (fundo
 do canvas vazio, porta de espera, sala vazia) e sempre abaixo da camada de conteúdo.
 
 ## Composição e ritmo visual

@@ -6,13 +6,13 @@ a `motion-scene-implementation` constrói em CSS e TS; a `motion-object-implemen
 
 ## Onde mora
 
-| Camada                     | Arquivo                                                                            | Quem escreve      |
-| -------------------------- | ---------------------------------------------------------------------------------- | ----------------- |
-| Fonte de verdade (decisão) | `docs/design/movimento.md` (criado na primeira leva que definir o sistema)         | Design, após aval |
-| Guia do personagem         | guia do Ponto em `docs/design/` (quando existir); hoje `docs/design/transicoes.md` | Design            |
-| CSS                        | `:root` de `src/client/styles.css` (ou `src/client/motion.css` importado por ele)  | Frontend          |
-| TS                         | `src/client/components/motion-tokens.ts`, ao lado de `motion.ts`                   | Frontend          |
-| Switch de preferência      | `src/client/components/motion.ts` (`applyMotion`, `reducedMotion`) — **já existe** | ninguém duplica   |
+| Camada                                            | Arquivo                                                                            | Quem escreve      |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------- |
+| Fonte de verdade (decisão; CSS e TS derivam dela) | `docs/design/movimento.md` (criado na primeira leva que definir o sistema)         | Design, após aval |
+| Guia do personagem                                | guia do Ponto em `docs/design/` (quando existir); hoje `docs/design/transicoes.md` | Design            |
+| CSS                                               | `:root` de `src/client/styles.css` (ou `src/client/motion.css` importado por ele)  | Frontend          |
+| TS                                                | `src/client/components/motion-tokens.ts`, ao lado de `motion.ts`                   | Frontend          |
+| Switch de preferência                             | `src/client/components/motion.ts` (`applyMotion`, `reducedMotion`) — **já existe** | ninguém duplica   |
 
 Tokens que já existem no código e devem continuar valendo: `--ease: 160ms ease` (atalho usado em
 dezenas de `transition`), a curva do Ponto `cubic-bezier(.2,.7,.2,1)` (chamada `--ease-ponto`
@@ -226,10 +226,13 @@ quebra entra nesta tabela e é decidida com o usuário antes de virar issue:
 
 ## Custo
 
-| Nota     | Quer dizer                                                                                  |
-| -------- | ------------------------------------------------------------------------------------------- |
-| barato   | só `transform`/`opacity`, poucos elementos, sem JS por quadro                               |
-| moderado | JS por quadro (pointer, mola), dezenas de elementos, paint pequeno (`clip-path`, traço SVG) |
-| pesado   | filtro/blur grande, canvas/WebGL em tela cheia, partículas, propriedade de layout em loop   |
+| Nota     | Quer dizer                                                                                |
+| -------- | ----------------------------------------------------------------------------------------- |
+| barato   | só `transform`/`opacity`, poucos elementos, sem JS por quadro                             |
+| moderado | JS por quadro (pointer, mola), dezenas de elementos, sem paint                            |
+| pesado   | filtro/blur grande, canvas/WebGL em tela cheia, partículas, propriedade de layout em loop |
+
+`clip-path`, traço SVG (`stroke-dashoffset`) e qualquer paint: **só com exceção aprovada**
+(aval do usuário registrado na issue), com a nota de custo que a exceção declarar.
 
 Toda peça leva a nota. Na cena, some as camadas simultâneas (ver `atmosfera-e-transicoes.md`).
