@@ -1,0 +1,1 @@
+O botão de voltar do navegador dentro da sala agora leva ao início, saindo da sala como o botão Sair, em vez de sair do VIO. O botão de avançar volta para a mesma sala, se ela ainda deixar você entrar. Recarregar a página dentro da sala continua voltando para ela.

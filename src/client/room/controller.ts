@@ -61,6 +61,7 @@ import {
   resumeCode,
   writeTabRoom,
 } from "./tab-room";
+import { leaveRoom, roomEntry, showRoom } from "./room-history";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -165,6 +166,8 @@ export class Controller {
    * Renewed when the page comes back from the bfcache (#301).
    */
   private page = freshKey();
+  /** This document turned the entry below the room into the start page (#309). */
+  private ownsStart = false;
   /** Room this page joined and has not left; it says goodbye on the way out. */
   private joinedRoom?: string;
   /** "Entrar nesta aba": joins like a new tab, without the creator credential. */
@@ -538,7 +541,7 @@ export class Controller {
   ) {
     const previousAttempts = recovering ? this.recoveryAttempt : 0;
     if (this.disposed) return;
-    if (this.intent || this.socket) void this.leave();
+    if (this.intent || this.socket) void this.leave(true, false);
     const generation = ++this.generation;
     const current = () => generation === this.generation && !this.disposed;
     if (this.sounds) this.cues.unlock();
@@ -928,10 +931,14 @@ export class Controller {
       this.bump();
       // So reescreve a barra de enderecos quando ela existe de verdade. Dentro
       // de uma casca nativa nao ha barra, e o "link" seria do esquema da casca.
-      if (this.persist && !embedded) {
-        const url = invite(result.snapshot.code);
-        history.replaceState(null, "", url);
-      }
+      // One entry per visit over the start page (#309): Back leaves the room.
+      if (this.persist && !embedded)
+        this.ownsStart =
+          showRoom(
+            result.snapshot.code,
+            invite(result.snapshot.code),
+            history,
+          ) || this.ownsStart;
     } catch (e) {
       if (!current()) return;
       // Locked room: stay connected and wait for the "admission" event.
@@ -1668,6 +1675,8 @@ export class Controller {
     if (this.resumed || !this.persist || this.intent || !name.trim()) return;
     this.resumed = true;
     const code = resumeCode(this.tabStorage(), link);
+    // Only a reload of the room's own entry, not Back to the start page (#309).
+    if (code && !embedded && roomEntry(history.state) !== code) return;
     if (code) void this.enter(name.trim(), code, false, invite?.(code));
   }
   private tabStore() {
@@ -1680,7 +1689,12 @@ export class Controller {
   private tabStorage() {
     return this.persist ? readTabRoom(this.tabStore()) : undefined;
   }
-  async leave(announce = true) {
+  /** Entering, at the door or in a room: Back from the browser leaves it (#309). */
+  get inRoom() {
+    return !!this.intent;
+  }
+  /** `exit`: the address bar leaves the room too; switching rooms keeps the entry. */
+  async leave(announce = true, exit = true) {
     const token = this.session?.token,
       joined = this.joinedRoom;
     this.joinedRoom = undefined;
@@ -1753,13 +1767,13 @@ export class Controller {
       notice: "",
       knocks: [],
     };
-    if (this.persist) history.replaceState(null, "", location.pathname);
+    if (this.persist && exit) leaveRoom(this.ownsStart && !embedded, history);
     this.bump();
   }
   async destroy() {
     if (this.disposed) return;
     this.disposed = true;
-    await this.leave();
+    await this.leave(true, false);
     this.peers.destroy();
     this.cues.close();
     this.playback.close();
