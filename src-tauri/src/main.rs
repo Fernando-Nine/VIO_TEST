@@ -8,6 +8,8 @@ mod printwindow;
 #[cfg(windows)]
 mod programs;
 #[cfg(windows)]
+mod instance;
+#[cfg(windows)]
 mod log;
 #[cfg(windows)]
 mod shell;

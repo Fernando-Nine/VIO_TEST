@@ -1,17 +1,18 @@
 # Mídia — handoff
 
-Atualizado: 2026-11-04
+Atualizado: 2026-11-07
 
 ## Agora
 
-Nada em andamento. #267, #271, #24 e #23 na prévia (rc.3–rc.6), aguardando o aceite do usuário
-no PC (roteiros nas PRs #272, #273, #275, #276; o mouse piscando da #267 só ele confirma).
+#303 (instância única do app Windows) na PR `feat/303-instancia-unica`, sem auto-merge, aguardando
+revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia esperando o aceite dele.
 
 ## Pendente / bloqueios
 
 - Parecer curto, com o Pesquisador quando existir: captura nativa x anti-cheat (Valorant/Riot),
   porque a tela pequena pode ter vindo dele. O usuário vai testar.
 - #135 TURN Cloudflare (`aguarda-usuario`): explicar passo a passo quando ele pedir.
+- Link `vio://` para a instância aberta fica para quando houver deep link (#282 e seguintes).
 
 ## Decisões da área
 
@@ -19,7 +20,10 @@ no PC (roteiros nas PRs #272, #273, #275, #276; o mouse piscando da #267 só ele
   (~30 fps), WGC se vier preta. Nenhum com borda amarela.
 - Teto de envio fixo (8 Mbps), mínimo 300 kbps por espectador; sem ajuste na interface.
 - Servidor próprio antes de terceirizar (TURN/SFU), quando chegar a hora.
+- Instância única por mutex nomeado com o identificador do canal, sem plugin; a segunda abertura já
+  mostra janela oculta (`SW_RESTORE`), então a bandeja (#282) só precisa cuidar do link `vio://`.
 
 ## Próximo passo
 
-Primeira issue `midia` da Fila (hoje P1 #280 com o Frontend). Medidas e dicas de bancada: `docs/notas/midia.md`.
+Primeira issue `midia` da Fila do `ESTADO.md`. Medidas e dicas de bancada (inclusive `cargo check`
+do Windows no Linux): `docs/notas/midia.md`.

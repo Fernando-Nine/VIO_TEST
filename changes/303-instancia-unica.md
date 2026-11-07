@@ -1,0 +1,1 @@
+Abrir o app VIO para Windows quando ele já está aberto não cria outra janela: a janela que já existe volta para a frente, restaurada se estava minimizada. O VIO e o VIO Teste continuam podendo ficar abertos ao mesmo tempo.

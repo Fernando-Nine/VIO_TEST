@@ -29,4 +29,8 @@ Medidas, mecanismos e dicas de bancada (movido do handoff em 2026-11-04). Ler so
 - Versão: depois de mudar `releases.ts`, `npm run build` regenera o CHANGELOG (a CI confere).
   PR em conflito ("dirty") não roda CI: merge da main antes.
 - `pkill -f` com padrão que aparece no próprio comando mata o shell; use o PID.
-- Rust do Windows no Linux: ver Git (handoff de 29/10); o passo de benches é continue-on-error.
+- Rust do Windows no Linux (`cargo check`, sem linkar): `rustup target add x86_64-pc-windows-msvc`;
+  `dist/desktop/index.html` e `dist/source.tar.gz` vazios (o `tauri-build` exige); o `ring` pede C:
+  `CC_x86_64_pc_windows_msvc=clang AR_x86_64_pc_windows_msvc=llvm-ar CFLAGS_x86_64_pc_windows_msvc="-isystem <shim>"`,
+  com `<shim>` contendo `assert.h`, `string.h` e `stdlib.h` mínimos (declarações de `memcpy`/`memset`/
+  `memcmp`/`memmove` e `_byteswap_ulong`/`_byteswap_uint64`/`_byteswap_ushort`). O passo de benches é continue-on-error.

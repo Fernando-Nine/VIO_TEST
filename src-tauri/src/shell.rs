@@ -1,4 +1,5 @@
 use crate::capture::{self, Manager, Source};
+use crate::instance;
 use crate::log;
 use crate::stream::{Options, Started, StreamManager, Tick};
 use crate::video::{VideoManager, VideoSource};
@@ -206,6 +207,7 @@ async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
 fn open(app: &AppHandle) -> tauri::Result<()> {
     let window = WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
         .title(app.package_info().name.clone())
+        .window_classname(instance::class(&app.config().identifier))
         .inner_size(1280.0, 800.0)
         .min_inner_size(720.0, 480.0)
         .use_https_scheme(true)
@@ -238,6 +240,16 @@ fn watch_page(webview: &tauri::webview::PlatformWebview) -> windows::core::Resul
 }
 
 pub fn run() {
+    let context = tauri::generate_context!();
+    // Same folder as `app_log_dir()`, opened early so the instance check can log.
+    if let Some(local) = std::env::var_os("LOCALAPPDATA") {
+        let dir = std::path::PathBuf::from(local).join(&context.config().identifier).join("logs");
+        log::init(dir, &context.package_info().version.to_string());
+    }
+    // A second launch raises the open window and quits (#303).
+    let Some(_instance) = instance::claim(&context.config().identifier) else {
+        return;
+    };
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Manager::default())
@@ -278,6 +290,6 @@ pub fn run() {
                 window.state::<StreamManager>().stop(window.app_handle(), None);
             }
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("VIO failed to start");
 }
