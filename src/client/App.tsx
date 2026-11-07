@@ -75,7 +75,6 @@ import {
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, versionLabel } from "../shared/releases";
 import { api, embedded, invite } from "./endpoint";
-import { roomEntry } from "./room/room-history";
 import { applyMotion } from "./components/motion";
 import { ShareDialog } from "./components/ShareDialog";
 type Panel =
@@ -285,13 +284,17 @@ export default function App({ engine }: { engine: Controller }) {
   // Sair does; the room's entry enters again, if the room still lets us in.
   const onHistory = useRef<(event: PopStateEvent) => void>(undefined);
   onHistory.current = (event) => {
-    const room = roomEntry(event.state);
-    if (!room) {
+    const popped = engine.popped(event.state);
+    if (popped === "ignore") return;
+    if (popped === "start") {
       if (engine.inRoom) void goHome();
       return;
     }
-    if (engine.inRoom || !name.trim()) return;
+    const room = popped.room;
+    if (engine.inRoom) return;
+    // Without a name, the start page opens with the code filled in.
     setCode(room);
+    if (!name.trim()) return;
     void engine.enter(
       name.trim(),
       room,
