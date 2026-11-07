@@ -1,6 +1,7 @@
 # Third-party agent skills are vendored as-is.
-.claude/skills/
+.claude/skills/*
 !.claude/skills/vio-*/
+!.claude/skills/motion-*/
 src/shared/build-info.json
 # Technical catalog: wide tables. Prettier pads every column and grows these files ~70%;
 # agents read them on demand, so they stay compact (see docs/catalogo/README.md).

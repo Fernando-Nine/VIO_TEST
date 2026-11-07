@@ -165,8 +165,10 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Erro visível ao usuário: `Fault` com `code` e mensagem em português, nunca stack trace.
 - Movimento: **o ponto da marca conduz as transições** (entrar na sala, trocar de página, abrir
   widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela. Só
-  `transform`/`opacity`, encaixe perfeito, e `prefers-reduced-motion` + Acessibilidade reduzem a
-  só esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`).
+  `transform`/`opacity`, encaixe perfeito (exceção a transform/opacity só com aval do usuário registrado na issue), e `prefers-reduced-motion` + Acessibilidade reduzem a
+  só esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`; Design:
+  `motion-object-design` e `motion-scene-design`; Frontend: `motion-object-implementation` e
+  `motion-scene-implementation`).
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
   Prefira edição direta, hover e menu de botão direito a painéis de ajustes.
 

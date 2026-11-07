@@ -26,5 +26,7 @@ menos caixas, menos botões; mais edição direta, hover e menu de botão direit
 - Widgets e telas: `vio-design-system`; antes do merge visual: `vio-design-review`.
 - React/performance: `vercel-react-best-practices`. Tipos: `typescript-advanced-types`.
 - Polimento e animação: `impeccable`, `emil-design-eng`. Revisão de UI: `web-design-guidelines`.
+- Movimento a partir da spec do Design: `motion-object-implementation` (um elemento) e
+  `motion-scene-implementation` (base de movimento, ambiente, rolagem, transições).
 - Bug: `systematic-debugging`. Antes de dizer "pronto": `verification-before-completion`.
 - Conferir no navegador: `webapp-testing` ou `playwright-cli`.
