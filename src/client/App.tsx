@@ -181,19 +181,23 @@ export default function App({ engine }: { engine: Controller }) {
       .initialize()
       .then(() => engine.bump())
       .catch((e) => engine.fail(e));
-    const unload = () => {
+    // pagehide, not beforeunload (#301): a download or mailto link fires
+    // beforeunload and the page stays, with no socket left.
+    const hide = () => {
+      engine.farewell();
       engine.captures.stopAll();
       engine.socket?.disconnect();
     };
-    // Also when persisted: beforeunload already dropped socket and captures.
-    const hide = () => engine.farewell();
-    window.addEventListener("beforeunload", unload);
+    const show = (event: PageTransitionEvent) => {
+      if (event.persisted) void engine.restored();
+    };
     window.addEventListener("pagehide", hide);
+    window.addEventListener("pageshow", show);
     // A reload goes back to the room (#286); mic and camera stay closed.
     engine.resume(name, code, inviteFor);
     return () => {
-      window.removeEventListener("beforeunload", unload);
       window.removeEventListener("pagehide", hide);
+      window.removeEventListener("pageshow", show);
     };
   }, [engine]);
   const people = view.snapshot?.participants || [];

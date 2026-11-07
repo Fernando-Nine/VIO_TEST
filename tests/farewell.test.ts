@@ -71,8 +71,14 @@ function farewell(
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
-const event = (socket: Socket, name: string) =>
-  new Promise((resolve) => socket.once(name, resolve));
+const event = (socket: Socket, name: string, timeout = 5000) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`no ${name}`)), timeout);
+    socket.once(name, (value: unknown) => {
+      clearTimeout(timer);
+      resolve(value);
+    });
+  });
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const room = (app: App, code: string) => app.rooms.rooms.get(code)!;
 const member = (app: App, code: string, id: string) =>
@@ -422,6 +428,134 @@ test("participante no snapshot só leva os campos permitidos", async () => {
       assert.ok(!("page" in p) && !("leavesAt" in p) && !("socketId" in p));
     }
     close(sa, sb);
+  } finally {
+    await app.close();
+  }
+});
+
+// #301: a page whose old socket the server still holds (half-open after a
+// network change) must not look like another tab.
+const watch = async (viewer: Socket, publicationId: string) =>
+  request<{ id: string }>(viewer, "subscribe", {
+    publicationId,
+    tier: "main",
+    nonce: crypto.randomUUID(),
+  });
+const answer = (socket: Socket) =>
+  socket.on("presence-probe", (ack: () => void) => ack());
+
+test("mesma página com o socket velho preso assume o lugar e mantém a mídia", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    answer(sa);
+    const screen = await request<Publication>(sa, "publish", {
+      kind: "screen",
+      key: crypto.randomUUID(),
+      audio: false,
+      muted: false,
+    });
+    const sub = await watch(sb, screen.id);
+    let ended = false;
+    sb.on("publication-ended", () => (ended = true));
+    // Same page (same Controller) back on a new connection.
+    const again = await connect(app, ta);
+    const dropped = event(sa, "disconnect");
+    const back = await join(again, { name: "Ana", code, page: "pa" });
+    await dropped;
+    const me = member(app, code, a.id)!;
+    assert.equal(me.socketId, again.id);
+    assert.equal(me.online, true);
+    assert.deepEqual(
+      back.snapshot.participants
+        .find((p) => p.id === a.id)!
+        .publications.map((p) => p.id),
+      [screen.id],
+    );
+    assert.ok(room(app, code).subscriptions.has(sub.id));
+    await delay(50);
+    assert.equal(member(app, code, a.id)?.online, true);
+    assert.equal(ended, false);
+    close(sb, again);
+  } finally {
+    await app.close();
+  }
+});
+
+test("página nova e socket velho mudo: o servidor sonda, solta e a página entra", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    // `sa` never answers the probe: the old page is gone without a word.
+    const next = await connect(app, ta);
+    const dropped = event(sa, "disconnect");
+    await assert.rejects(
+      join(next, { name: "Ana", code, page: "pa2" }),
+      /SESSION_IN_USE/,
+    );
+    await dropped;
+    const back = await join(next, { name: "Ana", code, page: "pa2" });
+    assert.equal(back.snapshot.creatorId, a.id);
+    assert.equal(member(app, code, a.id)?.socketId, next.id);
+    close(sb, next);
+  } finally {
+    await app.close();
+  }
+});
+
+test("página nova com a aba antiga viva segue em conflito", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    answer(sa);
+    const next = await connect(app, ta);
+    await assert.rejects(
+      join(next, { name: "Ana", code, page: "pa2" }),
+      /SESSION_IN_USE/,
+    );
+    await delay(2300);
+    assert.equal(sa.connected, true);
+    assert.equal(member(app, code, a.id)?.socketId, sa.id);
+    await assert.rejects(
+      join(next, { name: "Ana", code, page: "pa2" }),
+      /SESSION_IN_USE/,
+    );
+    close(sa, sb, next);
+  } finally {
+    await app.close();
+  }
+});
+
+test("aviso atrasado da página que já voltou derruba a mídia (por isso o bfcache troca o page)", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    const screen = await request<Publication>(sb, "publish", {
+      kind: "screen",
+      key: crypto.randomUUID(),
+      audio: false,
+      muted: false,
+    });
+    await watch(sa, screen.id);
+    sa.close();
+    await delay(50);
+    // Back from the bfcache with the same page; the pagehide farewell is late.
+    const back = await connect(app, ta);
+    await join(back, { name: "Ana", code, page: "pa" });
+    const sub = await watch(back, screen.id);
+    const dropped = event(back, "disconnect");
+    await farewell(app, { token: ta, page: "pa" });
+    await dropped;
+    assert.equal(room(app, code).subscriptions.has(sub.id), false);
+    // A restored page with a fresh page id is immune to the late farewell.
+    const restored = await connect(app, ta);
+    await join(restored, { name: "Ana", code, page: "pa3" });
+    const again = await watch(restored, screen.id);
+    await farewell(app, { token: ta, page: "pa" });
+    await delay(50);
+    assert.equal(member(app, code, a.id)?.socketId, restored.id);
+    assert.ok(room(app, code).subscriptions.has(again.id));
+    close(sb, restored);
   } finally {
     await app.close();
   }

@@ -110,6 +110,8 @@ const WAIT_TTL = 5 * 60 * 1000;
 const MAX_WAITING = 20;
 const REFUSED_FOR = 60 * 1000;
 const MAX_KNOWN = 500;
+/** A tab that is really open answers within this (#301). */
+const HOLDER_PROBE = 2000;
 const inviteTtl: Record<InviteTtl, number> = {
   "1h": 3600 * 1000,
   "1d": 24 * 3600 * 1000,
@@ -687,6 +689,19 @@ export class Rooms {
         .emit("participant-ping", { id: member.id, pingMs: member.pingMs });
     });
   }
+  /**
+   * Another page wants this identity (#301): a tab that is really open
+   * answers the probe; a page gone without a word (lost farewell, dead
+   * connection) does not, and its socket is let go so the next try enters.
+   */
+  private probeHolder(held: Socket) {
+    if (held.data.holderProbe) return;
+    held.data.holderProbe = true;
+    held.timeout(HOLDER_PROBE).emit("presence-probe", (error: Error | null) => {
+      held.data.holderProbe = false;
+      if (error) held.disconnect(true);
+    });
+  }
   private async command(
     socket: Socket,
     action: Action,
@@ -745,11 +760,22 @@ export class Rooms {
         this.rooms.set(code, room);
       }
       let member = room.members.get(socket.data.id);
-      if (member?.socketId && member.socketId !== socket.id)
-        throw new Fault(
-          "SESSION_IN_USE",
-          "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
-        );
+      if (member?.socketId && member.socketId !== socket.id) {
+        const held = this.io.sockets.sockets.get(member.socketId);
+        // The same page load on a new connection (#301): the one the server
+        // still holds is half-open (network change). Take its place, media
+        // included: the page still has its captures and peers.
+        if (!held || (data.page && member.page === data.page)) {
+          member.socketId = undefined;
+          held?.disconnect(true);
+        } else {
+          this.probeHolder(held);
+          throw new Fault(
+            "SESSION_IN_USE",
+            "Esta sessão já está aberta em outra aba. Abra uma nova sessão.",
+          );
+        }
+      }
       const empty = !room.members.size;
       const claim = verifyRoomCredential(
         this.config.secret,
