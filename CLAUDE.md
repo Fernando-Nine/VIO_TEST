@@ -98,7 +98,8 @@ subagentes para leitura pesada.
 - **Trabalho**: um branch curto por tarefa → PR no `VIO_TEST` com `Closes #N` → ativar auto-merge
   (squash) → encerrar, sem esperar a CI no chat. Se a CI falhar, quem abriu corrige (pode usar
   `subscribe_pr_activity`). Sem revisão humana obrigatória. Antes do push: `npm run typecheck`
-  e os testes do que mudou.
+  e os testes do que mudou. Áreas em paralelo usam **worktree próprio** (`git worktree add`), nunca
+  a mesma pasta. Área sem a ferramenta Agent avisa o copiloto, que roda o `goldfish`.
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`).
 - **Versão**: semver; correção = PATCH, funcionalidade = MINOR. PR comum **não** sobe a versão:
   cria `changes/<issue>-<slug>.md` com um parágrafo (`changes/README.md`), mostrado na prévia com o
