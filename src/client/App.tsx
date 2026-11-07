@@ -74,7 +74,7 @@ import {
 } from "./room/recent-rooms";
 import { ToastStack, toasts } from "./components/Toasts";
 import { releases, versionLabel } from "../shared/releases";
-import { api, invite } from "./endpoint";
+import { api, embedded, invite } from "./endpoint";
 import { applyMotion } from "./components/motion";
 import { ShareDialog } from "./components/ShareDialog";
 type Panel =
@@ -100,6 +100,9 @@ export default function App({ engine }: { engine: Controller }) {
   const endSplash = useCallback(() => setSplash(false), []);
   const [code, setCode] = useState(
     new URLSearchParams(location.search).get("sala") || "",
+  );
+  const [linkRoom] = useState(() =>
+    (new URLSearchParams(location.search).get("sala") || "").toUpperCase(),
   );
   // Signed invite of the link that opened the page (#242): enters even locked.
   const [linkInvite] = useState(
@@ -277,6 +280,34 @@ export default function App({ engine }: { engine: Controller }) {
     setCode("");
     setPanel(null);
   }
+  // Back and Forward of the browser (#309): the start page leaves the room as
+  // Sair does; the room's entry enters again, if the room still lets us in.
+  const onHistory = useRef<(event: PopStateEvent) => void>(undefined);
+  onHistory.current = (event) => {
+    const popped = engine.popped(event.state);
+    if (popped === "ignore") return;
+    if (popped === "start") {
+      if (engine.inRoom && !engine.showsRoom(history.state)) void goHome();
+      return;
+    }
+    const room = popped.room;
+    if (engine.inRoom) return;
+    // Without a name, the start page opens with the code filled in.
+    setCode(room);
+    if (!name.trim()) return;
+    void engine.enter(
+      name.trim(),
+      room,
+      false,
+      linkRoom === room ? linkInvite : undefined,
+    );
+  };
+  useEffect(() => {
+    if (embedded) return;
+    const pop = (event: PopStateEvent) => onHistory.current?.(event);
+    window.addEventListener("popstate", pop);
+    return () => window.removeEventListener("popstate", pop);
+  }, []);
   // Every room entered goes to Recentes, on this device only.
   const roomCode = view.snapshot?.code;
   useEffect(() => {

@@ -2,6 +2,11 @@
 
 Formato e propósito: [README](README.md).
 
+### 2026-11-07 · frontend · voltar depois de recarregar
+
+Entradas criadas por `pushState` pertencem ao documento que as criou: depois de recarregar a sala, Voltar ao início é uma carga completa, e o `resume` (#286) reentrava sozinho. Solução: a sala se marca no `history.state` e `resume` só volta se a entrada atual é a da sala.
+Ref: #309 · Vira skill? talvez
+
 ### 2026-11-07 · copiloto · duas áreas na mesma pasta
 
 Duas áreas trabalharam na mesma pasta e misturaram mudanças; um `git stash` e um `pkill` de uma derrubaram o trabalho da outra.

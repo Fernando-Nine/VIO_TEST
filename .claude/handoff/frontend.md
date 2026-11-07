@@ -4,9 +4,9 @@ Atualizado: 2026-11-07
 
 ## Agora
 
-#300 (vagas somem na tela cheia ociosa) em PR: removida a regra de ociosidade das vagas (#144) em `workspace.css`; vagas ficam sempre visíveis.
+#309 (Voltar do navegador sai do VIO) em PR: `room/room-history.ts` empilha uma entrada por visita à sala (`history.state.vioRoom`); `popstate` no `App` sai como o Sair ou reentra no Avançar; `resume` só volta se a entrada atual é a da sala. Goldfish revisado pelo copiloto (entrada no início de `enter`, fila serial com `late`); auto-merge ativado.
 
-#285 (Home só no app) em PR. Bloco 2.12 (#254, #258, #259, #260) entregue na prévia.
+#300 (vagas somem na tela cheia ociosa) e #285 (Home só no app) em PR. Bloco 2.12 (#254, #258, #259, #260) entregue na prévia.
 
 ## Pendente / bloqueios
 
@@ -22,6 +22,7 @@ Atualizado: 2026-11-07
 - `data-ponto` marca cada "ponto que fica" (landing, inicio, ao-vivo, download, baixar,
   pessoa, logo, espera) para a #261 medir origem e destino.
 - Download: produção baixa `VIO-x64-setup.exe` direto; prévia abre a release `beta`.
+- Histórico (#309): a sala se reconhece pelo `history.state`, nunca pela URL; uma entrada por visita, reconexão e recarga só substituem.
 - Trabalha em lote, só com tudo decidido (bugs são exceção).
 
 ## Próximo passo

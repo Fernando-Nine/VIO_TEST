@@ -46,12 +46,13 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | Arquivo | O que faz | Liga a |
 | --- | --- | --- |
 | `main.tsx` | Monta o app; laboratórios `/qa*` só em dev; service worker | `App.tsx`, `tests/*Lab.tsx` |
-| `App.tsx` | Telas, painéis, atalhos, `pagehide`/`pageshow`, `?sala=` | `Controller`, `components/`, `canvas/` |
+| `App.tsx` | Telas, painéis, atalhos, `pagehide`/`pageshow`, `popstate`, `?sala=` | `Controller`, `components/`, `canvas/` |
 | `endpoint.ts` | `apiBase`, `webBase`, `embedded`, `invite()` | `controller.ts`, `App.tsx` |
 | `id.ts` | `freshKey` | `controller.ts` |
 | `webmcp.ts` | Ferramentas WebMCP da sala | `controller.ts` |
 | `room/controller.ts` | Máquina de estado: socket, `epoch`, entrar/sair, publicações, widgets | `media/*`, `recovery.ts`, `shared/protocol.ts` |
 | `room/recovery.ts` | Atraso de reconexão e classificação de erro | `controller.ts` |
+| `room/room-history.ts` | Entrada da sala no histórico: Voltar sai, Avançar volta (#309) | `controller.ts`, `App.tsx` |
 | `room/tab-room.ts` | Sala da aba para retomar após recarregar | `controller.ts` |
 | `room/recent-rooms.ts` | Recentes (limite 10) | `Home.tsx` |
 | `room/watching.ts` | Quais telas se assiste; foco não muda assinatura | `controller.ts`, `ScreenStage` |

@@ -44,7 +44,7 @@ import {
 import { nextQuiet, presenceCues, type RestartQuiet } from "./presence-cues";
 import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
-import { api, socketOrigin, invite, embedded } from "../endpoint";
+import { api, socketOrigin, invite as roomUrl, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
 import { ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
@@ -61,6 +61,7 @@ import {
   resumeCode,
   writeTabRoom,
 } from "./tab-room";
+import { RoomHistory, resumes, roomEntry, type Popped } from "./room-history";
 export interface View {
   revision: number;
   status: "idle" | "connecting" | "connected" | "reconnecting" | "failed";
@@ -167,6 +168,8 @@ export class Controller {
    * Renewed when the page comes back from the bfcache (#301).
    */
   private page = freshKey();
+  /** The room in the browser history (#309); none in labs or a native shell. */
+  private readonly address?: RoomHistory;
   /** Room this page joined and has not left; it says goodbye on the way out. */
   private joinedRoom?: string;
   /** "Entrar nesta aba": joins like a new tab, without the creator credential. */
@@ -228,7 +231,13 @@ export class Controller {
     adapter?: CaptureAdapter,
     private persist = true,
     private connectSocket: typeof io = io,
+    address?: RoomHistory,
   ) {
+    this.address =
+      address ||
+      (persist && !embedded && typeof history !== "undefined"
+        ? new RoomHistory(history, () => location.pathname)
+        : undefined);
     this.canvas = new CanvasStore(persist);
     this.captures = new Captures(adapter, (kind, ended) => {
       this.bump();
@@ -540,7 +549,7 @@ export class Controller {
   ) {
     const previousAttempts = recovering ? this.recoveryAttempt : 0;
     if (this.disposed) return;
-    if (this.intent || this.socket) void this.leave();
+    if (this.intent || this.socket) void this.leave(true, false);
     const generation = ++this.generation;
     const current = () => generation === this.generation && !this.disposed;
     this.quiet = undefined;
@@ -558,6 +567,13 @@ export class Controller {
     if (!recovering) {
       this.conflictAttempt = 0;
       this.withoutCredential = false;
+      // The entry exists from the first step (#309): Back works at the door,
+      // refused or with an expired invite too; a new room gets its code later.
+      const room = this.intent.code;
+      void this.address?.show(
+        room || "",
+        room ? roomUrl(room) : location.pathname,
+      );
     }
     if (typeof window !== "undefined") {
       const online = () => {
@@ -776,6 +792,7 @@ export class Controller {
     if (!this.intent || this.disposed || this.reconnectTimer) return;
     if (permanentRecoveryError(error)) {
       this.view.status = "failed";
+      this.dropEntry();
       this.fail(error);
       return;
     }
@@ -786,6 +803,7 @@ export class Controller {
     if (conflict === undefined) {
       this.view.status = "failed";
       this.view.conflict = true;
+      this.dropEntry();
       this.view.notice = "";
       this.view.error = conflictText[code];
       this.bump();
@@ -932,10 +950,11 @@ export class Controller {
       this.bump();
       // So reescreve a barra de enderecos quando ela existe de verdade. Dentro
       // de uma casca nativa nao ha barra, e o "link" seria do esquema da casca.
-      if (this.persist && !embedded) {
-        const url = invite(result.snapshot.code);
-        history.replaceState(null, "", url);
-      }
+      // Replaces the entry of `enter` (or pushes it again after a failure).
+      void this.address?.show(
+        result.snapshot.code,
+        roomUrl(result.snapshot.code),
+      );
     } catch (e) {
       if (!current()) return;
       // Locked room: stay connected and wait for the "admission" event.
@@ -1679,6 +1698,8 @@ export class Controller {
     if (this.resumed || !this.persist || this.intent || !name.trim()) return;
     this.resumed = true;
     const code = resumeCode(this.tabStorage(), link);
+    // Only a reload of the room's own entry, not Back to the start page (#309).
+    if (code && this.address && !resumes(history.state, code)) return;
     if (code) void this.enter(name.trim(), code, false, invite?.(code));
   }
   private tabStore() {
@@ -1691,7 +1712,24 @@ export class Controller {
   private tabStorage() {
     return this.persist ? readTabRoom(this.tabStore()) : undefined;
   }
-  async leave(announce = true) {
+  /** Entering, at the door or in a room: Back from the browser leaves it (#309). */
+  get inRoom() {
+    return !!this.intent;
+  }
+  /** True while the browser shows the entry of the room we are in. */
+  showsRoom(state: unknown) {
+    return !!this.intent?.code && roomEntry(state) === this.intent.code;
+  }
+  /** What a popstate means for the room (#309); our own `back()` is ignored. */
+  popped(state: unknown): Popped {
+    return this.address?.popped(state) ?? "ignore";
+  }
+  /** A first entry that failed for good leaves no entry behind (#309). */
+  private dropEntry() {
+    if (!this.roomEntered) void this.address?.leave();
+  }
+  /** `exit`: the address bar leaves the room too; switching rooms keeps the entry. */
+  async leave(announce = true, exit = true) {
     const token = this.session?.token,
       joined = this.joinedRoom;
     this.joinedRoom = undefined;
@@ -1765,13 +1803,15 @@ export class Controller {
       notice: "",
       knocks: [],
     };
-    if (this.persist) history.replaceState(null, "", location.pathname);
+    if (exit && this.address) void this.address.leave();
+    else if (exit && this.persist)
+      history.replaceState(null, "", location.pathname);
     this.bump();
   }
   async destroy() {
     if (this.disposed) return;
     this.disposed = true;
-    await this.leave();
+    await this.leave(true, false);
     this.peers.destroy();
     this.cues.close();
     this.playback.close();
