@@ -42,10 +42,11 @@ técnicos do aplicativo ficam só no seu computador (vio.log), sem seu
 nome, sala ou conteúdo, e não são enviados. Veja a Política de
 Privacidade no site para o detalhe completo e seus direitos (LGPD).
 
-5. MENORES DE IDADE
-Quem tem menos de 18 anos deve usar o VIO com a ciência e a
-autorização de um responsável. Quem instala para outra pessoa menor de
-idade responde por essa autorização.
+5. IDADE MÍNIMA
+O VIO é para quem tem 13 anos ou mais. Entre 13 e 17 anos, use com a
+ciência e a autorização de um responsável. Quem instala para outra
+pessoa menor de idade responde por essa autorização. O VIO ainda não
+verifica a idade: ao instalar, você declara que cumpre esta regra.
 
 6. CONTEÚDO E RESPEITO
 Você é responsável pelo que transmite. Não transmita conteúdo ilegal

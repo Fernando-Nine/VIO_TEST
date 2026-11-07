@@ -56,8 +56,9 @@ Quando houver Termos de Uso e Política de Privacidade publicados, a seção 2 e
 sem mudança e o instalador aponta para eles. **[advogado depois]** revisar o conjunto antes de
 abrir ao público amplo ou monetizar.
 
-## Depende do usuário
+## Decisões
 
-1. Idade mínima do app (ex.: 13 ou 14 com ciência do responsável) e se haverá verificação.
-2. Trocar o `licenseFile` (hoje `LICENSE`, a AGPL) pelo termo: a AGPL continua no instalador
-   como recurso e é citada na seção 7.
+- **AGPL (decidido pelo usuário, #320)**: o `licenseFile` do instalador passa a ser o termo. A
+  AGPL v3 continua citada na seção 7 e o código-fonte e o texto da licença seguem no instalador.
+- **Idade mínima (recomendação do Jurídico, #321, a confirmar)**: 13+; 13–17 com ciência do
+  responsável; autodeclaração no instalador por enquanto. Pesquisa em `idade-minima.md`.
