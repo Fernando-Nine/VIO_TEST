@@ -12,10 +12,7 @@ revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia es
 - Parecer curto, com o Pesquisador quando existir: captura nativa x anti-cheat (Valorant/Riot),
   porque a tela pequena pode ter vindo dele. O usuário vai testar.
 - #135 TURN Cloudflare (`aguarda-usuario`): explicar passo a passo quando ele pedir.
-- #282 (bandeja): quando existir, a segunda abertura precisa mostrar a janela escondida; hoje o
-  `instance.rs` só restaura minimizada (janela escondida tem de ser mostrada pelo próprio processo,
-  por exemplo com a primeira instância vigiando um evento nomeado). Link `vio://` para a instância
-  aberta também fica para quando houver deep link.
+- Link `vio://` para a instância aberta fica para quando houver deep link (#282 e seguintes).
 
 ## Decisões da área
 
@@ -23,7 +20,8 @@ revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia es
   (~30 fps), WGC se vier preta. Nenhum com borda amarela.
 - Teto de envio fixo (8 Mbps), mínimo 300 kbps por espectador; sem ajuste na interface.
 - Servidor próprio antes de terceirizar (TURN/SFU), quando chegar a hora.
-- Instância única por mutex nomeado com o identificador do canal, sem plugin.
+- Instância única por mutex nomeado com o identificador do canal, sem plugin; a segunda abertura já
+  mostra janela oculta (`SW_RESTORE`), então a bandeja (#282) só precisa cuidar do link `vio://`.
 
 ## Próximo passo
 

@@ -241,6 +241,11 @@ fn watch_page(webview: &tauri::webview::PlatformWebview) -> windows::core::Resul
 
 pub fn run() {
     let context = tauri::generate_context!();
+    // Same folder as `app_log_dir()`, opened early so the instance check can log.
+    if let Some(local) = std::env::var_os("LOCALAPPDATA") {
+        let dir = std::path::PathBuf::from(local).join(&context.config().identifier).join("logs");
+        log::init(dir, &context.package_info().version.to_string());
+    }
     // A second launch raises the open window and quits (#303).
     let Some(_instance) = instance::claim(&context.config().identifier) else {
         return;
