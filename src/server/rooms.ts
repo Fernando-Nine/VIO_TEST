@@ -198,7 +198,7 @@ export class Rooms {
       log("cloudflare_turn_bad_response", {});
       throw new Fault(
         "TURN_UNAVAILABLE",
-        "Resposta inesperada do provedor de relay.",
+        "Não foi possível obter credenciais de relay agora. Tente de novo em instantes.",
       );
     }
     const result = { iceServers: body.iceServers, expiresAt: now + ttl * 1000 };
@@ -629,7 +629,7 @@ export class Rooms {
             ? e
             : new Fault(
                 "INVALID_REQUEST",
-                "Pedido inválido ou fora dos limites.",
+                "Não deu para entender esse pedido. Atualize a página e tente de novo.",
               );
         ack({ ok: false, code: f.code, message: f.message });
       }
@@ -638,19 +638,25 @@ export class Rooms {
       try {
         this.limits.take(socket.data.id + ":signal", 600);
         if (socket.data.expires < Date.now())
-          throw new Fault("SESSION_EXPIRED", "Sessão expirada.");
+          throw new Fault(
+            "SESSION_EXPIRED",
+            "Sua sessão expirou. Reconecte para continuar.",
+          );
         const signal = signalSchema.parse(raw);
         const [room, m] = this.member(socket);
         const sub = room.subscriptions.get(signal.id);
         if (!sub || (sub.viewer !== m.id && sub.publication.owner !== m.id))
-          throw new Fault("FORBIDDEN", "Conexão não autorizada.");
+          throw new Fault("FORBIDDEN", "Você não participa desta transmissão.");
         if (
           (signal.description?.type === "offer" &&
             m.id !== sub.publication.owner) ||
           (signal.description?.type === "answer" && m.id !== sub.viewer) ||
           (signal.restart && m.id !== sub.viewer)
         )
-          throw new Fault("FORBIDDEN", "Negociação inválida.");
+          throw new Fault(
+            "FORBIDDEN",
+            "A conexão com esta transmissão falhou. Tente assistir de novo.",
+          );
         this.send(
           room,
           m.id === sub.viewer ? sub.publication.owner : sub.viewer,
@@ -783,7 +789,10 @@ export class Rooms {
         ) {
           // Re-read: the room and the member may have moved while waiting.
           if (this.rooms.get(code) !== room || !socket.connected)
-            throw new Fault("SESSION_IN_USE", "Tente novamente.");
+            throw new Fault(
+              "SESSION_IN_USE",
+              "Não deu para retomar sua sessão. Tente de novo.",
+            );
           member = room.members.get(socket.data.id);
           if (member?.socketId !== held.id) held = undefined;
           else replaced = held;
@@ -1117,7 +1126,7 @@ export class Rooms {
       if (action === "widget-permission") {
         if (!manages) deny();
         if (data.participantId && !room.members.has(data.participantId))
-          throw new Fault("NOT_FOUND", "Pessoa indisponível.");
+          throw new Fault("NOT_FOUND", "Essa pessoa não está mais na sala.");
         widget = room.widgets.permission(
           data.id,
           data.participantId,
@@ -1174,7 +1183,10 @@ export class Rooms {
         sub.tier !== "main" ||
         sub.publication.kind === "voice"
       )
-        throw new Fault("FORBIDDEN", "Demanda de vídeo não autorizada.");
+        throw new Fault(
+          "FORBIDDEN",
+          "Você não pode pedir o vídeo desta transmissão.",
+        );
       sub.demand = { video: data.video, height: data.height };
       this.send(room, sub.publication.owner, "video-demand", {
         id: sub.id,
@@ -1263,9 +1275,9 @@ export class Rooms {
         .flatMap((m) => m.publications)
         .find((p) => p.id === data.publicationId);
       if (!p || p.owner === m.id)
-        throw new Fault("NOT_FOUND", "Transmissão indisponível.");
+        throw new Fault("NOT_FOUND", "Esta transmissão já terminou.");
       if (data.tier === "preview" && p.kind !== "screen")
-        throw new Fault("INVALID_REQUEST", "Miniatura inválida.");
+        throw new Fault("INVALID_REQUEST", "Só telas têm miniatura.");
       const own = [...room.subscriptions.values()].filter(
         (s) => s.viewer === m.id,
       );
@@ -1274,7 +1286,10 @@ export class Rooms {
         own.filter((s) => s.tier === "preview" && s.publication.id !== p.id)
           .length >= this.config.maxPreviews
       )
-        throw new Fault("PREVIEW_LIMIT", "Limite de miniaturas atingido.");
+        throw new Fault(
+          "PREVIEW_LIMIT",
+          "Há miniaturas demais abertas. Feche algumas e tente de novo.",
+        );
       const id = stableId(
         this.config.secret,
         [p.id, m.id, data.tier, data.nonce].join(":"),
@@ -1302,7 +1317,7 @@ export class Rooms {
     if (action === "unsubscribe") {
       const sub = room.subscriptions.get(data.id);
       if (sub && sub.viewer !== m.id)
-        throw new Fault("FORBIDDEN", "Assinatura não autorizada.");
+        throw new Fault("FORBIDDEN", "Você não pode alterar esta transmissão.");
       if (sub) this.closeSub(room, sub);
       return {};
     }
@@ -1343,6 +1358,9 @@ export class Rooms {
       }
       return { iceServers, expiresAt, turn: !!this.config.turnUrls.length };
     }
-    throw new Fault("INVALID_REQUEST", "Ação desconhecida.");
+    throw new Fault(
+      "INVALID_REQUEST",
+      "Não deu para fazer isso agora. Atualize a página e tente de novo.",
+    );
   }
 }

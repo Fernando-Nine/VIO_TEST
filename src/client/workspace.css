@@ -1020,11 +1020,6 @@
 .anchored-popover.volume-popover::after {
   display: none;
 }
-.sheet-body > .notice {
-  width: 100%;
-  max-height: 30dvh;
-  overflow: auto;
-}
 .player {
   isolation: isolate;
 }

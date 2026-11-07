@@ -89,7 +89,12 @@ export async function createApp(config: Config = readConfig(), dev = false) {
     } catch (e) {
       res
         .status(e instanceof Fault && e.code === "RATE_LIMIT" ? 429 : 403)
-        .json({ message: e instanceof Error ? e.message : "Pedido inválido." });
+        .json({
+          message:
+            e instanceof Error
+              ? e.message
+              : "Não deu para entender esse pedido. Atualize a página e tente de novo.",
+        });
     }
   });
   // Farewell of a page that leaves (#286). Sent with fetch keepalive, not
@@ -113,7 +118,11 @@ export async function createApp(config: Config = readConfig(), dev = false) {
         if (typeof req.body === "string") body = JSON.parse(req.body);
       } catch {}
       const parsed = farewellSchema.safeParse(body);
-      if (!parsed.success) return refuse(400, "Pedido inválido.");
+      if (!parsed.success)
+        return refuse(
+          400,
+          "Não deu para entender esse pedido. Atualize a página e tente de novo.",
+        );
       let id: string;
       try {
         id = verifyToken(config.secret, parsed.data.token).id;
@@ -141,7 +150,7 @@ export async function createApp(config: Config = readConfig(), dev = false) {
           status === 413
             ? "Pedido grande demais."
             : status < 500
-              ? "Pedido inválido."
+              ? "Não deu para entender esse pedido. Atualize a página e tente de novo."
               : "Não foi possível sair agora.",
       });
     },
@@ -182,7 +191,10 @@ export async function createApp(config: Config = readConfig(), dev = false) {
       const session = verifyToken(config.secret, socket.handshake.auth?.token);
       const ip = proxyaddr(socket.request, trust);
       if ((counts.get(ip) || 0) >= config.maxSocketsPerIp)
-        throw new Fault("CONNECTION_LIMIT", "Limite de conexões atingido.");
+        throw new Fault(
+          "CONNECTION_LIMIT",
+          "Há conexões demais abertas deste aparelho ou rede. Feche outras abas e tente de novo.",
+        );
       socket.data = { id: session.id, expires: session.exp, ip };
       next();
     } catch (e) {
