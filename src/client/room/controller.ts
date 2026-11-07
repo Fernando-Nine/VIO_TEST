@@ -838,8 +838,9 @@ export class Controller {
    * `room-credential: null` that follows would erase the one tabs share.
    */
   enterHere() {
-    // Let go of the old identity if this page holds it (#301); the server
-    // checks the page, so a tab that is really open keeps its place.
+    // Let go of the old identity if this page still holds it (#301), e.g. in
+    // another room after ALREADY_JOINED; the server checks the page, so a tab
+    // that is really open keeps its place.
     if (this.session) this.sendFarewell(this.session.token, true);
     this.withoutCredential = true;
     this.conflictAttempt = 0;
@@ -1612,10 +1613,9 @@ export class Controller {
     if (!this.intent) return;
     this.page = freshKey();
     this.joinAttempt++;
-    this.peers.closeAll();
-    this.publications.clear();
-    this.subscriptions.clear();
-    this.sentVideo.clear();
+    this.dropRoomMedia();
+    this.view.conflict = undefined;
+    this.view.error = "";
     this.callGeneration++;
     this.inCall = false;
     this.voicePending = false;
@@ -1624,6 +1624,20 @@ export class Controller {
     this.captures.deaf = false;
     this.bump();
     return this.retry();
+  }
+  /** Peers and the room's media bookkeeping; captures and the canvas stay. */
+  private dropRoomMedia() {
+    this.screenLevels.clear();
+    this.peers.closeAll();
+    this.publications.clear();
+    this.subscriptions.clear();
+    this.screenCatalog.clear();
+    this.desiredVideo.clear();
+    this.sentVideo.clear();
+    this.previewSources.clear();
+    this.missingScreens.clear();
+    this.missingSince.clear();
+    this.visiblePreviews.clear();
   }
   /** Reload (#286): back to the room this tab just left, never to the call. */
   resume(
@@ -1706,18 +1720,8 @@ export class Controller {
     this.cameraPending = false;
     this.captures.micMuted = true;
     this.captures.deaf = false;
-    this.screenLevels.clear();
-    this.peers.closeAll();
-    this.publications.clear();
-    this.subscriptions.clear();
-    this.screenCatalog.clear();
-    this.desiredVideo.clear();
-    this.sentVideo.clear();
+    this.dropRoomMedia();
     this.canvas.resetRoom();
-    this.previewSources.clear();
-    this.missingScreens.clear();
-    this.missingSince.clear();
-    this.visiblePreviews.clear();
     this.view = {
       revision: 0,
       status: "idle",

@@ -760,15 +760,15 @@ export class Rooms {
         this.rooms.set(code, room);
       }
       let member = room.members.get(socket.data.id);
+      let replaced: Socket | undefined;
       if (member?.socketId && member.socketId !== socket.id) {
         const held = this.io.sockets.sockets.get(member.socketId);
         // The same page load on a new connection (#301): the one the server
         // still holds is half-open (network change). Take its place, media
-        // included: the page still has its captures and peers.
-        if (!held || (data.page && member.page === data.page)) {
-          member.socketId = undefined;
-          held?.disconnect(true);
-        } else {
+        // included: the page still has its captures and peers. The old
+        // socket goes only past every refusal (below).
+        if (!held || (data.page && member.page === data.page)) replaced = held;
+        else {
           this.probeHolder(held);
           throw new Fault(
             "SESSION_IN_USE",
@@ -844,6 +844,8 @@ export class Rooms {
         page: data.page,
       };
       room.members.set(member.id, member);
+      // Its disconnect handler sees another socketId and keeps the member.
+      replaced?.disconnect(true);
       this.membership.set(member.id, code);
       this.remember(room, member.id);
       if (previous) {
