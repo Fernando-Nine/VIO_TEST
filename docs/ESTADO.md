@@ -24,10 +24,9 @@ Níveis P0–P3 (regra no `CLAUDE.md`). Etiquetas no GitHub; a área pega a prim
 Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
-- **P1**: #301 sala "aberta em outro lugar" sem estar (regressão da #291) · #292 duplicata ao
-  reiniciar · #300 tela cheia ociosa esconde vagas · #281 avisos empurram o layout · #266 cursor
+- **P1**: #292 duplicata ao reiniciar · #281 avisos empurram o layout · #266 cursor
   some · #268 Baixar direto · #280 Flutuante no app (com Mídia).
-- **P2**: #261 transições (Opus no máximo) · #270 notificações · #269 responsividade (QA) ·
+- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo) · #270 notificações · #269 responsividade (QA) ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes.
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
@@ -35,7 +34,8 @@ Ordem completa do produto em `ROADMAP.md`.
   #295 cards flutuantes · #298 cor da sala · #299 cor pessoal; menu inicial em #197.
 - Na prévia (2.12.0-rc.6): landing A (#258), início B (#259), trancar/convite (#260; #242 fechada), tela
   inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps). Depois da
-  rc.6, em `changes/`: tela inicial só no app (#285), saída rápida (#286).
+  rc.6, em `changes/`: tela inicial só no app (#285), saída rápida (#286), tela cheia ociosa (#300), outra aba (#301; ajustes da sonda em PR de
+  continuação).
 - Fora de issue: parecer captura nativa x anti-cheat (Mídia + Pesquisador; base no achado 10.2 do catálogo) · app em segundo plano
   e ícone novo · sala detalhada (Design) · assets de marca.
 
