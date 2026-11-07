@@ -21,17 +21,17 @@ código ou mandar um `crawler`. O `GUIA.md` de lá explica os porquês para leig
 
 ## Equipe
 
-| Área               | Papel                                                                                     | Handoff         |
-| ------------------ | ----------------------------------------------------------------------------------------- | --------------- |
-| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                        | `copiloto.md`   |
-| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                             | `frontend.md`   |
-| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                  | `midia.md`      |
-| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                            | `backend.md`    |
-| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                      | `qa.md`         |
-| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                | `design.md`     |
-| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                        | `juridico.md`   |
-| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                         | `roteirista.md` |
-| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web) | sem handoff     |
+| Área               | Papel                                                                                                                        | Handoff         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                                                           | `copiloto.md`   |
+| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                                                                | `frontend.md`   |
+| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                                                     | `midia.md`      |
+| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                                                               | `backend.md`    |
+| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                                                         | `qa.md`         |
+| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                                                   | `design.md`     |
+| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                                                           | `juridico.md`   |
+| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                                                            | `roteirista.md` |
+| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web), `escriba` (organiza aprendizados) | sem handoff     |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
@@ -61,11 +61,11 @@ subagentes para leitura pesada.
 
 **Modelo por tarefa** (o copiloto passa o modelo ao abrir a sessão da área):
 
-| Modelo | Tarefas                                                                                                       |
-| ------ | ------------------------------------------------------------------------------------------------------------- |
-| Opus   | Mídia/WebRTC, segurança, interface complexa e animações (animações com raciocínio no máximo)                  |
-| Sonnet | QA, textos/docs, Jurídico, Roteirista, Backend de rotina, bugs P1 simples, `goldfish`/`crawler`/`pesquisador` |
-| Haiku  | Buscas simples                                                                                                |
+| Modelo | Tarefas                                                                                                                 |
+| ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Opus   | Mídia/WebRTC, segurança, interface complexa e animações (animações com raciocínio no máximo)                            |
+| Sonnet | QA, textos/docs, Jurídico, Roteirista, Backend de rotina, bugs P1 simples, `goldfish`/`crawler`/`pesquisador`/`escriba` |
+| Haiku  | Buscas simples                                                                                                          |
 
 ## Ambientes e fluxo
 
@@ -208,7 +208,8 @@ screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
 Erro de agente que uma regra teria evitado, ou algo que o usuário precisou explicar no chat, vira
 uma linha curta neste arquivo (no lugar certo, sem duplicar). O copiloto revisa este arquivo uma
 vez por mês: tira o que ficou velho e atualiza a data abaixo.
-Toda área anota em `docs/aprendizados/` o que foi difícil, o que ajudou e o que evitar, no mesmo PR.
+Aprendizados (`docs/aprendizados/`): as áreas mandam 1–2 linhas no fim do bloco, e o copiloto chama o
+`escriba` no fim de cada bloco grande.
 Última revisão: 2026-11-04.
 
 ## Travas
