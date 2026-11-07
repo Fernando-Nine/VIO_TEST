@@ -1,0 +1,1 @@
+No aplicativo VIO para Windows, ligar o microfone ou a câmera não mostra mais o aviso "tauri.localhost quer usar...": o app libera os dois sozinho, só para a própria sala, e nega qualquer outro pedido (área de transferência, notificações, localização e afins). Você continua no controle pelo botão da sala e pela Privacidade do Windows.

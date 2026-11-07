@@ -7,16 +7,50 @@ use std::time::Duration;
 use tauri::{AppHandle, Manager as _, State, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_updater::UpdaterExt;
 use webview2_com::{
+    CoTaskMemPWSTR,
     Microsoft::Web::WebView2::Win32::{
+        ICoreWebView2PermissionRequestedEventArgs2, ICoreWebView2PermissionRequestedEventArgs3,
+        COREWEBVIEW2_PERMISSION_KIND, COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY,
+        COREWEBVIEW2_PERMISSION_KIND_CAMERA, COREWEBVIEW2_PERMISSION_KIND_MICROPHONE,
+        COREWEBVIEW2_PERMISSION_STATE_ALLOW, COREWEBVIEW2_PERMISSION_STATE_DENY,
         COREWEBVIEW2_PROCESS_FAILED_KIND, COREWEBVIEW2_PROCESS_FAILED_KIND_RENDER_PROCESS_EXITED,
     },
-    ProcessFailedEventHandler,
+    PermissionRequestedEventHandler, ProcessFailedEventHandler,
 };
+use windows::core::{Interface, PWSTR};
 
 // The window loads the interface bundled in the installer. Only that local origin
 // may call the capture commands; navigation never leaves it.
 fn local(url: &Url) -> bool {
     url.scheme() == "https" && url.host_str() == Some("tauri.localhost") && url.port().is_none()
+}
+
+/// What the app answers to a WebView2 permission request (#320).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Decision {
+    Allow,
+    Deny,
+    /// Leave WebView2's own behavior. Only autoplay: WebView2 shows no prompt for it and
+    /// follows Chromium's autoplay policy; denying it could silence the `<audio>` of
+    /// `RemoteVoice` before a click, and that element drives the remote speaking indicator.
+    Default,
+}
+
+/// The installer terms already tell the user the app uses the microphone and the camera,
+/// so the bundled page gets them without the WebView2 prompt. Everything else is denied,
+/// and so is any other origin (`about:blank`, empty or invalid URIs included). Screen
+/// capture is not a `PermissionRequested` kind: the `getDisplayMedia` fallback keeps the
+/// WebView2 picker, which is a choice of content.
+fn decide(kind: COREWEBVIEW2_PERMISSION_KIND, uri: &str) -> Decision {
+    if kind == COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY {
+        return Decision::Default;
+    }
+    let local = Url::parse(uri).is_ok_and(|url| local(&url));
+    if local && (kind == COREWEBVIEW2_PERMISSION_KIND_MICROPHONE || kind == COREWEBVIEW2_PERMISSION_KIND_CAMERA) {
+        Decision::Allow
+    } else {
+        Decision::Deny
+    }
 }
 
 fn trusted(window: &WebviewWindow) -> Result<(), String> {
@@ -212,7 +246,9 @@ fn open(app: &AppHandle) -> tauri::Result<()> {
         .on_navigation(local)
         .build()?;
     window.with_webview(|webview| {
-        let _ = watch_page(&webview);
+        if let Err(error) = watch_page(&webview) {
+            log::write("webview", &format!("watch failed {:#x}", error.code().0));
+        }
     })?;
     Ok(())
 }
@@ -234,7 +270,37 @@ fn watch_page(webview: &tauri::webview::PlatformWebview) -> windows::core::Resul
         Ok(())
     }));
     let mut token = 0i64;
-    unsafe { core.add_ProcessFailed(&handler, &mut token) }
+    unsafe { core.add_ProcessFailed(&handler, &mut token) }?;
+
+    // #320: microphone and camera without the "tauri.localhost wants to use" prompt.
+    // Registered after wry's own handlers (and Tauri leaves wry's clipboard one off), so
+    // WebView2 calls this one last and its state is what counts.
+    let handler = PermissionRequestedEventHandler::create(Box::new(|_, args| {
+        let Some(args) = args else { return Ok(()) };
+        let mut kind = COREWEBVIEW2_PERMISSION_KIND::default();
+        unsafe { args.PermissionKind(&mut kind) }?;
+        let mut raw = PWSTR::null();
+        unsafe { args.Uri(&mut raw) }?;
+        let uri = CoTaskMemPWSTR::from(raw).to_string();
+        let decision = decide(kind, &uri);
+        // Never persist an answer: a later build decides again from scratch.
+        if let Ok(args) = args.cast::<ICoreWebView2PermissionRequestedEventArgs3>() {
+            unsafe { args.SetSavesInProfile(false) }?;
+        }
+        match decision {
+            Decision::Allow => unsafe { args.SetState(COREWEBVIEW2_PERMISSION_STATE_ALLOW) }?,
+            Decision::Deny => unsafe { args.SetState(COREWEBVIEW2_PERMISSION_STATE_DENY) }?,
+            Decision::Default => return Ok(()),
+        }
+        // Handled only stops a frame's request from reaching this handler twice.
+        if let Ok(args) = args.cast::<ICoreWebView2PermissionRequestedEventArgs2>() {
+            unsafe { args.SetHandled(true) }?;
+        }
+        // Only the kind: the URI never goes to the log.
+        log::write("permission", &format!("kind {} {:?}", kind.0, decision));
+        Ok(())
+    }));
+    unsafe { core.add_PermissionRequested(&handler, &mut token) }
 }
 
 pub fn run() {
@@ -280,4 +346,70 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("VIO failed to start");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{decide, Decision};
+    use webview2_com::Microsoft::Web::WebView2::Win32::{
+        COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY, COREWEBVIEW2_PERMISSION_KIND_CAMERA,
+        COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ, COREWEBVIEW2_PERMISSION_KIND_FILE_READ_WRITE,
+        COREWEBVIEW2_PERMISSION_KIND_GEOLOCATION, COREWEBVIEW2_PERMISSION_KIND_LOCAL_FONTS,
+        COREWEBVIEW2_PERMISSION_KIND_MICROPHONE, COREWEBVIEW2_PERMISSION_KIND_MIDI_SYSTEM_EXCLUSIVE_MESSAGES,
+        COREWEBVIEW2_PERMISSION_KIND_MULTIPLE_AUTOMATIC_DOWNLOADS, COREWEBVIEW2_PERMISSION_KIND_NOTIFICATIONS,
+        COREWEBVIEW2_PERMISSION_KIND_OTHER_SENSORS, COREWEBVIEW2_PERMISSION_KIND_UNKNOWN_PERMISSION,
+        COREWEBVIEW2_PERMISSION_KIND_WINDOW_MANAGEMENT,
+    };
+
+    const PAGE: &str = "https://tauri.localhost/index.html";
+
+    #[test]
+    fn local_page_gets_microphone_and_camera() {
+        assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_MICROPHONE, PAGE), Decision::Allow);
+        assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_CAMERA, PAGE), Decision::Allow);
+        assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_CAMERA, "https://tauri.localhost/sala/ABC#x"), Decision::Allow);
+    }
+
+    #[test]
+    fn other_kinds_are_denied() {
+        for kind in [
+            COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ,
+            COREWEBVIEW2_PERMISSION_KIND_NOTIFICATIONS,
+            COREWEBVIEW2_PERMISSION_KIND_GEOLOCATION,
+            COREWEBVIEW2_PERMISSION_KIND_LOCAL_FONTS,
+            COREWEBVIEW2_PERMISSION_KIND_OTHER_SENSORS,
+            COREWEBVIEW2_PERMISSION_KIND_MIDI_SYSTEM_EXCLUSIVE_MESSAGES,
+            COREWEBVIEW2_PERMISSION_KIND_MULTIPLE_AUTOMATIC_DOWNLOADS,
+            COREWEBVIEW2_PERMISSION_KIND_FILE_READ_WRITE,
+            COREWEBVIEW2_PERMISSION_KIND_WINDOW_MANAGEMENT,
+            COREWEBVIEW2_PERMISSION_KIND_UNKNOWN_PERMISSION,
+        ] {
+            assert_eq!(decide(kind, PAGE), Decision::Deny, "kind {}", kind.0);
+        }
+    }
+
+    #[test]
+    fn other_origins_are_denied() {
+        for uri in [
+            "",
+            "about:blank",
+            "not a url",
+            "http://tauri.localhost/",
+            "https://tauri.localhost:8443/",
+            "https://tauri.localhost.example.com/",
+            "https://example.com/",
+            "https://vio-test.onrender.com/",
+            "tauri://localhost/",
+            "data:text/html,x",
+        ] {
+            assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_MICROPHONE, uri), Decision::Deny, "{uri:?}");
+            assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_CAMERA, uri), Decision::Deny, "{uri:?}");
+        }
+    }
+
+    #[test]
+    fn autoplay_keeps_webview_default() {
+        assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY, PAGE), Decision::Default);
+        assert_eq!(decide(COREWEBVIEW2_PERMISSION_KIND_AUTOPLAY, "https://example.com/"), Decision::Default);
+    }
 }

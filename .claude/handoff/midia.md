@@ -1,10 +1,12 @@
 # Mídia — handoff
 
-Atualizado: 2026-11-04
+Atualizado: 2026-11-07
 
 ## Agora
 
-Nada em andamento. #267, #271, #24 e #23 na prévia (rc.3–rc.6), aguardando o aceite do usuário
+#320 (permissões do app Windows): parte técnica na PR `feat/320-permissoes` (`Refs #320`, sem
+auto-merge). Falta o instalador mostrar o termo (PR #321, `aguarda-usuario`) e o teste no PC real.
+#267, #271, #24 e #23 na prévia (rc.3–rc.6), aguardando o aceite do usuário
 no PC (roteiros nas PRs #272, #273, #275, #276; o mouse piscando da #267 só ele confirma).
 
 ## Pendente / bloqueios

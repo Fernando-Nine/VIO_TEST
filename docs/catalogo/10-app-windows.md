@@ -17,6 +17,7 @@
 3. `open()` cria a janela `main` com `WebviewUrl::App("index.html")` e `use_https_scheme(true)`: origem **`https://tauri.localhost`** (sem porta). 1280×800, mínimo 720×480. `.on_navigation(local)` recusa qualquer URL que não seja essa origem.
 4. **O app empacota o cliente** (`frontendDist: ../dist/desktop`, gerado por `build-desktop.mjs`); não carrega a página remota. Só sinalização/Socket.IO vão ao servidor (`VITE_API_BASE` = servidor do canal; `VITE_WEB_URL` idem, para convites). O servidor precisa de `ALLOWED_APP_ORIGINS=https://tauri.localhost` (`src/server/config.ts` › `origemDeAppValida`, ~L73; `app.ts` ~L56/69/108 aceita a origem em CORS e Socket.IO). Está configurado nos dois Render (`docs/ESTADO.md`).
 5. `watch_page`: handler `ProcessFailed` do WebView2; registra no log e **recarrega** se o processo de renderização morreu (`RENDER_PROCESS_EXITED`).
+5a. `watch_page` também registra `PermissionRequested` (#320) direto no `ICoreWebView2` (o `permission_handler` do wry não traz o URI). `decide(kind, uri)` (função pura, testada): **microfone e câmera** são liberados só se `args.Uri()` passar em `local()`; todo outro tipo e toda outra origem (`about:blank`, vazio, inválido) são negados com `SetState(DENY)`. **Autoplay** fica no padrão do WebView2 (sem aviso; negar poderia calar o `<audio>` do `RemoteVoice`, que move o indicador de fala). `SetSavesInProfile(false)`: nenhuma decisão fica salva. Registrado depois dos handlers do wry (o de clipboard nem é ligado pelo Tauri), então prevalece; `SetHandled(true)`. Log: `permission kind <n> Allow|Deny`, nunca o URI. Captura de tela não é um `PermissionRequested`: o fallback `getDisplayMedia` (`desktop/capture.ts` ~L75) segue com o seletor do WebView2.
 6. `on_window_event`: em `Destroyed`/`CloseRequested` para todo o áudio (`Manager.stop(None)`) e todo o vídeo (`StreamManager.stop(None)`).
 
 ### Ponte nativa (quem pode chamar o quê)
@@ -69,7 +70,7 @@ Comandos (todos em `shell.rs`):
 
 ### Logs
 
-30. `log.rs`: um arquivo `vio.log` em `app_log_dir()`, rotacionado para `vio.old.log` acima de **256 KB**; linha = `<epoch s> <tipo> <texto>`, sem caracteres de controle, ≤400 caracteres; só códigos/locais (HRESULT, `arquivo:linha`), nunca nome, sala, título de janela ou token; nunca enviado. Um panic hook grava `panic`. Tipos usados: `start`, `panic`, `webview`, `audio`, `video`, `duplication`, `printwindow`.
+30. `log.rs`: um arquivo `vio.log` em `app_log_dir()`, rotacionado para `vio.old.log` acima de **256 KB**; linha = `<epoch s> <tipo> <texto>`, sem caracteres de controle, ≤400 caracteres; só códigos/locais (HRESULT, `arquivo:linha`), nunca nome, sala, título de janela ou token; nunca enviado. Um panic hook grava `panic`. Tipos usados: `start`, `panic`, `webview`, `permission`, `audio`, `video`, `duplication`, `printwindow`.
 
 ### Requisitos de Windows
 
