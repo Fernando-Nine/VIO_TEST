@@ -39,7 +39,8 @@
    `socketOrigin()` = `apiBase || location.origin` (`endpoint.ts`; casca Tauri usa `VITE_API_BASE`).
 6. Servidor: `allowRequest` confere `Origin` (ausente = recusa), limite 60 handshakes/min por IP e `maxSocketsPerIp`=20;
    `io.use` verifica o token (`verifyToken`) e põe `socket.data={id,expires,ip}`; erro vira `connect_error` com a
-   mensagem `SESSION_EXPIRED`/`CONNECTION_LIMIT` (`app.ts` ~L115–L135).
+   mensagem `SESSION_EXPIRED` (só token inválido ou vencido), `CONNECTION_LIMIT` ou `CONNECTION_ERROR` (qualquer outra
+   falha: o cliente tenta de novo **com o mesmo token**, #292) (`app.ts` ~L180–L193).
 7. Evento `connect` → `rejoin()` (~L814): `request("join", {...intent, credential?})`. `request` rejeita se o socket não
    está conectado, usa `socket.timeout(10000)` e descarta resposta se `generation`/`socket`/`actor` mudaram
    (`AbortError "Room changed"`).
@@ -139,6 +140,16 @@
    não perde o lugar; as tentativas do cliente (1, 2 e 4 s, com as sondas) passam dos 12 s. Risco que fica: aba
    congelada por mais de 12 s perde o lugar para a página nova (o ping do engine a derrubaria pouco depois de qualquer
    jeito).
+11. **#292, mesma aba com id novo**: `join` com `page` igual à de outro membro da sala (id diferente; os dois `page`
+    definidos) troca o id velho pelo novo **num só snapshot**, sem sonda e sem `leave`: o novo herda papel (inclusive
+    criador, `lentFromAdmin` e `restoredAdmins`), cor, `voiceBlocked` e widgets (dono, editores, autoria do chat,
+    votos, os fechados de "Desfazer" e o limite de mensagens; `revision`+1 e `widget-updated` para a sala). **Não**
+    herda `inCall`: o `rejoin` anuncia a chamada de novo. A mídia do velho cai (`dropMedia`), o
+    `membership` dele é apagado e o socket velho, se vivo, é derrubado. Sala trancada: a troca entra sem bater.
+    `page` aceita 16–64 caracteres `[A-Za-z0-9-]`. Vem de `newSession` (token vencido) ou de
+    "Entrar nesta aba". Premissa: **`page` é segredo da aba** (`freshKey()` em memória, fora de `participantFields`,
+    nunca difundido); o join ainda exige token válido e respeita `refused`. Sem `page`, ou com `page` diferente, é
+    outra pessoa, como antes. A despedida atrasada do id velho não acha mais nada.
 10. **#301, bfcache**: `pageshow` com `persisted` chama `engine.restored()`: `page` nova (a despedida atrasada do
     `pagehide` não derruba mais a página que voltou), PeerConnections, publicações e assinaturas zeradas, contagem de
     conflito zerada e reentrada. O canvas fica (sem reparentar hosts); telas que o primeiro snapshot não lista mais
@@ -152,6 +163,19 @@
 - `presence-cues.ts` › `presenceCues(prev,next,self)`: compara só **presença na lista** (ids), não `online`. Logo
   `room-leave` só toca quando o membro some do snapshot (fim do grace ou `leave`); ficar offline/voltar não toca nada.
   Ignora `epoch`/`code` diferentes e primeiro snapshot. `screen-new` se surgir publicação de tela de outra pessoa.
+  Troca da mesma aba (D2.11): um id offline que some junto com um id novo no mesmo snapshot não toca nada.
+- **Reinício (#292)**: no snapshot com `epoch` novo, `nextQuiet` guarda os ids e telas do snapshot anterior
+  (`RestartQuiet`, por `code` e `epoch`, no controller). Quem desses volta não toca `room-enter` nem `screen-new`.
+  Quem volta com id novo (aba nova, token perdido) também não: até `pending.size` ids nunca vistos entram calados,
+  e cada chegada (esperada ou não) gasta uma vaga. **Limite aceito**: alguém realmente novo nessa janela pode entrar
+  sem som; esgotadas as vagas, o próximo novo toca. A tela nova de quem volta com id novo **toca** `screen-new` (o
+  id da publicação é outro). A janela fecha quando todos os ids antigos e telas voltam ou em 120 s
+  (`RESTART_QUIET_MS`, `performance.now()`): se alguém nunca volta (ou volta com id novo), ela fica aberta os 120 s
+  inteiros. É descartada em `enter`, `leave`, `restored()` e `newSession`. Uma saída de quem está online toca
+  normalmente. No controller, `presenceCues` roda antes de `nextQuiet` (lê a janela como estava).
+- **Limite do Render**: no deploy a instância nova sobe ao lado e a antiga vive ~60 s até o SIGTERM. Quem reconecta
+  nesse meio-tempo cai na nova enquanto os outros seguem na velha: por até ~60 s a pessoa pode aparecer
+  "reconectando" na velha. A garantia de "uma vez só" vale **dentro de uma instância**.
   `receiveSnapshot(announce)` só emite cues se `roomEntered` e `status==="connected"`.
 - Chip da própria pessoa (`status.ts` › `connectionMetric`, `RoomStatus.tsx`): `status!=="connected"` →
   "Conectando" (warn) ou "Sem conexão" (bad, só `failed`); com telas e algum peer `failed|disconnected` →
@@ -166,7 +190,7 @@
 1. `socket.on("disconnect", reason)` (~L595): `status="reconnecting"`; só se `reason==="io server disconnect"` agenda
    `scheduleRecovery()` própria. Para os demais motivos quem reconecta é o Manager do Socket.IO (1 s, ×2, até 30 s,
    ±40 %, infinitas tentativas).
-2. `connect_error`: `SESSION_EXPIRED` → recuperação com sessão nova; outro erro → `status="reconnecting"`, `error="A conexão caiu. Tentando voltar…"`; se `!socket.active` (erro de middleware que o Manager não repete) →
+2. `connect_error`: `SESSION_EXPIRED` → recuperação com sessão nova; outro erro (inclusive `CONNECTION_ERROR`, #292) → `status="reconnecting"`, `error="A conexão caiu. Tentando voltar…"`; se `!socket.active` (erro de middleware que o Manager não repete) →
    `scheduleRecovery(code=error.message)`. `reconnect_failed` nunca dispara com `Infinity` (ouvinte morto, ~L622).
 3. `scheduleRecovery(error, soon)` (~L744): um só timer por vez; erro permanente → `failed`; atraso = `recoveryDelay (attempt)` = `min(30000, 1000·2^min(5,attempt))·(0.8+rand·0.4)`; `RATE_LIMIT`/`CONNECTION_LIMIT` → 60 s fixos. Ao
    disparar chama `retry()`: se socket conectado → `rejoin`; se existe socket → `socket.connect()`; senão `enter(..., recovering=true)` (mantém `recoveryAttempt`).

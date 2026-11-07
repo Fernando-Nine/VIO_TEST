@@ -259,7 +259,7 @@ test('socket velho mudo: a página nova entra sozinha, sem "Entrar nesta aba"', 
     await new Promise((resolve) => old.once("connect", () => resolve(0)));
     const joined = await old.timeout(5000).emitWithAck("command", {
       action: "join",
-      data: { name: "Ana", page: "old" },
+      data: { name: "Ana", page: "old-000000000000" },
     });
     assert.ok((joined as Reply<unknown>).ok);
     const code = (joined as { data: { snapshot: { code: string } } }).data

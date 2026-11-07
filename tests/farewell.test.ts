@@ -93,9 +93,9 @@ async function pair(app: App) {
     tb = token();
   const sa = await connect(app, ta),
     sb = await connect(app, tb);
-  const a = await join(sa, { name: "Ana", page: "pa" });
+  const a = await join(sa, { name: "Ana", page: "pa-0000000000000" });
   const code = a.snapshot.code;
-  const b = await join(sb, { name: "Bia", code, page: "pb" });
+  const b = await join(sb, { name: "Bia", code, page: "pb-0000000000000" });
   return { ta, tb, sa, sb, a, b, code };
 }
 const close = (...sockets: Socket[]) => sockets.forEach((s) => s.close());
@@ -103,14 +103,14 @@ const close = (...sockets: Socket[]) => sockets.forEach((s) => s.close());
 test("rota de saída: origem, corpo, tamanho e token", async () => {
   const app = await server();
   try {
-    const good = { token: token(), page: "p1" };
+    const good = { token: token(), page: "p1-0000000000000" };
     assert.equal((await farewell(app, good, { origin: null })).status, 403);
     assert.equal(
       (await farewell(app, good, { origin: "https://evil.example" })).status,
       403,
     );
     assert.equal(
-      (await farewell(app, { token: "x.y", page: "p1" })).status,
+      (await farewell(app, { token: "x.y", page: "p1-0000000000000" })).status,
       403,
     );
     for (const body of [
@@ -119,6 +119,9 @@ test("rota de saída: origem, corpo, tamanho e token", async () => {
       { ...good, extra: 1 },
       { ...good, explicit: false },
       { ...good, page: "a b" },
+      // A page id is a tab secret: too short to guess is refused.
+      { ...good, page: "p".repeat(15) },
+      { ...good, page: "p".repeat(65) },
     ])
       assert.equal((await farewell(app, body)).status, 400);
     assert.equal(
@@ -161,7 +164,7 @@ test("aviso de outra página, sem page ou da fila de espera não muda nada", asy
   try {
     const { ta, tb, sa, sb, a, b, code } = await pair(app);
     assert.equal(
-      (await farewell(app, { token: tb, page: "outra" })).status,
+      (await farewell(app, { token: tb, page: "outra-0000000000" })).status,
       204,
     );
     await delay(FAREWELL + 150);
@@ -170,7 +173,7 @@ test("aviso de outra página, sem page ou da fila de espera não muda nada", asy
     const tc = token();
     const sc = await connect(app, tc);
     const c = await join(sc, { name: "Cris", code });
-    await farewell(app, { token: tc, page: "pa" });
+    await farewell(app, { token: tc, page: "pa-0000000000000" });
     await delay(50);
     assert.equal(member(app, code, c.id)?.online, true);
     // Locked room: someone at the door is not a member.
@@ -178,11 +181,15 @@ test("aviso de outra página, sem page ou da fila de espera não muda nada", asy
     const td = token();
     const sd = await connect(app, td);
     await assert.rejects(
-      join(sd, { name: "Duda", code, page: "pd" }),
+      join(sd, { name: "Duda", code, page: "pd-0000000000000" }),
       /WAITING/,
     );
     assert.equal(room(app, code).waiting.size, 1);
-    await farewell(app, { token: td, page: "pd", explicit: true });
+    await farewell(app, {
+      token: td,
+      page: "pd-0000000000000",
+      explicit: true,
+    });
     await delay(50);
     assert.equal(room(app, code).waiting.size, 1);
     assert.equal(room(app, code).members.size, 3);
@@ -200,7 +207,7 @@ test("sem explicit e com alguém online: sai no prazo e só empresta o lugar", a
     const { ta, sa, sb, a, b, code } = await pair(app);
     const tc = token();
     const sc = await connect(app, tc);
-    const c = await join(sc, { name: "Cris", code, page: "pc" });
+    const c = await join(sc, { name: "Cris", code, page: "pc-0000000000000" });
     await request(sa, "call", { active: true });
     await request<Publication>(sa, "publish", {
       kind: "screen",
@@ -210,7 +217,10 @@ test("sem explicit e com alguém online: sai no prazo e só empresta o lugar", a
     });
     const ended = event(sb, "publication-ended");
     const gone = event(sa, "disconnect");
-    assert.equal((await farewell(app, { token: ta, page: "pa" })).status, 204);
+    assert.equal(
+      (await farewell(app, { token: ta, page: "pa-0000000000000" })).status,
+      204,
+    );
     await gone;
     await ended;
     const left = member(app, code, a.id)!;
@@ -219,7 +229,7 @@ test("sem explicit e com alguém online: sai no prazo e só empresta o lugar", a
     assert.deepEqual(left.publications, []);
     // Cris says goodbye a little later: each leaves at its own time.
     await delay(150);
-    await farewell(app, { token: tc, page: "pc" });
+    await farewell(app, { token: tc, page: "pc-0000000000000" });
     await delay(FAREWELL - 150 + 120);
     assert.equal(member(app, code, a.id), undefined);
     assert.ok(member(app, code, c.id));
@@ -238,7 +248,7 @@ test("sozinho na sala, o criador espera o grace inteiro e a sala fica como estav
   try {
     const t = token();
     const s = await connect(app, t);
-    const joined = await join(s, { name: "Ana", page: "pa" });
+    const joined = await join(s, { name: "Ana", page: "pa-0000000000000" });
     const code = joined.snapshot.code;
     await request(s, "room-permissions", { permissions: { guestChat: false } });
     await request(s, "widget-create", {
@@ -255,7 +265,7 @@ test("sozinho na sala, o criador espera o grace inteiro e a sala fica como estav
         ],
       },
     });
-    await farewell(app, { token: t, page: "pa" });
+    await farewell(app, { token: t, page: "pa-0000000000000" });
     await delay(FAREWELL + 150);
     app.rooms.clean();
     assert.equal(member(app, code, joined.id)?.online, false);
@@ -282,10 +292,17 @@ test("recarregar antes do prazo mantém papel, lugar e nada morto", async () => 
       audio: false,
       muted: false,
     });
-    assert.equal((await farewell(app, { token: ta, page: "pa" })).status, 204);
+    assert.equal(
+      (await farewell(app, { token: ta, page: "pa-0000000000000" })).status,
+      204,
+    );
     // Ana's new page comes back with the same token and a new page id.
     const reload = await connect(app, ta);
-    const back = await join(reload, { name: "Ana", code, page: "pa2" });
+    const back = await join(reload, {
+      name: "Ana",
+      code,
+      page: "pa2-000000000000",
+    });
     assert.equal(back.snapshot.creatorId, a.id);
     await delay(FAREWELL + 150);
     app.rooms.clean();
@@ -313,17 +330,21 @@ test("ordem invertida: join novo antes do aviso recebe SESSION_IN_USE e entra de
     });
     const next = await connect(app, ta);
     await assert.rejects(
-      join(next, { name: "Ana", code, page: "pa2" }),
+      join(next, { name: "Ana", code, page: "pa2-000000000000" }),
       /SESSION_IN_USE/,
     );
-    await farewell(app, { token: ta, page: "pa" });
-    const back = await join(next, { name: "Ana", code, page: "pa2" });
+    await farewell(app, { token: ta, page: "pa-0000000000000" });
+    const back = await join(next, {
+      name: "Ana",
+      code,
+      page: "pa2-000000000000",
+    });
     assert.equal(back.snapshot.creatorId, a.id);
     const me = back.snapshot.participants.find((p) => p.id === a.id)!;
     assert.deepEqual(me.publications, []);
     assert.equal(me.online, true);
     // The late farewell of the old page does nothing to the new one.
-    await farewell(app, { token: ta, page: "pa" });
+    await farewell(app, { token: ta, page: "pa-0000000000000" });
     await delay(FAREWELL + 150);
     assert.equal(member(app, code, a.id)?.online, true);
     close(sa, sb, next);
@@ -346,7 +367,11 @@ test("reentrar de outra página derruba as transmissões da página antiga", asy
     await delay(50);
     // No farewell arrived (crash): the new page still starts clean.
     const next = await connect(app, ta);
-    const back = await join(next, { name: "Ana", code, page: "pa2" });
+    const back = await join(next, {
+      name: "Ana",
+      code,
+      page: "pa2-000000000000",
+    });
     const me = back.snapshot.participants.find((p) => p.id === a.id)!;
     assert.deepEqual(me.publications, []);
     close(sb, next);
@@ -368,17 +393,17 @@ test("join recusado de página nova não derruba a mídia", async () => {
     room(app, code).members.get(a.id)!.inCall = true;
     const next = await connect(app, ta);
     await assert.rejects(
-      join(next, { name: "Ana", code, page: "pa2" }),
+      join(next, { name: "Ana", code, page: "pa2-000000000000" }),
       /SESSION_IN_USE/,
     );
     await assert.rejects(
-      join(next, { name: "Ana", code: "ZZZZZZ", page: "pa2" }),
+      join(next, { name: "Ana", code: "ZZZZZZ", page: "pa2-000000000000" }),
       /ALREADY_JOINED/,
     );
     const me = member(app, code, a.id)!;
     assert.equal(me.publications.length, 1);
     assert.equal(me.inCall, true);
-    assert.equal(me.page, "pa");
+    assert.equal(me.page, "pa-0000000000000");
     close(sa, sb, next);
   } finally {
     await app.close();
@@ -391,7 +416,11 @@ test("explicit sai na hora e passa o lugar de criador", async () => {
     const { ta, sa, sb, a, b, code } = await pair(app);
     sa.close();
     await delay(50);
-    await farewell(app, { token: ta, page: "pa", explicit: true });
+    await farewell(app, {
+      token: ta,
+      page: "pa-0000000000000",
+      explicit: true,
+    });
     await delay(50);
     assert.equal(member(app, code, a.id), undefined);
     assert.equal(room(app, code).creatorId, b.id);
@@ -423,7 +452,7 @@ test("participante no snapshot só leva os campos permitidos", async () => {
   const app = await server();
   try {
     const { tb, sa, sb, a, code } = await pair(app);
-    await farewell(app, { token: tb, page: "pb" });
+    await farewell(app, { token: tb, page: "pb-0000000000000" });
     await delay(50);
     const snapshot = app.rooms.snapshot(room(app, code), a.id);
     for (const p of snapshot.participants) {
@@ -465,7 +494,11 @@ test("mesma página com o socket velho preso assume o lugar e mantém a mídia",
     // Same page (same Controller) back on a new connection.
     const again = await connect(app, ta);
     const dropped = event(sa, "disconnect");
-    const back = await join(again, { name: "Ana", code, page: "pa" });
+    const back = await join(again, {
+      name: "Ana",
+      code,
+      page: "pa-0000000000000",
+    });
     await dropped;
     const me = member(app, code, a.id)!;
     assert.equal(me.socketId, again.id);
@@ -493,14 +526,18 @@ test("página nova e socket velho mudo: o servidor sonda, espera o silêncio e a
     // `sa` never answers the probe, but it just talked: maybe only frozen.
     const next = await connect(app, ta);
     await assert.rejects(
-      join(next, { name: "Ana", code, page: "pa2" }),
+      join(next, { name: "Ana", code, page: "pa2-000000000000" }),
       /SESSION_IN_USE/,
     );
     assert.equal(sa.connected, true);
     await delay(QUIET);
     // Mute and quiet: the join waits for the probe and enters in the same call.
     const dropped = event(sa, "disconnect");
-    const back = await join(next, { name: "Ana", code, page: "pa2" });
+    const back = await join(next, {
+      name: "Ana",
+      code,
+      page: "pa2-000000000000",
+    });
     await dropped;
     assert.equal(back.snapshot.creatorId, a.id);
     assert.equal(member(app, code, a.id)?.socketId, next.id);
@@ -517,12 +554,12 @@ test("página nova com a aba antiga viva segue em conflito", async () => {
     answer(sa);
     const next = await connect(app, ta);
     await assert.rejects(
-      join(next, { name: "Ana", code, page: "pa2" }),
+      join(next, { name: "Ana", code, page: "pa2-000000000000" }),
       /SESSION_IN_USE/,
     );
     await delay(QUIET);
     await assert.rejects(
-      join(next, { name: "Ana", code, page: "pa2" }),
+      join(next, { name: "Ana", code, page: "pa2-000000000000" }),
       /SESSION_IN_USE/,
     );
     assert.equal(sa.connected, true);
@@ -538,11 +575,19 @@ test("saída explícita depois de 'Entrar nesta aba': só a mesma página tira a
   try {
     const { ta, sa, sb, a, code } = await pair(app);
     // Another page's explicit goodbye leaves this one in place.
-    await farewell(app, { token: ta, page: "pa9", explicit: true });
+    await farewell(app, {
+      token: ta,
+      page: "pa9-000000000000",
+      explicit: true,
+    });
     await delay(50);
     assert.equal(member(app, code, a.id)?.socketId, sa.id);
     // The same page (enterHere without a socket) leaves for good.
-    await farewell(app, { token: ta, page: "pa", explicit: true });
+    await farewell(app, {
+      token: ta,
+      page: "pa-0000000000000",
+      explicit: true,
+    });
     await delay(50);
     assert.equal(member(app, code, a.id), undefined);
     close(sa, sb);
@@ -566,21 +611,232 @@ test("aviso atrasado da página que já voltou derruba a mídia (por isso o bfca
     await delay(50);
     // Back from the bfcache with the same page; the pagehide farewell is late.
     const back = await connect(app, ta);
-    await join(back, { name: "Ana", code, page: "pa" });
+    await join(back, { name: "Ana", code, page: "pa-0000000000000" });
     const sub = await watch(back, screen.id);
     const dropped = event(back, "disconnect");
-    await farewell(app, { token: ta, page: "pa" });
+    await farewell(app, { token: ta, page: "pa-0000000000000" });
     await dropped;
     assert.equal(room(app, code).subscriptions.has(sub.id), false);
     // A restored page with a fresh page id is immune to the late farewell.
     const restored = await connect(app, ta);
-    await join(restored, { name: "Ana", code, page: "pa3" });
+    await join(restored, { name: "Ana", code, page: "pa3-000000000000" });
     const again = await watch(restored, screen.id);
-    await farewell(app, { token: ta, page: "pa" });
+    await farewell(app, { token: ta, page: "pa-0000000000000" });
     await delay(50);
     assert.equal(member(app, code, a.id)?.socketId, restored.id);
     assert.ok(room(app, code).subscriptions.has(again.id));
     close(sb, restored);
+  } finally {
+    await app.close();
+  }
+});
+
+// #292: the same page load under a new identity (expired token, "Entrar nesta
+// aba") takes the old id's place at once: no duplicate, no leave in between.
+function names(socket: Socket) {
+  const seen: string[][] = [];
+  socket.on("snapshot", (s: JoinResult["snapshot"]) =>
+    seen.push(s.participants.map((p) => p.name)),
+  );
+  return seen;
+}
+const unique = (seen: string[][]) =>
+  seen.every((names) => new Set(names).size === names.length);
+
+test("#292: mesma página com id novo assume o lugar sem duplicata nem sonda", async () => {
+  const app = await server();
+  try {
+    const { ta, sa, sb, a, code } = await pair(app);
+    const seen = names(sb);
+    const old = member(app, code, a.id)!;
+    const sa2 = await connect(app, token());
+    const gone = event(sa, "disconnect");
+    const started = Date.now();
+    const next = await join(sa2, {
+      name: "Ana",
+      code,
+      page: "pa-0000000000000",
+    });
+    // No probe: the page is the tab's secret.
+    assert.ok(Date.now() - started < PROBE);
+    await gone;
+    assert.notEqual(next.id, a.id);
+    assert.equal(member(app, code, a.id), undefined);
+    assert.equal(app.rooms.membership.get(a.id), undefined);
+    const now = member(app, code, next.id)!;
+    assert.equal(now.role, "creator");
+    assert.equal(room(app, code).creatorId, next.id);
+    assert.equal(now.color, old.color);
+    assert.ok(next.credential);
+    await delay(50);
+    assert.ok(seen.length > 0 && unique(seen), JSON.stringify(seen));
+    assert.deepEqual(seen.at(-1)!.sort(), ["Ana", "Bia"]);
+    // The old identity's late farewell changes nothing.
+    await farewell(app, {
+      token: ta,
+      page: "pa-0000000000000",
+      explicit: true,
+    });
+    assert.ok(member(app, code, next.id));
+    close(sa2, sb);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: sem page ou com page diferente, id novo é outra pessoa", async () => {
+  const app = await server();
+  try {
+    const s1 = await connect(app, token()),
+      s2 = await connect(app, token()),
+      s3 = await connect(app, token());
+    const a = await join(s1, { name: "Ana" });
+    const code = a.snapshot.code;
+    const b = await join(s2, { name: "Bia", code });
+    assert.ok(member(app, code, a.id) && member(app, code, b.id));
+    const c = await join(s3, { name: "Caio", code, page: "pc-0000000000000" });
+    assert.equal(room(app, code).members.size, 3);
+    assert.ok(member(app, code, c.id));
+    close(s1, s2, s3);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: corrida do aviso de 'Entrar nesta aba' com o join novo, nas duas ordens", async () => {
+  for (const order of ["aviso antes", "join antes"]) {
+    const app = await server();
+    try {
+      const { ta, sa, sb, a, code } = await pair(app);
+      const seen = names(sb);
+      sa.close();
+      await delay(50);
+      const sa2 = await connect(app, token());
+      let next: JoinResult;
+      if (order === "aviso antes") {
+        await farewell(app, {
+          token: ta,
+          page: "pa-0000000000000",
+          explicit: true,
+        });
+        next = await join(sa2, { name: "Ana", code, page: "pa-0000000000000" });
+      } else {
+        next = await join(sa2, { name: "Ana", code, page: "pa-0000000000000" });
+        await farewell(app, {
+          token: ta,
+          page: "pa-0000000000000",
+          explicit: true,
+        });
+      }
+      await delay(50);
+      assert.equal(member(app, code, a.id), undefined, order);
+      assert.ok(member(app, code, next.id)?.online, order);
+      assert.equal(room(app, code).members.size, 2, order);
+      assert.ok(unique(seen), order);
+      close(sa2, sb);
+    } finally {
+      await app.close();
+    }
+  }
+});
+
+test("#292: a troca leva bloqueio de voz, admin emprestado e widgets, sem herdar a chamada", async () => {
+  const app = await server();
+  try {
+    const { sa, sb, b, code } = await pair(app);
+    await request(sa, "role", { participantId: b.id, action: "promote" });
+    await request(sb, "call", { active: true });
+    await request(sa, "moderate", { participantId: b.id, voiceBlocked: true });
+    const widget = crypto.randomUUID();
+    await request(sb, "widget-create", {
+      id: widget,
+      content: {
+        title: "Nota",
+        blocks: [
+          { id: crypto.randomUUID(), kind: "score", label: "Pontos", value: 0 },
+        ],
+      },
+    });
+    await request(sa, "role", { participantId: b.id, action: "revoke" });
+    const r = room(app, code);
+    r.lentFromAdmin = b.id;
+    r.restoredAdmins.add(b.id);
+    await request(sa, "room-permissions", { permissions: { locked: true } });
+    const updated = new Promise<{ widget: { owner: string } | null }>(
+      (resolve) =>
+        sa.on(
+          "widget-updated",
+          (e: { id: string; widget: { owner: string } }) => {
+            if (e.id === widget) resolve(e);
+          },
+        ),
+    );
+    // Locked room: the same page under a new id comes in without knocking.
+    const sb2 = await connect(app, token());
+    const next = await join(sb2, {
+      name: "Bia",
+      code,
+      page: "pb-0000000000000",
+    });
+    assert.equal(member(app, code, b.id), undefined);
+    const now = member(app, code, next.id)!;
+    assert.equal(now.role, "admin");
+    assert.equal(now.voiceBlocked, true);
+    // The page announces the call again itself (rejoin): no call without audio.
+    assert.equal(now.inCall, false);
+    assert.equal(r.lentFromAdmin, next.id);
+    // The seat restored to the old id is the new id's: it comes back admin.
+    assert.equal(r.restoredAdmins.size, 0);
+    assert.equal((await updated).widget?.owner, next.id);
+    assert.equal(r.widgets.list().find((w) => w.id === widget)?.owner, next.id);
+    close(sa, sb, sb2);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: id recusado na porta não herda o lugar mesmo com a page certa", async () => {
+  const app = await server();
+  try {
+    const { sa, sb, b, code } = await pair(app);
+    await request(sa, "room-permissions", { permissions: { locked: true } });
+    const tx = issueToken(secret, 3600000);
+    const sx = await connect(app, tx.token);
+    const r = room(app, code);
+    r.refused.set(tx.id, Date.now() + 60000);
+    await assert.rejects(
+      join(sx, { name: "Bia", code, page: "pb-0000000000000" }),
+      /REFUSED|FORBIDDEN|WAITING|recus/i,
+    );
+    assert.equal(member(app, code, b.id)?.page, "pb-0000000000000");
+    assert.equal(r.members.size, 2);
+    close(sa, sb, sx);
+  } finally {
+    await app.close();
+  }
+});
+
+test("#292: erro que não é de token no handshake vira CONNECTION_ERROR", async () => {
+  const app = await server();
+  try {
+    const limit = app.config.maxSocketsPerIp;
+    Object.defineProperty(app.config, "maxSocketsPerIp", {
+      configurable: true,
+      get() {
+        if (!new Error().stack?.includes("allowRequest"))
+          throw new TypeError("boom");
+        return limit;
+      },
+    });
+    const socket = io(app.url, {
+      transports: ["websocket"],
+      auth: { token: token() },
+      extraHeaders: { Origin: origin },
+      reconnection: false,
+    });
+    const error = await event(socket, "connect_error");
+    assert.equal((error as Error).message, "CONNECTION_ERROR");
+    socket.close();
   } finally {
     await app.close();
   }

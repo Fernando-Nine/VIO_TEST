@@ -1,0 +1,1 @@
+Quando o servidor reinicia, cada pessoa volta para a sala uma vez só, sem aparecer em dobro, e a volta é silenciosa: quem já estava na sala não ouve mais o som de sair nem o de entrar. Quem chega pela primeira vez continua tocando o som de entrada.

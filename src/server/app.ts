@@ -186,7 +186,9 @@ export async function createApp(config: Config = readConfig(), dev = false) {
       socket.data = { id: session.id, expires: session.exp, ip };
       next();
     } catch (e) {
-      next(new Error(e instanceof Fault ? e.code : "SESSION_EXPIRED"));
+      // Only a bad token means a new identity (verifyToken's own Fault). Any
+      // other failure keeps the token: the client retries with it (#292).
+      next(new Error(e instanceof Fault ? e.code : "CONNECTION_ERROR"));
     }
   });
   const rooms = new Rooms(io, config);
