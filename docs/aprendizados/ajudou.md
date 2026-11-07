@@ -2,6 +2,11 @@
 
 Formato e propósito: [README](README.md).
 
+### 2026-11-07 · mídia · cargo check do app Windows no Linux
+
+Com o target `x86_64-pc-windows-msvc`, clang e três cabeçalhos falsos para o `ring`, o `cargo check` do `src-tauri` roda no contêiner Linux e pega erro de tipo antes da CI do Windows. Receita em `docs/notas/midia.md`.
+Ref: #303 · Vira skill? talvez
+
 ### 2026-11-07 · copiloto · o catálogo poupa crawler
 
 Mapa e fichas do catálogo respondem onde e como as coisas estão sem varrer o código nem puxar da memória; o crawler fica para o que o catálogo não cobre.
