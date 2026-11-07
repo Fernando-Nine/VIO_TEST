@@ -361,23 +361,33 @@ input[type="checkbox"] {
 .in-room .app-footer .version {
   min-height: 28px;
 }
-.player > .notice {
-  position: absolute;
-  top: calc(
-    var(--canvas-toolbar-height, 50px) + 8px + env(safe-area-inset-top, 0px)
-  );
+/* Inline notices (landing, Home, sheets) float above the page (#281): they
+   never take space in the flow, so nothing below them moves. */
+.notice {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
   left: 50%;
-  transform: translateX(-50%);
+  translate: -50% 0;
+  z-index: 300;
   width: min(600px, calc(100% - 24px));
+  max-width: none;
   margin: 0;
-  z-index: 80;
-  max-height: min(
-    35dvh,
-    calc(100% - var(--canvas-toolbar-height, 50px) - 24px)
-  );
+  max-height: 35dvh;
   overflow-y: auto;
-  overscroll-behavior: contain;
-  align-items: flex-start;
+  align-items: center;
+  box-shadow: 0 10px 30px #0007;
+  animation: vio-notice-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes vio-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice {
+    animation: none;
+  }
 }
 .notice > span {
   min-width: 0;

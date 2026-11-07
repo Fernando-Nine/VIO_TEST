@@ -18,3 +18,8 @@ Ref: CLAUDE.md · Vira skill? sim
 O MCP do GitHub não edita a descrição das etiquetas, e o copiloto precisava editá-las sozinho.
 Solução: etiquetas num arquivo (`.github/labels.yml`) e um workflow que as sincroniza.
 Ref: `.github/workflows/labels.yml` · Vira skill? talvez
+
+### 2026-11-07 · frontend · aviso no fluxo empurra a tela
+
+O `.notice` (landing, Home e painéis) era um bloco no fluxo: ao aparecer, empurrava o conteúdo (nos painéis) ou ficava escondido sob o cabeçalho (landing). Regra de `.player > .notice` era código morto. Solução: `.notice` fixo no topo, com `opacity`/`transform`. Conferir aviso sempre medindo `getBoundingClientRect` antes e depois.
+Ref: #281 · Vira skill? não

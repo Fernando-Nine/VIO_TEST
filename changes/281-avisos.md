@@ -1,0 +1,1 @@
+Erros e avisos agora flutuam por cima da tela, em vez de empurrar o conteúdo para baixo: na página de boas-vindas e nos painéis de Ajustes, Pessoas e Compartilhar, nada se move quando um aviso aparece ou some. Também reescrevemos várias mensagens de erro para dizer o que aconteceu e o que fazer, em frases completas.
