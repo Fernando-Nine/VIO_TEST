@@ -764,7 +764,7 @@ export default function App({ engine }: { engine: Controller }) {
                             ? "Voltar da janela flutuante"
                             : pip.active
                               ? "Fechar janela flutuante"
-                              : "Picture-in-picture"
+                              : "Vídeo flutuante"
                         }
                         title="Janela flutuante"
                         onClick={togglePip}
@@ -837,7 +837,7 @@ export default function App({ engine }: { engine: Controller }) {
                         ...(pip.supported
                           ? [
                               {
-                                label: "Picture-in-picture",
+                                label: "Vídeo flutuante",
                                 icon: PictureInPicture2,
                                 run: togglePip,
                               },
