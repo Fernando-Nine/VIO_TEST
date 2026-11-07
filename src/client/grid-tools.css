@@ -207,5 +207,5 @@
 }
 .canvas-toolbar .single-toggle:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: var(--cursor-pointer);
 }

@@ -171,7 +171,7 @@ button.raffle-chip:hover {
   gap: 0.6em;
   color: #d9dbec;
   font-size: 0.85em;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .raffle-switch input {
   appearance: none;
@@ -183,7 +183,7 @@ button.raffle-chip:hover {
   margin: 0;
   border-radius: 999px;
   background: #2a2c3c;
-  cursor: pointer;
+  cursor: var(--cursor-hand);
 }
 .raffle-switch input::after {
   content: "";

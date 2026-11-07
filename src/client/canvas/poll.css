@@ -120,7 +120,7 @@
   background: #2a2c3c;
   color: #d9dbec;
   font: 600 0.7em var(--mono);
-  cursor: default;
+  cursor: var(--cursor-pointer);
 }
 .poll-faces:not(:empty) + .poll-count {
   margin-left: 0.4em;

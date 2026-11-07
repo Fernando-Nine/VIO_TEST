@@ -435,32 +435,6 @@
     min-height: 30px;
   }
 }
-@media (hover: hover) and (pointer: fine) {
-  .app {
-    cursor:
-      url("/cursors/vio-pointer.svg") 4 3,
-      auto;
-  }
-  .app
-    :is(
-      button,
-      a,
-      summary,
-      select,
-      input[type="range"],
-      input[type="checkbox"]
-    ):not(:disabled) {
-    cursor:
-      url("/cursors/vio-hand.svg") 13 3,
-      pointer;
-  }
-  .app .cards-handle {
-    cursor: grab;
-  }
-  .app .is-dragging .cards-handle {
-    cursor: grabbing;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .landing-page::before,
   .landing-page::after,
