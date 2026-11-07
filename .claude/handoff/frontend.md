@@ -1,8 +1,10 @@
 # Frontend — handoff
 
-Atualizado: 2026-11-05
+Atualizado: 2026-11-07
 
 ## Agora
+
+#300 (vagas somem na tela cheia ociosa) em PR: removida a regra de ociosidade das vagas (#144) em `workspace.css`; vagas ficam sempre visíveis.
 
 #285 (Home só no app) em PR. Bloco 2.12 (#254, #258, #259, #260) entregue na prévia.
 
