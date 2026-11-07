@@ -133,11 +133,16 @@
    viva, o servidor ignora (a `page` não bate).
 9. **#301, conflito falso**: a mesma página (mesma `page`) reconectando enquanto o servidor ainda segura o socket velho
    meio aberto (troca de rede) **assume o lugar** com a mídia: o socket velho é derrubado sem `dropMedia`. Página
-   diferente com o socket velho mudo: o servidor manda `presence-probe` ao socket preso (2 s, `HOLDER_PROBE`); sem
-   resposta, solta-o, e a próxima tentativa (1 s/2 s) entra. Aba viva responde e o conflito segue.
+   diferente: o `join` espera a `presence-probe` ao socket preso (2 s, `config.holderProbe`) e só o solta se ele não
+   respondeu **e** está sem tráfego há 12 s (`config.holderQuiet`, pulsação de 10 s + folga); então entra na mesma
+   chamada. Aba viva responde e o conflito segue. Aba congelada (celular, Safari em segundo plano) com tráfego recente
+   não perde o lugar; as tentativas do cliente (1, 2 e 4 s, com as sondas) passam dos 12 s. Risco que fica: aba
+   congelada por mais de 12 s perde o lugar para a página nova (o ping do engine a derrubaria pouco depois de qualquer
+   jeito).
 10. **#301, bfcache**: `pageshow` com `persisted` chama `engine.restored()`: `page` nova (a despedida atrasada do
-    `pagehide` não derruba mais a página que voltou), PeerConnections, publicações e assinaturas zeradas e reentrada.
-    Microfone e câmera ficam fechados.
+    `pagehide` não derruba mais a página que voltou), PeerConnections, publicações e assinaturas zeradas, contagem de
+    conflito zerada e reentrada. O canvas fica (sem reparentar hosts); telas que o primeiro snapshot não lista mais
+    saem na hora. Microfone e câmera ficam fechados.
 
 ### E. O que os outros veem e as PeerConnections
 
@@ -187,7 +192,7 @@
 | Grace de reconexão | 90 s (10–300; env `RECONNECT_GRACE_SECONDS`) | `server/config.ts` › `grace` (~L167) |
 | Prazo depois da despedida | 8 s (2–60; env `FAREWELL_SECONDS`), só com outra pessoa online | `server/config.ts` › `farewell` |
 | Volta sozinho depois de recarregar | até 60 s depois do `pagehide` | `client/room/tab-room.ts` › `RESUME_WINDOW` |
-| Conflito de sessão | 2 tentativas (1 s, 2 s), depois "Entrar nesta aba" | `client/room/recovery.ts` › `conflictDelay` |
+| Conflito de sessão | 3 tentativas (1 s, 2 s, 4 s), depois "Entrar nesta aba" | `client/room/recovery.ts` › `conflictDelay` |
 | `POST /api/leave` | 2 KB, 30/min por IP | `server/app.ts` |
 | Varredura de membros offline | a cada 10 s, remove se `> grace` | `server/app.ts` (`cleanup`), `rooms.ts` › `clean` |
 | engine.io ping do servidor | `pingInterval` 20000 ms, `pingTimeout` 20000 ms | `server/app.ts` (~L105) |
@@ -197,7 +202,7 @@
 | Atraso por limite de taxa | 60 s | `controller.ts` › `scheduleRecovery` |
 | Heartbeat do cliente | 10 s (`ping`) | `controller.ts` ~L738 |
 | `presence-probe` | timeout 3 s | `rooms.ts` › `probePing` |
-| Sonda do socket preso em `SESSION_IN_USE` | 2 s | `rooms.ts` › `HOLDER_PROBE`, `probeHolder` |
+| Sonda do socket preso em `SESSION_IN_USE` | 2 s; solta só com 12 s sem tráfego | `config.ts` › `holderProbe`, `holderQuiet`; `rooms.ts` › `holderGone` |
 | Timeout de comando | 10 s (`request`); `leave` 1,5 s | `controller.ts` |
 | TTL da sessão / renovação | 3600 s (300–86400); renova quando faltam < 300 s | `config.ts` › `sessionTtl`; `heartbeat` |
 | Limites de taxa | `join` 12/min por id e 40/min por IP; `leave` 12/min; `ping` 30/min; `renew` 12/min; `/api/session` 30/min/IP; handshake 60/min/IP | `rooms.ts` › `rates`, `app.ts` |

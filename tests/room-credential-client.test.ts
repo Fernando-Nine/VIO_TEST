@@ -121,9 +121,9 @@ test("cliente guarda a credencial e volta como criador depois de um reinício re
   }
 });
 
-// #286: the same session open twice stops after two tries and "Entrar nesta
+// #286: the same session open twice stops after three tries and "Entrar nesta
 // aba" joins as a new tab would, without taking the creator seat.
-test("mesma sessão em duas abas: para após duas tentativas e entra sem a credencial", async () => {
+test("mesma sessão em duas abas: para após três tentativas e entra sem a credencial", async () => {
   const origin = "http://localhost:3000";
   const app = await createApp(
     readConfig({
@@ -173,10 +173,10 @@ test("mesma sessão em duas abas: para após duas tentativas e entra sem a crede
     assert.ok(shared.credentials[code]);
     const started = Date.now();
     await second.enter("Ana", code);
-    await until(() => second.view.status === "failed", 8000);
+    await until(() => second.view.status === "failed", 12000);
     assert.equal(second.view.conflict, true);
     assert.equal(second.view.error, "Esta sala já está aberta em outra aba.");
-    assert.ok(Date.now() - started >= 2500, "two tries before giving up");
+    assert.ok(Date.now() - started >= 6500, "three tries before giving up");
 
     const oldToken = (shared.session as { token: string }).token;
     await second.enterHere();
@@ -201,6 +201,84 @@ test("mesma sessão em duas abas: para após duas tentativas e entra sem a crede
   } finally {
     await second.destroy();
     await first.destroy();
+    await app.close();
+    globalThis.fetch = nativeFetch;
+    if (locationDescriptor)
+      Object.defineProperty(globalThis, "location", locationDescriptor);
+    else Reflect.deleteProperty(globalThis, "location");
+  }
+});
+
+// #301: a network change leaves the old socket half open and mute. The page
+// that comes back on a new connection gets in by retrying, never by asking.
+test('socket velho mudo: a página nova entra sozinha, sem "Entrar nesta aba"', async () => {
+  const origin = "http://localhost:3000";
+  const app = await createApp({
+    ...readConfig({
+      PORT: "0",
+      SESSION_SECRET: "test-only-room-credential-client-secret",
+      ALLOWED_ORIGINS: origin,
+      STUN_URLS: "",
+    }),
+    holderProbe: 200,
+    holderQuiet: 800,
+  });
+  app.http.listen(0, "127.0.0.1");
+  await once(app.http, "listening");
+  const url = `http://127.0.0.1:${(app.http.address() as { port: number }).port}`;
+  const nativeFetch = globalThis.fetch;
+  const locationDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "location",
+  );
+  Object.defineProperty(globalThis, "location", {
+    value: new URL(url),
+    configurable: true,
+  });
+  globalThis.fetch = (input, init) =>
+    nativeFetch(
+      typeof input === "string" && input.startsWith("/") ? url + input : input,
+      { ...init, headers: { ...init?.headers, Origin: origin } },
+    );
+  const connect = ((uri, options) =>
+    io(uri, { ...options, extraHeaders: { Origin: origin } })) as typeof io;
+  const session = await (
+    await globalThis.fetch("/api/session", { method: "POST" })
+  ).json();
+  // The old connection: joined, then never answers the presence probe.
+  const old = io(url, {
+    transports: ["websocket"],
+    auth: { token: session.token },
+    extraHeaders: { Origin: origin },
+    reconnection: false,
+  });
+  const page = new Controller(undefined, false, connect);
+  page.sounds = false;
+  (page as unknown as { session: unknown }).session = session;
+  try {
+    await new Promise((resolve) => old.once("connect", () => resolve(0)));
+    const joined = await old.timeout(5000).emitWithAck("command", {
+      action: "join",
+      data: { name: "Ana", page: "old" },
+    });
+    assert.ok((joined as Reply<unknown>).ok);
+    const code = (joined as { data: { snapshot: { code: string } } }).data
+      .snapshot.code;
+    let asked = false;
+    const tick = setInterval(() => (asked ||= !!page.view.conflict), 10);
+    await page.enter("Ana", code);
+    await until(() => page.view.status === "connected", 10000);
+    clearInterval(tick);
+    assert.equal(asked, false, 'no "Entrar nesta aba"');
+    assert.equal(page.view.id, session.id);
+    await until(() => !old.connected, 2000);
+    assert.equal(
+      app.rooms.rooms.get(code)!.members.get(session.id)!.socketId,
+      page.socket!.id,
+    );
+  } finally {
+    old.close();
+    await page.destroy();
     await app.close();
     globalThis.fetch = nativeFetch;
     if (locationDescriptor)

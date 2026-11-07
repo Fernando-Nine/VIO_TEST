@@ -9,6 +9,13 @@ export interface Config {
   grace: number;
   /** Time a page that said goodbye keeps its place, with someone else online (#286). */
   farewell: number;
+  /** How long the socket holding an identity has to answer a probe (#301). */
+  holderProbe: number;
+  /**
+   * Silence (no packet at all) after which an unanswered holder is let go
+   * (#301): the client pings every 10 s, so a live tab is never this quiet.
+   */
+  holderQuiet: number;
   roomTtl: number;
   recommendedParticipants: number;
   maxRooms: number;
@@ -168,6 +175,8 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     sessionTtl: integer(env.SESSION_TTL_SECONDS, 3600, 300, 86400) * 1000,
     grace: integer(env.RECONNECT_GRACE_SECONDS, 90, 10, 300) * 1000,
     farewell: integer(env.FAREWELL_SECONDS, 8, 2, 60) * 1000,
+    holderProbe: 2000,
+    holderQuiet: 12000,
     roomTtl: integer(env.ROOM_TTL_SECONDS, 300, 10, 3600) * 1000,
     // Advisory only. Legacy MAX_PARTICIPANTS must not restore the retired cap.
     recommendedParticipants: 6,
