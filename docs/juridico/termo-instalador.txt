@@ -1,63 +1,63 @@
-VIO - Termos do aplicativo para Windows
+﻿VIO - Termos do aplicativo para Windows
 NerdQuest Studios
 
-Ao instalar, voce aceita estes termos. Texto curto, sem letras miudas.
+Ao instalar, você aceita estes termos. Texto curto, sem letras miúdas.
 
 1. O QUE O VIO FAZ
-O VIO reune pessoas numa sala para assistir algo juntas, com voz e
-tela compartilhada. Nao ha conta e o VIO nao grava nada no servidor.
-A voz e a tela vao direto de aparelho para aparelho (o servidor so
-ajuda a conectar). Em alguns casos o trafego passa por um servidor de
+O VIO reúne pessoas numa sala para assistir algo juntas, com voz e
+tela compartilhada. Não há conta e o VIO não grava nada no servidor.
+A voz e a tela vão direto de aparelho para aparelho (o servidor só
+ajuda a conectar). Em alguns casos o tráfego passa por um servidor de
 repasse, sem ser guardado.
 
-2. PERMISSOES DO APLICATIVO
-Ao instalar, voce autoriza o VIO a usar, neste computador:
- - Microfone: para sua voz na sala. Comeca desligado; so transmite
-   quando voce liga.
- - Camera: para sua imagem na sala. Comeca desligada; so transmite
-   quando voce liga.
- - Tela, janela e som de programas: para compartilhar o que voce
-   escolher. Voce escolhe a fonte a cada compartilhamento, e o VIO
-   nao captura nada fora do que voce selecionou.
- - Reproducao automatica de som: para ouvir quem esta na sala sem
+2. PERMISSÕES DO APLICATIVO
+Ao instalar, você autoriza o VIO a usar, neste computador:
+ - Microfone: para sua voz na sala. Começa desligado; só transmite
+   quando você liga.
+ - Câmera: para sua imagem na sala. Começa desligada; só transmite
+   quando você liga.
+ - Tela, janela e som de programas: para compartilhar o que você
+   escolher. Você escolhe a fonte a cada compartilhamento, e o VIO
+   não captura nada fora do que você selecionou.
+ - Reprodução automática de som: para ouvir quem está na sala sem
    precisar clicar a cada entrada.
- - Copiar para a area de transferencia: para copiar o link da sala.
-   O VIO nao le o que voce copiou em outros programas.
-O VIO nao pede outras permissoes. Paginas externas nunca recebem
-permissao do aplicativo.
+ - Copiar para a área de transferência: para copiar o link da sala.
+   O VIO não lê o que você copiou em outros programas.
+O VIO não pede outras permissões. Páginas externas nunca recebem
+permissão do aplicativo.
 
-3. COMO VOCE FICA NO CONTROLE
- - A sala mostra, de forma visivel, quando seu microfone, sua camera
-   ou sua tela estao em uso.
- - Voce desliga qualquer um a qualquer momento, na propria sala.
- - Voce pode retirar tudo pelo Windows, em Configuracoes > Privacidade
-   e seguranca (Microfone, Camera). Sem a permissao, o VIO continua
-   abrindo, so nao usa aquele recurso.
+3. COMO VOCÊ FICA NO CONTROLE
+ - A sala mostra, de forma visível, quando seu microfone, sua câmera
+   ou sua tela estão em uso.
+ - Você desliga qualquer um a qualquer momento, na própria sala.
+ - Você pode retirar tudo pelo Windows, em Configurações > Privacidade
+   e segurança (Microfone, Câmera). Sem a permissão, o VIO continua
+   abrindo, só não usa aquele recurso.
  - Desinstalar o VIO encerra tudo.
 
 4. SEUS DADOS
-O VIO nao pede nome real, e-mail nem telefone. O apelido que voce
-escolhe fica na memoria da sala enquanto ela existe. Os registros
-tecnicos do aplicativo ficam so no seu computador (vio.log), sem seu
-nome, sala ou conteudo, e nao sao enviados. Veja a Politica de
+O VIO não pede nome real, e-mail nem telefone. O apelido que você
+escolhe fica na memória da sala enquanto ela existe. Os registros
+técnicos do aplicativo ficam só no seu computador (vio.log), sem seu
+nome, sala ou conteúdo, e não são enviados. Veja a Política de
 Privacidade no site para o detalhe completo e seus direitos (LGPD).
 
 5. MENORES DE IDADE
-Quem tem menos de 18 anos deve usar o VIO com a ciencia e a
-autorizacao de um responsavel. Quem instala para outra pessoa menor de
-idade responde por essa autorizacao.
+Quem tem menos de 18 anos deve usar o VIO com a ciência e a
+autorização de um responsável. Quem instala para outra pessoa menor de
+idade responde por essa autorização.
 
-6. CONTEUDO E RESPEITO
-Voce e responsavel pelo que transmite. Nao transmita conteudo ilegal
-nem que voce nao tenha direito de mostrar, e respeite a privacidade de
-quem esta na sala: avise as pessoas antes de gravar ou registrar a
+6. CONTEÚDO E RESPEITO
+Você é responsável pelo que transmite. Não transmita conteúdo ilegal
+nem que você não tenha direito de mostrar, e respeite a privacidade de
+quem está na sala: avise as pessoas antes de gravar ou registrar a
 conversa por qualquer meio.
 
 7. SOFTWARE LIVRE
-O VIO e software livre sob a licenca GNU AGPL v3. O texto completo da
-licenca e o codigo-fonte acompanham este instalador.
+O VIO é software livre sob a licença GNU AGPL v3. O texto completo da
+licença e o código-fonte acompanham este instalador.
 
 8. SEM GARANTIA
-O VIO e oferecido como esta, sem garantia de funcionamento continuo.
+O VIO é oferecido como está, sem garantia de funcionamento contínuo.
 
-Se voce nao concorda, cancele a instalacao.
+Se você não concorda, cancele a instalação.
