@@ -1,0 +1,1 @@
+No app para Windows, o botão Flutuante e o item "Janela flutuante" do menu não aparecem mais, porque ali a janela flutuante não abria e o clique não fazia nada. No navegador, tudo continua como antes.

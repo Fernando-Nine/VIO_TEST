@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { desktop } from "../desktop/bridge";
 
 type DocumentPip = {
   requestWindow(options: { width: number; height: number }): Promise<Window>;
@@ -13,7 +14,9 @@ export function usePictureInPicture() {
   const [native, setNative] = useState(false);
   const api = (window as Window & { documentPictureInPicture?: DocumentPip })
     .documentPictureInPicture;
-  const supported = !!api || !!document.pictureInPictureEnabled;
+  // The Windows app (Tauri 2 / WebView2) denies new windows and gives no
+  // reliable PiP, so the click would do nothing (#280): hide it there.
+  const supported = !desktop && (!!api || !!document.pictureInPictureEnabled);
   const close = useCallback(() => {
     generation.current++;
     const pip = active.current;
@@ -36,7 +39,7 @@ export function usePictureInPicture() {
     };
   }, []);
   async function toggle(host: HTMLElement, video: HTMLVideoElement | null) {
-    if (opening.current) return;
+    if (!supported || opening.current) return;
     if (active.current || document.pictureInPictureElement) {
       close();
       return;

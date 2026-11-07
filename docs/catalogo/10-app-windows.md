@@ -180,7 +180,7 @@ https://learn.microsoft.com/windows/apps/package-and-deploy/code-signing-options
 | 10.10 | A tabela do `docs/WINDOWS-RELEASE.md` cita estável 2.9.0 e beta `2.9.0-rc.11.<n>`; hoje são 2.11.0 e 2.12.0-rc.6. | doc desatualizado | alta | `docs/WINDOWS-RELEASE.md` (~L9) |
 | 10.11 | O comentário de `config.ts` e um teste do servidor falam em `http://tauri.localhost`, mas o app usa `use_https_scheme(true)` (`https://tauri.localhost`). O validador aceita os dois, mas o exemplo da mensagem de erro induz a configurar `http`. | doc desatualizado | média | `src/server/config.ts` (~L70, ~L97); `tests/server.test.ts` (~L582) |
 | 10.12 | Os testes nativos pesados são `#[ignore]` e rodam só no runner sem GPU (WARP); o desempenho real só é medido no PC do usuário, e o teste de CPU roda com `continue-on-error`. | lacuna | média | `windows.yml` (~L71); `stream.rs` |
-| 10.13 | `.on_navigation(local)` não cobre pedido de janela nova (`window.open`); com `frame-src 'none'` e a CSP, o impacto é baixo. | risco | baixa | `shell.rs` (~L212) |
+| 10.13 | Janela nova (`window.open`, Document PiP) é **recusada** pelo wry 0.57: sem `on_new_window` no `shell.rs`, o handler `NewWindowRequested` faz `SetHandled(true)` sem janela. Bom para a segurança; por isso o PiP não funciona no app e o botão Flutuante fica escondido nele (#280). Janela flutuante nativa seria feature nova: a mídia viva não passa de um WebView para outro. | lacuna | alta | `shell.rs` › `open` (~L212); `wry/src/webview2/mod.rs` (~L782); `media/picture-in-picture.ts` |
 | 10.14 | `OpenProcess` por janela e snapshot do ToolHelp a cada listagem pesam num PC com centenas de processos; a pausa de 700 ms entre listagens atenua. | desempenho | baixa | `capture.rs`; `video.rs` |
 
 ## Perguntas em aberto

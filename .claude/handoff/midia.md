@@ -1,10 +1,13 @@
 # Mídia — handoff
 
-Atualizado: 2026-11-04
+Atualizado: 2026-11-07
 
 ## Agora
 
-Nada em andamento. #267, #271, #24 e #23 na prévia (rc.3–rc.6), aguardando o aceite do usuário
+#280 (Flutuante no app): PR aberta, aguardando o goldfish. O botão some no app (o wry recusa
+janelas novas, então o PiP não abre). Uma janela nativa sempre no topo seria P3, com rascunho do Design.
+
+#267, #271, #24 e #23 na prévia (rc.3–rc.6), aguardando o aceite do usuário
 no PC (roteiros nas PRs #272, #273, #275, #276; o mouse piscando da #267 só ele confirma).
 
 ## Pendente / bloqueios
@@ -22,4 +25,4 @@ no PC (roteiros nas PRs #272, #273, #275, #276; o mouse piscando da #267 só ele
 
 ## Próximo passo
 
-Primeira issue `midia` da Fila (hoje P1 #280 com o Frontend). Medidas e dicas de bancada: `docs/notas/midia.md`.
+Primeira issue `midia` da Fila depois da #280. Medidas e dicas de bancada: `docs/notas/midia.md`.
