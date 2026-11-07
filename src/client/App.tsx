@@ -837,7 +837,7 @@ export default function App({ engine }: { engine: Controller }) {
                         ...(pip.supported
                           ? [
                               {
-                                label: "Janela flutuante",
+                                label: "Picture-in-picture",
                                 icon: PictureInPicture2,
                                 run: togglePip,
                               },

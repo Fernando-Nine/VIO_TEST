@@ -1,1 +1,1 @@
-No app para Windows, o botão Flutuante e o item "Janela flutuante" do menu não aparecem mais, porque ali a janela flutuante não abria e o clique não fazia nada. No navegador, tudo continua como antes.
+No app para Windows, o botão Flutuante da barra da sala e o item de picture-in-picture do menu de mais opções não aparecem mais, porque ali a janela não abria e o clique não fazia nada. A opção "Janela flutuante" do menu de cada tela continua, porque solta a tela dentro da sala. No navegador, o item do menu agora se chama "Picture-in-picture", para não confundir os dois.
