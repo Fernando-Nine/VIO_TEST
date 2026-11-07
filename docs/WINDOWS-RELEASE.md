@@ -73,7 +73,7 @@ Salve; o Render reinicia o serviço sozinho.
 - **VIO Teste:** nada a fazer. Cada merge na `main` do VIO_TEST que toca o app ou a
   interface publica uma versão nova no release `beta`. Quem tem o VIO Teste recebe ao
   abrir o app. Download manual: o instalador `VIO-Teste-<versão>-x64-setup.exe` no
-  release `beta`.
+  release `beta`, ou a cópia de nome fixo `VIO-Teste-x64-setup.exe` (usada pelo botão Baixar da landing).
 - **VIO:** a release de produção (QA/copiloto) termina com a tag `vX.Y.Z` no VIO. A tag
   precisa ser criada por uma pessoa ou pelo token do agente, não pelo `GITHUB_TOKEN` de
   outro workflow (esse não dispara workflows). A tag tem de bater com a versão do
