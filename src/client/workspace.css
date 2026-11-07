@@ -1879,11 +1879,12 @@
   font: 12px var(--mono);
   color: #f1f2fa;
   margin-top: 10px;
-  cursor: var(--cursor-pointer);
+  cursor: text;
   overflow-wrap: anywhere;
 }
 .dice-guide dd {
   margin: 0;
+  cursor: text;
   color: #bcc1da;
   font-size: 13px;
   line-height: 1.5;

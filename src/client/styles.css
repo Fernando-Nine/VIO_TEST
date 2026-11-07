@@ -77,8 +77,8 @@ label {
 label:has(> input:is([type="checkbox"], [type="radio"]):not(:disabled)) {
   cursor: var(--cursor-hand);
 }
-:root
-  :is(
+:where(:root)
+  :where(
     button,
     a[href],
     summary,
@@ -87,7 +87,7 @@ label:has(> input:is([type="checkbox"], [type="radio"]):not(:disabled)) {
     [role="menuitem"],
     [role="tab"],
     input:is([type="range"], [type="checkbox"], [type="radio"], [type="color"])
-  ):not(:disabled, [aria-disabled="true"]) {
+  ):where(:not(:disabled, [aria-disabled="true"])) {
   cursor: var(--cursor-hand);
 }
 body {
@@ -114,6 +114,9 @@ button {
 button:disabled {
   cursor: var(--cursor-pointer);
   opacity: 0.45;
+}
+button[aria-disabled="true"] {
+  cursor: var(--cursor-pointer);
 }
 a {
   color: var(--blue-light);
