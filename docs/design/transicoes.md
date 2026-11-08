@@ -48,9 +48,10 @@ Curva padrão: `cubic-bezier(.2,.7,.2,1)` ("--ease-ponto"). Todos ≤ 800 ms.
 
 ## Custo
 
-- Só `transform` e `opacity`; um único elemento viajante (`position: fixed`,
-  `pointer-events: none`, `will-change: transform` só durante a viagem).
-- Nada de blur, sombra animada, filtro ou propriedade de layout animada.
+- Decisão 020: animação completa por padrão. `transform`/`opacity` seguem como o caminho barato;
+  um único elemento viajante (`position: fixed`, `pointer-events: none`, `will-change: transform`
+  só durante a viagem).
+- Evite blur, `backdrop-filter` e filtro pesados sobre vídeo, e propriedade de layout animada em loop.
 - **Invariantes do `CLAUDE.md`**: a transição é só apresentação. Nunca reparentar o host de
   vídeo, clonar vídeo, recriar players ou tirar o `<audio>` do `RemoteVoice` da árvore.
   Sobre vídeo, o ponto passa por cima; o palco real não muda de pai.
@@ -59,4 +60,5 @@ Curva padrão: `cubic-bezier(.2,.7,.2,1)` ("--ease-ponto"). Todos ≤ 800 ms.
 
 - Já existe: Ajustes › Acessibilidade › **Reduzir movimento** (`src/client/components/motion.ts`)
   - `prefers-reduced-motion`. Com ele: o ponto não viaja, nada cresce nem quica; toda troca
-    vira só opacidade de 150 ms; o ponto aparece direto no lugar final; nada pulsa.
+    vira só opacidade de 150 ms; o ponto aparece direto no lugar final; nada pulsa. Serve também
+    de interruptor para PC fraco ou internet ruim (decisão 020).

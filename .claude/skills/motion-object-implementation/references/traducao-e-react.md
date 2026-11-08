@@ -21,7 +21,7 @@ use o que já há (`motion.ts`, `--ease`) e crie só o token que faltar, no form
 | token `--motion-dur-base` etc.                | `var(--motion-dur-base)` no CSS; `motion.dur.base` no TS                                      |
 | variante reduzida                             | CSS com os dois seletores; JS com `reducedMotion(win)` / `useReducedMotion(win)`              |
 | custo                                         | confirme na medição se for moderado ou pesado                                                 |
-| exceção aprovada                              | implemente com o custo dito; comentário no CSS citando a issue                                |
+| efeito fora de transform/opacity              | implemente com o custo dito; comentário no CSS citando a issue                                |
 
 ## 2. Qual ferramenta para cada elemento
 

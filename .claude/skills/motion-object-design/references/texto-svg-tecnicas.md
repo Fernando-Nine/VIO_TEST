@@ -1,7 +1,7 @@
 # Texto, SVG, técnicas, bibliotecas e custo
 
-Núcleo de conhecimento da `motion-object-design`. Cada técnica traz se fica dentro da regra do
-projeto (`transform`/`opacity`) ou se vira **exceção** a declarar.
+Núcleo de conhecimento da `motion-object-design`. Cada técnica traz se fica no caminho barato
+(`transform`/`opacity`) ou se é **exceção** (paint/layout): permitida (decisão 020), com o custo anotado.
 
 ## Texto
 
@@ -54,7 +54,7 @@ impacto e voltam (continuidade).
 | Lottie / Rive                        | animação ilustrada; Rive com máquina de estado (humores do Ponto) | dependência         | moderado                |
 
 Gooey com o Ponto: dois Pontos se aproximam e se fundem como gotas (pessoa entra na sala e o ponto
-dela se junta ao grupo). Bonito, pesado (filtro). Declare a exceção e ofereça a alternativa
+dela se junta ao grupo). Bonito, pesado (filtro). Anote o custo e ofereça a alternativa
 barata: escala e opacidade cruzadas no instante do encontro.
 
 ## Técnicas (quando usar cada uma)

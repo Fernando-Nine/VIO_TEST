@@ -1,6 +1,6 @@
 ---
 name: vio-design-delivery
-description: Formato de entrega de uma leva de Design do VIO — canvas editável com seções por issue, 2–3 alternativas em tamanho real, seção Escolhidas, coleta das escolhas, specs e issues frontend. Use sempre ao montar, revisar ou fechar uma leva.
+description: Formato de entrega de uma leva de Design do VIO — canvas editável com seções por issue, 5 estilos × 5 exemplos (trabalho novo) ou 2–3 alternativas (ajuste pequeno) em tamanho real, seção Escolhidas, coleta das escolhas, specs e issues frontend. Use sempre ao montar, revisar ou fechar uma leva.
 ---
 
 # Entrega de uma leva (Design)
@@ -11,10 +11,10 @@ usuário edita e comenta direto).
 
 ## O que veio de cada leva
 
-| Leva | Artifact                            | Formato                                                | Fica                                                                                     |
-| ---- | ----------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Leva | Artifact                                           | Formato                                                           | Fica                                                                                                                                  |
+| ---- | -------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | 1, 2 | `3M2c9eiZF8Pp26bjBhMjAZ`, `819UwyvwKn6c5WCU1X5Hv8` | Canvas do tipo **Design**: uma prancha `.dc.html` por alternativa | Edição direta (texto, cor, espaçamento no painel de propriedades), comentário preso à prancha, notas, título "escolhida: X" por seção |
-| 3    | `3yJ4umERzwmY3vtWfxt8hJ`             | Página HTML única, montada por script, sem capacidades | Seções por issue, tamanhos reais lado a lado, selo `sugestão`, seção `#escolhidas` no topo |
+| 3    | `3yJ4umERzwmY3vtWfxt8hJ`                           | Página HTML única, montada por script, sem capacidades            | Seções por issue, tamanhos reais lado a lado, selo `sugestão`, seção `#escolhidas` no topo                                            |
 
 A leva 3 perdeu a edição: tudo era gerado por `innerHTML`, então o usuário não podia mexer
 num texto nem comentar uma prancha. **Volta das levas 1/2:**
@@ -42,7 +42,10 @@ própria, carregue antes a skill `artifact-capabilities` e registre aqui.
 2. Crie o canvas com `title` "VIO · Leva N" e siga as instruções do tipo (vêm na resposta).
 3. Layout do canvas:
    - Uma **linha por issue**, de cima para baixo, com a nota `title1` "#146 · Cabeçalho".
-   - Na linha, 2–3 pranchas (A, B, C), 80 px entre elas; 120 px entre linhas.
+   - Na linha, as pranchas (A, B, C…), 80 px entre elas; 120 px entre linhas. **Trabalho novo ou
+     de identidade (decisão 021): 5 estilos × 5 exemplos cada**, um estilo por linha ou grupo, e
+     depois espere o usuário pedir para expandir ou mudar um estilo. **Ajuste pequeno do que já
+     existe: 2–3 pranchas.**
    - Dentro de cada prancha, os **tamanhos reais** lado a lado: Lateral 420×240, Tira
      280×160, Foco 960×640, Celular 380 de largura. Legenda com o tamanho em mono.
    - Abaixo das molduras, 2–4 linhas sobre o que muda; recomendação marcada, se houver.

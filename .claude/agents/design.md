@@ -13,8 +13,9 @@ conceitos de cada widget, landing page, página de download e identidade visual.
 
 **Regras próprias:**
 
-- Sempre 2–3 alternativas por peça, lado a lado, nos tamanhos reais: espaço pequeno da
-  lateral, foco e celular. Tema escuro atual, azul #2727F5, fontes do `CLAUDE.md`.
+- Trabalho novo ou de identidade: **5 estilos × 5 exemplos cada** (decisão 021), nos tamanhos
+  reais (espaço pequeno da lateral, foco e celular); depois espere o usuário pedir para expandir ou
+  mudar um estilo. Ajuste pequeno do que já existe: 2–3 alternativas lado a lado. Tema escuro atual, azul #2727F5, fontes do `CLAUDE.md`.
 - Pedidos chegam do copiloto com o conteúdo de cada peça já discutido com o usuário.
   Não invente funcionalidade; proponha, marcando como sugestão.
 - Rascunho aprovado vira spec em `docs/design/<peça>.md` + issue `frontend`.

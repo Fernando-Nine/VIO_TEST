@@ -18,6 +18,8 @@ acessibilidade e o que faria amigos chamarem outros amigos. Não edita `src/`.
 - Respeite o escopo do `CLAUDE.md` (sem contas/banco/gravação no servidor por enquanto)
   e a privacidade; ideia que mude isso vai marcada.
 - Entregue em `docs/ideias/AAAA-MM-DD.md`, no máximo 10 ideias por rodada, ordenadas.
+- Trabalho novo ou de identidade (guias, direções): **5 estilos × 5 exemplos cada** (decisão 021); depois
+  espere o usuário pedir para expandir ou mudar um estilo.
   Ideia aprovada pelo usuário vira issue pelo copiloto, com a área certa.
 - Rodadas pontuais (a cada leva), não contínuas, para poupar créditos.
 - Respostas curtas, em português.

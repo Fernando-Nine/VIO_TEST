@@ -2,7 +2,7 @@
 
 Efeitos de cena montados sobre a fundação (`fundacao.md`): todo efeito entra por `registerEffect`
 / `useSceneEffect`, roda no `ticker` e lê os stores. Antes de codar, confira na spec: técnica,
-custo, variante reduzida, exceções aprovadas na issue.
+custo, variante reduzida, custos declarados na spec.
 
 **Onde cabe:** landing, Início, página de download, splash — à vontade. **Sala:** nada de ambiente
 sobre vídeo ao vivo (só se a issue registrar o aval do usuário), nada que rode por quadro atrás de uma transmissão (`composicao-e-coreografia.md`
@@ -270,7 +270,7 @@ mesmo elemento achata: separe.
 | Hora do dia             | `Date` uma vez ao montar                             | escolhe a variante; não anima durante a sessão                  |
 | Orientação / tamanho    | `viewport` + `matchMedia("(orientation: portrait)")` | remonta o efeito com o tamanho novo                             |
 
-Mudar a cor de fundo por rolagem é paint (exceção): sem aval, cruze duas camadas por `opacity`.
+Mudar a cor de fundo por rolagem é paint (paint): permitido, mas cruzar duas camadas por `opacity` é mais barato.
 
 ### Carregar e descartar 3D/peças pesadas
 

@@ -246,7 +246,7 @@ descendentes. Fonte variável (eixos da Bricolage) animada é exceção (refaz o
   regra: cruzar duas formas com `scale` + `opacity`.
 - `lucide-react`: o `<svg>` aceita `className`; anime o wrapper ou o `<svg>` inteiro por
   `transform` (`transform-box: fill-box; transform-origin: center` para girar no centro).
-- Filtro animado (gooey, displacement) é pesado: só com exceção aprovada, e nunca na sala.
+- Filtro animado (gooey, displacement) é pesado: permitido (decisão 020), mas nunca sobre vídeo na sala; anote o custo.
 
 ## 6. Canvas pequeno num objeto
 

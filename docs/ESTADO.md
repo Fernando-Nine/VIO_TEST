@@ -1,7 +1,7 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-11-07.
+Atualizado: 2026-11-08.
 
 ## Ambientes
 
@@ -26,7 +26,7 @@ Ordem completa do produto em `ROADMAP.md`.
 - **P0**: nenhuma.
 - **P1**: #281 avisos empurram o layout (frontend, em andamento) · #266 cursor
   some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento).
-- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo) · #270 notificações · #269 responsividade (QA) ·
+- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; em espera até as telas, balões e pop-ups serem redesenhados com o Ponto) · #270 notificações · #269 responsividade (QA) ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes.
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
@@ -62,6 +62,9 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [017](decisoes/017-custo-e-codigo-nosso.md) Pago só com receita ou ao abrir ao público; código nosso antes.
 - [018](decisoes/018-ver-antes-de-codar.md) Ver antes de codar (rascunho do Design e aval); desempate dentro do nível.
 - [019](decisoes/019-idade-minima.md) Idade mínima 13+ por autodeclaração no aceite enquanto o app for só de amigos; antes do público, verificação terceirizada.
+- [020](decisoes/020-movimento-completo.md) Movimento completo por padrão; reduzido também para PC fraco ou internet ruim; mídia intocada.
+- [021](decisoes/021-entrega-criativa.md) Entrega criativa 5 estilos × 5 exemplos em trabalho novo; 2–3 opções só em ajuste pequeno.
+- Prioridade de design (8 nov): telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações; #261 fica em espera.
 
 ## Em aberto (aguardam o usuário)
 

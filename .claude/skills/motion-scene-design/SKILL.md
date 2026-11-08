@@ -28,7 +28,7 @@ rápida. O Design desenha e especifica; **não implementa no app** (`.claude/age
 3. `docs/design/movimento.md`, se existir (o sistema já aprovado). Se não existir, esta skill o cria.
 4. `vio-design-system` (tokens visuais) e `vio-design-delivery` (formato da leva).
 5. Só o que a tarefa pede de `references/`:
-   - `references/sistema.md` — formato dos tokens, energia, switch, exceções, custo. **Sempre.**
+   - `references/sistema.md` — formato dos tokens, energia, switch, efeitos e custo. **Sempre.**
    - `references/composicao-e-coreografia.md` — ritmo, camadas, coreografia, rolagem.
    - `references/atmosfera-e-transicoes.md` — ambiente, 3D, transições, reatividade, custo da
      cena, responsividade, bibliotecas.
@@ -56,21 +56,21 @@ provavelmente está genérica.
 **Liberdade criativa vem primeiro.** Toda regra que não seja invariante ou segurança é um padrão:
 pode ser quebrada, desde que você diga qual, por quê e quanto custa.
 
-| Tipo                        | Regra                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| **Invariante** (não quebra) | nunca reparentar, clonar ou escalar o host de vídeo; o Ponto passa por cima           |
-| **Invariante**              | não tirar o `<audio>` do `RemoteVoice` da árvore                                      |
-| **Invariante**              | foco e layout só mudam a apresentação                                                 |
-| **Invariante**              | a animação de fala só lê o estado (`useSpeaking`, `voiceLevel`), não o produz         |
-| **Invariante**              | toda peça tem variante reduzida, ligada ao switch que já existe                       |
-| Padrão quebrável            | só `transform`/`opacity` (exceção marcada com motivo e custo, decidida com o usuário) |
-| Padrão quebrável            | sequência inteira ≤ 800 ms                                                            |
-| Padrão quebrável            | nada de ambiente na sala; sobre vídeo, só com aval do usuário registrado na issue     |
-| Padrão quebrável            | escala de tokens de `references/sistema.md`                                           |
+| Tipo                        | Regra                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| **Invariante** (não quebra) | nunca reparentar, clonar ou escalar o host de vídeo; o Ponto passa por cima       |
+| **Invariante**              | não tirar o `<audio>` do `RemoteVoice` da árvore                                  |
+| **Invariante**              | foco e layout só mudam a apresentação                                             |
+| **Invariante**              | a animação de fala só lê o estado (`useSpeaking`, `voiceLevel`), não o produz     |
+| **Invariante**              | toda peça tem variante reduzida, ligada ao switch que já existe                   |
+| Padrão                      | animação completa (decisão 020); `transform`/`opacity` é o caminho barato         |
+| Padrão quebrável            | sequência inteira ≤ 800 ms                                                        |
+| Padrão quebrável            | nada de ambiente na sala; sobre vídeo, só com aval do usuário registrado na issue |
+| Padrão quebrável            | escala de tokens de `references/sistema.md`                                       |
 
-**Exceção a `transform`/`opacity`:** marque na tabela de exceções da spec (efeito, propriedade, por
-que vale, custo, alternativa dentro da regra) e leve a decisão ao usuário pela leva. O Frontend não
-implementa a exceção sem esse aval registrado na issue.
+**Efeito fora de `transform`/`opacity`:** não precisa de aval (decisão 020). Anote na tabela de
+custos da spec (efeito, propriedade, custo, o que o modo reduzido faz). Evite blur/`backdrop-filter`
+pesado sobre vídeo.
 
 ## Switch de movimento (não invente outro)
 
@@ -135,7 +135,7 @@ Use a estrutura que comunica melhor; acrescente ou tire campos conforme a ideia.
 - **Sequência de carga** e o que ela espera.
 - **Gatilhos**: clique, rolagem, evento da sala, tempo.
 - **Variantes reduzidas**: uma por camada e por transição.
-- **Exceções** a `transform`/`opacity`: tabela com motivo e custo, marcada para o aval.
+- **Custos** dos efeitos fora de `transform`/`opacity`: tabela com propriedade e custo.
 - **Bibliotecas**: qual usaria e por quê, e o plano nativo.
 - **Custo**: resumo da cena e os primeiros cortes se pedirem otimização.
 - **Fallbacks**: sem WebGL, aparelho fraco, celular, PiP.
