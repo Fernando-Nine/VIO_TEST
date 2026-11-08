@@ -23,7 +23,7 @@ viagem entre as telas, põe as linhas de velocidade e o vento, e decide quando t
 ## Leia antes
 
 1. A issue: spec da cena (`docs/design/<peça>.md`, seção Movimento), link do rascunho, aceite e
-   **exceções aprovadas** (só valem as registradas na issue).
+   custos declarados (animação completa por padrão, decisão 020).
 2. `docs/design/transicoes.md` (o Ponto conduz; tempos; lugares). O guia do Ponto em
    `docs/design/`, quando existir, é a fonte sobre o personagem e vence esta skill.
 3. `docs/design/movimento.md` (sistema aprovado, **fonte dos tokens**: CSS e TS derivam dele), se existir; senão o formato de
@@ -86,9 +86,9 @@ pesado, import só do necessário (tree-shaking), versão exata no `package.json
 - **Invariantes de mídia:** nunca reparentar, clonar ou escalar o host de vídeo; não tirar o
   `<audio>` do `RemoteVoice` da árvore; foco e layout só mudam a apresentação (PeerConnections,
   MediaStreams, hosts e players intactos); a animação de fala só lê `useSpeaking`/`voiceLevel`.
-- **Só `transform`/`opacity`.** Nada fora disso entra sem a exceção aprovada na issue (efeito,
-  propriedade, motivo, custo). Sem aval, use a alternativa dentro da regra que a spec trouxe, ou
-  avise o copiloto.
+- **Animação completa por padrão (decisão 020).** `transform`/`opacity` são o caminho barato, não
+  um limite: efeitos de paint, `clip-path`, traço SVG e filtro entram sem aval, com o custo anotado.
+  Evite blur/`backdrop-filter` pesado sobre vídeo e preserve o desempenho da chamada.
 - **Um switch só:** Ajustes › Acessibilidade › Reduzir movimento + `src/client/components/motion.ts`
   (`applyMotion`, `reducedMotion`). Estenda esse arquivo (`onMotionChange`, puro) e ponha o hook
   `useReducedMotion` em `motion-react.ts`;
@@ -104,12 +104,12 @@ Todo o resto da spec (tempos, teto de 800 ms, energia, quantidade de camadas) se
 não couber, proponha a alternativa mais fiel e diga exatamente o que mudou.
 
 **Campos mínimos da spec** (faltou um: peça ao copiloto antes de implementar): estados (e
-gatilhos), tokens, variante reduzida, exceções aprovadas e aceite.
+gatilhos), tokens, variante reduzida, custos declarados e aceite.
 
 ## Fluxo
 
 1. **Ler** a spec e o rascunho: intenção, camadas, coreografia, transições, carga, variantes
-   reduzidas, exceções aprovadas, aceite. Ambíguo ou em conflito com a pilha: uma pergunta curta ao
+   reduzidas, custos declarados, aceite. Ambíguo ou em conflito com a pilha: uma pergunta curta ao
    copiloto, ou escolha a opção mais fiel e registre a suposição.
 2. **Conferir** a pilha e inventariar o que já existe (tokens, `motion.ts`, animações em
    `WidgetFrame.tsx`, `Toasts.tsx`, `strip-input.ts`, `landing.css`, `Home.tsx`/`Splash`).

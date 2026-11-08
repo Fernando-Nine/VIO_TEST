@@ -1,4 +1,11 @@
 {
+  "_fonte": "Tokens reais: src/client/styles.css :root. Pessoas: src/shared/colors.ts.",
+  "_propostos": [
+    "estados.over",
+    "pessoas (como --person-*)",
+    "forma.ponto-radius",
+    "movimento.ease-ponto"
+  ],
   "$comment": "Paleta oficial do VIO. Fonte: src/client/styles.css (:root) e src/shared/colors.ts (colorPresets). Tema escuro único. Contraste medido sobre --bg (#0B0C13).",
   "marca": {
     "blue": {
@@ -11,17 +18,32 @@
     }
   },
   "superficies": {
-    "bg": { "value": "#0B0C13", "uso": "Fundo da página." },
-    "panel": { "value": "#14151F", "uso": "Painéis e widgets." },
-    "raised": { "value": "#1B1C29", "uso": "Elementos elevados, menus." },
+    "bg": {
+      "value": "#0B0C13",
+      "uso": "Fundo da página."
+    },
+    "panel": {
+      "value": "#14151F",
+      "uso": "Painéis e widgets."
+    },
+    "raised": {
+      "value": "#1B1C29",
+      "uso": "Elementos elevados, menus."
+    },
     "line": {
       "value": "#2A2C3C",
       "uso": "Bordas e divisórias (decorativas; 1,42:1)."
     }
   },
   "texto": {
-    "text": { "value": "#F3F3FB", "contraste": 17.68 },
-    "muted": { "value": "#A3A5BC", "contraste": 8.05 },
+    "text": {
+      "value": "#F3F3FB",
+      "contraste": 17.68
+    },
+    "muted": {
+      "value": "#A3A5BC",
+      "contraste": 8.05
+    },
     "focus": {
       "value": "#C8CEFF",
       "uso": "Anel de foco do teclado.",
@@ -46,14 +68,38 @@
     }
   },
   "pessoas": [
-    { "name": "Rosa", "value": "#EC75B5" },
-    { "name": "Amarelo", "value": "#F5CB55" },
-    { "name": "Verde", "value": "#67CB96" },
-    { "name": "Anil", "value": "#2727F5" },
-    { "name": "Ciano", "value": "#60CFDC" },
-    { "name": "Vermelho", "value": "#ED747C" },
-    { "name": "Roxo", "value": "#AB88EE" },
-    { "name": "Laranja", "value": "#F1A365" }
+    {
+      "name": "Rosa",
+      "value": "#EC75B5"
+    },
+    {
+      "name": "Amarelo",
+      "value": "#F5CB55"
+    },
+    {
+      "name": "Verde",
+      "value": "#67CB96"
+    },
+    {
+      "name": "Anil",
+      "value": "#2727F5"
+    },
+    {
+      "name": "Ciano",
+      "value": "#60CFDC"
+    },
+    {
+      "name": "Vermelho",
+      "value": "#ED747C"
+    },
+    {
+      "name": "Roxo",
+      "value": "#AB88EE"
+    },
+    {
+      "name": "Laranja",
+      "value": "#F1A365"
+    }
   ],
   "tipo": {
     "font": "\"Bricolage Grotesque Variable\", \"Bricolage Grotesque\", sans-serif",

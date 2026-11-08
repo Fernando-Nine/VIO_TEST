@@ -5,9 +5,10 @@
 | Papel     | Fonte                          | Token    | Onde                                         |
 | --------- | ------------------------------ | -------- | -------------------------------------------- |
 | Interface | Bricolage Grotesque (variável) | `--font` | Tudo: títulos, botões, texto                 |
-| Números   | IBM Plex Mono                  | `--mono` | Código da sala, ping, tempos, contagens, HEX |
+| Números   | IBM Plex Mono, só 400          | `--mono` | Código da sala, ping, tempos, contagens, HEX |
 
-- Pesos: 400 (texto), 600 (botões, rótulos), 700–800 (títulos grandes). No máximo 2 pesos e 3 tamanhos
+- Pesos da Bricolage (variável): 400 (texto), 600 (botões, rótulos), 700–800 (títulos grandes). O IBM
+  Plex Mono só tem o 400 no app (`src/client/main.tsx`); outro peso exige importar o arquivo. No máximo 2 pesos e 3 tamanhos
   por widget.
 - Escala de partida: 12 · 14 · 16 (base) · 20 · 28 · 40 · 56 px. Títulos com `text-wrap: balance`.
 - Números que mudam: `font-variant-numeric: tabular-nums`.

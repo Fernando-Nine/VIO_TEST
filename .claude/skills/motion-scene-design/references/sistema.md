@@ -215,12 +215,12 @@ só "mais calmo".
   ≤ 150 ms), **removido** (o efeito nem monta). Toda peça de movimento declara uma.
   No reduzido o Ponto não viaja, não cresce, não quica e não pulsa: aparece direto no lugar final.
 
-## Exceções à regra "só `transform`/`opacity`"
+## Efeitos fora de `transform`/`opacity`
 
-A regra do projeto é animar só `transform` e `opacity`. No Design ela é padrão quebrável; cada
-quebra entra nesta tabela e é decidida com o usuário antes de virar issue:
+Decisão 020: o padrão é animação completa; `transform`/`opacity` são o caminho barato, não um
+limite. Efeito fora disso não pede aval; anote nesta tabela para o Frontend saber o custo:
 
-| Efeito             | Propriedade fora da regra | Por que vale                 | Custo                      | Alternativa dentro da regra       |
+| Efeito             | Propriedade               | Por que vale                 | Custo                      | Alternativa mais barata           |
 | ------------------ | ------------------------- | ---------------------------- | -------------------------- | --------------------------------- |
 | peso do "vio" vivo | `font-variation-settings` | a palavra respira com a fala | moderado (layout do texto) | trocar duas camadas com opacidade |
 
@@ -232,7 +232,7 @@ quebra entra nesta tabela e é decidida com o usuário antes de virar issue:
 | moderado | JS por quadro (pointer, mola), dezenas de elementos, sem paint                            |
 | pesado   | filtro/blur grande, canvas/WebGL em tela cheia, partículas, propriedade de layout em loop |
 
-`clip-path`, traço SVG (`stroke-dashoffset`) e qualquer paint: **só com exceção aprovada**
-(aval do usuário registrado na issue), com a nota de custo que a exceção declarar.
+`clip-path`, traço SVG (`stroke-dashoffset`) e qualquer paint: permitidos, com a nota de custo.
+Sobre vídeo, evite blur e `backdrop-filter` pesados.
 
 Toda peça leva a nota. Na cena, some as camadas simultâneas (ver `atmosfera-e-transicoes.md`).

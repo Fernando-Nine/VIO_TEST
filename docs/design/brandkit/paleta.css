@@ -1,5 +1,5 @@
-/* Paleta oficial do VIO (brandkit). Fonte: src/client/styles.css :root e src/shared/colors.ts.
-   Copiar para protótipos e peças externas; o app usa os tokens de styles.css. */
+/* Paleta oficial do VIO (brandkit). Só consulta: o app usa os tokens de src/client/styles.css.
+   Bloco 1 = tokens reais de styles.css :root. Bloco 2 = PROPOSTOS (não existem no app ainda). */
 :root {
   color-scheme: dark;
   /* marca */
@@ -17,8 +17,20 @@
   /* estados */
   --live: #4cddc3;
   --danger: #ff8a96;
-  --over: #f2d36b; /* volume acima de 100% */
-  /* pessoas (ColorPicker) */
+  /* forma, tipo e movimento */
+  --radius: 18px;
+  --space: 8px;
+  --font: "Bricolage Grotesque Variable", "Bricolage Grotesque", sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --ease: 160ms ease;
+}
+
+/* PROPOSTOS: entram com a issue frontend de unificação de tokens (#227). */
+:root {
+  --over: #f2d36b; /* volume acima de 100%; hoje solto em vários CSS */
+  --ponto-radius: 27%;
+  --ease-ponto: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* pessoas: src/shared/colors.ts colorPresets */
   --person-rosa: #ec75b5;
   --person-amarelo: #f5cb55;
   --person-verde: #67cb96;
@@ -27,12 +39,4 @@
   --person-vermelho: #ed747c;
   --person-roxo: #ab88ee;
   --person-laranja: #f1a365;
-  /* forma, tipo e movimento */
-  --radius: 18px;
-  --ponto-radius: 27%;
-  --space: 8px;
-  --font: "Bricolage Grotesque Variable", "Bricolage Grotesque", sans-serif;
-  --mono: "IBM Plex Mono", monospace;
-  --ease: 160ms ease;
-  --ease-ponto: cubic-bezier(0.2, 0.7, 0.2, 1);
 }

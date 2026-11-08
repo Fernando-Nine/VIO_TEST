@@ -1,7 +1,7 @@
 # Texto, SVG, técnicas, bibliotecas e custo
 
-Núcleo de conhecimento da `motion-object-design`. Cada técnica traz se fica dentro da regra do
-projeto (`transform`/`opacity`) ou se vira **exceção** a declarar.
+Núcleo de conhecimento da `motion-object-design`. Cada técnica traz se fica no caminho barato
+(`transform`/`opacity`) ou se tem **custo** de paint/layout (permitido pela decisão 020; anote o custo).
 
 ## Texto
 
@@ -10,7 +10,7 @@ projeto (`transform`/`opacity`) ou se vira **exceção** a declarar.
 | Dividir (letras/palavras/linhas) | cada parte entra com stagger                                     | dentro                  | texto real fica legível para leitor de tela (`aria-label` no pai, partes `aria-hidden`) |
 | Máscara de revelação             | o texto sobe de dentro de uma linha cortada (`overflow: hidden`) | dentro                  | a máscara não pode cortar acentos e descendentes                                        |
 | Scramble                         | letras embaralham até formar a palavra                           | dentro (troca de texto) | só em palavra curta; nunca em texto que a pessoa precisa ler já                         |
-| Fonte variável                   | peso/largura mudam (Bricolage tem eixos `wght`, `wdth`, `opsz`)  | **exceção**             | refaz o layout do texto; reserve a largura                                              |
+| Fonte variável                   | peso/largura mudam (Bricolage tem eixos `wght`, `wdth`, `opsz`)  | **custo: layout/paint** | refaz o layout do texto; reserve a largura                                              |
 | Contador / ticker de número      | dígitos rolam como odômetro (`translateY` por coluna)            | dentro                  | IBM Plex Mono + `tabular-nums`: largura fixa, sem pulo                                  |
 | Máquina de escrever              | letras aparecem com `steps()` ou uma a uma                       | dentro (opacidade)      | cursor piscando no reduzido: parado                                                     |
 | Letreiro (marquee)               | faixa que corre sem fim                                          | dentro                  | pausa no hover/foco; nunca com informação essencial                                     |
@@ -42,38 +42,38 @@ impacto e voltam (continuidade).
 
 ## SVG e ilustração
 
-| Técnica                              | Como                                                              | Regra               | Custo                   |
-| ------------------------------------ | ----------------------------------------------------------------- | ------------------- | ----------------------- |
-| Desenhar o traço                     | `stroke-dasharray` = comprimento; anima `stroke-dashoffset`       | **exceção** (paint) | barato em traço pequeno |
-| Alternativa ao traço                 | revelar o traço com máscara que se move (`transform`)             | dentro              | barato                  |
-| Morph de caminho                     | anima o `d` (mesmo número de pontos) ou biblioteca de morph       | **exceção**         | moderado                |
-| Morph de forma                       | trocar formas com escala e opacidade cruzadas                     | dentro              | barato                  |
-| Máscara e `clip-path`                | revelar por recorte (`inset()`, `circle()`)                       | **exceção** (paint) | barato/moderado         |
-| Filtros (gooey, displacement, ruído) | `feGaussianBlur` + `feColorMatrix`, `feTurbulence`                | **exceção**         | pesado se animado       |
-| Gradiente animado                    | mover a camada do gradiente, não as cores                         | dentro              | barato                  |
-| Lottie / Rive                        | animação ilustrada; Rive com máquina de estado (humores do Ponto) | dependência         | moderado                |
+| Técnica                              | Como                                                              | Regra                   | Custo                   |
+| ------------------------------------ | ----------------------------------------------------------------- | ----------------------- | ----------------------- |
+| Desenhar o traço                     | `stroke-dasharray` = comprimento; anima `stroke-dashoffset`       | **custo: paint**        | barato em traço pequeno |
+| Alternativa ao traço                 | revelar o traço com máscara que se move (`transform`)             | dentro                  | barato                  |
+| Morph de caminho                     | anima o `d` (mesmo número de pontos) ou biblioteca de morph       | **custo: layout/paint** | moderado                |
+| Morph de forma                       | trocar formas com escala e opacidade cruzadas                     | dentro                  | barato                  |
+| Máscara e `clip-path`                | revelar por recorte (`inset()`, `circle()`)                       | **custo: paint**        | barato/moderado         |
+| Filtros (gooey, displacement, ruído) | `feGaussianBlur` + `feColorMatrix`, `feTurbulence`                | **custo: layout/paint** | pesado se animado       |
+| Gradiente animado                    | mover a camada do gradiente, não as cores                         | dentro                  | barato                  |
+| Lottie / Rive                        | animação ilustrada; Rive com máquina de estado (humores do Ponto) | dependência             | moderado                |
 
 Gooey com o Ponto: dois Pontos se aproximam e se fundem como gotas (pessoa entra na sala e o ponto
-dela se junta ao grupo). Bonito, pesado (filtro). Declare a exceção e ofereça a alternativa
+dela se junta ao grupo). Bonito, pesado (filtro). Anote o custo e ofereça a alternativa
 barata: escala e opacidade cruzadas no instante do encontro.
 
 ## Técnicas (quando usar cada uma)
 
-| Técnica                              | Use para                                                                | Observação                                          |
-| ------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------- |
-| `transition`                         | mudança de estado interrompível (hover, aberto/fechado)                 | redireciona no meio sem pulo                        |
-| `@keyframes`                         | sequência fixa, loops                                                   | recomeça do zero se interrompida                    |
-| `@property`                          | animar variável tipada (`<angle>`, `<number>`) que alimenta `transform` | animar uma variável que pinta (cor) é exceção       |
-| `@starting-style`                    | entrada a partir de `display: none` ou de montagem                      | suporte bom nos motores atuais (confirmar)          |
-| Web Animations API                   | sequência por código, `finished` como promessa, interrupção             | não é afetada pelas regras CSS que zeram transições |
-| Scroll-driven (`animation-timeline`) | ligado à rolagem, no compositor                                         | suporte varia; fallback estático                    |
-| View Transitions                     | trocar estado com elemento compartilhado                                | congela a imagem antiga; cuidado perto de vídeo     |
-| FLIP                                 | o objeto muda de lugar no layout e anima a diferença                    | técnica do Ponto e do `WidgetFrame`                 |
-| Canvas 2D                            | partículas, rastro, desenho livre num objeto pequeno                    | fora da regra; declare                              |
-| WebGL / shader                       | brilho, distorção, material num objeto pequeno                          | pesado; só fora da sala                             |
+| Técnica                              | Use para                                                                | Observação                                             |
+| ------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| `transition`                         | mudança de estado interrompível (hover, aberto/fechado)                 | redireciona no meio sem pulo                           |
+| `@keyframes`                         | sequência fixa, loops                                                   | recomeça do zero se interrompida                       |
+| `@property`                          | animar variável tipada (`<angle>`, `<number>`) que alimenta `transform` | animar uma variável que pinta (cor) tem custo de paint |
+| `@starting-style`                    | entrada a partir de `display: none` ou de montagem                      | suporte bom nos motores atuais (confirmar)             |
+| Web Animations API                   | sequência por código, `finished` como promessa, interrupção             | não é afetada pelas regras CSS que zeram transições    |
+| Scroll-driven (`animation-timeline`) | ligado à rolagem, no compositor                                         | suporte varia; fallback estático                       |
+| View Transitions                     | trocar estado com elemento compartilhado                                | congela a imagem antiga; cuidado perto de vídeo        |
+| FLIP                                 | o objeto muda de lugar no layout e anima a diferença                    | técnica do Ponto e do `WidgetFrame`                    |
+| Canvas 2D                            | partículas, rastro, desenho livre num objeto pequeno                    | custo: bitmap; declare                                 |
+| WebGL / shader                       | brilho, distorção, material num objeto pequeno                          | pesado; só fora da sala                                |
 
 ```css
-/* @property: girar o anel do Ponto carregando, sem JS e dentro da regra. */
+/* @property: girar o anel do Ponto carregando, sem JS e barato. */
 @property --giro {
   syntax: "<angle>";
   inherits: false;

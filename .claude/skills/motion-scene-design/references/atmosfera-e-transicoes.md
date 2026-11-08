@@ -7,21 +7,21 @@ Núcleo de conhecimento da `motion-scene-design`. Padrões quebráveis, salvo os
 Ambiente é o que dá ar ao mundo sem pedir atenção. Teste: se a pessoa olha para o ambiente em vez
 do conteúdo, ele está alto demais.
 
-| Técnica                    | Como se faz (rascunho)                                                       | Custo           | Dentro de `transform`/`opacity`?                      |
-| -------------------------- | ---------------------------------------------------------------------------- | --------------- | ----------------------------------------------------- |
-| Gradiente animado          | camada grande com gradiente fixo, movida com `translate`/`rotate` lentos     | barato          | sim (mova a camada, não as cores)                     |
-| Mesh gradient              | 3–5 manchas radiais em camadas separadas, cada uma derivando devagar         | moderado        | sim, se as manchas forem elementos movidos            |
-| Gradiente por `@property`  | registrar `--angulo` e animar a cor/ângulo do próprio gradiente              | moderado        | **não**: repinta a cada quadro → exceção              |
-| Grão/ruído                 | PNG ou SVG `feTurbulence` pré-renderizado, deslocado em passos               | barato          | sim (desloque a textura; não recalcule o filtro)      |
-| Partículas                 | canvas 2D com teto de quantidade; poucas dezenas em DOM                      | moderado/pesado | canvas fica fora da regra (pinta em bitmap) → declare |
-| Linhas de velocidade/vento | traços finos em camada, `translateX` em loop, opacidade pela velocidade      | barato          | sim                                                   |
-| Névoa                      | 2–3 camadas de gradiente borrado **pré-renderizado**, derivando              | moderado        | sim, se o blur não for animado                        |
-| Aurora                     | faixas largas com gradiente, `rotate` + `translate` lentos, `mix-blend-mode` | moderado        | blend mode custa composição; declare                  |
-| Varredura de luz           | faixa diagonal translúcida atravessando com `translateX`                     | barato          | sim                                                   |
-| Fundo em canvas/WebGL      | shader procedural, ruído, campo de pontos                                    | pesado          | fora da regra → exceção com fallback estático         |
-| Gerativo                   | regras simples + semente (a sala tem um fundo único pelo código da sala?)    | varia           | depende da técnica                                    |
-| Profundidade de campo      | camadas `far` mais borradas (blur estático) e mais apagadas                  | moderado        | sim, se o blur não muda                               |
-| Hora do dia                | paleta e luz do ambiente mudam com a hora local                              | barato          | sim, se a troca for por opacidade entre camadas       |
+| Técnica                    | Como se faz (rascunho)                                                       | Custo           | Dentro de `transform`/`opacity`?                       |
+| -------------------------- | ---------------------------------------------------------------------------- | --------------- | ------------------------------------------------------ |
+| Gradiente animado          | camada grande com gradiente fixo, movida com `translate`/`rotate` lentos     | barato          | sim (mova a camada, não as cores)                      |
+| Mesh gradient              | 3–5 manchas radiais em camadas separadas, cada uma derivando devagar         | moderado        | sim, se as manchas forem elementos movidos             |
+| Gradiente por `@property`  | registrar `--angulo` e animar a cor/ângulo do próprio gradiente              | moderado        | **não**: repinta a cada quadro → custo de paint        |
+| Grão/ruído                 | PNG ou SVG `feTurbulence` pré-renderizado, deslocado em passos               | barato          | sim (desloque a textura; não recalcule o filtro)       |
+| Partículas                 | canvas 2D com teto de quantidade; poucas dezenas em DOM                      | moderado/pesado | canvas: custo de bitmap (pinta fora do DOM); declare |
+| Linhas de velocidade/vento | traços finos em camada, `translateX` em loop, opacidade pela velocidade      | barato          | sim                                                    |
+| Névoa                      | 2–3 camadas de gradiente borrado **pré-renderizado**, derivando              | moderado        | sim, se o blur não for animado                         |
+| Aurora                     | faixas largas com gradiente, `rotate` + `translate` lentos, `mix-blend-mode` | moderado        | blend mode custa composição; declare                   |
+| Varredura de luz           | faixa diagonal translúcida atravessando com `translateX`                     | barato          | sim                                                    |
+| Fundo em canvas/WebGL      | shader procedural, ruído, campo de pontos                                    | pesado          | custo alto: declare; fallback estático                 |
+| Gerativo                   | regras simples + semente (a sala tem um fundo único pelo código da sala?)    | varia           | depende da técnica                                     |
+| Profundidade de campo      | camadas `far` mais borradas (blur estático) e mais apagadas                  | moderado        | sim, se o blur não muda                                |
+| Hora do dia                | paleta e luz do ambiente mudam com a hora local                              | barato          | sim, se a troca for por opacidade entre camadas        |
 
 O VIO tem um tema escuro só; "ambiente por tema" é ideia para depois — proponha como sugestão.
 A cor da marca (`#2727F5`) e o destaque (`#A6A9FF`) são o limite da paleta do ambiente; ambiente
@@ -39,7 +39,7 @@ cursor se aproxima, as ondas se inclinam para ele. No reduzido: o Ponto parado, 
 - **Quando não vale:** dentro da sala, sobre vídeo, em widget, em tudo que roda junto com WebRTC (o
   orçamento de GPU e CPU é da chamada).
 - **Técnicas:** CSS 3D (`perspective`, `rotateX/Y`, `transform-style: preserve-3d`) para inclinar
-  cartões e seções — barato e dentro da regra. Three.js / React Three Fiber / OGL para cena real;
+  cartões e seções — barato (só transform/opacity). Three.js / React Three Fiber / OGL para cena real;
   Spline e Rive como embed. Pós-processamento (bloom, grão) só no herói.
 - **Degradação:** sem WebGL, no reduzido ou em aparelho fraco → imagem estática do mesmo
   enquadramento (pôster). Declare o pôster na spec.

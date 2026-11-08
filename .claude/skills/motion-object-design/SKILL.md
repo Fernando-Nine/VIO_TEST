@@ -53,9 +53,9 @@ quebrável: quebre, diga qual, por quê e quanto custa.
 - **Invariantes (não quebram):** nunca reparentar, clonar ou escalar o host de vídeo; não tirar o
   `<audio>` do `RemoteVoice` da árvore; foco e layout só mudam a apresentação; a animação de fala só
   lê o estado (`useSpeaking`, `voiceLevel`); toda peça tem variante reduzida.
-- **Padrão quebrável:** só `transform`/`opacity`. Para quebrar, marque a exceção na spec (efeito,
-  propriedade, motivo, custo, alternativa dentro da regra) e leve ao usuário na leva. Sem aval
-  registrado na issue, o Frontend não implementa a exceção.
+- **Animação completa por padrão (decisão 020).** `transform`/`opacity` são o caminho barato, não
+  um limite. Efeito fora disso não pede aval: anote na spec (efeito, propriedade, custo, o que o
+  modo reduzido faz). Evite blur/`backdrop-filter` pesado sobre vídeo.
 - **Padrões quebráveis também:** tokens da escala, teto de 800 ms por sequência, faixas de duração.
 
 ## Switch de movimento (não invente outro)
@@ -125,7 +125,7 @@ Acrescente ou tire campos conforme a ideia. Normalmente:
   desvio com motivo; tokens **novos** marcados.
 - **Variante reduzida** de cada estado.
 - **Técnica / biblioteca** sugerida, com o motivo, e o plano nativo.
-- **Exceções** a `transform`/`opacity` (tabela), para o aval.
+- **Custos** dos efeitos fora de `transform`/`opacity` (tabela).
 - **Custo**: barato · moderado · pesado.
 - **Fallback**: toque, aparelho fraco, PiP.
 - **Aceite**: o que é "pronto" visto na tela.
@@ -148,8 +148,8 @@ Aceite: o Ponto nunca sai do botão no hover; nenhum pulo de layout; reduzido se
 | --------------------------- | ---------------------- | ----------------------------------------------------- |
 | `transition`                | `@keyframes`           | o estado pode mudar no meio (hover, abrir/fechar)     |
 | mola                        | curva com duração      | o alvo muda enquanto anda, ou segue cursor/dedo       |
-| máscara móvel               | `stroke-dashoffset`    | quer ficar dentro da regra `transform`/`opacity`      |
-| escala + opacidade cruzadas | morph de caminho       | o morph seria exceção pesada e a troca cruzada basta  |
+| máscara móvel               | `stroke-dashoffset`    | quer o caminho mais barato (`transform`/`opacity`)    |
+| escala + opacidade cruzadas | morph de caminho       | o morph seria pesado e a troca cruzada basta          |
 | odômetro (`translateY`)     | contar número a número | o número salta muito e precisa ser lido no fim        |
 | nada                        | qualquer animação      | a ação é repetida 100× por dia e a animação só atrasa |
 

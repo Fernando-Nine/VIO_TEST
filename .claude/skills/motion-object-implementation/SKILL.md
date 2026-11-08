@@ -23,7 +23,7 @@ viagem entre as telas e põe as linhas de velocidade.
 ## Leia antes
 
 1. A issue: spec do objeto (`docs/design/<peça>.md`, seção Movimento), link do rascunho, aceite e
-   **exceções aprovadas** (só valem as registradas na issue).
+   custos declarados (animação completa por padrão, decisão 020).
 2. `docs/design/transicoes.md`; o guia do Ponto em `docs/design/`, quando existir (vence esta skill
    no que diz sobre o personagem).
 3. A base: `docs/design/movimento.md` e `.claude/skills/motion-scene-implementation/references/fundacao.md`.
@@ -72,8 +72,9 @@ nativo e avise o copiloto.
   `<audio>` do `RemoteVoice` da árvore; foco e layout só mudam a apresentação; a animação de fala
   só **lê** o estado (`useSpeaking` → booleano/classe `.speaking`; `engine.captures.voiceLevel`
   0–1, só da pessoa local) e nunca cria áudio ou analisador.
-- **Só `transform`/`opacity`.** Nada fora disso entra sem a exceção aprovada na issue. Sem aval, a
-  alternativa dentro da regra da spec (máscara movida, camada cruzada), ou avise o copiloto.
+- **Animação completa por padrão (decisão 020).** `transform`/`opacity` são o caminho barato, não
+  um limite: paint, `clip-path`, traço SVG e filtro entram sem aval, com o custo anotado. Evite
+  blur/`backdrop-filter` pesado sobre vídeo e mantenha o desempenho da chamada.
 - **Um switch só:** `src/client/components/motion.ts` (`reducedMotion(win)`, e da base
   `onMotionChange`; `useReducedMotion` em `motion-react.ts`) + Ajustes › Acessibilidade. Nada de política própria do
   componente. Toda peça implementa a variante reduzida da spec. CSS reduzido com **dois
@@ -89,12 +90,12 @@ Todo o resto (tempos, curvas, amplitude, quantidade de passos) segue a spec, sal
 proponha a alternativa mais fiel e diga exatamente o que mudou.
 
 **Campos mínimos da spec** (faltou um: peça ao copiloto antes de implementar): estados (e
-gatilhos), tokens, variante reduzida, exceções aprovadas e aceite.
+gatilhos), tokens, variante reduzida, custos declarados e aceite.
 
 ## Fluxo
 
 1. **Ler** a spec e o rascunho: intenção, estados e gatilhos, tokens, variante reduzida,
-   exceções aprovadas, aceite. Ambíguo ou em conflito com a pilha: pergunta curta ao copiloto, ou
+   custos declarados, aceite. Ambíguo ou em conflito com a pilha: pergunta curta ao copiloto, ou
    a opção mais fiel com a suposição registrada.
 2. **Conferir** a pilha e a base; achar o componente e o CSS atuais (catálogo, `mapa.md`).
 3. **Implementar** fiel, componentizado e reutilizável: estado no React, movimento no CSS/WAAPI,
@@ -131,7 +132,7 @@ Decisões rápidas:
 
 ```
 #N <objeto>: <estados implementados> com tokens e variante reduzida — PR #M.
-Custo observado: <barato | moderado (x fps) | pesado (…)>; exceções usadas: <issue | nenhuma>.
+Custo observado: <barato | moderado (x fps) | pesado (…)>; efeitos fora de transform/opacity: <quais | nenhum>.
 Desvios da spec: <o que mudou e por quê | nenhum>. Tokens novos: <nomes | nenhum>.
 Otimização possível a pedido: <uma linha>.
 ```

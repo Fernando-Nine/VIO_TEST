@@ -21,7 +21,7 @@ use o que já há (`motion.ts`, `--ease`) e crie só o token que faltar, no form
 | token `--motion-dur-base` etc.                | `var(--motion-dur-base)` no CSS; `motion.dur.base` no TS                                      |
 | variante reduzida                             | CSS com os dois seletores; JS com `reducedMotion(win)` / `useReducedMotion(win)`              |
 | custo                                         | confirme na medição se for moderado ou pesado                                                 |
-| exceção aprovada                              | implemente com o custo dito; comentário no CSS citando a issue                                |
+| efeito fora de transform/opacity              | implemente com o custo dito; comentário no CSS citando a issue                                |
 
 ## 2. Qual ferramenta para cada elemento
 
@@ -29,7 +29,7 @@ use o que já há (`motion.ts`, `--ease`) e crie só o token que faltar, no form
 | ------------------------------------- | ---------------------------------- | -------------------------------------------------- |
 | Botão, toggle, campo, aba, chip       | CSS `transition`                   | WAAPI se a sequência tiver passos (sucesso → idle) |
 | Menu, popover, dica                   | `@starting-style` + `transition`   | presença por WAAPI se a saída tiver forma própria  |
-| Ícone (`lucide-react`)                | CSS no `<svg>` ou no wrapper       | traço desenhado = exceção (paint)                  |
+| Ícone (`lucide-react`)                | CSS no `<svg>` ou no wrapper       | traço desenhado = custo de paint                   |
 | Número ao vivo (pessoas, ping, votos) | odômetro por coluna (`translateY`) | —                                                  |
 | Texto de destaque (landing)           | dividir + `animation-delay`        | GSAP SplitText só com aval                         |
 | O Ponto                               | `@keyframes` + WAAPI               | Rive (humores com máquina de estado) só com aval   |
