@@ -29,7 +29,7 @@ use o que já há (`motion.ts`, `--ease`) e crie só o token que faltar, no form
 | ------------------------------------- | ---------------------------------- | -------------------------------------------------- |
 | Botão, toggle, campo, aba, chip       | CSS `transition`                   | WAAPI se a sequência tiver passos (sucesso → idle) |
 | Menu, popover, dica                   | `@starting-style` + `transition`   | presença por WAAPI se a saída tiver forma própria  |
-| Ícone (`lucide-react`)                | CSS no `<svg>` ou no wrapper       | traço desenhado = exceção (paint)                  |
+| Ícone (`lucide-react`)                | CSS no `<svg>` ou no wrapper       | traço desenhado = custo de paint                   |
 | Número ao vivo (pessoas, ping, votos) | odômetro por coluna (`translateY`) | —                                                  |
 | Texto de destaque (landing)           | dividir + `animation-delay`        | GSAP SplitText só com aval                         |
 | O Ponto                               | `@keyframes` + WAAPI               | Rive (humores com máquina de estado) só com aval   |

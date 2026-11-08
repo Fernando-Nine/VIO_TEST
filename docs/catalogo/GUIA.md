@@ -303,8 +303,13 @@ Detalhes: [ficha 06](06-canvas-widgets-e-notas.md).
 - **Service worker:** um ajudante do navegador que guarda os arquivos fixos (imagens e scripts) para
   o VIO abrir mais rápido. Nunca mexe na sala, na sessão nem na conexão.
 - **App instalável (PWA):** o site pode ser instalado como aplicativo.
-- **Movimento reduzido:** opção do sistema ou dos Ajustes para quem se incomoda com animação; reduz
-  tudo a esmaecimento.
+- **Reduzir movimento:** opção do sistema ou dos Ajustes (Acessibilidade) que reduz tudo a esmaecimento.
+  Serve para quem se incomoda com animação e também para PC fraco ou internet ruim (decisão 020).
+- **Animação completa:** desde a decisão 020 o VIO anima à vontade; o que protege a chamada é não
+  mexer no vídeo e evitar efeitos pesados sobre ele. Quem tem aparelho fraco liga Reduzir movimento.
+- **Entrega criativa 5×5:** em trabalho novo ou de identidade, Design e Roteirista mostram 5 estilos
+  com 5 exemplos cada, para você ver muita variedade de uma vez; depois você pede para expandir ou
+  mudar um estilo (decisão 021). Ajuste pequeno continua com 2–3 opções.
 - **Ponto da marca:** o círculo do logo, pensado para conduzir as transições de um lugar a outro.
 - **WebMCP:** um jeito experimental de um assistente de IA no navegador ler e controlar a sala.
 

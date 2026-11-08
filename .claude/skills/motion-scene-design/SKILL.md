@@ -56,17 +56,17 @@ provavelmente está genérica.
 **Liberdade criativa vem primeiro.** Toda regra que não seja invariante ou segurança é um padrão:
 pode ser quebrada, desde que você diga qual, por quê e quanto custa.
 
-| Tipo                        | Regra                                                                             |
-| --------------------------- | --------------------------------------------------------------------------------- |
-| **Invariante** (não quebra) | nunca reparentar, clonar ou escalar o host de vídeo; o Ponto passa por cima       |
-| **Invariante**              | não tirar o `<audio>` do `RemoteVoice` da árvore                                  |
-| **Invariante**              | foco e layout só mudam a apresentação                                             |
-| **Invariante**              | a animação de fala só lê o estado (`useSpeaking`, `voiceLevel`), não o produz     |
-| **Invariante**              | toda peça tem variante reduzida, ligada ao switch que já existe                   |
-| Padrão                      | animação completa (decisão 020); `transform`/`opacity` é o caminho barato         |
-| Padrão quebrável            | sequência inteira ≤ 800 ms                                                        |
-| Padrão quebrável            | nada de ambiente na sala; sobre vídeo, só com aval do usuário registrado na issue |
-| Padrão quebrável            | escala de tokens de `references/sistema.md`                                       |
+| Tipo                        | Regra                                                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Invariante** (não quebra) | nunca reparentar, clonar ou escalar o host de vídeo; o Ponto passa por cima                                |
+| **Invariante**              | não tirar o `<audio>` do `RemoteVoice` da árvore                                                           |
+| **Invariante**              | foco e layout só mudam a apresentação                                                                      |
+| **Invariante**              | a animação de fala só lê o estado (`useSpeaking`, `voiceLevel`), não o produz                              |
+| **Invariante**              | toda peça tem variante reduzida, ligada ao switch que já existe                                            |
+| Padrão                      | animação completa (decisão 020); `transform`/`opacity` é o caminho barato                                  |
+| Padrão quebrável            | sequência inteira ≤ 800 ms                                                                                 |
+| Padrão quebrável            | evite blur/backdrop-filter e efeito de ambiente sobre vídeo (custo alto); se usar, o modo reduzido desliga |
+| Padrão quebrável            | escala de tokens de `references/sistema.md`                                                                |
 
 **Efeito fora de `transform`/`opacity`:** não precisa de aval (decisão 020). Anote na tabela de
 custos da spec (efeito, propriedade, custo, o que o modo reduzido faz). Evite blur/`backdrop-filter`

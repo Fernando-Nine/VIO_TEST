@@ -11,10 +11,10 @@ usuário edita e comenta direto).
 
 ## O que veio de cada leva
 
-| Leva | Artifact                                           | Formato                                                           | Fica                                                                                                                                  |
-| ---- | -------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Leva | Artifact                            | Formato                                                | Fica                                                                                     |
+| ---- | ----------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | 1, 2 | `3M2c9eiZF8Pp26bjBhMjAZ`, `819UwyvwKn6c5WCU1X5Hv8` | Canvas do tipo **Design**: uma prancha `.dc.html` por alternativa | Edição direta (texto, cor, espaçamento no painel de propriedades), comentário preso à prancha, notas, título "escolhida: X" por seção |
-| 3    | `3yJ4umERzwmY3vtWfxt8hJ`                           | Página HTML única, montada por script, sem capacidades            | Seções por issue, tamanhos reais lado a lado, selo `sugestão`, seção `#escolhidas` no topo                                            |
+| 3    | `3yJ4umERzwmY3vtWfxt8hJ`             | Página HTML única, montada por script, sem capacidades | Seções por issue, tamanhos reais lado a lado, selo `sugestão`, seção `#escolhidas` no topo |
 
 A leva 3 perdeu a edição: tudo era gerado por `innerHTML`, então o usuário não podia mexer
 num texto nem comentar uma prancha. **Volta das levas 1/2:**

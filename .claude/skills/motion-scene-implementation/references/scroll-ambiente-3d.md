@@ -270,7 +270,7 @@ mesmo elemento achata: separe.
 | Hora do dia             | `Date` uma vez ao montar                             | escolhe a variante; não anima durante a sessão                  |
 | Orientação / tamanho    | `viewport` + `matchMedia("(orientation: portrait)")` | remonta o efeito com o tamanho novo                             |
 
-Mudar a cor de fundo por rolagem é paint (paint): permitido, mas cruzar duas camadas por `opacity` é mais barato.
+Mudar a cor de fundo por rolagem tem custo de paint: permitido, mas cruzar duas camadas por `opacity` é mais barato.
 
 ### Carregar e descartar 3D/peças pesadas
 

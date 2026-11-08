@@ -66,7 +66,7 @@ Fundo  [------------ escurece 4 % (linear) ------------]
 ```
 
 Sequência longa demais vira espera. Teto atual do VIO: **800 ms** para a sequência inteira
-(`transicoes.md`). Quebrar o teto é exceção: diga quanto, onde e por quê (ex.: primeira entrada na
+(`transicoes.md`). Quebrar o teto é possível: diga quanto, onde e por quê (ex.: primeira entrada na
 landing, uma vez por visita, pulável com clique ou tecla, como o `Splash` já faz).
 
 ## Rolagem

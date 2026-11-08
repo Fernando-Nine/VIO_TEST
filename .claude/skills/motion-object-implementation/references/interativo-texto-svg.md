@@ -89,7 +89,7 @@ export function Magnetic({
 - **Tilt:** grave `--_rx`/`--_ry` com `el.style.setProperty` no tick; o CSS faz
   `transform: perspective(800px) rotateX(var(--_rx)) rotateY(var(--_ry))`. Limite a ±6°.
 - **Holofote:** uma camada filha com gradiente radial **fixo**, movida por `translate` até o
-  cursor (dentro da regra). Recalcular `background` a cada quadro é paint: exceção.
+  cursor (custo baixo). Recalcular `background` a cada quadro é paint (custo maior).
 - Os dois só com `viewport.finePointer`; no reduzido, removidos.
 
 ## 2. Arrastar e gestos
@@ -236,14 +236,14 @@ export function SplitWords({ text }: { text: string }) {
 Divida por palavra ou
 linha, não por letra, em português com acento (a letra separada pode quebrar a combinação).
 Máscara de revelação: `overflow: hidden` com `padding-block` para não cortar acentos e
-descendentes. Fonte variável (eixos da Bricolage) animada é exceção (refaz o layout).
+descendentes. Fonte variável (eixos da Bricolage) animada tem custo de layout (refaz o texto).
 
 ## 5. SVG
 
-- **Traço desenhado** (`stroke-dashoffset`) é paint: exceção. Dentro da regra: uma máscara
+- **Traço desenhado** (`stroke-dashoffset`) é paint (custo maior). Alternativa barata: uma máscara
   (`<mask>` com um retângulo) movida por `transform` revela o traço.
-- **Morph de caminho** (animar `d`): exceção; mesmo número de pontos nos dois caminhos. Dentro da
-  regra: cruzar duas formas com `scale` + `opacity`.
+- **Morph de caminho** (animar `d`): custo de paint; mesmo número de pontos nos dois caminhos. Alternativa barata:
+  cruzar duas formas com `scale` + `opacity`.
 - `lucide-react`: o `<svg>` aceita `className`; anime o wrapper ou o `<svg>` inteiro por
   `transform` (`transform-box: fill-box; transform-origin: center` para girar no centro).
 - Filtro animado (gooey, displacement) é pesado: permitido (decisão 020), mas nunca sobre vídeo na sala; anote o custo.

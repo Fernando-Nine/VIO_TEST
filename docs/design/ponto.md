@@ -2,7 +2,7 @@
 
 > Este é o **capítulo do Ponto do futuro Brandbook** (#227).
 
-Roteirista · 2026-11-07 · aprovado pelo usuário · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
+Roteirista · 2026-11-07 · guia aprovado; estilos pendentes de escolha · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
 `sala-trancada.md`, `cameras.md`, `docs/ideias/2026-10-28-roteiro.md`, `2026-10-28-assets.md`,
 `docs/decisoes/002-leva-5-e-movimento.md`, `src/client/components/motion.ts`.
 Estende a escolha A da #261; não a rediscute.
@@ -38,7 +38,7 @@ Decisões já tomadas pelo usuário (valem como base, não como limite de ideias
    principal fica sem.
 2. **Animação completa (decisão 020).** `transform`/`opacity` são o caminho barato, não um limite:
    `stroke-dashoffset`, `clip-path`, troca de `background-color` e outros efeitos entram sem aval,
-   com o custo anotado. Evite blur e `backdrop-filter` pesados sobre vídeo. `will-change` só durante
+   com o custo anotado. Evite blur/`backdrop-filter` e efeito de ambiente sobre vídeo (custo alto); se usar, o modo reduzido desliga. `will-change` só durante
    o movimento. O modo reduzido (regra 5) é o interruptor para PC fraco ou internet ruim.
 3. **Mídia intocada.** Nunca reparentar host de vídeo, clonar vídeo, recriar player, tirar o
    `<audio>` do `RemoteVoice` nem mexer em PeerConnection/MediaStream. O indicador de voz continua
@@ -52,7 +52,7 @@ Decisões já tomadas pelo usuário (valem como base, não como limite de ideias
 4. **Interrompível e redirecionável.** Se a pessoa age no meio de uma animação, o Ponto **muda de
    rumo a partir de onde está** (mola, sem salto, sem teletransporte) e a ação vale imediatamente.
    Nenhuma animação bloqueia ou adia o que a pessoa fez.
-5. **Movimento reduzido** (`prefers-reduced-motion` ou Ajustes › Acessibilidade): tudo vira
+5. **Reduzir movimento** (`prefers-reduced-motion` ou Ajustes › Acessibilidade › Reduzir movimento): tudo vira
    esmaecimento curto, o Ponto aparece no lugar final, e o que é loop vira **estado estático que
    ainda comunica** (seção 8). Uma só fonte de verdade: o que `reducedMotion()` de `motion.ts` já
    resolve; o CSS usa o mesmo atributo `data-motion="reduce"`.
@@ -221,7 +221,7 @@ estilos × 5 exemplos cada, decisão 021). O usuário pode trocar qualquer um de
 4. **Bento modular (moderna).** Blocos em grade, cada função no seu módulo, transições precisas e
    limpas. _Pergunta:_ o que torna isto inconfundivelmente VIO e não "mais um app bonito"?
 5. **Desenhado à mão / orgânico.** Traço de caneta, contornos irregulares, texturas de papel; o
-   Ponto como objeto com massa e atrito. Entra no lugar do Glass, porque blur sobre vídeo pesa.
+   Ponto como objeto com massa e atrito. Entra no lugar do Glass (vidro fosco, cortado porque blur sobre vídeo pesa).
    _Pergunta:_ a pessoa sente o peso do ponto no clique?
 
 Pistas para escolher: o estilo vencedor pode ser diferente por contexto (brincalhão na landing,
@@ -309,10 +309,10 @@ Não precisam voltar ao usuário agora; entram como parte dos rascunhos.
 
 ---
 
-## 8. Movimento reduzido: o sinal estático
+## 8. Reduzir movimento: o sinal estático
 
 _(Mantido da v2.)_ A regra 5 é a regra; os valores abaixo são **valores iniciais sugeridos**. Em
-movimento reduzido nenhum loop roda e a personalidade continua legível:
+Reduzir movimento nenhum loop roda e a personalidade continua legível:
 
 - **Pedindo para entrar:** ponto cheio + o texto "Pedindo para entrar…" (sem piscar).
 - **Carregando:** três pontos estáticos em escalas diferentes (um cheio, dois menores) + rótulo
@@ -345,7 +345,7 @@ Formato da leva: skill `vio-design-delivery`. Cada estilo (5 exemplos por estilo
   `docs/design/transicoes.md`; tokens globais em `src/client/styles.css` `:root` — `--blue`,
   `--blue-light`, `--live`, `--radius`, `--ease`; cores de participante em
   `src/client/components/ColorPicker.tsx`).
-- **Versão de movimento reduzido** de cada momento.
+- **Versão com Reduzir movimento** de cada momento.
 - **Nota do que foi descartado** e por quê.
 - **Teste lado a lado** do indicador de fala com câmera (seção 7, item 1).
 - Efeito caro (paint, layout, filtro): anote o custo e diga o que o modo reduzido faz.
@@ -357,7 +357,7 @@ Formato da leva: skill `vio-design-delivery`. Cada estilo (5 exemplos por estilo
 
 Telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações
 (#261 em espera). O Design entrega **5 estilos × 5 exemplos** (seção 4; momentos da seção 6, em
-tamanho real e interativos, cada um com versão de movimento reduzido). O usuário escolhe, troca ou
+tamanho real e interativos, cada um com versão com Reduzir movimento). O usuário escolhe, troca ou
 mistura estilos e só então nasce o conjunto padrão que substitui a tabela de `transicoes.md` na
 #261. Depois, o Frontend (Opus, raciocínio máximo) implementa um módulo reutilizável em vez de uma
 animação por tela.

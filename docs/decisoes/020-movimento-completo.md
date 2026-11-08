@@ -4,20 +4,26 @@ Data: 2026-11-08 (#261, #227)
 
 ## Contexto
 
-A regra "só `transform`/`opacity`" limitava a animação do Ponto e das telas, e cada exceção
+A regra "só `transform`/`opacity`" limitava a animação do Ponto e das telas, e cada efeito fora dela
 pedia aval do usuário. Isso travava o Design e deixava a interface mais contida do que a marca pede.
 
 ## Decisão
 
-- O padrão é **animação completa**. "Só `transform`/`opacity`" deixa de ser limite; exceções não
+- O padrão é **animação completa**. "Só `transform`/`opacity`" deixa de ser limite; efeitos fora dela não
   precisam mais de aval.
-- **Movimento reduzido** (Ajustes › Acessibilidade, `src/client/components/motion.ts`,
+- **Reduzir movimento** (Ajustes › Acessibilidade, `src/client/components/motion.ts`,
   `data-motion="reduce"`) continua e passa a ser também o interruptor para PC fraco ou internet
   ruim, além de `prefers-reduced-motion`. Nele: esmaecer em até 150 ms; loops e efeitos de
   ambiente ficam estáticos ou somem.
 - Seguem valendo os invariantes de mídia: não reparentar hosts de vídeo, não clonar vídeo,
   preservar PeerConnections, MediaStreams e players de áudio.
-- Seguem valendo o desempenho: evitar blur e `backdrop-filter` pesados sobre vídeo.
+- Desempenho: evite blur/`backdrop-filter` e efeito de ambiente sobre vídeo (custo alto); se usar, o modo reduzido desliga. Sem exigir aval.
+
+## Pendência
+
+O achado 07.1 do catálogo (`docs/catalogo/07-cliente-e-interface.md`, L132): com movimento reduzido o
+toast não fecha sozinho. Corrigir (prazo em JS, não no fim da animação) antes de contar com o modo
+reduzido como interruptor de desempenho.
 
 ## Motivo
 
