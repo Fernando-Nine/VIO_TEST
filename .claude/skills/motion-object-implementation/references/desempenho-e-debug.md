@@ -8,7 +8,7 @@ Aqui fica o que é próprio de um objeto.
 
 | Regra                                  | Por quê                                                                      |
 | -------------------------------------- | ---------------------------------------------------------------------------- |
-| Animar só `transform`/`opacity`        | compositor; o resto é exceção aprovada                                       |
+| Preferir `transform`/`opacity`         | compositor; o resto é permitido (decisão 020), com o custo anotado           |
 | `will-change` só durante a animação    | camada permanente gasta memória; em lista inteira, trava                     |
 | Ler tudo, depois escrever tudo         | `getBoundingClientRect` depois de `style.*` força layout                     |
 | Por quadro, só no `ticker`             | um `rAF` por componente vira dezenas                                         |

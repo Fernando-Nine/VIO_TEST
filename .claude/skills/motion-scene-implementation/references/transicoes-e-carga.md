@@ -222,7 +222,7 @@ animação.
 - **Carga rápida (< 300 ms):** não mostre nada. Entre 300 ms e 1 s: o Ponto respira no lugar do
   conteúdo. Acima de 1 s: esqueleto com a forma do que vem.
 - **Esqueleto:** blocos com a forma final; brilho = uma camada com gradiente **movida** por
-  `translateX` (dentro da regra), nunca `background-position` animado (exceção de paint). No
+  `translateX` (barato), evite `background-position` animado (custo de paint). No
   reduzido, blocos parados.
 - **Conteúdo chegando:** troca esqueleto → conteúdo com opacidade cruzada (`fast`), sem pulo de
   layout (o esqueleto tem as mesmas dimensões).

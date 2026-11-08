@@ -59,6 +59,11 @@ arrumação de issues e docs, varreduras) a subagentes (ferramenta Agent, em seg
 devolvem ≤ 10 linhas; cria subagentes sem pedir ao usuário (aval de 5 nov). As áreas também usam
 subagentes para leitura pesada.
 
+**Esforço e ultracode:** ao abrir sessão de área ou pedir trabalho grande, o copiloto diz ao usuário qual
+esforço usar (alto, extra ou max) e se vale ligar o ultracode (`/effort ultracode`, ou `ultracode:` no
+início de um prompt): o Claude monta workflows com vários subagentes em segundo plano; serve para
+auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não vale para tarefa pequena.
+
 **Modelo por tarefa** (o copiloto passa o modelo ao abrir a sessão da área):
 
 | Modelo | Tarefas                                                                                                                 |
@@ -100,7 +105,8 @@ subagentes para leitura pesada.
 - **Pesquisar antes de insistir**: diante de bug difícil ou solução incerta, rode o `pesquisador`
   (fóruns, Reddit, issues de bibliotecas, docs) antes de trocar código por tentativa.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
-  rascunho do Design (2–3 opções em tamanho real, etiqueta `design`) e só vira issue de
+  rascunho do Design (trabalho novo ou de identidade: 5 estilos × 5 exemplos; ajuste pequeno: 2–3 opções;
+  tamanho real, etiqueta `design`; decisão 021) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
   já existe não precisam. Vale também para transição e animação. O copiloto confere o aval na issue
   antes de abrir a sessão da área, mesmo que a issue seja a próxima da Fila.
@@ -164,9 +170,10 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Fontes: Bricolage Grotesque (interface) e IBM Plex Mono (código da sala, ping, números).
 - Erro visível ao usuário: `Fault` com `code` e mensagem em português, nunca stack trace.
 - Movimento: **o ponto da marca conduz as transições** (entrar na sala, trocar de página, abrir
-  widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela. Só
-  `transform`/`opacity`, encaixe perfeito (exceção a transform/opacity só com aval do usuário registrado na issue), e `prefers-reduced-motion` + Acessibilidade reduzem a
-  só esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`; Design:
+  widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela, com encaixe
+  perfeito. O padrão é animação completa (decisão 020); invariantes de mídia e desempenho sobre vídeo
+  valem sempre. `prefers-reduced-motion` e Ajustes › Acessibilidade (também para PC fraco ou internet
+  ruim) reduzem a esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`; Design:
   `motion-object-design` e `motion-scene-design`; Frontend: `motion-object-implementation` e
   `motion-scene-implementation`).
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
