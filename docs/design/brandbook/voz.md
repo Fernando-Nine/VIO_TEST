@@ -16,23 +16,23 @@ empresa. Português do Brasil, frases completas, com acento.
 
 ## Tom por momento
 
-| Momento     | Tom                  | Exemplo                                                |
-| ----------- | -------------------- | ------------------------------------------------------ |
-| Boas-vindas | Caloroso, breve      | "Assistir junto."                                      |
-| Ação feita  | Discreto             | "Convite copiado."                                     |
-| Espera      | Paciente             | "Pedindo para entrar…"                                 |
-| Sem resposta | Gentil, com saída   | "Ninguém respondeu a tempo. Tente entrar de novo."     |
-| Rede        | Calmo, diz o que faz | "A conexão caiu. Tentando voltar à sala automaticamente…" |
-| Permissão   | Claro, com o próximo passo | "Esta ação exige permissão do criador ou de um administrador da sala." |
+| Momento      | Tom                        | Exemplo                                                                |
+| ------------ | -------------------------- | ---------------------------------------------------------------------- |
+| Boas-vindas  | Caloroso, breve            | "Assistir junto."                                                      |
+| Ação feita   | Discreto                   | "Convite copiado."                                                     |
+| Espera       | Paciente                   | "Pedindo para entrar…"                                                 |
+| Sem resposta | Gentil, com saída          | "Ninguém respondeu a tempo. Tente entrar de novo."                     |
+| Rede         | Calmo, diz o que faz       | "A conexão caiu. Tentando voltar à sala automaticamente…"              |
+| Permissão    | Claro, com o próximo passo | "Esta ação exige permissão do criador ou de um administrador da sala." |
 
 ## Certo × errado
 
-| Certo                                   | Errado                                    |
-| --------------------------------------- | ----------------------------------------- |
-| "Entrar"                                | "Clique aqui para entrar na sala"         |
-| "Não achamos essa sala. Confira o código." | "Erro 404: room not found"             |
-| "Sua tela está ao vivo."                | "Transmissão iniciada com sucesso!!"      |
-| "Criar minha sala"                      | "Nova instância de sala"                  |
+| Certo                                      | Errado                               |
+| ------------------------------------------ | ------------------------------------ |
+| "Entrar"                                   | "Clique aqui para entrar na sala"    |
+| "Não achamos essa sala. Confira o código." | "Erro 404: room not found"           |
+| "Sua tela está ao vivo."                   | "Transmissão iniciada com sucesso!!" |
+| "Criar minha sala"                         | "Nova instância de sala"             |
 
 O Ponto **não fala**: não há balão "do Ponto" com texto. Ele comunica pelo que faz.
 

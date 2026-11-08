@@ -14,23 +14,23 @@ pequeno), cansa e dorme, **tem peso** (acelera, freia, quica, assenta) e só se 
 
 ## O que nunca muda
 
-| Regra            | Como                                                                                         |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| Forma            | Quadrado arredondado, canto 27% do lado (6 de 22). **Nunca círculo como estado.** Pode virar botão, widget ou barra como transição e depois volta a ser ponto. Esticar e achatar por eixo não conta como outra forma. |
-| Cor              | **Azul `#2727F5` quase sempre.** Muda só em raras ocasiões (cor de quem compartilha, aviso real, comemoração curta), e sempre junto com movimento ou tamanho, nunca só a cor. |
-| Ação principal   | **Dividir e juntar.** Alguém entra: o Ponto se divide na pessoa. Abre widget: se divide no widget. Fecha ou a pessoa sai: junta de volta. |
-| Andar            | **Rola como um dado, em passos de 45°** (fica em pé na ponta, cai para o lado seguinte, assenta). Distâncias longas: **voa circulando** (curva, órbita que fecha até pousar). |
-| Presença         | O Ponto da marca é um só e contínuo: não some no meio do caminho nem espera duplicado no destino. Toda tela principal tem ponto. |
-| Mídia            | Nunca fica sobre vídeo nem é pai de vídeo ou `<audio>`. Em tela cheia: pequeno, baixa opacidade, no canto, na cor de quem compartilha. |
+| Regra          | Como                                                                                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Forma          | Quadrado arredondado, canto 27% do lado (6 de 22). **Nunca círculo como estado.** Pode virar botão, widget ou barra como transição e depois volta a ser ponto. Esticar e achatar por eixo não conta como outra forma. |
+| Cor            | **Azul `#2727F5` quase sempre.** Muda só em raras ocasiões (cor de quem compartilha, aviso real, comemoração curta), e sempre junto com movimento ou tamanho, nunca só a cor.                                         |
+| Ação principal | **Dividir e juntar.** Alguém entra: o Ponto se divide na pessoa. Abre widget: se divide no widget. Fecha ou a pessoa sai: junta de volta.                                                                             |
+| Andar          | **Rola como um dado, em passos de 45°** (fica em pé na ponta, cai para o lado seguinte, assenta). Distâncias longas: **voa circulando** (curva, órbita que fecha até pousar).                                         |
+| Presença       | O Ponto da marca é um só e contínuo: não some no meio do caminho nem espera duplicado no destino. Toda tela principal tem ponto.                                                                                      |
+| Mídia          | Nunca fica sobre vídeo nem é pai de vídeo ou `<audio>`. Em tela cheia: pequeno, baixa opacidade, no canto, na cor de quem compartilha.                                                                                |
 
 ## Tamanhos
 
-| Uso                       | Lado      |
-| ------------------------- | --------- |
-| No logo                   | 22% da altura do logo |
-| Ponto de pessoa, lista    | 8–10 px   |
-| Ponto em botão, título    | 10–14 px  |
-| Estado (espera, carregar) | 16–24 px  |
+| Uso                       | Lado                                   |
+| ------------------------- | -------------------------------------- |
+| No logo                   | 22% da altura do logo                  |
+| Ponto de pessoa, lista    | 8–10 px                                |
+| Ponto em botão, título    | 10–14 px                               |
+| Estado (espera, carregar) | 16–24 px                               |
 | Ilustração, abertura      | até 120 px (quadrado da sala trancada) |
 
 ## Contraste

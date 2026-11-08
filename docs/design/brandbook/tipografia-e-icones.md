@@ -2,10 +2,10 @@
 
 ## Fontes
 
-| Papel     | Fonte                         | Token    | Onde                                         |
-| --------- | ----------------------------- | -------- | -------------------------------------------- |
+| Papel     | Fonte                          | Token    | Onde                                         |
+| --------- | ------------------------------ | -------- | -------------------------------------------- |
 | Interface | Bricolage Grotesque (variável) | `--font` | Tudo: títulos, botões, texto                 |
-| Números   | IBM Plex Mono                 | `--mono` | Código da sala, ping, tempos, contagens, HEX |
+| Números   | IBM Plex Mono                  | `--mono` | Código da sala, ping, tempos, contagens, HEX |
 
 - Pesos: 400 (texto), 600 (botões, rótulos), 700–800 (títulos grandes). No máximo 2 pesos e 3 tamanhos
   por widget.

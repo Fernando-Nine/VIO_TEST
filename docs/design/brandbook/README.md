@@ -7,16 +7,16 @@ https://claude.ai/artifact/UnQPQ3Fs6gxSVQg418btT7.
 O que está aqui é **decidido**, salvo o capítulo [Em aberto](em-aberto.md), que espera a escolha do
 usuário. Se o código divergir deste guia, vale o código (`src/client/styles.css`) e este guia é corrigido.
 
-| Capítulo                                  | O que diz                                                    |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| [Marca](#marca)                           | O que é o VIO, o logo, área livre, tamanhos mínimos           |
-| [O Ponto](ponto.md)                       | A personalidade única do Ponto e as regras de forma e cor     |
-| [Cores](cores.md)                         | Tokens reais, contraste medido, cores das pessoas             |
-| [Tipografia e ícones](tipografia-e-icones.md) | Bricolage Grotesque, IBM Plex Mono, `lucide-react`        |
-| [Voz e tom](voz.md)                       | Como o VIO fala, em português                                 |
-| [Movimento](movimento.md)                 | Resumo da decisão 020 e as regras do Ponto em movimento       |
-| [Usos certos e errados](usos.md)          | O que fazer e o que nunca fazer com a marca                   |
-| [Em aberto](em-aberto.md)                 | O Ponto em telas, balões e pop-ups: 5 estilos × 5 exemplos    |
+| Capítulo                                      | O que diz                                                  |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| [Marca](#marca)                               | O que é o VIO, o logo, área livre, tamanhos mínimos        |
+| [O Ponto](ponto.md)                           | A personalidade única do Ponto e as regras de forma e cor  |
+| [Cores](cores.md)                             | Tokens reais, contraste medido, cores das pessoas          |
+| [Tipografia e ícones](tipografia-e-icones.md) | Bricolage Grotesque, IBM Plex Mono, `lucide-react`         |
+| [Voz e tom](voz.md)                           | Como o VIO fala, em português                              |
+| [Movimento](movimento.md)                     | Resumo da decisão 020 e as regras do Ponto em movimento    |
+| [Usos certos e errados](usos.md)              | O que fazer e o que nunca fazer com a marca                |
+| [Em aberto](em-aberto.md)                     | O Ponto em telas, balões e pop-ups: 5 estilos × 5 exemplos |
 
 ## Marca
 
@@ -37,14 +37,14 @@ azul. Proporção 268 × 100. O traço usa a cor do texto; o Ponto é azul `#272
 
 Variações em [`../brandkit/logo/`](../brandkit/logo/):
 
-| Arquivo                 | Onde usar                                         |
-| ----------------------- | ------------------------------------------------- |
-| `vio-escuro.svg`        | Padrão. Fundo escuro do app (`#0B0C13`).          |
-| `vio-claro.svg`         | Fundo claro (impressos, sites de terceiros).      |
-| `vio-mono-branco.svg`   | Sobre foto, vídeo ou cor; uma cor só.             |
-| `vio-mono-preto.svg`    | Impressão em uma cor, carimbo.                    |
-| `vio-mono-azul.svg`     | Fundo branco quando só cabe a cor da marca.       |
-| `vio-escuro-fundo.svg`  | Já com o fundo escuro e área livre (avatar, card).|
-| `vio-azul-fundo.svg`    | Já com fundo azul (avatar, capa).                 |
+| Arquivo                | Onde usar                                          |
+| ---------------------- | -------------------------------------------------- |
+| `vio-escuro.svg`       | Padrão. Fundo escuro do app (`#0B0C13`).           |
+| `vio-claro.svg`        | Fundo claro (impressos, sites de terceiros).       |
+| `vio-mono-branco.svg`  | Sobre foto, vídeo ou cor; uma cor só.              |
+| `vio-mono-preto.svg`   | Impressão em uma cor, carimbo.                     |
+| `vio-mono-azul.svg`    | Fundo branco quando só cabe a cor da marca.        |
+| `vio-escuro-fundo.svg` | Já com o fundo escuro e área livre (avatar, card). |
+| `vio-azul-fundo.svg`   | Já com fundo azul (avatar, capa).                  |
 
 Ponto sozinho em [`../brandkit/ponto/`](../brandkit/ponto/) (azul, claro, branco, preto).
