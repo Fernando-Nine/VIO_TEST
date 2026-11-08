@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brandbook VIO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: one long reference column (max 1240) — decided brand first, open choices (5×5) last.
+   Single dark look on purpose: VIO has one dark theme. Tokens = src/client/styles.css :root. */
+:root{
+  color-scheme:dark;
+  --bg:#0b0c13;--panel:#14151f;--raised:#1b1c29;--line:#2a2c3c;--muted:#a3a5bc;--text:#f3f3fb;
+  --blue:#2727f5;--blue-light:#a6a9ff;--live:#4cddc3;--danger:#ff8a96;--focus:#c8ceff;--over:#f2d36b;
+  --paper:#f3f3fb;--ink:#0b0c13;
+  --radius:18px;--ease-ponto:cubic-bezier(.2,.7,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --font:"Bricolage Grotesque Variable","Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.55 var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+main{max-width:1240px;margin:0 auto}
+h1,h2,h3,h4,h5{margin:0;text-wrap:balance;font-weight:700;letter-spacing:-.01em}
+p{margin:0}
+code,.mono{font-family:var(--mono)}
+a{color:var(--blue-light)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+button{font:inherit;color:inherit}
+.lab{font:500 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:62ch}
+section.ch{display:grid;gap:24px;padding-block:56px;border-top:1px solid var(--line)}
+section.ch>header{display:grid;gap:8px}
+section.ch>*,.sty,.sty-h>div{min-width:0}
+section.ch h2{font-size:clamp(28px,4vw,40px)}
+.pill{justify-self:start;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font:500 12px var(--mono);background:var(--raised);color:var(--muted)}
+.pill.open{background:#f2d36b1f;color:var(--over)}
+
+/* top */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:16px;align-items:center;justify-content:space-between;padding-block:12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top .logo{height:22px;width:auto;color:var(--text)}
+.top nav{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:14px}
+.top nav a{color:var(--muted);text-decoration:none}
+.top nav a:hover{color:var(--text)}
+.hero{display:grid;gap:20px;padding-block:72px 56px}
+.hero .logo{height:clamp(64px,12vw,120px);width:auto;color:var(--text);overflow:visible}
+.hero h1{font-size:clamp(20px,2.4vw,26px);font-weight:500;color:var(--muted);max-width:40ch}
+.hero h1 b{color:var(--text);font-weight:700}
+
+/* marca */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tile{display:grid;gap:10px}
+.tile .pad{height:150px;border-radius:12px;display:grid;place-items:center;padding:24px}
+.tile .pad .logo{height:44px;width:auto}
+.tile figcaption{display:flex;justify-content:space-between;gap:8px;font:12px var(--mono);color:var(--muted)}
+figure{margin:0}
+.clear{display:flex;gap:32px;flex-wrap:wrap;align-items:center}
+.clearbox{position:relative;padding:22px;outline:1px dashed var(--blue-light);outline-offset:0;border-radius:4px}
+.clearbox .logo{height:100px;width:auto;display:block;color:var(--text)}
+.sizes{display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap}
+.sizes div{display:grid;gap:6px;justify-items:start}
+.sizes .logo{width:auto;color:var(--text)}
+.sizes small{font:12px var(--mono);color:var(--muted)}
+
+/* ponto */
+.ponto-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:32px;align-items:start}
+.constr{position:relative;width:min(100%,264px);aspect-ratio:1;background:
+  repeating-linear-gradient(0deg,var(--line) 0 1px,transparent 1px 12px),repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 12px);border-radius:8px;display:grid;place-items:center}
+.constr i{display:block;width:72%;aspect-ratio:1;border-radius:27%;background:var(--blue)}
+.constr span{position:absolute;font:12px var(--mono);color:var(--blue-light)}
+.traits{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.trait{background:var(--panel);border-radius:12px;padding:14px 16px;display:grid;gap:4px}
+.trait b{font-weight:700}
+.trait span{color:var(--muted);font-size:14px}
+.rules{display:grid;gap:0;border-top:1px solid var(--line)}
+.rules>div{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rules dt{font-weight:700}
+.rules dd{margin:0;color:var(--muted)}
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.vc{background:var(--panel);border-radius:12px;padding:12px;display:grid;gap:8px}
+.vc .stage{position:relative;height:96px;border-radius:8px;background:var(--bg);overflow:hidden}
+.vc b{font-size:15px}
+.vc span{font-size:13px;color:var(--muted)}
+.stage .p{position:absolute;width:18px;height:18px;border-radius:27%;background:var(--blue);left:calc(50% - 9px);top:calc(50% - 9px)}
+.stage .floor{position:absolute;left:12px;right:12px;bottom:28px;height:1px;background:var(--line)}
+.stage.roll .p{top:auto;bottom:29px;left:20px}
+.people{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.person{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border-radius:999px;padding:6px 12px 6px 10px;font-size:14px}
+.person i{width:10px;height:10px;border-radius:27%;display:block}
+
+/* cores */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.sw{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;background:var(--panel);border-radius:12px;padding:10px;align-items:center}
+.chip{width:56px;height:56px;border-radius:10px}
+.chip.edge{box-shadow:inset 0 0 0 1px var(--line)}
+.sw-t{display:grid;grid-template-columns:auto 1fr;gap:0 10px;font-size:13px;min-width:0}
+.sw-t code{font-weight:600;color:var(--text)}
+.sw-t .hex{font-family:var(--mono);color:var(--muted);text-align:right}
+.sw-t .cr{grid-column:1/-1;font:12px var(--mono);color:var(--blue-light)}
+.sw-t .use{grid-column:1/-1;color:var(--muted)}
+.callout{border-left:3px solid var(--over);padding:10px 14px;background:var(--panel);border-radius:0 10px 10px 0;max-width:72ch}
+
+/* tipo */
+.spec{display:grid;gap:18px}
+.spec .big{font-size:clamp(40px,7vw,72px);font-weight:800;line-height:1;letter-spacing:-.03em}
+.scale{display:grid;gap:6px}
+.scale div{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:baseline;gap:12px}
+.scale small{font:12px var(--mono);color:var(--muted)}
+.monoshow{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--mono);font-size:22px;font-variant-numeric:tabular-nums}
+.monoshow span{display:grid;gap:2px}
+.monoshow small{font-size:12px;color:var(--muted)}
+.icons{display:flex;gap:10px;flex-wrap:wrap}
+.icons div{display:grid;justify-items:center;gap:6px;width:84px;padding:12px 4px;background:var(--panel);border-radius:12px;font:11px var(--mono);color:var(--muted)}
+.icons .ic{color:var(--text)}
+
+/* voz, usos */
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.pair{display:grid;gap:0;border-radius:12px;overflow:hidden;background:var(--panel)}
+.pair div{padding:12px 14px;display:grid;gap:2px}
+.pair .ok{border-bottom:1px solid var(--line)}
+.pair small{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.pair .ok small{color:var(--live)}
+.pair .no small{color:var(--danger)}
+.pair .no span{color:var(--muted);text-decoration:line-through;text-decoration-color:#ff8a9680}
+.uses{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.use{display:grid;gap:8px}
+.use .pad{height:132px;border-radius:12px;background:var(--panel);display:grid;place-items:center;position:relative;overflow:hidden}
+.use .tag{display:flex;gap:6px;align-items:center;font-size:14px}
+.use .tag .ic{flex:none}
+.use.ok .tag .ic{color:var(--live)}
+.use.no .tag .ic{color:var(--danger)}
+.use .pad .logo{height:36px;width:auto;color:var(--text)}
+.demo-btn{height:44px;padding:0 18px;border-radius:12px;border:0;background:var(--blue);color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:10px}
+.demo-btn i{width:10px;height:10px;border-radius:27%;background:#fff;display:block}
+.fakevid{position:absolute;inset:16px;border-radius:8px;background:linear-gradient(135deg,#3a3f5c,#1e2235 60%,#53406a)}
+.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;font:13px var(--mono)}
+.files div{background:var(--panel);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.files span{color:var(--muted);font-family:var(--font)}
+
+/* curve */
+.curve{width:180px;height:180px;background:var(--panel);border-radius:12px}
+.mv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start}
+.mv ul{margin:0;padding-left:18px;display:grid;gap:6px;color:var(--muted)}
+.mv li b{color:var(--text)}
+
+/* ===== 5×5 ===== */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:4;background:var(--bg);padding-block:10px}
+.tb{height:40px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-weight:600;cursor:pointer}
+.tb[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.sty{display:grid;gap:16px;padding-block:28px;border-top:1px dashed var(--line)}
+.sty-h{display:flex;gap:14px;align-items:center}
+.letter{flex:none;width:40px;height:40px;border-radius:27%;background:var(--blue);color:#fff;display:grid;place-items:center;font:700 18px var(--mono)}
+.sty-h h3{font-size:22px}
+.sty-h p{color:var(--muted);font-size:14px;max-width:70ch}
+.frames{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.fr{width:min(380px,100%);min-width:0;display:grid;gap:8px}
+.fr figcaption{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--muted)}
+.scr{position:relative;width:100%;display:grid;align-content:start;gap:14px;padding:20px;overflow:hidden}
+.f1 .scr{min-height:440px;align-content:center}
+.f2 .scr{min-height:200px}
+.f3 .scr{min-height:260px;align-content:center;background-color:#0b0c13}
+.f4 .scr{min-height:140px;align-content:end}
+.f5 .scr{min-height:300px;justify-items:center;align-content:center;text-align:center}
+.draw{display:none}
+.pt{display:inline-block;flex:none;width:12px;height:12px;border-radius:27%;background:var(--blue)}
+.scr .eyebrow{font:500 12px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.scr .ttl{font-size:30px;line-height:1.1}
+.b1,.b2{min-height:44px;padding:0 18px;border:0;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-weight:600;cursor:pointer}
+.b1{background:var(--blue);color:#fff}
+.b1 .pt{background:#fff}
+.b1.dz{background:#ff8a96;color:var(--ink)}
+.b2{background:var(--raised);color:var(--text)}
+.join{display:grid;gap:6px}
+.join label{font-size:13px;color:var(--muted)}
+.join .row{display:flex;gap:8px}
+.join input{flex:1;min-width:0;height:44px;padding:0 12px;font:15px var(--mono);color:var(--text);background:var(--bg);border:1px solid var(--line)}
+.join input::placeholder{color:#a3a5bc99}
+.bar{display:flex;align-items:center;gap:10px}
+.ib{width:44px;height:44px;display:grid;place-items:center;border:0;background:var(--raised);cursor:pointer}
+.code{font:600 15px var(--mono);letter-spacing:.04em}
+.who{margin-left:auto;font-size:13px;color:var(--muted)}
+.balloon{justify-self:start;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:14px;font-weight:600;background:var(--raised)}
+.dialog{display:grid;gap:10px;padding:20px;background:var(--panel);transform-origin:28px 30px}
+.dialog h5{font-size:20px;display:flex;align-items:center;gap:10px}
+.dialog p{color:var(--muted);font-size:15px}
+.acts{display:flex;gap:8px;justify-content:flex-end;padding-top:6px;flex-wrap:wrap}
+.toast{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--raised);font-weight:600}
+.toast .ic{margin-left:auto;color:var(--live)}
+.box{width:120px;height:120px;display:grid;place-items:center;background:var(--panel)}
+.box .pt{width:24px;height:24px}
+.wt{font-weight:600}
+
+/* A · neo-brutalista */
+.A .scr{background:var(--panel);border:3px solid var(--text);border-radius:8px;box-shadow:6px 6px 0 var(--blue)}
+.A .ttl{font-size:38px;font-weight:800;letter-spacing:-.03em;text-transform:uppercase}
+.A .b1,.A .b2,.A .ib,.A .join input{border:3px solid var(--text);border-radius:6px}
+.A .b1{box-shadow:4px 4px 0 var(--text);font-weight:800}
+.A .b1 .pt{width:16px;height:16px}
+.A .b2{background:transparent}
+.A .balloon,.A .toast,.A .dialog,.A .box{border:3px solid var(--text);border-radius:6px;box-shadow:4px 4px 0 var(--blue)}
+.A .balloon .pt,.A .toast .pt,.A .dialog .pt{width:16px;height:16px}
+.A .box .pt{width:40px;height:40px}
+.A .f3 .scr,.A .f4 .scr{background:var(--bg)}
+.run .A .f1 .b1 .pt{animation:a-slam 560ms cubic-bezier(.7,0,.2,1) both}
+.run .A .f1 .ttl{animation:a-drop 420ms cubic-bezier(.7,0,.2,1) both}
+.run .A .f2 .balloon{animation:a-drop 360ms cubic-bezier(.7,0,.2,1) 120ms both}
+.run .A .f2 .balloon .pt{animation:a-slam 500ms cubic-bezier(.7,0,.2,1) 120ms both}
+.run .A .f3 .dialog{animation:a-grow 380ms cubic-bezier(.7,0,.2,1) both}
+.run .A .f4 .toast{animation:a-in 420ms cubic-bezier(.7,0,.2,1) both}
+.run .A .f4 .toast .pt{animation:a-stamp 360ms cubic-bezier(.7,0,.2,1) 380ms both}
+.run .A .f5 .box .pt{animation:a-wait 1800ms cubic-bezier(.7,0,.2,1) infinite}
+@keyframes a-slam{0%{transform:translateX(-300px)}78%{transform:translateX(8px) scaleX(.72)}100%{transform:none}}
+@keyframes a-drop{0%{transform:translateY(-40px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes a-grow{0%{transform:scale(.06);opacity:.4}100%{transform:none;opacity:1}}
+@keyframes a-in{0%{transform:translateX(110%)}100%{transform:none}}
+@keyframes a-stamp{0%{transform:scale(1.9)}100%{transform:none}}
+@keyframes a-wait{0%,40%,100%{transform:none}55%{transform:translateY(-22px)}70%{transform:translateY(0) scale(1.2,.8)}80%{transform:none}}
+
+/* B · Swiss editorial */
+.B .scr{background:var(--bg);border-top:1px solid var(--text);padding-inline:0}
+.B .ttl{font-size:44px;font-weight:700;letter-spacing:-.035em;line-height:.98}
+.B .eyebrow{display:flex;justify-content:space-between}
+.B .b1{justify-self:start;border-radius:2px;padding-inline:16px}
+.B .b1 .pt{width:8px;height:8px}
+.B .b2{background:transparent;border-bottom:1px solid var(--text);border-radius:0;padding-inline:4px}
+.B .join input{border-width:0 0 1px;background:transparent;padding-inline:0}
+.B .ib{background:transparent;border:1px solid var(--line);border-radius:2px}
+.B .balloon{background:transparent;border-left:1px solid var(--text);padding-block:2px;font-weight:500}
+.B .balloon .pt,.B .toast .pt,.B .dialog .pt{width:8px;height:8px}
+.B .dialog{background:transparent;border-top:1px solid var(--text);padding-inline:0}
+.B .dialog h5{font-size:26px;letter-spacing:-.02em}
+.B .toast{background:transparent;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-inline:0;font-weight:500}
+.B .box{background:transparent;border:1px solid var(--line);border-radius:0}
+.B .box .pt{width:12px;height:12px}
+.B .wt{font:500 13px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.run .B .scr{animation:b-rule 520ms var(--ease-ponto) both}
+.run .B .f1 .b1 .pt,.run .B .balloon .pt,.run .B .toast .pt{animation:b-step 420ms var(--ease-ponto) 200ms both}
+.run .B .f3 .dialog{animation:b-fade 360ms var(--ease-ponto) both}
+.run .B .f5 .box .pt{animation:b-breathe 4000ms ease-in-out infinite}
+@keyframes b-rule{0%{border-top-color:transparent;clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
+@keyframes b-step{0%{transform:translateX(-14px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes b-fade{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+@keyframes b-breathe{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* C · expressivo spring */
+.C .scr{background:var(--raised);border-radius:32px}
+.C .ttl{font-size:34px;font-weight:800;font-variation-settings:"opsz" 96}
+.C .b1,.C .b2,.C .ib,.C .balloon,.C .toast{border-radius:999px}
+.C .b1{min-height:52px;font-size:17px}
+.C .b1 .pt{width:14px;height:14px}
+.C .b2{background:var(--panel)}
+.C .join input{border-radius:999px;border:0;background:var(--panel);padding-inline:18px}
+.C .ib{background:var(--panel)}
+.C .balloon{background:var(--blue-light);color:var(--ink);padding:10px 16px}
+.C .balloon .pt{background:var(--blue)}
+.C .dialog{border-radius:28px;background:var(--raised);box-shadow:0 24px 64px #0007}
+.C .f3 .scr,.C .f4 .scr{background:var(--panel)}
+.C .toast{padding:14px 20px}
+.C .toast .pt{width:14px;height:14px}
+.C .box{border-radius:36px;background:var(--panel)}
+.run .C .f1 .b1 .pt{animation:c-roll 800ms both}
+.run .C .f1 .b1{animation:c-pop 500ms var(--spring) 640ms both}
+.run .C .f2 .balloon{transform-origin:22px 0;animation:c-pop 520ms var(--spring) both}
+.run .C .f2 .balloon .pt{animation:c-lean 900ms var(--spring) 200ms both}
+.run .C .f3 .dialog{animation:c-grow 560ms var(--spring) both}
+.run .C .f4 .toast{animation:c-up 520ms var(--spring) both}
+.run .C .f4 .toast .pt{animation:c-hop 700ms 360ms both}
+.run .C .f5 .box .pt{animation:c-breathe 2600ms ease-in-out infinite}
+@keyframes c-roll{
+  0%{transform:translate(-200px,0) rotate(-360deg);animation-timing-function:ease-in}
+  12.5%{transform:translate(-175px,-4px) rotate(-315deg);animation-timing-function:ease-out}
+  25%{transform:translate(-150px,0) rotate(-270deg);animation-timing-function:ease-in}
+  37.5%{transform:translate(-112px,-4px) rotate(-225deg);animation-timing-function:ease-out}
+  50%{transform:translate(-75px,0) rotate(-180deg);animation-timing-function:ease-in}
+  62.5%{transform:translate(-50px,-4px) rotate(-135deg);animation-timing-function:ease-out}
+  75%{transform:translate(-25px,0) rotate(-90deg);animation-timing-function:ease-in}
+  87.5%{transform:translate(-12px,-3px) rotate(-45deg);animation-timing-function:ease-out}
+  94%{transform:translate(0,0) rotate(0) scale(1.3,.75)}
+  100%{transform:none}}
+@keyframes c-pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+@keyframes c-lean{0%{transform:rotate(0)}35%{transform:translateX(-3px) rotate(-28deg)}100%{transform:none}}
+@keyframes c-grow{0%{transform:scale(.05)}100%{transform:none}}
+@keyframes c-up{0%{transform:translateY(120%)}100%{transform:none}}
+@keyframes c-hop{0%,100%{transform:none}20%{transform:scale(1.25,.75)}45%{transform:translateY(-16px) scale(.85,1.2) rotate(45deg)}70%{transform:translateY(0) scale(1.3,.72) rotate(90deg)}85%{transform:scale(.95,1.05) rotate(90deg)}}
+@keyframes c-breathe{0%,100%{transform:none}45%{transform:scale(1.14,1.06)}60%{transform:scale(1.08,1.1)}}
+
+/* D · bento */
+.D .scr{padding:0;gap:8px;background:transparent}
+.D .scr>:not(.draw){background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.D .f1 .scr{grid-template-columns:1fr 1fr}
+.D .f1 .eyebrow{grid-column:1;display:grid;place-items:center;font-size:20px;color:var(--text)}
+.D .f1 .ttl{grid-column:2;font-size:22px;display:flex;align-items:end;min-height:96px}
+.D .f1 .b1{grid-column:1/-1;border-radius:var(--radius);min-height:72px;justify-content:space-between;font-size:17px;padding:0 20px;flex-direction:row-reverse;border:0}
+.D .f1 .b1 .pt{width:14px;height:14px}
+.D .f1 .join{grid-column:1/-1}
+.D .b2,.D .join input{border-radius:12px}
+.D .ib{border-radius:12px}
+.D .f2 .scr{grid-template-columns:1fr}
+.D .balloon{border-radius:12px !important;padding:10px 14px !important;background:var(--raised) !important}
+.D .f3 .scr{align-content:center}
+.D .dialog{background:var(--panel)}
+.D .acts{display:grid;grid-template-columns:1fr 1fr}
+.D .acts button{border-radius:12px}
+.D .f4 .scr{grid-template-columns:56px 1fr}
+.D .toast{grid-column:1/-1;border-radius:var(--radius) !important;padding:0 !important;overflow:hidden;gap:0}
+.D .toast .pt{width:56px;height:56px;border-radius:0;background:var(--blue);display:grid}
+.D .toast .tx{padding:0 16px}
+.D .toast .ic{margin-right:16px}
+.D .f5 .scr{grid-template-columns:120px 1fr;justify-items:stretch;text-align:left;align-items:stretch}
+.D .box{width:auto;height:120px;padding:0 !important;border-radius:var(--radius) !important}
+.D .wt{display:grid;align-items:center}
+.D .f5 .b2{grid-column:1/-1;justify-self:stretch;border-radius:var(--radius) !important}
+.run .D .scr>:not(.draw){animation:d-tile 420ms var(--ease-ponto) both}
+.run .D .scr>:nth-child(3){animation-delay:60ms}
+.run .D .scr>:nth-child(4){animation-delay:120ms}
+.run .D .scr>:nth-child(5){animation-delay:180ms}
+.run .D .f1 .b1 .pt{animation:d-edge 700ms var(--ease-ponto) 200ms both}
+.run .D .f2 .balloon .pt{animation:d-edge-s 560ms var(--ease-ponto) 160ms both}
+.run .D .f4 .toast .pt{animation:d-wipe 420ms var(--ease-ponto) 120ms both}
+.run .D .f5 .box .pt{animation:d-orbit 3200ms var(--ease-ponto) infinite}
+@keyframes d-tile{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@keyframes d-edge{0%{transform:translate(-300px,-60px)}50%{transform:translate(0,-60px)}100%{transform:none}}
+@keyframes d-edge-s{0%{transform:translate(-40px,-50px)}50%{transform:translate(-40px,0)}100%{transform:none}}
+@keyframes d-wipe{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
+@keyframes d-orbit{0%,20%{transform:none}35%{transform:translate(30px,-30px)}50%{transform:translate(30px,30px)}65%{transform:translate(-30px,30px)}80%{transform:translate(-30px,-30px)}95%,100%{transform:none}}
+
+/* E · desenhado à mão */
+.E .scr{background:var(--bg)}
+.E .draw{display:block;position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);pointer-events:none;overflow:visible}
+.E .draw path{fill:none;stroke:var(--text);stroke-width:.6;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0}
+.E .ttl{font-size:36px;font-weight:600;font-variation-settings:"opsz" 96;transform:rotate(-1.5deg);justify-self:start;background:linear-gradient(transparent 70%,#2727f5aa 70% 90%,transparent 90%)}
+.E .pt{border-radius:32% 24% 30% 22%;transform:rotate(-6deg)}
+.E .b1,.E .b2,.E .ib,.E .join input,.E .balloon,.E .toast,.E .dialog,.E .box{border:2px solid var(--text);border-radius:14px 6px 16px 8px / 8px 16px 6px 14px}
+.E .b1{transform:rotate(-.8deg)}
+.E .b1 .pt{width:14px;height:14px}
+.E .b2,.E .ib{background:transparent}
+.E .join input{background:transparent}
+.E .balloon{background:var(--bg);transform:rotate(1.2deg)}
+.E .dialog{background:var(--bg);transform:rotate(-.6deg)}
+.E .toast{background:var(--bg);transform:rotate(.6deg)}
+.E .box{background:transparent;border-style:dashed}
+.E .box .pt{width:28px;height:28px}
+.run .E .draw path{animation:e-draw 700ms var(--ease-ponto) both}
+.run .E .f1 .b1 .pt{animation:e-fall 760ms 300ms both}
+.run .E .f2 .balloon .pt,.run .E .f4 .toast .pt{animation:e-fall-s 620ms 260ms both}
+.run .E .f3 .dialog{animation:e-wob 520ms var(--ease-ponto) 200ms both}
+.run .E .f5 .box .pt{animation:e-nap 3600ms ease-in-out infinite}
+@keyframes e-draw{0%{stroke-dashoffset:1}100%{stroke-dashoffset:0}}
+@keyframes e-fall{0%{transform:translate(-60px,-260px) rotate(-40deg);animation-timing-function:cubic-bezier(.5,0,1,.6)}60%{transform:translate(0,0) rotate(-6deg) scale(1.25,.7);animation-timing-function:ease-out}75%{transform:translate(0,-6px) rotate(-10deg)}100%{transform:rotate(-6deg)}}
+@keyframes e-fall-s{0%{transform:translate(0,-60px) rotate(-30deg);animation-timing-function:cubic-bezier(.5,0,1,.6)}65%{transform:rotate(-6deg) scale(1.25,.75)}100%{transform:rotate(-6deg)}}
+@keyframes e-wob{0%{opacity:0;transform:rotate(-4deg) scale(.9)}100%{opacity:1;transform:rotate(-.6deg)}}
+@keyframes e-nap{0%,100%{transform:rotate(-6deg)}40%{transform:rotate(-14deg) translateY(2px) scale(1.05,.95)}70%{transform:rotate(-2deg)}}
+
+/* vocabulário do Ponto */
+.run .stage.roll .p{animation:v-roll 2400ms infinite}
+.run .stage.fly .p{animation:v-fly 2600ms var(--ease-ponto) infinite}
+.run .stage.split .p{animation:v-split 2600ms var(--ease-ponto) infinite}
+.run .stage.split .p+.p{animation-name:v-split2}
+.run .stage.breathe .p{animation:c-breathe 2600ms ease-in-out infinite}
+.run .stage.hop .p{animation:c-hop 1400ms infinite}
+@keyframes v-roll{
+  0%{transform:translateX(0) rotate(0)}
+  10%{transform:translateX(4px) translateY(-4px) rotate(45deg)}
+  20%,26%{transform:translateX(18px) rotate(90deg)}
+  36%{transform:translateX(22px) translateY(-4px) rotate(135deg)}
+  46%,52%{transform:translateX(36px) rotate(180deg)}
+  62%{transform:translateX(40px) translateY(-4px) rotate(225deg)}
+  72%,100%{transform:translateX(54px) rotate(270deg)}}
+@keyframes v-fly{0%,100%{transform:translate(-60px,20px)}25%{transform:translate(0,-30px)}50%{transform:translate(50px,0)}70%{transform:translate(0,22px)}85%{transform:translate(-14px,0)}}
+@keyframes v-split{0%,15%,85%,100%{transform:none}40%,60%{transform:translateX(-36px)}}
+@keyframes v-split2{0%,15%,85%,100%{transform:none}40%,60%{transform:translateX(36px)}}
+
+/* reduzir movimento: esmaecer 150 ms, loops parados */
+@keyframes vio-fade{0%{opacity:0}100%{opacity:1}}
+.run.rm .m,.run.rm .m *,.run.rm .scr,.run.rm .scr *:not(.lp){animation:vio-fade 150ms ease both !important}
+.run.rm .lp,.run.rm .stage .p{animation:none !important}
+@media (prefers-reduced-motion:reduce){
+  .run:not(.full) .m,.run:not(.full) .m *,.run:not(.full) .scr,.run:not(.full) .scr *:not(.lp){animation:vio-fade 150ms ease both !important}
+  .run:not(.full) .lp,.run:not(.full) .stage .p{animation:none !important}
+}
+.split .p+.p{background:#ec75b5}
+
+@media (max-width:760px){
+  .ponto-grid,.mv{grid-template-columns:1fr}
+  .rules>div{grid-template-columns:1fr;gap:4px}
+  .toolbar{top:env(safe-area-inset-top,0px);position:static}
+  .D .f5 .scr{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main id="m" class="run">
+<div class="top"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg><nav aria-label="Capítulos"><a href="#marca">Marca</a><a href="#ponto">Ponto</a><a href="#cores">Cores</a><a href="#tipo">Tipo e ícones</a><a href="#voz">Voz</a><a href="#movimento">Movimento</a><a href="#usos">Usos</a><a href="#aberto">Em aberto</a><a href="#arquivos">Arquivos</a></nav></div>
+
+<header class="hero">
+  <svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg>
+  <h1><b>Brandbook e Brandkit do VIO.</b> Tudo o que está decidido sobre a marca, num só lugar, e no fim o que ainda espera a sua escolha.</h1>
+  <p class="lab">v1 · 2026-11-08 · #227 · by NerdQuest Studios</p>
+</header>
+
+<section class="ch" id="marca"><header><p class="lab">Decidido</p><h2>Marca</h2><p class="lead">"VIO" em traço único de pontas redondas, o O aberto e, na linha de base, o Ponto. O traço usa a cor do texto; o Ponto é azul.</p></header>
+<div class="tiles">
+  <figure class="tile"><div class="pad" style="background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="#F3F3FB" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="#2727F5"/></svg></div><figcaption><span>Padrão, fundo escuro</span><span>vio-escuro.svg</span></figcaption></figure>
+  <figure class="tile"><div class="pad" style="background:var(--paper)"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="#0B0C13" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="#2727F5"/></svg></div><figcaption><span>Fundo claro</span><span>vio-claro.svg</span></figcaption></figure>
+  <figure class="tile"><div class="pad" style="background:var(--blue)"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="#FFFFFF"/></svg></div><figcaption><span>Sobre azul ou foto</span><span>vio-mono-branco.svg</span></figcaption></figure>
+  <figure class="tile"><div class="pad" style="background:var(--paper)"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="#0B0C13" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="#0B0C13"/></svg></div><figcaption><span>Uma cor, impressão</span><span>vio-mono-preto.svg</span></figcaption></figure>
+  <figure class="tile"><div class="pad" style="background:#ffffff"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="#2727F5" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="#2727F5"/></svg></div><figcaption><span>Só a cor da marca</span><span>vio-mono-azul.svg</span></figcaption></figure>
+  <figure class="tile"><div class="pad" style="background:var(--panel)"><svg viewBox="0 0 64 64" width="88" height="88" role="img" aria-label="Ícone do app"><rect width="64" height="64" rx="18" fill="#2727f5"/><path d="m14 18 12 29h12l12-29H38l-6 17-6-17Z" fill="white"/></svg></div><figcaption><span>Ícone do app</span><span>icone-app.svg</span></figcaption></figure>
+</div>
+<div class="clear">
+  <div class="clearbox"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg></div>
+  <div style="display:grid;gap:12px;max-width:44ch"><p><b>Área livre:</b> a altura do Ponto em volta de todo o logo.</p><p><b>Altura mínima:</b> 16 px. Abaixo disso, só o Ponto ou o ícone do app.</p><p class="lead" style="font-size:14px">NerdQuest Studios assina fora do logo, em texto pequeno.</p></div>
+</div>
+<div class="sizes">
+  <div><svg class="logo" style="height:56px" viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg><small>56 · abertura</small></div>
+  <div><svg class="logo" style="height:32px" viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg><small>32 · cabeçalho</small></div>
+  <div><svg class="logo" style="height:24px" viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg><small>24 · Início</small></div>
+  <div><svg class="logo" style="height:16px" viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg><small>16 · mínimo</small></div>
+</div>
+</section>
+
+<section class="ch" id="ponto"><header><p class="lab">Decidido · guia completo em docs/design/ponto.md</p><h2>O Ponto</h2><p class="lead">Um quadrado arredondado que é quase um amiguinho vivo. Guia e acompanha a pessoa, desenha o que ela vai precisar e se transforma nisso. O VIO é o ponto, e as pessoas também.</p></header>
+<div class="ponto-grid">
+  <div style="display:grid;gap:12px;justify-items:start"><div class="constr"><i></i><span style="top:6px;left:8px">22 × 22</span><span style="bottom:6px;right:8px">canto 6 · 27%</span></div><p class="lead" style="font-size:14px">Base e repouso: sempre quadrado arredondado. Nunca círculo como estado.</p></div>
+  <dl class="rules">
+    <div><dt>Cor</dt><dd>Azul #2727F5 quase sempre. Muda raramente (cor de quem compartilha, aviso real, comemoração curta) e sempre junto com movimento ou tamanho.</dd></div>
+    <div><dt>Ação principal</dt><dd>Dividir e juntar. Alguém entra, ele se divide na pessoa; abre widget, se divide no widget; fecha, junta de volta.</dd></div>
+    <div><dt>Andar</dt><dd>Rola como um dado, em passos de 45°. Distâncias longas: voa circulando e pousa exato.</dd></div>
+    <div><dt>Presença</dt><dd>Um só Ponto da marca, contínuo: não some no caminho nem espera duplicado. Toda tela principal tem ponto.</dd></div>
+    <div><dt>Mídia</dt><dd>Nunca sobre o vídeo. Em tela cheia: pequeno, baixa opacidade, no canto, na cor de quem compartilha.</dd></div>
+    <div><dt>Contraste</dt><dd>Azul no fundo escuro dá 2,50:1. Quando o Ponto carrega estado, vai junto texto ou contorno #A6A9FF.</dd></div>
+  </dl>
+</div>
+<div class="traits">
+  <div class="trait"><b>Atento</b><span>Vem perto quando a pessoa precisa, se afasta quando ela está concentrada.</span></div>
+  <div class="trait"><b>Curioso</b><span>Olha para o que é novo: inclina-se, chega perto, espia.</span></div>
+  <div class="trait"><b>Paciente</b><span>Espera respirando, sem piscar de impaciência.</span></div>
+  <div class="trait"><b>Caloroso</b><span>Comemora pequeno e de verdade. Nunca confete.</span></div>
+  <div class="trait"><b>Cansa e dorme</b><span>Fica lento sem ninguém mexer e acorda com gentileza.</span></div>
+  <div class="trait"><b>Tem peso</b><span>Acelera, freia, quica, assenta. Só se mexe com motivo.</span></div>
+</div>
+<div class="vocab">
+  <div class="vc"><div class="stage roll" aria-hidden="true"><i class="floor"></i><i class="p"></i></div><b>Rolar em 45°</b><span>Em pé na ponta, cai para o lado seguinte, assenta.</span></div>
+  <div class="vc"><div class="stage fly" aria-hidden="true"><i class="p"></i></div><b>Voar circulando</b><span>Curva que fecha até pousar exato.</span></div>
+  <div class="vc"><div class="stage split" aria-hidden="true"><i class="p"></i><i class="p"></i></div><b>Dividir e juntar</b><span>A ação principal: vira a pessoa, o widget, e volta.</span></div>
+  <div class="vc"><div class="stage breathe" aria-hidden="true"><i class="p"></i></div><b>Respirar</b><span>A espera dele. Loop único da tela.</span></div>
+  <div class="vc"><div class="stage hop" aria-hidden="true"><i class="p"></i></div><b>Quicar</b><span>Comemora um gesto pequeno.</span></div>
+</div>
+<div class="people" aria-label="Pontos de pessoa"><span class="person"><i style="background:#EC75B5"></i>Rosa</span><span class="person"><i style="background:#F5CB55"></i>Amarelo</span><span class="person"><i style="background:#67CB96"></i>Verde</span><span class="person"><i style="background:#2727F5"></i>Anil</span><span class="person"><i style="background:#60CFDC"></i>Ciano</span><span class="person"><i style="background:#ED747C"></i>Vermelho</span><span class="person"><i style="background:#AB88EE"></i>Roxo</span><span class="person"><i style="background:#F1A365"></i>Laranja</span></div>
+</section>
+
+<section class="ch" id="cores"><header><p class="lab">Decidido · src/client/styles.css :root</p><h2>Cores</h2><p class="lead">Tema escuro único. Fundo e painéis dominam; o azul aparece pouco e com intenção. Contraste medido sobre o fundo #0B0C13.</p></header>
+<div class="swatches">
+<div class="sw"><div class="chip" style="background:#2727F5"></div><div class="sw-t"><code>--blue</code><span class="hex">#2727F5</span><span class="cr">2,50 no fundo · 7,79 com texto branco</span><span class="use">Ponto, logo, botão principal. Nunca texto.</span></div></div>
+<div class="sw"><div class="chip" style="background:#A6A9FF"></div><div class="sw-t"><code>--blue-light</code><span class="hex">#A6A9FF</span><span class="cr">9,05</span><span class="use">Destaque discreto, link, contorno de estado.</span></div></div>
+<div class="sw"><div class="chip edge" style="background:#0B0C13"></div><div class="sw-t"><code>--bg</code><span class="hex">#0B0C13</span><span class="cr">fundo</span><span class="use">Página.</span></div></div>
+<div class="sw"><div class="chip edge" style="background:#14151F"></div><div class="sw-t"><code>--panel</code><span class="hex">#14151F</span><span class="cr">superfície</span><span class="use">Painéis e widgets.</span></div></div>
+<div class="sw"><div class="chip edge" style="background:#1B1C29"></div><div class="sw-t"><code>--raised</code><span class="hex">#1B1C29</span><span class="cr">superfície</span><span class="use">Menus, elevados.</span></div></div>
+<div class="sw"><div class="chip edge" style="background:#2A2C3C"></div><div class="sw-t"><code>--line</code><span class="hex">#2A2C3C</span><span class="cr">1,42 · decorativa</span><span class="use">Bordas e divisórias.</span></div></div>
+<div class="sw"><div class="chip" style="background:#F3F3FB"></div><div class="sw-t"><code>--text</code><span class="hex">#F3F3FB</span><span class="cr">17,68</span><span class="use">Texto.</span></div></div>
+<div class="sw"><div class="chip" style="background:#A3A5BC"></div><div class="sw-t"><code>--muted</code><span class="hex">#A3A5BC</span><span class="cr">8,05</span><span class="use">Texto secundário.</span></div></div>
+<div class="sw"><div class="chip" style="background:#C8CEFF"></div><div class="sw-t"><code>--focus</code><span class="hex">#C8CEFF</span><span class="cr">12,76</span><span class="use">Anel de foco.</span></div></div>
+<div class="sw"><div class="chip" style="background:#4CDDC3"></div><div class="sw-t"><code>--live</code><span class="hex">#4CDDC3</span><span class="cr">11,56</span><span class="use">Ao vivo, fala com câmera.</span></div></div>
+<div class="sw"><div class="chip" style="background:#FF8A96"></div><div class="sw-t"><code>--danger</code><span class="hex">#FF8A96</span><span class="cr">8,67</span><span class="use">Erro, ação destrutiva.</span></div></div>
+<div class="sw"><div class="chip" style="background:#F2D36B"></div><div class="sw-t"><code>--over</code><span class="hex">#F2D36B</span><span class="cr">13,29</span><span class="use">Volume acima de 100%. Hoje solto no CSS; vira token.</span></div></div>
+</div>
+<div class="people" aria-label="Cores das pessoas"><span class="person"><i style="background:#EC75B5;width:18px;height:18px"></i>Rosa <code style="color:var(--muted);font-size:12px">#EC75B5</code></span><span class="person"><i style="background:#F5CB55;width:18px;height:18px"></i>Amarelo <code style="color:var(--muted);font-size:12px">#F5CB55</code></span><span class="person"><i style="background:#67CB96;width:18px;height:18px"></i>Verde <code style="color:var(--muted);font-size:12px">#67CB96</code></span><span class="person"><i style="background:#2727F5;width:18px;height:18px"></i>Anil <code style="color:var(--muted);font-size:12px">#2727F5</code></span><span class="person"><i style="background:#60CFDC;width:18px;height:18px"></i>Ciano <code style="color:var(--muted);font-size:12px">#60CFDC</code></span><span class="person"><i style="background:#ED747C;width:18px;height:18px"></i>Vermelho <code style="color:var(--muted);font-size:12px">#ED747C</code></span><span class="person"><i style="background:#AB88EE;width:18px;height:18px"></i>Roxo <code style="color:var(--muted);font-size:12px">#AB88EE</code></span><span class="person"><i style="background:#F1A365;width:18px;height:18px"></i>Laranja <code style="color:var(--muted);font-size:12px">#F1A365</code></span></div>
+<p class="callout">Para o Frontend, depois do aval: room.css repete tokens com outros valores (--panel #151722, --blue-light #a8adff), há cerca de 40 cores soltas e raios de 3 a 18 px. Esta paleta é a referência para unificar.</p>
+</section>
+
+<section class="ch" id="tipo"><header><p class="lab">Decidido</p><h2>Tipografia e ícones</h2></header>
+<div class="spec">
+  <p class="big">Assistir junto.</p>
+  <p class="lab">Bricolage Grotesque · interface · 400 / 600 / 800</p>
+  <div class="scale">
+    <div><small>56</small><span style="font-size:56px;font-weight:800;line-height:1.05">Sala</span></div>
+    <div><small>40</small><span style="font-size:40px;font-weight:700">Criar minha sala</span></div>
+    <div><small>28</small><span style="font-size:28px;font-weight:700">Pessoas na sala</span></div>
+    <div><small>20</small><span style="font-size:20px;font-weight:600">Copiar convite</span></div>
+    <div><small>16</small><span>A conexão caiu. Tentando voltar à sala automaticamente…</span></div>
+    <div><small>14</small><span style="font-size:14px;color:var(--muted)">Cor aplicada para todos nesta sala.</span></div>
+  </div>
+  <p class="lab">IBM Plex Mono · código da sala, ping, tempos, números</p>
+  <div class="monoshow"><span>K7Q-42M<small>código</small></span><span>38 ms<small>ping</small></span><span>04:59<small>cronômetro</small></span><span>120%<small>volume</small></span><span>#2727F5<small>cor</small></span></div>
+</div>
+<div class="icons" aria-label="Ícones lucide-react"><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>Mic</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 2l20 20"/><path d="M18.89 13.23A7 7 0 0 0 19 12v-2"/><path d="M5 10v2a7 7 0 0 0 12 5"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12"/><path d="M12 19v3"/></svg>MicOff</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>Monitor</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Users</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Copy</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Lock</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Check</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>X</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</div><div><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/></svg>Palette</div></div>
+<p class="lead" style="font-size:14px">Só lucide-react. Traço 2 px, 16 / 20 / 24 px, cor do texto. Botão de ícone com rótulo para leitor de tela e alvo de 40 px (44 no toque).</p>
+</section>
+
+<section class="ch" id="voz"><header><p class="lab">Decidido</p><h2>Voz e tom</h2><p class="lead">Um amigo que organiza a sessão: direto, caloroso, sem pressa. Português, frases completas, com acento. Verbo no botão. O Ponto não fala; ele faz.</p></header>
+<div class="pairs">
+  <div class="pair"><div class="ok"><small>Certo</small><span>Entrar na sala</span></div><div class="no"><small>Errado</small><span>Clique aqui para entrar na sala</span></div></div>
+  <div class="pair"><div class="ok"><small>Certo</small><span>Convite copiado.</span></div><div class="no"><small>Errado</small><span>Link copiado com sucesso!!</span></div></div>
+  <div class="pair"><div class="ok"><small>Certo</small><span>A conexão caiu. Tentando voltar à sala automaticamente…</span></div><div class="no"><small>Errado</small><span>Erro de socket: reconnecting (ICE failed)</span></div></div>
+  <div class="pair"><div class="ok"><small>Certo</small><span>Ninguém respondeu a tempo. Tente entrar de novo.</span></div><div class="no"><small>Errado</small><span>Timeout. Operação cancelada.</span></div></div>
+  <div class="pair"><div class="ok"><small>Certo</small><span>Esta ação exige permissão do criador ou de um administrador da sala.</span></div><div class="no"><small>Errado</small><span>Acesso negado.</span></div></div>
+  <div class="pair"><div class="ok"><small>Certo</small><span>Criar minha sala</span></div><div class="no"><small>Errado</small><span>OK</span></div></div>
+</div>
+</section>
+
+<section class="ch" id="movimento"><header><p class="lab">Decidido · decisão 020</p><h2>Movimento</h2></header>
+<div class="mv">
+  <svg class="curve" viewBox="0 0 100 100" role="img" aria-label="Curva do Ponto"><path d="M10 90 C 30 69, 30 13, 90 10" fill="none" stroke="#2727f5" stroke-width="3" stroke-linecap="round"/><path d="M10 90 L30 69 M90 10 L30 13" stroke="#a3a5bc" stroke-width="1" stroke-dasharray="2 2"/><rect x="85" y="5" width="10" height="10" rx="2.7" fill="#2727f5"/><text x="10" y="98" fill="#a3a5bc" font-size="6" font-family="IBM Plex Mono, monospace">cubic-bezier(.2,.7,.2,1)</text></svg>
+  <ul>
+    <li><b>Animação completa por padrão.</b> transform e opacity são o caminho barato, não o limite.</li>
+    <li><b>O Ponto conduz as transições,</b> sempre de um lugar a outro, medido no layout real.</li>
+    <li><b>Até 800 ms,</b> curva --ease-ponto; mola com sobra só onde o estilo pede, nunca durante o vídeo.</li>
+    <li><b>Interrompível:</b> a ação da pessoa vale na hora; o Ponto muda de rumo de onde está.</li>
+    <li><b>Mídia intocada:</b> nada reparenta, clona ou cobre vídeo.</li>
+    <li><b>Reduzir movimento</b> (sistema ou Ajustes › Acessibilidade): esmaecer até 150 ms, loops parados que ainda comunicam. Também serve para PC fraco.</li>
+  </ul>
+</div>
+</section>
+
+<section class="ch" id="usos"><header><p class="lab">Decidido</p><h2>Usos certos e errados</h2></header>
+<div class="uses">
+  <div class="use ok"><div class="pad"><svg class="logo " viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Logo padrão com área livre.</p></div>
+  <div class="use ok"><div class="pad"><span class="demo-btn"><i></i>Criar minha sala</span></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Azul em ação principal, texto branco.</p></div>
+  <div class="use ok"><div class="pad" style="gap:8px;grid-auto-flow:column"><i class="pt" style="width:16px;height:16px"></i><span style="font-weight:600">Pedindo para entrar…</span></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Ponto com texto ao carregar estado.</p></div>
+  <div class="use no"><div class="pad"><i style="display:block;width:48px;height:48px;border-radius:50%;background:var(--blue)"></i></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Ponto redondo ou em outra forma.</p></div>
+  <div class="use no"><div class="pad"><span style="color:var(--blue);font-weight:600;font-size:18px">Copiar convite</span></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Texto azul no fundo escuro (2,50:1).</p></div>
+  <div class="use no"><div class="pad"><svg class="logo" style="transform:scaleX(1.5) skewX(-12deg)" viewBox="0 0 268 100" role="img" aria-label="VIO"><g fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="244" y="78" width="22" height="22" rx="6" fill="var(--blue)"/></svg></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Esticar, inclinar ou deformar o logo.</p></div>
+  <div class="use no"><div class="pad"><svg class="logo" viewBox="0 0 268 100" aria-hidden="true"><g fill="none" stroke="#f3f3fb" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12 L44 88 L68.4 30"/><path d="M106 36 L106 88"/><path d="M195.17 15.16 A38 38 0 1 1 145.3 34.51"/></g><rect x="236" y="0" width="22" height="22" rx="6" fill="#ec75b5"/></svg></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Mover o Ponto ou trocar a cor dele no logo.</p></div>
+  <div class="use no"><div class="pad"><i class="fakevid"></i><i class="pt" style="position:relative;width:28px;height:28px"></i></div><p class="tag"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Ponto ou animação sobre o vídeo.</p></div>
+</div>
+</section>
+
+<section class="ch" id="aberto"><header><p class="pill open">Espera sua escolha</p><h2>Em aberto: o Ponto em telas, balões e pop-ups</h2><p class="lead">Cinco estilos × cinco exemplos, em tamanho real (380 px, largura de celular). Cores, fontes e o Ponto são os mesmos nos cinco; muda o desenho das superfícies e o jeito de mover. Comente no estilo que preferir ("C no Início, B na sala"). Misturar por contexto vale.</p></header>
+<div class="toolbar"><button class="tb" id="replay" type="button">Repetir animações</button><button class="tb" id="reduce" type="button" aria-pressed="false">Reduzir movimento</button><span class="lab">"Sair da sala?" é texto de exemplo (sugestão)</span></div>
+<section class="sty A" id="estilo-a" aria-labelledby="h-A">
+  <header class="sty-h"><span class="letter">A</span><div><h3 id="h-A">Neo-brutalista</h3><p>Borda clara grossa, sombra dura azul, o Ponto protagonista. Viagem grande e freada seca.</p></div></header>
+  <div class="frames"><figure class="fr f1"><figcaption>1 · Início <span>380 × 440</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <p class="eyebrow">VIO</p>
+    <h4 class="ttl m">Assistir junto</h4>
+    <button class="b1" type="button"><span class="pt m"></span>Criar minha sala</button>
+    <div class="join m">
+      <label for="code-A">Código ou link da sala</label>
+      <div class="row"><input id="code-A" placeholder="ABC-123" autocomplete="off"><button class="b2" type="button">Entrar na sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f2"><figcaption>2 · Balão <span>380 × 200</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="bar m"><button class="ib" type="button" aria-label="Copiar convite"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><span class="code">K7Q-42M</span><span class="who">3 pessoas</span></div>
+    <div class="balloon m" role="tooltip"><span class="pt m"></span>Copiar convite</div>
+  </div></figure>
+<figure class="fr f3"><figcaption>3 · Pop-up <span>380 × 260</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="dialog m" role="dialog" aria-labelledby="dl-A">
+      <h5 id="dl-A"><span class="pt"></span>Sair da sala?</h5>
+      <p>A chamada continua para quem ficar.</p>
+      <div class="acts"><button class="b2" type="button">Ficar</button><button class="b1 dz" type="button">Sair da sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f4"><figcaption>4 · Aviso <span>380 × 140</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="toast m" role="status"><span class="pt m"></span><span class="tx">Convite copiado.</span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+  </div></figure>
+<figure class="fr f5"><figcaption>5 · Espera <span>380 × 300</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="box m"><span class="pt lp"></span></div>
+    <p class="wt m" role="status">Pedindo para entrar…</p>
+    <button class="b2 m" type="button">Cancelar</button>
+  </div></figure></div>
+</section>
+<section class="sty B" id="estilo-b" aria-labelledby="h-B">
+  <header class="sty-h"><span class="letter">B</span><div><h3 id="h-B">Swiss editorial</h3><p>Sem caixas: grade, linha fina e tipo grande. O Ponto quase não se mexe; cada gesto pesa.</p></div></header>
+  <div class="frames"><figure class="fr f1"><figcaption>1 · Início <span>380 × 440</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <p class="eyebrow">VIO</p>
+    <h4 class="ttl m">Assistir junto</h4>
+    <button class="b1" type="button"><span class="pt m"></span>Criar minha sala</button>
+    <div class="join m">
+      <label for="code-B">Código ou link da sala</label>
+      <div class="row"><input id="code-B" placeholder="ABC-123" autocomplete="off"><button class="b2" type="button">Entrar na sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f2"><figcaption>2 · Balão <span>380 × 200</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="bar m"><button class="ib" type="button" aria-label="Copiar convite"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><span class="code">K7Q-42M</span><span class="who">3 pessoas</span></div>
+    <div class="balloon m" role="tooltip"><span class="pt m"></span>Copiar convite</div>
+  </div></figure>
+<figure class="fr f3"><figcaption>3 · Pop-up <span>380 × 260</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="dialog m" role="dialog" aria-labelledby="dl-B">
+      <h5 id="dl-B"><span class="pt"></span>Sair da sala?</h5>
+      <p>A chamada continua para quem ficar.</p>
+      <div class="acts"><button class="b2" type="button">Ficar</button><button class="b1 dz" type="button">Sair da sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f4"><figcaption>4 · Aviso <span>380 × 140</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="toast m" role="status"><span class="pt m"></span><span class="tx">Convite copiado.</span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+  </div></figure>
+<figure class="fr f5"><figcaption>5 · Espera <span>380 × 300</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="box m"><span class="pt lp"></span></div>
+    <p class="wt m" role="status">Pedindo para entrar…</p>
+    <button class="b2 m" type="button">Cancelar</button>
+  </div></figure></div>
+</section>
+<section class="sty C" id="estilo-c" aria-labelledby="h-C">
+  <header class="sty-h"><span class="letter">C</span><div><h3 id="h-C">Expressivo spring</h3><p>Superfícies macias, pílulas, mola com sobra. O Ponto rola em 45°, quica e se estica.</p></div></header>
+  <div class="frames"><figure class="fr f1"><figcaption>1 · Início <span>380 × 440</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <p class="eyebrow">VIO</p>
+    <h4 class="ttl m">Assistir junto</h4>
+    <button class="b1" type="button"><span class="pt m"></span>Criar minha sala</button>
+    <div class="join m">
+      <label for="code-C">Código ou link da sala</label>
+      <div class="row"><input id="code-C" placeholder="ABC-123" autocomplete="off"><button class="b2" type="button">Entrar na sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f2"><figcaption>2 · Balão <span>380 × 200</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="bar m"><button class="ib" type="button" aria-label="Copiar convite"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><span class="code">K7Q-42M</span><span class="who">3 pessoas</span></div>
+    <div class="balloon m" role="tooltip"><span class="pt m"></span>Copiar convite</div>
+  </div></figure>
+<figure class="fr f3"><figcaption>3 · Pop-up <span>380 × 260</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="dialog m" role="dialog" aria-labelledby="dl-C">
+      <h5 id="dl-C"><span class="pt"></span>Sair da sala?</h5>
+      <p>A chamada continua para quem ficar.</p>
+      <div class="acts"><button class="b2" type="button">Ficar</button><button class="b1 dz" type="button">Sair da sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f4"><figcaption>4 · Aviso <span>380 × 140</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="toast m" role="status"><span class="pt m"></span><span class="tx">Convite copiado.</span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+  </div></figure>
+<figure class="fr f5"><figcaption>5 · Espera <span>380 × 300</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="box m"><span class="pt lp"></span></div>
+    <p class="wt m" role="status">Pedindo para entrar…</p>
+    <button class="b2 m" type="button">Cancelar</button>
+  </div></figure></div>
+</section>
+<section class="sty D" id="estilo-d" aria-labelledby="h-D">
+  <header class="sty-h"><span class="letter">D</span><div><h3 id="h-D">Bento modular</h3><p>Cada função no seu bloco. Blocos entram em sequência; o Ponto anda pelas bordas, preciso.</p></div></header>
+  <div class="frames"><figure class="fr f1"><figcaption>1 · Início <span>380 × 440</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <p class="eyebrow">VIO</p>
+    <h4 class="ttl m">Assistir junto</h4>
+    <button class="b1" type="button"><span class="pt m"></span>Criar minha sala</button>
+    <div class="join m">
+      <label for="code-D">Código ou link da sala</label>
+      <div class="row"><input id="code-D" placeholder="ABC-123" autocomplete="off"><button class="b2" type="button">Entrar na sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f2"><figcaption>2 · Balão <span>380 × 200</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="bar m"><button class="ib" type="button" aria-label="Copiar convite"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><span class="code">K7Q-42M</span><span class="who">3 pessoas</span></div>
+    <div class="balloon m" role="tooltip"><span class="pt m"></span>Copiar convite</div>
+  </div></figure>
+<figure class="fr f3"><figcaption>3 · Pop-up <span>380 × 260</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="dialog m" role="dialog" aria-labelledby="dl-D">
+      <h5 id="dl-D"><span class="pt"></span>Sair da sala?</h5>
+      <p>A chamada continua para quem ficar.</p>
+      <div class="acts"><button class="b2" type="button">Ficar</button><button class="b1 dz" type="button">Sair da sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f4"><figcaption>4 · Aviso <span>380 × 140</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="toast m" role="status"><span class="pt m"></span><span class="tx">Convite copiado.</span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+  </div></figure>
+<figure class="fr f5"><figcaption>5 · Espera <span>380 × 300</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="box m"><span class="pt lp"></span></div>
+    <p class="wt m" role="status">Pedindo para entrar…</p>
+    <button class="b2 m" type="button">Cancelar</button>
+  </div></figure></div>
+</section>
+<section class="sty E" id="estilo-e" aria-labelledby="h-E">
+  <header class="sty-h"><span class="letter">E</span><div><h3 id="h-E">Desenhado à mão</h3><p>Contorno irregular que o traço desenha e deixa. O Ponto cai com peso e atrito.</p></div></header>
+  <div class="frames"><figure class="fr f1"><figcaption>1 · Início <span>380 × 440</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <p class="eyebrow">VIO</p>
+    <h4 class="ttl m">Assistir junto</h4>
+    <button class="b1" type="button"><span class="pt m"></span>Criar minha sala</button>
+    <div class="join m">
+      <label for="code-E">Código ou link da sala</label>
+      <div class="row"><input id="code-E" placeholder="ABC-123" autocomplete="off"><button class="b2" type="button">Entrar na sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f2"><figcaption>2 · Balão <span>380 × 200</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="bar m"><button class="ib" type="button" aria-label="Copiar convite"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><span class="code">K7Q-42M</span><span class="who">3 pessoas</span></div>
+    <div class="balloon m" role="tooltip"><span class="pt m"></span>Copiar convite</div>
+  </div></figure>
+<figure class="fr f3"><figcaption>3 · Pop-up <span>380 × 260</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="dialog m" role="dialog" aria-labelledby="dl-E">
+      <h5 id="dl-E"><span class="pt"></span>Sair da sala?</h5>
+      <p>A chamada continua para quem ficar.</p>
+      <div class="acts"><button class="b2" type="button">Ficar</button><button class="b1 dz" type="button">Sair da sala</button></div>
+    </div>
+  </div></figure>
+<figure class="fr f4"><figcaption>4 · Aviso <span>380 × 140</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="toast m" role="status"><span class="pt m"></span><span class="tx">Convite copiado.</span><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+  </div></figure>
+<figure class="fr f5"><figcaption>5 · Espera <span>380 × 300</span></figcaption>
+  <div class="scr"><svg class="draw m" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M3 5 C 28 2, 72 6, 97 3 C 99 30, 96 70, 97 96 C 70 99, 30 95, 4 97 C 1 70, 5 30, 3 5"/></svg>
+    <div class="box m"><span class="pt lp"></span></div>
+    <p class="wt m" role="status">Pedindo para entrar…</p>
+    <button class="b2 m" type="button">Cancelar</button>
+  </div></figure></div>
+</section>
+<div class="callout" style="border-left-color:var(--blue-light)"><b>Custo.</b> E usa stroke-dashoffset uma vez ao abrir; B e D usam clip-path curto; nenhum usa blur. Em Reduzir movimento todos esmaecem em 150 ms e a espera fica parada (Ponto cheio e texto). <b>Descartado:</b> Glass (blur sobre vídeo pesa) e Ponto com rostinho (ele comunica pelo que faz). <b>Sugestão:</b> C na landing e no Início, B ou D dentro da sala com vídeo.</div>
+</section>
+
+<section class="ch" id="arquivos"><header><p class="lab">Brandkit · docs/design/brandkit/</p><h2>Arquivos</h2></header>
+<div class="files">
+  <div>logo/vio-escuro.svg<span>Padrão, fundo escuro</span></div>
+  <div>logo/vio-claro.svg<span>Fundo claro</span></div>
+  <div>logo/vio-mono-branco.svg<span>Uma cor, branco</span></div>
+  <div>logo/vio-mono-preto.svg<span>Uma cor, preto</span></div>
+  <div>logo/vio-mono-azul.svg<span>Uma cor, azul</span></div>
+  <div>logo/vio-escuro-fundo.svg<span>Com fundo escuro e área livre</span></div>
+  <div>logo/vio-azul-fundo.svg<span>Com fundo azul</span></div>
+  <div>ponto/ponto-azul.svg · claro · branco · preto<span>O Ponto sozinho</span></div>
+  <div>icone-app.svg<span>Ícone do app (favicon)</span></div>
+  <div>paleta.css · paleta.json<span>Tokens prontos para usar</span></div>
+  <div>../brandbook/<span>Regras em texto, por capítulo</span></div>
+</div>
+</section>
+</main>
+<script>
+(function(){
+  var m=document.getElementById("m"),rd=document.getElementById("reduce"),rp=document.getElementById("replay");
+  var mq=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)");
+  function set(on){m.classList.toggle("rm",on);m.classList.toggle("full",!on);rd.setAttribute("aria-pressed",String(on));}
+  set(!!(mq&&mq.matches));
+  rd.addEventListener("click",function(){set(rd.getAttribute("aria-pressed")!=="true");replay();});
+  function replay(){m.classList.remove("run");void m.offsetWidth;m.classList.add("run");}
+  rp.addEventListener("click",replay);
+})();
+</script>
+</body>
+</html>

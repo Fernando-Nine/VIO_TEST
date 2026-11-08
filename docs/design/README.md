@@ -32,6 +32,7 @@ desligadas em `prefers-reduced-motion`.
 | Widget Pessoas         | [widget-pessoas.md](widget-pessoas.md)       | C, volume sempre à vista      |
 | Minha transmissão      | [minha-transmissao.md](minha-transmissao.md) | A + silenciar, trocar, 1/2    |
 | Tempos                 | [tempos.md](tempos.md)                       | 1 · site e própria tela       |
+| Brandbook e Brandkit   | [brandbook/](brandbook/README.md)            | Decidido; 5×5 do Ponto em aberto |
 | Câmeras                | [cameras.md](cameras.md)                     | C + B                         |
 | Avisos e sino          | [notificacoes.md](notificacoes.md)           | B + barra de tempo            |
 | Adicionar widget       | [adicionar-widget.md](adicionar-widget.md)   | Leva 4: B + aba Comunidade    |

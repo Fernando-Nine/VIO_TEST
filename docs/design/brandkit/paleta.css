@@ -1,0 +1,38 @@
+/* Paleta oficial do VIO (brandkit). Fonte: src/client/styles.css :root e src/shared/colors.ts.
+   Copiar para protótipos e peças externas; o app usa os tokens de styles.css. */
+:root {
+  color-scheme: dark;
+  /* marca */
+  --blue: #2727f5;
+  --blue-light: #a6a9ff;
+  /* superfícies */
+  --bg: #0b0c13;
+  --panel: #14151f;
+  --raised: #1b1c29;
+  --line: #2a2c3c;
+  /* texto */
+  --text: #f3f3fb;
+  --muted: #a3a5bc;
+  --focus: #c8ceff;
+  /* estados */
+  --live: #4cddc3;
+  --danger: #ff8a96;
+  --over: #f2d36b; /* volume acima de 100% */
+  /* pessoas (ColorPicker) */
+  --person-rosa: #ec75b5;
+  --person-amarelo: #f5cb55;
+  --person-verde: #67cb96;
+  --person-anil: #2727f5;
+  --person-ciano: #60cfdc;
+  --person-vermelho: #ed747c;
+  --person-roxo: #ab88ee;
+  --person-laranja: #f1a365;
+  /* forma, tipo e movimento */
+  --radius: 18px;
+  --ponto-radius: 27%;
+  --space: 8px;
+  --font: "Bricolage Grotesque Variable", "Bricolage Grotesque", sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --ease: 160ms ease;
+  --ease-ponto: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
