@@ -1,0 +1,119 @@
+{
+  "_fonte": "Tokens reais: src/client/styles.css :root. Pessoas: src/shared/colors.ts.",
+  "_propostos": [
+    "estados.over",
+    "pessoas (como --person-*)",
+    "forma.ponto-radius",
+    "movimento.ease-ponto"
+  ],
+  "$comment": "Paleta oficial do VIO. Fonte: src/client/styles.css (:root) e src/shared/colors.ts (colorPresets). Tema escuro único. Contraste medido sobre --bg (#0B0C13).",
+  "marca": {
+    "blue": {
+      "value": "#2727F5",
+      "uso": "Ponto, logo, botão principal (texto branco 7,79:1). Não usar como texto sobre o fundo escuro (2,50:1)."
+    },
+    "blue-light": {
+      "value": "#A6A9FF",
+      "uso": "Destaque discreto, texto de destaque e contorno do Ponto quando ele carrega estado (9,05:1)."
+    }
+  },
+  "superficies": {
+    "bg": {
+      "value": "#0B0C13",
+      "uso": "Fundo da página."
+    },
+    "panel": {
+      "value": "#14151F",
+      "uso": "Painéis e widgets."
+    },
+    "raised": {
+      "value": "#1B1C29",
+      "uso": "Elementos elevados, menus."
+    },
+    "line": {
+      "value": "#2A2C3C",
+      "uso": "Bordas e divisórias (decorativas; 1,42:1)."
+    }
+  },
+  "texto": {
+    "text": {
+      "value": "#F3F3FB",
+      "contraste": 17.68
+    },
+    "muted": {
+      "value": "#A3A5BC",
+      "contraste": 8.05
+    },
+    "focus": {
+      "value": "#C8CEFF",
+      "uso": "Anel de foco do teclado.",
+      "contraste": 12.76
+    }
+  },
+  "estados": {
+    "live": {
+      "value": "#4CDDC3",
+      "uso": "Ao vivo, fala com câmera.",
+      "contraste": 11.56
+    },
+    "danger": {
+      "value": "#FF8A96",
+      "uso": "Erro e ação destrutiva.",
+      "contraste": 8.67
+    },
+    "over": {
+      "value": "#F2D36B",
+      "uso": "Volume acima de 100%.",
+      "contraste": 13.29
+    }
+  },
+  "pessoas": [
+    {
+      "name": "Rosa",
+      "value": "#EC75B5"
+    },
+    {
+      "name": "Amarelo",
+      "value": "#F5CB55"
+    },
+    {
+      "name": "Verde",
+      "value": "#67CB96"
+    },
+    {
+      "name": "Anil",
+      "value": "#2727F5"
+    },
+    {
+      "name": "Ciano",
+      "value": "#60CFDC"
+    },
+    {
+      "name": "Vermelho",
+      "value": "#ED747C"
+    },
+    {
+      "name": "Roxo",
+      "value": "#AB88EE"
+    },
+    {
+      "name": "Laranja",
+      "value": "#F1A365"
+    }
+  ],
+  "tipo": {
+    "font": "\"Bricolage Grotesque Variable\", \"Bricolage Grotesque\", sans-serif",
+    "mono": "\"IBM Plex Mono\", monospace"
+  },
+  "forma": {
+    "radius": "18px",
+    "ponto-radius": "27% (6 de 22)",
+    "space": "8px"
+  },
+  "movimento": {
+    "ease": "160ms ease",
+    "ease-ponto": "cubic-bezier(.2,.7,.2,1)",
+    "duracao-max": "800ms",
+    "reduzido": "esmaecer até 150ms; loops parados"
+  }
+}
