@@ -1,8 +1,9 @@
 # Voz e tom da marca
 
 - **Fase:** 1a do [plano](../guias/plano.md) (guia do Brandbook; não depende do estilo).
-- **Prancha:** a publicar com o guia da 1a.
-- **Quem espera:** a #281 (textos de aviso e erro) depende desta escolha.
+- **Prancha:** https://claude.ai/artifact/YVskrhnhRkqmPuTQEzhR36 (perguntas P1–P5).
+- **Depois da escolha:** a #281 já fechou em 7 nov (PR #316); o ajuste de voz que a escolha pedir
+  vira issue nova de `frontend`.
 
 Base que já vale, sem ser a voz: interface em português, frases completas com acento, sem texto
 que explica o óbvio (`CLAUDE.md`, "Convenções"); erro visível como `Fault` com mensagem em

@@ -24,8 +24,7 @@ Níveis P0–P3 (regra no `CLAUDE.md`). Etiquetas no GitHub; a área pega a prim
 Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
-- **P1**: #281 avisos empurram o layout (frontend, em andamento) · #266 cursor
-  some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento).
+- **P1**: #266 cursor some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento).
 - **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade (QA) ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes.
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
