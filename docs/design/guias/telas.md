@@ -212,7 +212,7 @@ oferta. Só no navegador; o app abre no Início. Spec: [landing.md](../landing.m
 **Estados**
 
 - **Vazio** (enviar sem nome): erro junto ao campo, "Escreva um nome para entrar.", com foco no
-  campo. Sem balão nativo do navegador.
+  campo **(sugestão;** hoje aparece o balão nativo do navegador**)**.
 - **Carregando**: o botão vira "Abrindo sua sala…", o formulário fica ocupado e não aceita
   segundo envio.
 - **Erro**: falha de conexão ao entrar aparece no lugar, acima do formulário, com "Tentar de
@@ -229,7 +229,7 @@ de entrada é a primeira coisa a receber foco depois do título. No celular, o t
 pelo navegador" (leva ao bloco), nada de download do Windows e nada de "Instalar VIO" no bloco
 de entrada; o atalho do navegador, se houver, fica no fim, como "Adicionar à tela inicial"
 **(sugestão)**. Cada seção de maquete fica com uma maquete só no celular, para a página não
-passar muito de duas telas e meia de altura por seção.
+passar muito de duas telas e meia de altura por seção **(sugestão)**.
 
 **Sala de demonstração (MiniRoom).** É ilustração da sala real, então usa o vocabulário real:
 "Para a sala" no lugar de "Da sala", e a mesma seleção de aba da sala. As abas funcionam por
@@ -274,7 +274,8 @@ endereço `/#baixar`**)**.
   Baixar de novo" **(sugestão)**.
 - **Prévia**: na prévia o botão abre a página de versões de teste ("VIO Teste"); a linha de
   versão diz "Versão de teste".
-- **Copiado**: "Copiar" vira "Copiado" por 2 s, com anúncio para leitor de tela.
+- **Copiado**: "Copiar" vira "Copiado" (como hoje) por 2 s, com anúncio para leitor de tela
+  **(sugestão:** tempo e anúncio**)**.
 
 **Entrada e saída.** Chega rolando a landing, pelo "Por que instalar" ou por `#baixar`. Sai baixando
 ou para o bloco de entrada.
@@ -336,8 +337,7 @@ Ponto: no centro (tela "Carregando o app").
 3. "Entrar com código": campo "Código ou link da sala"; ao colar um link, "Link reconhecido ·
    CÓDIGO".
 4. Seu nome ("Como chamar você?"), sempre visível e editável.
-5. Lateral "Salas recentes" com até 12 itens (o código guarda 10; alinhar com a spec), cada um
-   com menu: "Renomear (só para você)", "Copiar convite", "Esquecer". Nota "Guardadas só neste
+5. Lateral "Salas recentes" com até 12 itens, cada um com menu: "Renomear (só para você)", "Copiar convite", "Esquecer". Nota "Guardadas só neste
    aparelho."
 6. Versão (abre Novidades).
 
@@ -384,7 +384,8 @@ Esta seção fixa o que os dois têm em comum.
 
 **Estados (comuns)**
 
-- **Vazio**: "Escreva um nome para entrar." junto ao campo.
+- **Vazio**: "Escreva um nome para entrar." junto ao campo **(sugestão;** o Início já tem "Escreva
+  seu nome ao lado para entrar."**)**.
 - **Link reconhecido**: "Link reconhecido · CÓDIGO".
 - **Carregando**: botão com texto de progresso; formulário ocupado.
 - **Erro de campo**: "Esse código não parece de uma sala do VIO. Confira e tente de novo." para
@@ -477,10 +478,10 @@ Criar do Início (app).
 
 **Partes**
 
-- **Cadeado do cabeçalho** (balão), na ordem: "Sala trancada" (liga/desliga); validade do
-  convite (1 h, 1 dia, 7 dias); "Entra direto, mesmo trancada" (liga/desliga do mesmo tipo do
-  primeiro, não uma caixa de seleção); "Copiar convite" (ação principal do balão); "Revogar
-  convites" (destrutiva, separada, pede um segundo clique "Revogar mesmo?").
+- **Cadeado do cabeçalho** (balão). Conteúdo, nesta ordem: (1) sala trancada ou aberta; (2)
+  validade do convite (1 h, 1 dia, 7 dias); (3) "Entra direto, mesmo trancada"; (4) "Copiar
+  convite", a ação principal; (5) "Revogar convites", destrutiva e separada, que já confirma com um
+  segundo clique ("Revogar mesmo?"). A forma dos controles é do [guia de componentes](componentes.md).
 - **Batida na porta** (toast): "[Nome] bateu na porta." com "Agora não" e "Deixar entrar" (a
   principal); barra de tempo; várias pessoas viram "+N esperando".
 - **Na porta** (bloco no painel Pessoas): a fila, com as mesmas duas ações por pessoa.
@@ -529,9 +530,11 @@ tempo; o conteúdo (transmissão e widgets) manda, a interface recua.
   motivo**)**.
 - **Com gente e sem nada aberto**: "Compartilhe uma tela ou abra um widget." com as duas ações.
 - **Com transmissão**: a transmissão ganha o foco; o selo "Ao vivo" aparece.
-- **6+ pessoas**: o aviso de carga aparece uma vez no cabeçalho, junto ao contador de Pessoas,
-  com uma dica que explica e não bloqueia ("Com 6 ou mais pessoas, a conexão de cada um trabalha
-  mais. Se travar, desliguem câmeras ou miniaturas."); some quando volta a menos de 6.
+- **6+ pessoas**: hoje o aviso de carga (RoomLimit, um botão de ajuda que abre a explicação) fica
+  no painel Pessoas e no widget Pessoas e não bloqueia a entrada. Proposta: um aviso só, no
+  cabeçalho junto ao contador de Pessoas, com a dica "Com 6 ou mais pessoas, a conexão de cada um
+  trabalha mais. Se travar, desliguem câmeras ou miniaturas." **(sugestão:** posição e texto**)**;
+  some quando volta a menos de 6.
 - **Reconectando**: a sala continua visível; o código vira o indicador de carregar; ações que
   dependem do servidor mostram "Reconectando à sala. Aguarde para tentar esta ação."
 - **Janela flutuante ativa**: o palco mostra "A sessão está na janela flutuante." com "Trazer de
@@ -545,7 +548,8 @@ na cor de quem compartilha.
 **Conteúdo e hierarquia**
 
 1. Código da sala com o estado da tranca (cadeado + texto) e o tempo de sala em mono.
-2. Pessoas com contador ("Pessoas · 3"), com o aviso de 6+ quando houver.
+2. Pessoas com contador ("Pessoas · 3"), com o aviso de 6+ quando houver **(sugestão:** hoje o
+   aviso fica no painel e no widget Pessoas**)**.
 3. "Convidar" (ação principal do cabeçalho; vira "Copiado").
 4. Indicador de conexão: "Conexão boa · 16 ms", "Conexão instável", "Reconectando", "Sem
    conexão" **(sugestão:** no lugar de "16 ms Servidor"**)**; abre Sobre a sala.
@@ -560,7 +564,7 @@ e sem Convidar**)**.
 **Resolve do inventário.** Três tipos de ação com o mesmo peso; "Sair" vermelho ao lado de
 "Convidar"; "16 ms Servidor"; Convidar sumindo no celular; tranca só pelo ícone.
 
-#### 4.9.2 Palco: transmissões
+#### 4.9.2 Palco e telas ao vivo
 
 O palco real é o widget de tela do canvas (`canvas/widgets.tsx`); não há palco separado.
 
@@ -575,14 +579,15 @@ O palco real é o widget de tela do canvas (`canvas/widgets.tsx`); não há palc
   [Nome]", vazio "Ninguém assistindo ainda.", "· reconectando" por pessoa, e a nota "Inclui áudio
   em segundo plano e pessoas conectando. Miniaturas não contam."
 - **Sons que você ouve** (balão do chip de som): fontes de som sem imagem e o volume de cada.
-- **Áudio bloqueado** pelo navegador: "Clique para ouvir" sobre a tela, um aviso só
-  **(sugestão:** hoje é estado sem padrão**)**; "Ativar amplificação" quando o ganho acima de 100%
+- **Áudio bloqueado** pelo navegador: um aviso só sobre a tela, "Clique para ouvir" **(sugestão;**
+  hoje é estado sem padrão**)**; "Ativar amplificação" quando o ganho acima de 100%
   não funcionar.
 
 **Estados**
 
 - **Carregando**: "Conectando à transmissão…" no lugar do vídeo, com o nome de quem compartilha.
-- **Erro**: "Esta transmissão já terminou." e o espaço se fecha (o Ponto junta).
+- **Erro**: "Esta transmissão já terminou." (`Fault` `NOT_FOUND` em `server/rooms.ts`) e o
+  espaço se fecha (o Ponto junta).
 - **Pausado**: "Vídeo pausado" em texto, não só cor.
 - **Até 3 telas** ao mesmo tempo por sala.
 - **Ninguém transmitindo**: o ícone de Transmissões ao vivo não aparece; o palco segue os estados
@@ -592,7 +597,7 @@ O palco real é o widget de tela do canvas (`canvas/widgets.tsx`); não há palc
 depois, a entrada no sino. O ícone de Transmissões ao vivo não pisca junto **(sugestão;**
 inventário: três caminhos para o mesmo aviso**)**.
 
-**Tela cheia.** Só o vídeo; controles recolhidos em uma pílula; o Ponto sutil no canto na cor de
+**Tela cheia.** Só o vídeo; controles recolhidos; o Ponto sutil no canto na cor de
 quem compartilha. Esc sai.
 
 **Janela flutuante.** O vídeo vai para a janela do sistema; a sala mostra o aviso e "Trazer de
@@ -635,7 +640,7 @@ fica o que a tela precisa.
 
 **Catálogo** (painel): busca, abas "Assistir", "Conversar", "Decidir e jogar", "Tempo",
 "Comunidade", "Não exibidos"; na criação, "Para mim" ou "Para a sala". Vazio de busca: "Nenhum
-widget com esse nome."; vazio da sala: "Nenhum widget da sala ainda."; "Em breve: widgets da
+widget com esse nome."; vazio da sala: "Nenhum widget da sala ainda." (`canvas/RoomCanvas.tsx`); "Em breve: widgets da
 comunidade.". No celular, as abas rolam sem cortar o texto (inventário).
 
 **Estados.** Cada widget tem estado vazio de uma linha com a ação (hoje só o chat: "Comece a
@@ -684,11 +689,13 @@ Spec: [pessoas.md](../pessoas.md).
 4. Aba Permissões (dono e administradores).
 5. "Minha cor na sala" a partir da própria linha.
 
-**Menu da pessoa** (botão direito ou "…"): ações sobre a pessoa, depois volume, depois as de
-dono ("Transferir posse", que abre confirmação, e silenciar para todos), separadas.
+**Menu da pessoa** (botão direito ou "…"). Conteúdo em três grupos, nesta ordem: ações sobre a
+pessoa; o volume dela para você; ações de dono e administrador (silenciar para todos e "Transferir
+posse", que já abre confirmação). O desenho do menu é do [guia de componentes](componentes.md).
 
-**Estados.** Sozinho: só a própria linha e "Convidar". 6+: lista rola; o aviso de carga fica no
-cabeçalho, não aqui. Pessoa reconectando: "Reconectando" em texto.
+**Estados.** Sozinho: só a própria linha e "Convidar". 6+: a lista rola; hoje o aviso de carga
+fica aqui (e no widget Pessoas), e a proposta o leva ao cabeçalho **(sugestão)**. Pessoa
+reconectando: "Reconectando" em texto.
 
 **Celular e desktop.** Painel lateral no desktop, sem cobrir a camada de avisos; folha de baixo no
 celular.
@@ -699,7 +706,7 @@ destrutivo.
 #### 4.9.7 Compartilhar tela
 
 Spec: [compartilhar.md](../compartilhar.md). É o único seletor de fonte; o antigo seletor
-(ScreenPicker) não está em uso ([seção 5](#5-fora-deste-guia-código-sem-uso)).
+(ScreenPicker) não está em uso ([seção 5](#5-fora-deste-guia-arquivos-sem-uso)).
 
 **Conteúdo e hierarquia**
 
@@ -710,7 +717,7 @@ Spec: [compartilhar.md](../compartilhar.md). É o único seletor de fonte; o ant
 4. **Ação principal: "Compartilhar"**; "Cancelar" ao lado.
 
 **Estados.** Vazio (app): "Abra o aplicativo que deseja compartilhar."; carregando miniaturas: o
-lugar de cada uma reservado; erro: "Não foi possível gerar a miniatura." no lugar dela, sem
+lugar de cada uma reservado; erro: "Não foi possível gerar a miniatura." **(sugestão)** no lugar dela, sem
 fechar o modal; limite de 3 telas: o modal explica e não abre a escolha.
 
 **Celular.** Navegador do celular não compartilha tela; o botão Tela abre só o que for possível
@@ -747,11 +754,13 @@ lugar; modal em mais uma posição.
 
 - **Vazio de busca**: "Nenhum ajuste com esse nome."
 - **Sem permissão**: o grupo da sala mostra o estado atual, sem controles mortos.
-- **Erro**: dispositivo que sumiu ("Microfone desconectado. Escolha outro.") junto ao campo.
-- **Botão morto**: "Prévias ao vivo" não faz nada hoje (catálogo 05.2) e sai até funcionar.
+- **Erro**: dispositivo que sumiu, junto ao campo: "Microfone desconectado. Escolha outro."
+  **(sugestão)**.
+- **"Prévias ao vivo"**: o efeito é só visual; o consumidor principal (ScreenPicker) está sem uso
+  ([seção 5](#5-fora-deste-guia-arquivos-sem-uso)). Fica ou sai: decisão do Frontend.
 
-**Regras.** Interruptor mostra "Ligado/Desligado" além da posição; o medidor de voz e o controle
-de sensibilidade são uma peça só (o controle desliza sobre o medidor). Salva ao mudar, sem botão
+**Regras.** Interruptor mostra "Ligado/Desligado" além da posição **(sugestão)**; o medidor de voz
+e o controle de sensibilidade são uma peça só, com o limiar sobre o medidor (como na spec). Salva ao mudar, sem botão
 Salvar. Transferir posse abre confirmação.
 
 **Celular e desktop.** No desktop, modal com lista à esquerda e conteúdo à direita, sem cortar
@@ -854,37 +863,42 @@ landing sem aviso (inventário): passa a ter tela.
 
 Ponto: parado junto ao título, na cor do aviso.
 
-## 5. Fora deste guia: código sem uso
+## 5. Fora deste guia: arquivos sem uso
 
-Componentes que existem em `src/client/` mas não são montados em lugar nenhum. O guia não desenha
-nada para eles; a função de cada um já está numa tela viva.
+Componentes que existem em `src/client/` mas não são montados em lugar nenhum, e um ajuste que
+depende de um deles. O guia não desenha nada para eles; a função de cada um já está numa tela viva.
 
-| Arquivo                                           | O que era                                | Onde a função vive hoje                                                                           |
-| ------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `components/ScreenStage.tsx` e `screen-layout.ts` | palco de telas com "Organizar tela de X" | widget de tela no canvas ([4.9.2](#492-palco-transmissões)) e Layout ([4.9.3](#493-grade-e-foco)) |
-| `components/ScreenPicker.tsx`                     | prévia e ações de cada tela (só ícones)  | Transmissões ao vivo e o widget de tela                                                           |
-| `components/FloatingPeople.tsx`                   | cards de pessoas e telas sobre o canvas  | painel Pessoas e tira de pessoas                                                                  |
-| Ajuste "Prévias ao vivo"                          | interruptor sem efeito                   | sai até ter função ([4.10](#410-ajustes))                                                         |
+| Arquivo                                           | O que era                                                 | Onde a função vive hoje                                                                              |
+| ------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `components/ScreenStage.tsx` e `screen-layout.ts` | palco de telas com "Organizar tela de X"                  | widget de tela no canvas ([4.9.2](#492-palco-e-telas-ao-vivo)) e Layout ([4.9.3](#493-grade-e-foco)) |
+| `components/ScreenPicker.tsx`                     | prévia e ações de cada tela (só ícones)                   | Transmissões ao vivo e o widget de tela                                                              |
+| `components/FloatingPeople.tsx`                   | cards de pessoas e telas sobre o canvas                   | painel Pessoas e tira de pessoas                                                                     |
+| Ajuste "Prévias ao vivo"                          | interruptor com efeito só visual (classe `live-previews`) | o consumidor principal (ScreenPicker) está sem uso; Frontend decide ([4.10](#410-ajustes))           |
 
 Remover ou reaproveitar é decisão do Frontend com o copiloto, fora da fase de design.
 
 ## 6. Telas para a fase 2
 
-Cinco peças cobrem os problemas mais graves do inventário e todas as famílias de componentes. Cada
-estilo entrega **duas amostras** (duas pranchas) com as mesmas cinco peças, para comparar lado a
-lado **(sugestão de montagem)**:
+A fase 2 tem **10 variações**: os 5 estilos do [guia do Ponto](movimento-ponto.md) (seção 4) com
+2 variações cada. **Todas as 10 mostram o mesmo conjunto de telas**, com o mesmo conteúdo e os
+mesmos estados, para que a comparação seja só de estilo.
 
-- **Prancha 1**: Início no app (1280 × 800).
-- **Prancha 2**: Sala com transmissão e pessoas (1280 × 800 e celular 390), com o toast da batida
-  à vista; o modal e o balão como recortes na mesma prancha.
+| #   | Tela do conjunto                                                                                                                                                                                                                     | Por que ela                                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Início do app** (1280 × 800): pergunta, Criar sala, Entrar com código, nome e Salas recentes; com a **Porta em recorte** ("Pedindo para entrar…")                                                                                  | Porta de entrada do produto prioritário (app Windows), nunca vista em tela. Testa ação principal × secundária, campo com rótulo e lista com vazio. A Porta é o pior caso da marca: o Ponto parado, sem movimento que o salve.                            |
+| 2   | **Sala no desktop** (1280 × 800): uma tela em foco com selo Ao vivo, painel Pessoas aberto, dois widgets, barra de controles na chamada e o toast "bateu na porta" com "Agora não", "Deixar entrar", barra de tempo e "+N esperando" | Tela mais usada. Reúne os problemas graves: quatro versões de botão principal, seleção em três estilos, anel de foco, cabeçalho com pesos iguais, estado só por cor, cores das pessoas sobre vídeo e o toast que hoje cobre widget ou fica sob o painel. |
+| 3   | **Sala no celular** (390 × 844): a mesma sala, com a barra de baixo e a folha de Pessoas                                                                                                                                             | Testa se o estilo sobrevive ao espaço apertado: cabeçalho, barra de baixo, alvos de toque e uma coluna.                                                                                                                                                  |
+| 4   | **Recorte: modal Compartilhar tela**                                                                                                                                                                                                 | Modal de decisão com escolha visual (miniaturas), controles de formulário (qualidade, som) e um principal claro. Testa a posição única dos modais (hoje quatro).                                                                                         |
+| 5   | **Recorte: balão do cadeado**                                                                                                                                                                                                        | Balão ancorado com liga e desliga, validade, ação principal (Copiar convite) e destrutiva separada. Testa estado em texto e o destrutivo à parte.                                                                                                        |
 
-| #   | Peça                                                                                                                                                          | Por que ela                                                                                                                                                                                         |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Início** (app, 1280 × 800): pergunta, Criar sala, Entrar com código, nome e Salas recentes                                                                  | Porta de entrada do produto prioritário (app Windows). Testa ação principal × secundária, campo com rótulo, lista com vazio e o Ponto em repouso. Nunca foi vista em tela.                          |
-| 2   | **Sala com transmissão e pessoas** (desktop e celular): uma tela em foco com selo Ao vivo, painel Pessoas aberto, dois widgets, barra de controles na chamada | Tela mais usada. Reúne os problemas graves: quatro versões de botão principal, seleção em três estilos, anel de foco, cabeçalho com pesos iguais, estado só por cor, cores das pessoas sobre vídeo. |
-| 3   | **Modal: Compartilhar tela**                                                                                                                                  | Modal de decisão com escolha visual (miniaturas), controles de formulário (qualidade, som) e um principal claro. Testa a posição única dos modais (hoje quatro).                                    |
-| 4   | **Balão: cadeado da sala**                                                                                                                                    | Balão ancorado com interruptores, opção de validade, ação principal (Copiar convite) e destrutiva com segundo clique. Testa interruptor com estado em texto e o destrutivo separado.                |
-| 5   | **Toast: "bateu na porta"** com "Agora não", "Deixar entrar", barra de tempo e "+N esperando"                                                                 | Aviso com duas ações e prazo, que hoje cobre widget ou fica sob o painel. Testa a camada de avisos acima de tudo e o movimento reduzido.                                                            |
+Juntas, as cinco cobrem todas as famílias de componentes (modal, folha, balão, toast, menu pelo
+painel Pessoas, confirmação pelo balão) e os dois modos do produto que a fase 2 precisa comparar:
+abrir o app e estar na sala.
+
+**Lacuna aceita.** Reconectando ([4.12](#412-reconectando)) e a tela de falha
+([4.13](#413-erros-e-telas-de-falha)) ficam fora do conjunto. Os dois reaproveitam peças que o
+conjunto já mostra (o Ponto parado da Porta, o toast, o cabeçalho da sala) e serão conferidos na
+fase 4.
 
 Ficam de fora de propósito: a landing (modo persuadir, com spec própria; herda o estilo escolhido
-na fase 4) e Ajustes (herda modal, interruptor e lista das peças 3 e 4).
+na fase 4) e Ajustes (herda modal, interruptor e lista das telas 4 e 5).
