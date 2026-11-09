@@ -4,26 +4,34 @@ Retrato da interface em 9 nov. 2026 (`main`, v2.12.0-rc.6), feito no navegador e
 400 × 860, com escala 1. Aqui só há inventário e crítica. Quando algo pede solução, o texto diz
 apenas "precisa de regra para X"; as regras ficam para os guias 1c e 1d.
 
+Os achados citados como "catálogo 07.N" vêm da tabela de achados de
+`docs/catalogo/07-cliente-e-interface.md`.
+
 Gravidade: **alta** quando atrapalha a tarefa, fere a WCAG AA ou espalha incoerência por toda a
 interface; **média** quando confunde ou destoa, mas há contorno; **baixa** quando é acabamento.
 
 ## Base comum (vale para tudo abaixo)
 
-- **Tokens em três lugares.** `styles.css` define `:root` (`--panel #14151f`,
+- **Tokens em vários `:root`.** `styles.css:1` define a paleta (`--panel #14151f`,
   `--raised #1b1c29`, `--line #2a2c3c`, `--muted #a3a5bc`, `--text #f3f3fb`,
-  `--focus #c8ceff`). `room.css` redefine o mesmo `:root` com outros valores (`--panel #151722`,
-  `--raised #22263b`, `--line #303244`, `--muted #acafc3`, `--text #f1f2fa`,
-  `--focus #a8adff`), e o que vale depende da ordem de importação. `landing.css` tem um terceiro
-  conjunto (`--paper`, `--ink`, `--ink-soft`, `--rule`, `--accent`, `--brand`). Precisa de regra
-  para dizer onde moram os tokens e quem pode redefini-los.
-- **Valores soltos.** Os CSS do cliente somam 893 cores hex (448 distintas), cerca de 30 raios
-  diferentes (10, 12, 6, 8, 4, 14, 7, 5, 18, 16, 9, 3, 2 px e outros), 35 sombras distintas,
-  41 tamanhos de fonte e mais de 20 valores de `z-index` sem escala. `var(--radius)` aparece uma
+  `--focus #c8ceff`). `room.css:2` redefine as mesmas variáveis com outros valores
+  (`--panel #151722`, `--raised #22263b`, `--line #303244`, `--muted #acafc3`,
+  `--text #f1f2fa`, `--focus #a8adff`), e o que vale depende da ordem de importação. Há ainda
+  `:root` em `styles.css:61` e `:66` (cursores), em `workspace.css:2` (cores da barra de
+  rolagem) e um terceiro conjunto de paleta em `landing.css` (`--paper`, `--ink`, `--ink-soft`,
+  `--rule`, `--accent`, `--brand`). Precisa de regra para dizer onde moram os tokens e quem pode
+  redefini-los.
+- **Valores soltos.** Contagem por `grep` em todos os `.css` de `src/client`, valores distintos
+  pelo texto da declaração: 893 cores hex (448 distintas), cerca de 30 raios (10, 12, 6, 8, 4,
+  14, 7, 5, 18, 16, 9, 3, 2 px e outros), 35 a 39 sombras (35 contando só declarações de uma
+  linha, 39 juntando as de várias linhas), 91 valores de `font-size` (41 se contar só números em
+  px/rem, sem `clamp`, `em` e variáveis) e mais de 20 valores de `z-index` sem escala. `var(--radius)` aparece uma
   única vez. Precisa de regra para escala de raio, sombra, tipografia e camadas.
-- **Classes estilizadas em vários arquivos.** `.primary` é definida em 10 arquivos
+- **Classes estilizadas em vários arquivos.** `.primary` é definida em 11 arquivos
   (`styles`, `room`, `share`, `preferences`, `finish`, `landing`, `workspace`, `door`, `home`,
-  `canvas/timer`). `.sheet-content` em 6, `.icon-button` em 6, `.volume-popover` em 3
-  (`multiscreen`, `finish`, `workspace`). `finish.css` é uma camada de polimento que sobrescreve
+  `catalog`, `canvas/timer`). `.sheet-content` em 6. `.icon-button` em 6 (`styles`, `room`,
+  `finish`, `multiscreen`, `workspace`, `canvas/poll`). `.volume-popover` em 3 (`multiscreen`,
+  `finish`, `workspace`). `finish.css` é uma camada de polimento que sobrescreve
   as outras (o gradiente do botão primário vem dela). Precisa de regra para dizer qual arquivo é
   dono de cada componente.
 - **Botão primário em pelo menos quatro versões:** com gradiente (`finish.css`), azul chapado
@@ -44,8 +52,9 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
 - **Dicas só no `title`.** Não há componente de dica: são 95 atributos `title=` nativos. A dica
   não aparece no toque nem no foco do teclado e segue o estilo do sistema. Precisa de regra para
   dicas de botões de ícone.
-- **Sem link de pular para o conteúdo** (achado 07.13). Movimento reduzido tira até os
-  esmaecimentos (07.2), o que contraria a regra de movimento do `CLAUDE.md`.
+- **Sem link de pular para o conteúdo** (catálogo 07.13, não confirmado lá). O movimento
+  reduzido apaga toda animação e transição, inclusive os esmaecimentos (catálogo 07.2), o que
+  contraria a regra de movimento do `CLAUDE.md`.
 - **Interface que adormece.** Cabeçalho, barra e rodapé somem após 1 s parado (4 s no toque).
   Quem chega à sala e não mexe o mouse não vê os controles. Precisa de regra para o que nunca
   some.
@@ -179,7 +188,9 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   painel Pessoas.
 - **Problemas:**
   - O mesmo popover mistura interruptor e caixa de seleção para opções do mesmo tipo.
-  - "Revogar convites" é destrutivo e fica sem confirmação, ao lado de "Copiar convite".
+  - "Revogar convites" confirma com um segundo clique no mesmo botão, que vira "Revogar
+    mesmo?" (`RoomLock.tsx` ~L66-72, L146). É uma forma de confirmar diferente da usada para
+    transferir a posse (ver 2.6).
   - O toast da batida cobre o cabeçalho do widget de cima (400) e fica sob o painel Pessoas
     (1280).
   - As iniciais do avatar mudam: "A" na lista da porta e "AN" no resto.
@@ -187,20 +198,29 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
 ### 1.8 Saída e finalização
 
 - **Objetivo:** encerrar a sessão.
-- **Situação:** não existe. "Sair da sala" volta direto para a landing, sem confirmação e sem
-  tela de despedida, mesmo para o dono da sala, com o nome mantido no campo. Precisa de regra
-  para ações sem volta (sair, revogar, transferir posse).
+- **Situação:** não existe. "Sair da sala" (`App.tsx` ~L491-494, `goHome()`) volta direto para
+  a landing, sem confirmação e sem tela de despedida, mesmo para o dono da sala, com o nome
+  mantido no campo. É a única ação sem volta da sala que não pede confirmação. Precisa de regra
+  para dizer quais ações confirmam e o que acontece depois de sair.
 
 ## 2. Componentes flutuantes
 
 ### 2.1 Painéis e modais (`<Dialog>`)
 
-- **Onde:** Ajustes, Compartilhar tela, Pessoas, Adicionar widget, Organizar seu espaço
-  (Layout), Minha cor, Sobre, Trocar tela, Histórico de versões, "Todos os espaços estão
-  ocupados".
+- **Onde (14 chamadas de `<Dialog>`):**
+  - `App.tsx`: um só `<Dialog>` para os painéis Pessoas, Ajustes, Minha cor, Sobre,
+    Compartilhar tela, Trocar tela e Histórico de versões.
+  - `canvas/RoomCanvas.tsx`: "Todos os espaços estão ocupados", "Organizar seu espaço"
+    (Layout) e "Adicionar widget".
+  - `components/PersonMenu.tsx`: "Edição por X" e "Transferir a sala para X?".
+  - `components/Settings.tsx`: "Transferir a sala para X?" (a mesma pergunta, em outro lugar).
+  - `components/ScreenStage.tsx`: "Organizar tela de X".
+  - `canvas/WidgetFrame.tsx`: "Quem pode controlar".
+  - `canvas/ModuleWidget.tsx`: "Cor e paleta", "Histórico", "Tarefas da sessão" e "Guia de
+    dados".
+  - `canvas/CustomWidget.tsx`: "Cor".
 - **Arquivos:** `components/Dialog.tsx` (`dialog.sheet`, `.sheet-centered`, `.sheet-content`,
-  cabeçalho com "Fechar painel"), `components/ShareDialog.tsx`, `canvas/WidgetCatalog.tsx`,
-  `canvas/GridTools.tsx`. CSS espalhado por `styles.css`, `room.css`, `share.css`,
+  cabeçalho com "Fechar painel"), mais os chamadores acima. CSS espalhado por `styles.css`, `room.css`, `share.css`,
   `preferences.css`, `finish.css` e `workspace.css` (`.sheet.sheet-people`).
 - **Variações de posição (1280):** modal central com fundo desfocado (Ajustes, Compartilhar);
   folha à direita colada no topo com fundo (Adicionar widget, Layout); painel à direita, abaixo
@@ -221,6 +241,12 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
     título.
   - No catálogo em 400, as abas passam da largura ("Com…" cortado) sem sinal de rolagem.
   - O texto de Câmeras manda "fixe uma câmera pelo botão direito", o que não existe no toque.
+  - Escolher cor tem dois diálogos diferentes: "Cor e paleta" (`ModuleWidget`) e "Cor"
+    (`CustomWidget`), além de "Minha cor" no `App.tsx`.
+  - Ajuda e histórico de widget abrem como painel ("Guia de dados", "Histórico"), não junto ao
+    widget.
+  - Só foram vistos na tela Ajustes, Compartilhar, Pessoas, Adicionar widget e Layout. Os
+    demais foram lidos no código.
 - Precisa de regra para quando usar modal, folha lateral, folha inferior ou painel não modal.
 
 ### 2.2 Popovers ancorados
@@ -229,12 +255,20 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   (`connection-popover`), volume de tela (`volume-popover`), entrada (`entry-popover`),
   seletor de fonte (`stream-picker`), seletor de grade (`grid-picker`), emoji
   (`emoji-picker`), cor (`color-picker`), escolha de espaço (`slot-picker`).
-- **Arquivos:** `components/AnchoredPopover.tsx` (`popover="manual"`),
-  `components/popover-position.ts`, `components/Notifications.tsx`,
-  `components/EmojiPicker.tsx`, `components/ColorPicker.tsx`, `components/ScreenVolume.tsx`,
-  `canvas/GridPicker.tsx`. CSS em `styles.css` (conexão: raio 14, padding 18), `workspace.css`
-  (notificações: raio 14, padding 14; volume: padding 12), `finish.css` e `multiscreen.css`
-  (volume de novo).
+- **Arquivos (componente e CSS dono):**
+  - `entry-popover`: `components/RoomLock.tsx` ~L216, com CSS em `door.css:30`
+    (`.anchored-popover.entry-popover`). O popover da sala é estilizado no CSS da porta.
+  - `connection-popover`: `components/RoomStatus.tsx` ~L207, com CSS em `styles.css` ~L1611
+    (raio 14, padding 18).
+  - `notifications-panel`: `components/Notifications.tsx` ~L183, com CSS em `workspace.css`
+    ~L1566 (raio 14, padding 14).
+  - `volume-popover`: `components/ScreenVolume.tsx`, com CSS em `workspace.css:22`,
+    `finish.css:533` e `multiscreen.css:277`.
+  - Os demais: `components/AnchoredPopover.tsx` (`popover="manual"`),
+    `components/popover-position.ts`, `components/EmojiPicker.tsx`,
+    `components/ColorPicker.tsx` e `canvas/GridPicker.tsx`.
+  - Mais dois painéis ancorados com classe própria: `spectators-panel` (`Spectators.tsx`) e
+    `sound-panel` (`SoundSources.tsx`).
 - **Inconsistências:**
   - Raio, padding e sombra diferem entre popovers vizinhos.
   - `.volume-popover` é definido três vezes.
@@ -253,9 +287,10 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   (`.person-menu`, `.person-menu-volume`), `canvas/header-tools.tsx`; CSS em `workspace.css`.
 - **Inconsistências:**
   - O menu da pessoa mistura controle deslizante e itens de ação.
-  - Itens destrutivos em vermelho ("Silenciar para todos", "Transferir posse da sala") ficam
-    sem separação e sem confirmação, e "Silenciar para todos" é reversível, enquanto
-    "Transferir posse" não é, com o mesmo peso visual.
+  - Itens em vermelho ("Silenciar para todos", "Transferir posse da sala") ficam sem separação
+    do resto. "Silenciar para todos" é reversível e "Transferir posse" não é, com o mesmo peso
+    visual. Transferir abre um `<Dialog>` de confirmação ("Transferir a sala para X?",
+    `PersonMenu.tsx` ~L265-290).
   - O menu de ações do widget não foi alcançado pelo teste automático pelo rótulo "Ações de…".
     Vale conferir se todo widget expõe o menu ao teclado.
 - Precisa de regra para menus (agrupamento, destrutivo, atalho por teclado e toque).
@@ -270,9 +305,13 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   texto e "Deixar entrar" primário); `.notice` no topo da página ou dentro de uma folha.
 - **Problemas:**
   - Dois sistemas de aviso (`.toast` e `.notice`) com posições e camadas diferentes.
-  - O toast (`z-index: 80`, dentro do canvas) fica sob o painel Pessoas (`z-index: 50`, mas em
-    outro contexto de empilhamento).
-  - Com movimento reduzido, o toast nunca fecha sozinho (07.1).
+  - O toast fica sob o painel Pessoas, embora `.toast-stack` tenha `z-index: 80`
+    (`workspace.css` ~L2983) e `.sheet.sheet-people` tenha 50 (`workspace.css` ~L2730). O número
+    sozinho não explica o fato. A causa provável é o contexto de empilhamento (o toast fica
+    dentro do canvas, e o painel é um `<dialog>`), ainda não verificada.
+  - Movimento reduzido quebra o fechamento do toast (catálogo 07.1, deduzido do CSS e não
+    reproduzido lá). Pelo sistema, o toast não fecha sozinho. Por Ajustes, fecha na hora,
+    inclusive o da batida na porta.
   - Em 400, cobre o cabeçalho do primeiro widget, e "bateu na porta." quebra em três linhas.
 - Precisa de regra para avisos (tipos, posição, duração, camada, ações).
 
@@ -290,51 +329,112 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   - Cada widget traz CSS com cores próprias fora dos tokens.
 - **Estados:** vazio só no chat; sem padrão de carregando e erro; "Admins" bloqueia sem dizer a
   quem não é admin por que não pode agir.
+- **Por widget:**
+  - Notas (`canvas/CustomWidget.tsx`, `NoteActions.tsx`): não foi aberto nesta rodada. Tem um
+    diálogo "Cor" próprio, diferente do "Cor e paleta" dos outros widgets.
+  - Dados (`canvas/DiceFace.tsx`, `dice.css`): não foi aberto nesta rodada. A ajuda ("Guia de
+    dados") abre em painel separado, longe do widget.
+  - Cronômetro (`canvas/TimerBlock.tsx`, `timer.css`): "Iniciar" é menor que os outros
+    primários; o segmentado Temporizador/Cronômetro fica cinza; `timer.css` redefine
+    `.primary`.
+  - Votação (`canvas/PollFace.tsx`, `poll.css`): em 400, os campos de opção encostam na borda e
+    o "+" quase sai; `poll.css` redefine `.icon-button`.
+  - Sorteio (`canvas/RaffleFace.tsx`, `raffle.css`): não foi aberto nesta rodada; tem CSS
+    próprio com cores fora dos tokens.
+  - Chat e Minha transmissão: ver acima (vazio só no chat; Minha transmissão sem minimizar).
 
 ### 2.6 Confirmações
 
-- **Situação:** praticamente não há. Sair da sala, revogar convites e transferir posse agem na hora
-  (fechar widget compartilhado não foi testado). O único diálogo de decisão é "Todos os espaços estão
-  ocupados", com estilo próprio. Precisa de regra para confirmar ações sem volta.
+- **Situação:** existem duas formas diferentes de confirmar, e uma ação sem nenhuma.
+  - Segundo clique no mesmo botão: "Revogar convites" vira "Revogar mesmo?"
+    (`RoomLock.tsx` ~L66-72, L146).
+  - `<Dialog>` central: "Transferir a sala para X?", aberto tanto pelo menu da pessoa
+    (`PersonMenu.tsx` ~L265-290) quanto pelos Ajustes (`Settings.tsx` ~L905-925).
+  - Sem confirmação: "Sair da sala" (`App.tsx` ~L491-494). Fechar widget compartilhado não foi
+    testado.
+  - Outro diálogo de decisão, "Todos os espaços estão ocupados", usa a classe própria
+    `widget-dialog-actions`.
+- Precisa de regra para dizer quando e como confirmar.
 
-### 2.7 Dicas (tooltips)
+### 2.7 Outros componentes da sala e da landing
+
+Uma linha por componente. "Não exercitado" quer dizer que a rodada (uma ou duas pessoas, sem
+tela remota nem câmera) não mostrou o componente; o comentário vem do código.
+
+- **ScreenStage** (`components/ScreenStage.tsx`, palco das telas): não exercitado. Tem o
+  `<Dialog>` "Organizar tela de X", outro lugar para escolher posição e tamanho além do Layout.
+- **ScreenPicker** (`components/ScreenPicker.tsx`, prévia e ações de cada tela): não exercitado.
+  São quatro ações só de ícone na prévia (assistir só, em conjunto, focar, parar), explicadas
+  apenas por `aria-label` e `title`.
+- **LiveScreens** (`components/LiveScreens.tsx`): não exercitado. O ícone da barra só existe
+  enquanto alguém transmite, e o aviso de "começou uma tela" vai para o toast e para o sino,
+  mais um caminho de aviso.
+- **Spectators** (`components/Spectators.tsx`): não exercitado. Tem um painel ancorado com
+  classe própria (`spectators-panel`) fora do padrão dos popovers; o vazio diz "Ninguém
+  assistindo ainda.".
+- **FloatingPeople** (`components/FloatingPeople.tsx`, cards de pessoas e telas sobre o
+  canvas): não exercitado (sem câmera). Tem seletor próprio de posição dos cards
+  (`card-positions`, 6 âncoras), mais um jeito de escolher posição além do Layout e do
+  ScreenStage.
+- **MiniRoom** (`components/MiniRoom.tsx`, sala de demonstração da landing): as abas "Várias
+  telas / Voz / Widgets da sala" marcam a escolhida com azul sólido, outro estilo de seleção. A
+  pílula dos widgets da demonstração diz "Da sala", e a sala de verdade diz "Todos"/"Admins".
+- **SoundSources** (`components/SoundSources.tsx`, sons sem imagem): não exercitado. Tem chip na
+  barra e painel ancorado com classe própria (`sound-panel`).
+- **ScreenAudio** (`components/ScreenAudio.tsx`): não exercitado. O aviso de reprodução
+  bloqueada (`play-blocked`) é mais um estado sem padrão comum.
+- **VolumeSlider** (`components/VolumeSlider.tsx`): segue `docs/design/volume.md` (setas, Page
+  Up/Down, dourado acima de 100%); sem problema notado. No menu da pessoa ele divide espaço com
+  itens de ação (ver 2.3).
+- **ShareDialog** (`components/ShareDialog.tsx`, `share.css`): Qualidade e FPS em mono
+  maiúsculo; caixa tracejada de explicação, estilo que não se repete em outro lugar; em 400,
+  "Janela do aplicativo" e "Aba do navegador" quebram em duas linhas. `share.css` redefine
+  `.primary` e `.sheet-content`.
+- **Splash e desktop** (`Home.tsx` ~L449, `home.css`): não vistos, porque só existem no app
+  Windows. As variantes reduzidas do Splash perdem para o `!important` da regra de movimento
+  (catálogo 07.2).
+
+### 2.8 Dicas (tooltips)
 
 - **Situação:** não existe componente. São 95 `title=` nativos (ver Base comum). Botões só de
   ícone (sino, tela cheia, trocar, minimizar) dependem disso para se explicar.
 
 ## 3. Tabela-resumo
 
-| Componente/tela            | Gravidade | Problema                                                                                                  |
-| -------------------------- | --------- | --------------------------------------------------------------------------------------------------------- |
-| Base (tokens)              | alta      | `:root` em `styles.css` e `room.css` com valores diferentes, mais um terceiro conjunto em `landing.css`.  |
-| Base (valores soltos)      | alta      | 448 cores hex distintas, cerca de 30 raios, 35 sombras e mais de 20 `z-index` sem escala.                 |
-| Base (donos de classe)     | alta      | `.primary` em 10 arquivos, `.sheet-content` em 6 e `.volume-popover` em 3, sobrescritos por `finish.css`. |
-| Painéis/modais             | alta      | Quatro posições e estilos diferentes para o mesmo `<Dialog>`, que mudam de novo no celular.               |
-| Toasts/avisos              | alta      | O toast fica sob o painel Pessoas, não fecha com movimento reduzido e há dois sistemas de aviso.          |
-| Saída/confirmações         | alta      | Sair, revogar convites e transferir posse agem sem confirmação e sem tela de saída.                       |
-| Entrar (convite inválido)  | alta      | Link de convite inválido ou vencido cai na landing sem aviso.                                             |
-| Base (foco visível)        | alta      | Anel de foco retangular que cobre os botões do cabeçalho do widget; forma muda por componente.            |
-| Botões                     | média     | Primário em quatro versões (gradiente, chapado, contornado, tamanhos variados).                           |
-| Estado selecionado         | média     | Segmentado cinza num lugar e azulado em outro; Layout com dois estilos de seleção.                        |
-| Landing (formulário)       | média     | Erro de nome vazio usa a validação nativa, no idioma do navegador.                                        |
-| Landing (hierarquia)       | média     | Três CTAs de download acima da dobra competem com "Criar minha sala"; nomes diferentes.                   |
-| Landing (celular)          | média     | "Instalar VIO" aparece no celular, onde o app Windows não serve.                                          |
-| Sala (adormecer)           | média     | Os controles somem após 1 s parado; quem chega não vê o que fazer.                                        |
-| Sala (grade vazia)         | média     | "+ Adicionar widget" repetido 4 vezes e "Foco único" desabilitado sem motivo.                             |
-| Sala (celular)             | média     | Setas de rolagem por cima dos widgets; campos da votação encostam na borda.                               |
-| Catálogo (celular)         | média     | Abas cortadas sem sinal de rolagem; texto de Câmeras pede botão direito no toque.                         |
-| Dicas                      | média     | 95 `title=` nativos: nenhuma dica no toque nem no foco do teclado.                                        |
-| Rótulos mono               | média     | Mono maiúsculo pequeno e de baixo contraste em rótulos de interface, fora do uso previsto.                |
-| Popovers                   | média     | Raio, padding, cabeçalho e ancoragem diferentes entre popovers vizinhos.                                  |
-| Menus                      | média     | Destrutivos sem separação; reversível e irreversível com o mesmo peso.                                    |
-| Tranca (popover)           | média     | Interruptor e caixa de seleção misturados para opções do mesmo tipo.                                      |
-| Widgets (cabeçalho)        | média     | Botões do cabeçalho variam por widget; estado vazio só no chat.                                           |
-| Ajustes (voz)              | média     | Medidor e controle de sensibilidade em barras separadas.                                                  |
-| Porta                      | baixa     | Recusado sem motivo nem próximo passo; logo muda de posição em relação à landing.                         |
-| Pessoas (painel)           | baixa     | Título e aba repetem "Pessoas"; ícone de fone sem texto.                                                  |
-| Avatar                     | baixa     | Iniciais "A" na porta e "AN" no resto.                                                                    |
-| Landing (card)             | baixa     | Card de canto vivo entre campos arredondados; ponto quadrado aqui e redondo na sala.                      |
-| Notificações               | baixa     | Estado vazio sem próximo passo.                                                                           |
-| Textos da sala             | baixa     | "Flutuante" e "16 ms Servidor" não se explicam ao público.                                                |
-| Início (app)               | baixa     | Não verificado no navegador; precisa entrar na rodada de screenshots do app.                              |
-| Acessibilidade (navegação) | baixa     | Sem link de pular para o conteúdo (07.13).                                                                |
+| Componente/tela            | Gravidade | Problema                                                                                                   |
+| -------------------------- | --------- | ---------------------------------------------------------------------------------------------------------- |
+| Base (tokens)              | alta      | Paleta em `styles.css` e `room.css` com valores diferentes, mais um terceiro conjunto em `landing.css`.    |
+| Base (valores soltos)      | alta      | 448 cores hex, cerca de 30 raios, 35 a 39 sombras, 91 `font-size` e mais de 20 `z-index` distintos.        |
+| Base (donos de classe)     | alta      | `.primary` em 11 arquivos, `.sheet-content` em 6 e `.volume-popover` em 3, sobrescritos por `finish.css`.  |
+| Painéis/modais             | alta      | O mesmo `<Dialog>` aparece em 3 posições a 1280 px e em 4 a 400 px, com raios e paddings diferentes.       |
+| Toasts/avisos              | alta      | Toast sob o painel Pessoas (causa não verificada), quebrado no movimento reduzido; dois sistemas de aviso. |
+| Saída/confirmações         | alta      | Duas formas de confirmar (segundo clique e diálogo); "Sair da sala" não confirma e não tem tela de saída.  |
+| Entrar (convite inválido)  | alta      | Link de convite inválido ou vencido cai na landing sem aviso.                                              |
+| Base (foco visível)        | alta      | Anel de foco retangular que cobre os botões do cabeçalho do widget; forma muda por componente.             |
+| Botões                     | média     | Primário em quatro versões (gradiente, chapado, contornado, tamanhos variados).                            |
+| Estado selecionado         | média     | Segmentado cinza num lugar e azulado em outro; Layout com dois estilos de seleção.                         |
+| Landing (formulário)       | média     | Erro de nome vazio usa a validação nativa, no idioma do navegador.                                         |
+| Landing (hierarquia)       | média     | Três CTAs de download acima da dobra competem com "Criar minha sala"; nomes diferentes.                    |
+| Landing (celular)          | média     | "Instalar VIO" aparece no celular, onde o app Windows não serve.                                           |
+| Sala (adormecer)           | média     | Os controles somem após 1 s parado; quem chega não vê o que fazer.                                         |
+| Sala (grade vazia)         | média     | "+ Adicionar widget" repetido 4 vezes e "Foco único" desabilitado sem motivo.                              |
+| Sala (celular)             | média     | Setas de rolagem por cima dos widgets; campos da votação encostam na borda.                                |
+| Catálogo (celular)         | média     | Abas cortadas sem sinal de rolagem; texto de Câmeras pede botão direito no toque.                          |
+| Dicas                      | média     | 95 `title=` nativos: nenhuma dica no toque nem no foco do teclado.                                         |
+| Rótulos mono               | média     | Mono maiúsculo pequeno e de baixo contraste em rótulos de interface, fora do uso previsto.                 |
+| Popovers                   | média     | Raio, padding, cabeçalho e ancoragem diferentes entre popovers vizinhos.                                   |
+| Menus                      | média     | Itens vermelhos sem separação; reversível e irreversível com o mesmo peso.                                 |
+| Tranca (popover)           | média     | Interruptor e caixa de seleção misturados para opções do mesmo tipo.                                       |
+| Widgets (cabeçalho)        | média     | Botões do cabeçalho variam por widget; estado vazio só no chat.                                            |
+| Ajustes (voz)              | média     | Medidor e controle de sensibilidade em barras separadas.                                                   |
+| Porta                      | baixa     | Recusado sem motivo nem próximo passo; logo muda de posição em relação à landing.                          |
+| Pessoas (painel)           | baixa     | Título e aba repetem "Pessoas"; ícone de fone sem texto.                                                   |
+| Avatar                     | baixa     | Iniciais "A" na porta e "AN" no resto.                                                                     |
+| Landing (card)             | baixa     | Card de canto vivo entre campos arredondados; ponto quadrado aqui e redondo na sala.                       |
+| Notificações               | baixa     | Estado vazio sem próximo passo.                                                                            |
+| Textos da sala             | baixa     | "Flutuante" e "16 ms Servidor" não se explicam ao público.                                                 |
+| Início (app)               | baixa     | Não verificado no navegador; precisa entrar na rodada de screenshots do app.                               |
+| Acessibilidade (navegação) | baixa     | Sem link de pular para o conteúdo (catálogo 07.13).                                                        |
+| Posição (palco e cards)    | média     | Layout, ScreenStage e FloatingPeople têm, cada um, seu próprio jeito de escolher posição.                  |
+| Painéis ancorados extras   | baixa     | `spectators-panel` e `sound-panel` com classes próprias, fora do padrão dos popovers.                      |
+| Demonstração da landing    | baixa     | MiniRoom diz "Da sala" onde a sala de verdade diz "Todos"/"Admins"; abas com outro estilo de seleção.      |
