@@ -64,39 +64,40 @@ Arquivo novo no brandbook só nasce quando houver a primeira decisão daquele ca
 **5. Tipografia.** _Parcial._ Bricolage Grotesque na interface e IBM Plex Mono em código, ping,
 tempo e números (`CLAUDE.md`, "Convenções"). Pesos e escala na fase 3.
 
-**6. Ícones de interface.** _Parcial._ `lucide-react` (`CLAUDE.md`). Traço 1,5–2 px e tamanhos
-16/20/24 estão em uso e são confirmados na fase 3.
+**6. Ícones de interface.** _Parcial._ `lucide-react` (`CLAUDE.md`). No código de hoje: traço
+padrão de 2 px (exceções pontuais de 1,6 a 3) e tamanhos de 12 a 28 px, os mais comuns
+16, 14 e 15. A escala fixa de traço e tamanhos sai na fase 3.
 
 **7. Voz e tom.** _Aberto._ Já vale a base, que não é a voz: português, frases completas com
 acento, nada de texto óbvio (`CLAUDE.md`); erro visível como `Fault` com mensagem em português. As
-perguntas P1–P5 fecham [voz.md](../escolhas/voz.md). A #281 reescreveu textos de erro em 7 nov,
-antes desta escolha; se a voz decidida pedir ajuste, ele vira issue `frontend` nova.
+perguntas P1–P5 fecham [voz.md](../escolhas/voz.md). A #281 reescreveu textos de erro em 7 nov
+(PR #316), antes desta escolha; se a voz decidida pedir ajuste, ele vira issue `frontend` nova.
 
 **8. Imagem e ilustração.** _Aberto._ O que pode aparecer (P13) se decide agora; o estilo das
 ilustrações de estado espera as fases 2 e 3.
 
 **9. Movimento.** _Decidido no Ponto._ O capítulo é um link para
 [ponto.md#movimento](../brandbook/ponto.md#movimento) e para as cinco regras em
-[movimento-ponto.md](movimento-ponto.md#1-as-cinco-regras-as-únicas-inegociáveis). Valores finais
+[movimento-ponto.md](movimento-ponto.md) (seção 1). Valores finais
 na fase 5 (#261).
 
 **10. Aplicações.** _Parcial._
 
-| Aplicação          | Decidido                                                                                                | Aberto                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Redes              | Nada                                                                                                    | Ícone de perfil (P14); card de link (3)   |
-| Instalador         | App Windows primeiro, instaladores em `vio-releases` ([decisão 006](../../decisoes/006-app-windows.md)) | Ícone final (4); arte do NSIS (3)         |
-| Página de download | Landing C "O ponto", escolha A, botão "Baixar para Windows" (#197, #258, [landing.md](../landing.md))   | Pendências da #197                        |
-| Avatar             | Cada pessoa é um ponto na sua cor (guia do Ponto, 7 nov 2026); cor pessoal na #299                      | Forma do avatar (P15)                     |
-| Favicon            | M4 (prancha Marca, 29 out 2026)                                                                         | Troca dos arquivos em `public/` na fase 4 |
-| Marca d'água       | Clipes têm marca d'água ([decisão 007](../../decisoes/007-clips.md))                                    | Desenho (P9 e fase 3)                     |
+| Aplicação          | Decidido                                                                                                | Aberto                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Redes              | Nada                                                                                                    | Ícone de perfil (P14); card de link (3)                             |
+| Instalador         | App Windows primeiro, instaladores em `vio-releases` ([decisão 006](../../decisoes/006-app-windows.md)) | Ícone final (4); arte do NSIS (3)                                   |
+| Página de download | Landing C "O ponto", escolha A, botão "Baixar para Windows" (#197, #258, [landing.md](../landing.md))   | Pendências da #197                                                  |
+| Avatar             | Cada pessoa é um ponto na sua cor (guia do Ponto, 7 nov 2026); cor pessoal na #299                      | Ideia "pessoa = forma do Ponto" (P15); forma e raio nas fases 2 e 3 |
+| Favicon            | M4 é o ícone principal (prancha Marca, 29 out 2026)                                                     | A troca em `public/` fica para a fase 4                             |
+| Marca d'água       | Clipes têm marca d'água ([decisão 007](../../decisoes/007-clips.md))                                    | Desenho (P9 e fase 3)                                               |
 
 ## 3. Brandkit
 
 O Brandkit é a pasta [`../brandkit/`](../brandkit/) com os arquivos prontos. Regra de exportação:
 **um SVG mestre por peça**; todo o resto sai dele por script em `scripts/`, sem valor ajustado à mão
-(exceto os ícones de 16 e 32 px, conferidos pixel a pixel). O ImageMagick já está na máquina; se o
-script precisar de pacote novo, pede aprovação antes.
+(exceto os ícones de 16 e 32 px, conferidos pixel a pixel). Se o script precisar de pacote novo,
+pede aprovação antes.
 
 | Item                  | Formatos                                                                    | Como sai                                                     | Estado                         |
 | --------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------ |
@@ -163,7 +164,7 @@ Recomendação: **A**, sem código interno no texto (o `code` do `Fault` fica pa
 - C. Em todo lugar, de leve.
 
 Exemplo, landing: "Sua sala, sua turma, a mesma tela." × "Pipoca pronta? Chama a turma.".
-Exemplo, sala: "Ninguém assistindo" × "Plateia vazia por enquanto".
+Exemplo, sala: "Ninguém assistindo ainda." (texto atual) × "Plateia vazia por enquanto."
 
 Recomendação: **B**. Na landing e nas redes a voz pode brincar; dentro da sala, ela some.
 
@@ -207,13 +208,12 @@ Em todas: menor e depois do VIO, nunca junto do símbolo. Recomendação: **C**.
 
 Recomendação: **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado do "v" em 16 px.
 
-**P9. Que versões do logo existem e como ele fica sobre imagem?** Noite já está decidida.
+**P9. Que versões do logo existem e qual a regra sobre imagem?** Noite já está decidida. As
+cores e os contrastes de cada versão ficam para a fase 3.
 
-- A. Noite, Claro (letras #0B0C13, ponto azul, 7,23:1), Azul (letras brancas, ponto da P8) e
-  mono. Sobre imagem ou vídeo, só a M4 ou o logo numa chapa Noite. A marca d'água do clipe é a M4
-  no canto.
-- B. As mesmas versões, e sobre imagem o logo mono direto, sem efeito, só onde o contraste
-  medido passar de 3:1.
+- A. Noite, Claro, Azul e mono. Sobre imagem ou vídeo, só a M4 ou o logo numa chapa Noite. A
+  marca d'água do clipe é a M4 no canto.
+- B. As mesmas versões, e sobre imagem o logo mono direto, sem efeito, onde ele se ler bem.
 - C. Só Noite e Azul por enquanto; as outras entram quando houver uso.
 
 Recomendação: **A**. A M4 traz o próprio fundo e se lê em qualquer quadro do vídeo.
@@ -226,7 +226,8 @@ altura do logo).
 - C. Respiro da altura do "v"; logo a partir de 32 px.
 
 Abaixo do mínimo, usa-se a M4 (menor tamanho: 16 px). No cabeçalho da landing (72 px, logo de 32
-px), A ocupa 46 px, B 60 px e C 96 px, que não cabe. Recomendação: **B**.
+px), A ocupa 46 px, B 60 px e C 96 px, que não cabe. Os px e as proporções são provisórios e se
+ajustam na fase 3; aqui se escolhe a ordem de grandeza. Recomendação: **B**.
 
 **P11. Aprova a lista de usos proibidos?** Esticar ou achatar; girar; trocar a fonte; recolorir
 com cor de estado (verde ao vivo, vermelho de erro); letras azuis sobre Noite (2,50:1); sombra,
@@ -259,7 +260,7 @@ sobre escuro.
 Recomendação: **B**. Mostra o produto de verdade e não cria rosto falso.
 
 **P14. Qual ícone vai nos perfis (redes, Discord, atalhos)?** Os perfis cortam em círculo, então a
-versão de perfil é sangrada, com o desenho a 84%.
+versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta-se na fase 3).
 
 - A. M4 (fundo Noite): some em perfis de fundo escuro.
 - B. M1 (fundo azul): destaca em fundo claro e escuro.
@@ -267,15 +268,15 @@ versão de perfil é sangrada, com o desenho a 84%.
 
 Recomendação: **B**.
 
-**P15. Qual a forma do avatar das pessoas?** (Sugestão; liga com a cor pessoal da #299.) Hoje é um
-círculo cheio na cor pessoal, com a inicial (42 px no widget Pessoas).
+**P15. O avatar das pessoas segue a ideia "pessoa = forma do Ponto"?** (Sugestão; liga com a cor
+pessoal da #299.) Hoje é um círculo cheio na cor pessoal, com a inicial. Forma exata e raio ficam
+para as fases 2 e 3.
 
-- A. Quadrado arredondado (a forma do Ponto), cheio na cor pessoal, com a inicial.
-- B. Círculo atual, sem mudança.
-- C. Só o ponto da cor, sem inicial, nos espaços pequenos (o círculo fica nos grandes).
+- A. Sim: o avatar herda a forma do Ponto (as pessoas também são pontos).
+- B. Não: o avatar mantém forma própria, e só a cor liga a pessoa ao Ponto.
+- C. Decidir junto com o estilo visual, na fase 2.
 
-Recomendação: **A**. "As pessoas também são pontos" vira forma, não só cor. O raio exato fica para
-a fase 3.
+Recomendação: **A**. "As pessoas também são pontos" vira forma, não só cor.
 
 ## 5. Como decidir
 
