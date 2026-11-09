@@ -119,11 +119,9 @@ pede aprovação antes.
 15 perguntas, mais importantes primeiro. Em 9 nov 2026 o usuário respondeu 14; a P8 segue aberta. Cada uma tem opções com exemplos reais do app e uma
 recomendação. Recomendação não é decisão: sem resposta, a pergunta continua aberta.
 
-### A. Voz e tom (fecha `escolhas/voz.md`)
+### A. Voz e tom (fechou em `escolhas/fechadas/2026-11-09-voz.md`)
 
 **P1. Qual é o núcleo da voz?** Exemplo: a sala sem ninguém.
-
-> **Respondida: C, 9 nov 2026.**
 
 - A. Amigo que organiza a sessão: "Sala vazia. Mande o convite para quem vai assistir."
 - B. Anfitrião discreto: "Ninguém na sala ainda."
@@ -132,9 +130,9 @@ recomendação. Recomendação não é decisão: sem resposta, a pergunta contin
 Recomendação: **A**. É o mesmo papel do Ponto ("amiguinho que guia e acompanha"): ajuda, convida e
 sai da frente quando a sessão começa.
 
-**P2. Qual o registro dos textos?**
+> **Respondida: C, 9 nov 2026.**
 
-> **Respondida: B, 9 nov 2026.**
+**P2. Qual o registro dos textos?**
 
 | A. Cuidado (como hoje)                                          | B. Leve                                                  | C. Impessoal                 |
 | --------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- |
@@ -146,10 +144,10 @@ A e B falam com "você"; em B o VIO fala de si em terceira pessoa ("o VIO"), nun
 pessoa. Recomendação: **B**. Soa como o amigo da P1 sem virar gíria, e "o VIO" combina com o nome
 ser o produto.
 
-**P3. Como dar um erro?** Exemplo real: "Permissão não concedida. Autorize o acesso no navegador e
+> **Respondida: B, 9 nov 2026.**
 
-> **Respondida: B (exemplo ajustado à P2), 9 nov 2026.**
-> tente novamente."
+**P3. Como dar um erro?** Exemplo real: "Permissão não concedida. Autorize o acesso no navegador e
+tente novamente."
 
 - A. O que houve e o que fazer, em até duas frases, sem culpar: "O navegador bloqueou o microfone.
   Libere o acesso no cadeado da barra de endereço e tente de novo."
@@ -161,9 +159,9 @@ nele."; B "Opa, este widget é de outra pessoa."; C "Sem permissão."
 
 Recomendação: **A**, sem código interno no texto (o `code` do `Fault` fica para o suporte).
 
-**P4. Pode ter humor e gíria?**
+> **Respondida: B (exemplo ajustado à P2), 9 nov 2026.**
 
-> **Respondida: B, 9 nov 2026.**
+**P4. Pode ter humor e gíria?**
 
 - A. Nunca.
 - B. Só fora da sala (landing, redes, página inicial), nunca em erro nem durante a sessão.
@@ -174,9 +172,9 @@ Exemplo, sala: "Ninguém assistindo ainda." (texto atual) × "Plateia vazia por 
 
 Recomendação: **B**. Na landing e nas redes a voz pode brincar; dentro da sala, ela some.
 
-**P5. O VIO usa emoji nos próprios textos?**
+> **Respondida: B, 9 nov 2026.**
 
-> **Respondida: A, 9 nov 2026.**
+**P5. O VIO usa emoji nos próprios textos?**
 
 - A. Nunca. Emoji é das pessoas (chat e reações).
 - B. Só na landing e nas redes.
@@ -185,11 +183,11 @@ Recomendação: **B**. Na landing e nas redes a voz pode brincar; dentro da sala
 Recomendação: **A**. Leitor de tela lê o nome do emoji ("brilhos") e o texto do app fica limpo
 para o emoji das pessoas aparecer.
 
+> **Respondida: A, 9 nov 2026.**
+
 ### B. Nome e assinatura
 
 **P6. Como se escreve o nome no texto?** Exemplo: "O VIO não grava nem guarda nada."
-
-> **Respondida: A, 9 nov 2026.**
 
 - A. "VIO" em texto, sempre com "o" (o VIO); "vio." só como desenho do logo.
 - B. "Vio" em texto corrido; "VIO" só no código da sala.
@@ -198,10 +196,10 @@ para o emoji das pessoas aparecer.
 Recomendação: **A**. Já é o uso no app, no código da sala ("VIO-7K2Q") e no instalador
 ("VIO-x64-setup.exe"); "vio." em frase confunde com fim de frase.
 
-**P7. Como assinar a NerdQuest Studios?** Hoje há três formas: "by NerdQuest Studios" (landing),
+> **Respondida: A, 9 nov 2026.**
 
-> **Respondida: B, 9 nov 2026.**
-> "by NerdQuest Studios · fundado por Nine" (rodapé do app) e "NerdQuest · v2.x" (linha de versão).
+**P7. Como assinar a NerdQuest Studios?** Hoje há três formas: "by NerdQuest Studios" (landing),
+"by NerdQuest Studios · fundado por Nine" (rodapé do app) e "NerdQuest · v2.x" (linha de versão).
 
 - A. "by NerdQuest Studios · fundado por Nine" em todo rodapé.
 - B. "da NerdQuest Studios" (em português), sem crédito ao fundador.
@@ -210,22 +208,22 @@ Recomendação: **A**. Já é o uso no app, no código da sala ("VIO-7K2Q") e no
 
 Em todas: menor e depois do VIO, nunca junto do símbolo. Recomendação: **C**.
 
+> **Respondida: B, 9 nov 2026.**
+
 ### C. Logo e ícones
 
 **P8. Qual a cor do ponto da M1 (e do logo sobre azul)?** Fecha
-
-> **Em aberto (9 nov 2026):** o usuário não decidiu; sugeriu testar preto (cerca de 2,7:1) e quer ver a comparação visual. Ver [m1-ponto.md](../escolhas/m1-ponto.md).
-> [m1-ponto.md](../escolhas/m1-ponto.md).
+[m1-ponto.md](../escolhas/m1-ponto.md).
 
 - A. #A6A9FF: 3,61:1 sobre o azul e 2,16:1 contra o "v" branco. O ponto continua um personagem.
 - B. #F3F3FB: 7,06:1 sobre o azul, mas 1,10:1 contra o "v": vira parte da letra.
 
 Recomendação: **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado do "v" em 16 px.
 
-**P9. Que versões do logo existem e qual a regra sobre imagem?** Noite já está decidida. As
+> **Em aberto (9 nov 2026):** o usuário não decidiu; sugeriu testar preto (cerca de 2,7:1) e quer ver a comparação visual.
 
-> **Respondida: A, 9 nov 2026.**
-> cores e os contrastes de cada versão ficam para a fase 3.
+**P9. Que versões do logo existem e qual a regra sobre imagem?** Noite já está decidida. As
+cores e os contrastes de cada versão ficam para a fase 3.
 
 - A. Noite, Claro, Azul e mono. Sobre imagem ou vídeo, só a M4 ou o logo numa chapa Noite. A
   marca d'água do clipe é a M4 no canto.
@@ -234,10 +232,10 @@ Recomendação: **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado 
 
 Recomendação: **A**. A M4 traz o próprio fundo e se lê em qualquer quadro do vídeo.
 
-**P10. Qual o respiro e o tamanho mínimo do logo?** A unidade é o Ponto (lado do ponto, 22% da
+> **Respondida: A, 9 nov 2026.**
 
-> **Respondida: B, 9 nov 2026.**
-> altura do logo).
+**P10. Qual o respiro e o tamanho mínimo do logo?** A unidade é o Ponto (lado do ponto, 22% da
+altura do logo).
 
 - A. Respiro de 1 Ponto; logo a partir de 20 px de altura.
 - B. Respiro de 2 Pontos; logo a partir de 24 px.
@@ -247,24 +245,24 @@ Abaixo do mínimo, usa-se a M4 (menor tamanho: 16 px). No cabeçalho da landing 
 px), A ocupa 46 px, B 60 px e C 96 px, que não cabe. Os px e as proporções são provisórios e se
 ajustam na fase 3; aqui se escolhe a ordem de grandeza. Recomendação: **B**.
 
-**P11. Aprova a lista de usos proibidos?** Esticar ou achatar; girar; trocar a fonte; recolorir
+> **Respondida: B, 9 nov 2026.**
 
-> **Respondida: B (com exceção: brilho só em divulgação), 9 nov 2026.**
-> com cor de estado (verde ao vivo, vermelho de erro); letras azuis sobre Noite (2,50:1); sombra,
-> brilho, contorno ou degradê; ponto redondo; ponto separado da palavra.
+**P11. Aprova a lista de usos proibidos?** Esticar ou achatar; girar; trocar a fonte; recolorir
+com cor de estado (verde ao vivo, vermelho de erro); letras azuis sobre Noite (2,50:1); sombra,
+brilho, contorno ou degradê; ponto redondo; ponto separado da palavra.
 
 - A. Aprovo a lista inteira.
 - B. Aprovo com ajustes (diga quais).
 
 Recomendação: **A**.
 
+> **Respondida: B (com exceção: brilho só em divulgação), 9 nov 2026.**
+
 ### D. Temas, imagem e aplicações
 
 **P12. Quais temas próprios o VIO planeja?** A [decisão 003](../../decisoes/003-temas.md) prevê
-
-> **Respondida: A, 9 nov 2026.**
-> temas próprios (só cores) e da comunidade, mais tarde. Aqui se decide quais; as cores ficam para a
-> fase 3.
+temas próprios (só cores) e da comunidade, mais tarde. Aqui se decide quais; as cores ficam para a
+fase 3.
 
 - A. Noite, Noite azul e Claro, com "Automático" (segue o sistema). O palco fica escuro em todos.
 - B. Noite e Claro, com "Automático".
@@ -273,9 +271,9 @@ Recomendação: **A**.
 Recomendação: **A**. Já estava no roteiro de 28 out (`docs/ideias/`) e mantém o vídeo sempre
 sobre escuro.
 
-**P13. O que pode aparecer em imagem da marca?**
+> **Respondida: A, 9 nov 2026.**
 
-> **Respondida: B (com ajuste: sem app, filme ou jogo de terceiros na tela compartilhada), 9 nov 2026.**
+**P13. O que pode aparecer em imagem da marca?**
 
 - A. Só o Ponto e formas da interface.
 - B. O Ponto e capturas reais do app; sem foto de banco de imagem e sem pessoa gerada por IA.
@@ -283,10 +281,10 @@ sobre escuro.
 
 Recomendação: **B**. Mostra o produto de verdade e não cria rosto falso.
 
-**P14. Qual ícone vai nos perfis (redes, Discord, atalhos)?** Os perfis cortam em círculo, então a
+> **Respondida: B (com ajuste: sem app, filme ou jogo de terceiros na tela compartilhada), 9 nov 2026.**
 
-> **Respondida: A, 9 nov 2026.**
-> versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta-se na fase 3).
+**P14. Qual ícone vai nos perfis (redes, Discord, atalhos)?** Os perfis cortam em círculo, então a
+versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta-se na fase 3).
 
 - A. M4 (fundo Noite): some em perfis de fundo escuro.
 - B. M1 (fundo azul): destaca em fundo claro e escuro.
@@ -294,17 +292,19 @@ Recomendação: **B**. Mostra o produto de verdade e não cria rosto falso.
 
 Recomendação: **B**.
 
-**P15. O avatar das pessoas segue a ideia "pessoa = forma do Ponto"?** (Sugestão; liga com a cor
-
 > **Respondida: A, 9 nov 2026.**
-> pessoal da #299.) Hoje é um círculo cheio na cor pessoal, com a inicial. Forma exata e raio ficam
-> para as fases 2 e 3.
+
+**P15. O avatar das pessoas segue a ideia "pessoa = forma do Ponto"?** (Sugestão; liga com a cor
+pessoal da #299.) Hoje é um círculo cheio na cor pessoal, com a inicial. Forma exata e raio ficam
+para as fases 2 e 3.
 
 - A. Sim: o avatar herda a forma do Ponto (as pessoas também são pontos).
 - B. Não: o avatar mantém forma própria, e só a cor liga a pessoa ao Ponto.
 - C. Decidir junto com o estilo visual, na fase 2.
 
 Recomendação: **A**. "As pessoas também são pontos" vira forma, não só cor.
+
+> **Respondida: A, 9 nov 2026.**
 
 ## 5. Como decidir
 

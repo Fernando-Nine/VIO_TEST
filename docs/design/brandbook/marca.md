@@ -15,15 +15,15 @@
 
 ## Ícones do app
 
-| Ícone                  | Uso                  | Arquivo                                                          |
-| ---------------------- | -------------------- | ---------------------------------------------------------------- |
-| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)           |
-| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto: [`m1-ponto.md`](../escolhas/m1-ponto.md) |
+| Ícone                  | Uso                  | Arquivo                                                               |
+| ---------------------- | -------------------- | --------------------------------------------------------------------- |
+| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)                |
+| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto (P8): [`m1-ponto.md`](../escolhas/m1-ponto.md) |
 
 - M4: quadrado arredondado em `#0B0C13` com borda `#2A2C3C`, "v" em `#F3F3FB` e ponto azul
   `#2727F5` alinhado ao pé da letra.
-- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto ainda
-  não está decidida ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
+- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto está
+  em aberto (P8) ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
 - Origem: escolha do usuário na prancha "VIO · Marca", 29 out 2026 (#227), quadros "Escolhidas ·
   Ícones M4 (principal) e M1" e "Escolhida · Logo VIO (N3 arredondada) + ícones M4 e M1" ·
   https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo
@@ -36,7 +36,7 @@
 ## Assinatura
 
 - "da NerdQuest Studios", em português, sem crédito ao fundador.
-- Sempre menor e depois do VIO, nunca junto do símbolo.
+- Sempre menor e depois do VIO, nunca junto do símbolo (regra comum a todas as opções da P7).
 - A troca nos rodapés do app é a fase 4.
 - Origem: resposta do usuário à P7 da fase 1a, 9 nov 2026.
 
@@ -66,6 +66,7 @@
 
 ## Ícone de perfil
 
-- A **M4**, com fundo Noite, em redes, Discord e atalhos. Motivo do usuário: gosto por marca
-  escura, como a Steam, mesmo sabendo que o azul destaca mais.
+- A **M4**, com fundo Noite, em redes, Discord e atalhos. Fala do usuário: "sei que o azul se destaca
+  mais, mas além de ser gosto pessoal, pensei que a Steam, que também é uma marca grande, faz escuro
+  assim".
 - Origem: resposta do usuário à P14 da fase 1a, 9 nov 2026.

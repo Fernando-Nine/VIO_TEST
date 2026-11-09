@@ -6,7 +6,8 @@ Como o VIO fala nos próprios textos. Frases completas, com acento, sem explicar
 ## Núcleo: turma zoeira
 
 - A voz é de turma: brinca, chama a galera. Exemplo: "Só você por aqui? Chama a galera!".
-- A zoeira vale só onde a P4 libera (abaixo); dentro da sala e em erro vale o registro leve.
+- O exemplo mostra o tom da voz. O registro leve da P2 vale para todo texto; humor e gíria (P4) só fora
+  da sala, então dentro da sala a P4 tira a gíria.
 - Origem: resposta do usuário à P1 da fase 1a, 9 nov 2026.
 
 ## Registro: leve
