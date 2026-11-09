@@ -19,7 +19,6 @@ Nada daqui vale como identidade oficial.
 | Estilo visual         | [estilo-visual.md](estilo-visual.md) | fase 2           |
 | Cor do ponto da M1    | [m1-ponto.md](m1-ponto.md)           | com o usuário    |
 | Cores (retrato atual) | [cores.md](cores.md)                 | fase 3           |
-| Voz e tom da marca    | [voz.md](voz.md)                     | fase 1a          |
 
 ## Fora de escolha (para a fila do Frontend)
 

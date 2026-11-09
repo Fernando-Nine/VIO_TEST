@@ -15,15 +15,58 @@
 
 ## Ícones do app
 
-| Ícone                  | Uso                  | Arquivo                                                          |
-| ---------------------- | -------------------- | ---------------------------------------------------------------- |
-| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)           |
-| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto: [`m1-ponto.md`](../escolhas/m1-ponto.md) |
+| Ícone                  | Uso                  | Arquivo                                                               |
+| ---------------------- | -------------------- | --------------------------------------------------------------------- |
+| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)                |
+| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto (P8): [`m1-ponto.md`](../escolhas/m1-ponto.md) |
 
 - M4: quadrado arredondado em `#0B0C13` com borda `#2A2C3C`, "v" em `#F3F3FB` e ponto azul
   `#2727F5` alinhado ao pé da letra.
-- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto ainda
-  não está decidida ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
+- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto está
+  em aberto (P8) ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
 - Origem: escolha do usuário na prancha "VIO · Marca", 29 out 2026 (#227), quadros "Escolhidas ·
   Ícones M4 (principal) e M1" e "Escolhida · Logo VIO (N3 arredondada) + ícones M4 e M1" ·
   https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo
+
+## Nome no texto
+
+- Escreve-se "VIO", sempre com artigo: "o VIO". "vio." é só o desenho do logo.
+- Origem: resposta do usuário à P6 da fase 1a, 9 nov 2026.
+
+## Assinatura
+
+- "da NerdQuest Studios", em português, sem crédito ao fundador.
+- Sempre menor e depois do VIO, nunca junto do símbolo (regra comum a todas as opções da P7).
+- A troca nos rodapés do app é a fase 4.
+- Origem: resposta do usuário à P7 da fase 1a, 9 nov 2026.
+
+## Versões do logo
+
+- **Noite**, **Claro**, **Azul** e **mono**. As cores de cada uma ficam para a fase 3.
+- Sobre imagem ou vídeo: só a M4, ou o logo numa chapa Noite.
+- A marca d'água do clipe é a M4 no canto.
+- Origem: resposta do usuário à P9 da fase 1a, 9 nov 2026.
+
+## Respiro e tamanho mínimo
+
+- Respiro de **2 Pontos** (o Ponto é o lado do ponto, 22% da altura do logo).
+- Logo a partir de **24 px** de altura; abaixo disso, a M4.
+- Números finos ajustados na fase 3.
+- Origem: resposta do usuário à P10 da fase 1a, 9 nov 2026.
+
+## Usos proibidos
+
+- Esticar ou achatar; girar; trocar a fonte.
+- Recolorir com cor de estado (verde ao vivo, vermelho de erro).
+- Letras azuis sobre Noite (2,50:1).
+- Sombra, contorno ou degradê.
+- Ponto redondo; ponto separado da palavra.
+- **Brilho** só em peça de divulgação (propaganda); no padrão o logo fica como está, sem brilho.
+- Origem: resposta do usuário à P11 da fase 1a, 9 nov 2026 (aprovada com a exceção do brilho).
+
+## Ícone de perfil
+
+- A **M4**, com fundo Noite, em redes, Discord e atalhos. Fala do usuário: "sei que o azul se destaca
+  mais, mas além de ser gosto pessoal, pensei que a Steam, que também é uma marca grande, faz escuro
+  assim".
+- Origem: resposta do usuário à P14 da fase 1a, 9 nov 2026.
