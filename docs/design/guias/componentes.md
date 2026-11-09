@@ -6,13 +6,18 @@ fases 2 e 3 ([plano](plano.md)).
 
 - Os problemas citados vêm do [inventário da fase 1b](inventario.md) (seções "1.x", "2.x" e "Base
   comum") e do [catálogo 07](../../catalogo/07-cliente-e-interface.md) (achados "07.N").
-- **Regra** é o comportamento-alvo da fase 4. **Sugestão** muda o que existe hoje ou uma spec
-  aprovada e espera o aval do usuário (lista na seção 6).
-- Specs aprovadas que este guia segue sem mudar: [notificacoes.md](../notificacoes.md),
+- **Regra** é o comportamento-alvo da fase 4: unifica o que hoje existe em várias formas,
+  escolhendo uma delas, e corrige defeitos do inventário, sem criar nem tirar o que a pessoa pode
+  fazer.
+- **Sugestão** cria ou tira comportamento (o que aparece, quando, para quem, em que ordem) ou muda
+  uma spec aprovada. Só vale com o aval do usuário; até lá, fica o que existe. A lista está na
+  seção 6, e a tabela de migração (5) herda as marcas.
+- Specs aprovadas que o guia segue: [notificacoes.md](../notificacoes.md),
   [cabecalho-widget.md](../cabecalho-widget.md), [widgets-padrao.md](../widgets-padrao.md),
-  [transicoes.md](../transicoes.md) e [volume.md](../volume.md). Onde o guia refina uma delas, ele
-  diz.
-- Números (tempos, alturas) são valores iniciais. O que vale é a ordem e o comportamento.
+  [transicoes.md](../transicoes.md) e [volume.md](../volume.md). Onde ele muda uma delas, é
+  sugestão da seção 6.2, e a spec vale até o aval.
+- Números novos são valores iniciais, marcados assim: tamanhos ficam para a fase 3 e tempos para a
+  fase 5. O que vale é a ordem e o comportamento.
 
 ## 0. Base comum
 
@@ -20,7 +25,8 @@ fases 2 e 3 ([plano](plano.md)).
 
 Faça as perguntas na ordem. A primeira resposta "sim" decide.
 
-1. A ação não tem volta, ou a volta depende de outra pessoa? → **Confirmação** (1.9).
+1. A ação não tem volta, a volta depende de outra pessoa ou ela corta algo dos outros? →
+   **Confirmação** (1.9).
 2. É só o nome ou a explicação de um controle? → **Dica** (1.6).
 3. É um recado que a pessoa não pediu (de outra pessoa ou do sistema)? → **Aviso** (1.7).
 4. É uma lista de ações sobre algo (pessoa, widget, espaço)? → **Menu** (1.8).
@@ -33,9 +39,9 @@ Faça as perguntas na ordem. A primeira resposta "sim" decide.
 A **folha de baixo** (1.3) não entra na escolha: é a forma de celular das outras famílias (0.3). O
 **card de widget** (1.10) não flutua, mas entra no guia porque abre, fecha e tem estados.
 
-**Modal só abre por ação da própria pessoa.** O que chega de fora (alguém compartilhou uma tela,
-bateu na porta) vira aviso com ação, nunca modal. Hoje "Todos os espaços estão ocupados" abre uma
-modal quando outra pessoa começa uma tela (2.6). **Sugestão**, seção 6.
+**Modal só abre por ação da própria pessoa (sugestão).** O que chega de fora (alguém compartilhou
+uma tela, bateu na porta) vira aviso com ação, nunca modal. Hoje "Todos os espaços estão ocupados"
+abre uma modal quando outra pessoa começa uma tela (2.6); até o aval, fica assim.
 
 ### 0.2 Um dono por família
 
@@ -71,25 +77,26 @@ Hoje o mesmo `<Dialog>` tem 4 comportamentos em 400 px (2.1).
 - Fechar devolve o foco ao gatilho. Se o gatilho sumiu (o widget fechou, a pessoa saiu), o foco vai
   ao vizinho lógico: o próximo item da mesma lista, senão o anterior, senão o título da região.
 - Modal, folha (forma modal) e confirmação prendem o foco, como `showModal()` já faz. Painel,
-  popover e menu não prendem.
+  popover em balão e menu ancorado não prendem; na forma de folha de baixo, vale 1.3.
 - Como o foco aparece: regra 2.5.
 
 ### 0.5 Fechar
 
-| Família          | Esc               | Clique ou toque fora | X        | Outros                            |
-| ---------------- | ----------------- | -------------------- | -------- | --------------------------------- |
-| Modal central    | sim               | sim                  | sim      |                                   |
-| Folha lateral    | sim               | sim                  | sim      |                                   |
-| Folha de baixo   | sim               | só na forma modal    | sempre   | arrastar para baixo (opcional)    |
-| Painel não modal | com o foco dentro | não                  | sim      | o gatilho alterna                 |
-| Popover          | sim               | sim                  | não (\*) | o gatilho alterna; Tab para fora  |
-| Dica             | sim               | não se aplica        | não      | sai do hover ou do foco           |
-| Dica clicável    | sim               | sim                  | não      | o gatilho alterna                 |
-| Aviso            | com o foco nele   | não                  | sempre   | tempo, exceto erro e pedido (1.7) |
-| Menu             | sim               | sim                  | não      | Tab; escolher um item             |
-| Confirmação      | = Cancelar        | = Cancelar           | não      | Cancelar                          |
+| Família          | Esc               | Clique ou toque fora | X        | Outros                                |
+| ---------------- | ----------------- | -------------------- | -------- | ------------------------------------- |
+| Modal central    | sim               | sim                  | sim      |                                       |
+| Folha lateral    | sim               | sim                  | sim      |                                       |
+| Folha de baixo   | sim               | só na forma modal    | sempre   | arrastar para baixo (opcional)        |
+| Painel não modal | com o foco dentro | não                  | sim      | o gatilho alterna                     |
+| Popover          | sim               | sim                  | não (\*) | o gatilho alterna; Tab para fora (\*) |
+| Dica             | sim               | não se aplica        | não      | sai do hover ou do foco               |
+| Dica clicável    | sim               | sim                  | não      | o gatilho alterna                     |
+| Aviso            | com o foco nele   | não                  | sempre   | tempo, exceto erro e pedido (1.7)     |
+| Menu             | sim               | sim                  | não (\*) | Tab (\*); escolher um item            |
+| Confirmação      | = desistir        | = desistir           | não      | botão de desistir (1.9)               |
 
-(\*) No celular, quando vira folha de baixo, o popover ganha X.
+(\*) No celular, quando popover e menu viram folha de baixo, ganham X e prendem o foco (1.3): Tab
+não fecha. "Tab para fora" vale só no balão e no menu ancorado.
 
 - Esc fecha **só a superfície de cima**, uma por vez. Um campo de busca com texto pode usar o
   primeiro Esc para limpar; o seguinte fecha. Hoje o Esc falha de forma intermitente no catálogo
@@ -103,8 +110,9 @@ Hoje o mesmo `<Dialog>` tem 4 comportamentos em 400 px (2.1).
 
 ### 0.6 Camadas
 
-Uma escala com nome substitui os mais de 20 `z-index` soltos (Base comum). O número de cada camada
-pode mudar; a ordem não.
+Uma escala com nome substitui os mais de 20 `z-index` soltos (Base comum). Os números são valores
+iniciais (fase 3). A ordem é **sugestão**: ela decide o que cobre o quê (a pilha de avisos sobe
+acima do painel Pessoas, por exemplo), e o Frontend confere cada caso antes da fase 4.
 
 | Camada                   | Token (sugestão)       | Valor inicial | O que mora nela                                                            |
 | ------------------------ | ---------------------- | ------------- | -------------------------------------------------------------------------- |
@@ -134,8 +142,9 @@ pode mudar; a ordem não.
 
 - **Carregando.** Título e X aparecem na hora. O corpo já tem o tamanho final e mostra o indicador
   de carregamento do Ponto ([movimento-ponto.md](movimento-ponto.md), 3.7 e 8) com rótulo para o
-  leitor (`role="status"`). Ele só aparece depois de ~300 ms, para não piscar. Um botão que espera
-  resposta mantém a largura, fica `aria-busy` e não aceita o segundo clique.
+  leitor (`role="status"`). Ele só aparece depois de ~300 ms (valor inicial; fase 5), para não
+  piscar. Um botão que espera resposta mantém a largura, fica `aria-busy` e não aceita o segundo
+  clique.
 - **Erro.** Faixa de aviso (1.7) dentro da superfície, perto do que falhou, dizendo o que houve e o
   que fazer, com "Tentar de novo" quando couber. Nunca fecha a superfície nem apaga o que a pessoa
   digitou.
@@ -151,8 +160,8 @@ pode mudar; a ordem não.
 - **Título.** Nome do lugar ("Ajustes", "Pessoas"), verbo com objeto para tarefa ("Adicionar
   widget", "Organizar seu espaço") ou pergunta na confirmação ("Sair da sala?"). Sem ponto final.
 - **Botões.** Verbo que diz o resultado ("Transferir", "Deixar entrar", "Tentar de novo"). Nunca
-  "OK", "Sim" ou "Não". Para desistir: "Cancelar" na confirmação, "Agora não" no pedido de outra
-  pessoa.
+  "OK", "Sim" ou "Não". Para desistir: "Cancelar" na confirmação ("Ficar" na de Sair da sala) e
+  "Agora não" no pedido de outra pessoa.
 - **X.** Sempre com `aria-label` ("Fechar painel", "Fechar aviso", como hoje).
 - **Corpo.** Uma ou duas frases completas, com acento, falando com "você", sem exclamação e sem
   jargão ("ping", "socket", "servidor").
@@ -167,8 +176,9 @@ pode mudar; a ordem não.
 
 - **Usar** para tarefa curta e focada que pede atenção total: Ajustes, Compartilhar tela, Trocar
   tela, Minha cor, Sobre, Edição por X.
-- **Não usar** para o que chega de fora (aviso), para a escolha de um controle (popover), quando a
-  pessoa precisa ver a sala mudar (folha lateral) ou para confirmar (confirmação).
+- **Não usar** para o que chega de fora (aviso; **sugestão**, 0.1), para a escolha de um controle
+  (popover), quando a pessoa precisa ver a sala mudar (folha lateral) ou para confirmar
+  (confirmação).
 - **Anatomia.** Obrigatórios: título (nome da modal via `aria-labelledby`), X e corpo. Opcionais:
   busca, navegação em dois níveis, faixa de aviso no topo do corpo e linha de ações (só quando a
   mudança não vale na hora).
@@ -196,7 +206,8 @@ pode mudar; a ordem não.
   que o da modal, para a prévia continuar legível (o quanto, a fase 2 decide).
 - **Fechar.** Esc, clique no fundo ou X. Se a folha mostra uma prévia, fechar assim desfaz a prévia;
   só a ação aplica (0.5).
-- **Celular.** Folha de baixo alta (até ~90% da altura), com a prévia acima quando couber.
+- **Celular.** Folha de baixo alta (até ~90% da altura; valor inicial, fase 3), com a prévia acima
+  quando couber.
 - **Teclado, leitor e texto.** Como 1.1.
 
 ### 1.3 Folha de baixo
@@ -206,10 +217,12 @@ pode mudar; a ordem não.
   (`env(safe-area-inset-bottom)`). Opcionais: alça de arrastar e linha de ações fixa embaixo.
 - **Modal ou não.** Herda da família de origem. A forma de modal, folha, popover grande, menu e
   confirmação tem fundo e prende o foco; a forma de painel não tem fundo e não prende.
-- **Altura.** A do conteúdo, até ~85% da tela; passou disso, o corpo rola e o título fica. Com o
-  teclado virtual aberto, a folha sobe junto (`visualViewport`) e o campo em foco fica à vista.
-- **Toque.** Alvos de pelo menos 44 px; itens de menu com 48 px. Arrastar para baixo fecha
-  (**sugestão**, opcional). O X é sempre a alternativa ao gesto (WCAG 2.5.7).
+- **Altura.** A do conteúdo, até ~85% da tela (valor inicial; fase 3); passou disso, o corpo rola e
+  o título fica. Com o teclado virtual aberto, a folha sobe junto (`visualViewport`) e o campo em
+  foco fica à vista.
+- **Toque.** Alvos de pelo menos 44 px, meta do VIO (é o nível AAA, WCAG 2.5.5; o mínimo AA, 2.5.8,
+  é 24 px); itens de menu com 48 px, como hoje. Arrastar para baixo fecha (**sugestão**,
+  opcional). O X é sempre a alternativa ao gesto (WCAG 2.5.7).
 - **Fechar.** X, Esc no teclado físico, toque no fundo (só na forma modal) e o arrasto, se houver.
 
 ### 1.4 Painel não modal
@@ -255,11 +268,13 @@ pode mudar; a ordem não.
   cobre o gatilho e fica a pelo menos 8 px da borda da janela (`popover-position.ts`). O mesmo
   posicionamento vale para todos; hoje a âncora varia (2.2).
 - **Celular.** Tabela 0.3.
-- **Teclado.** Tab depois do último controle fecha e segue para o que vem depois do gatilho.
-  Shift+Tab no primeiro volta ao gatilho. Esc fecha e devolve o foco ao gatilho (como hoje).
+- **Teclado.** No balão, que não é modal, Tab depois do último controle fecha e segue para o que vem
+  depois do gatilho, e Shift+Tab no primeiro volta ao gatilho. Na folha de baixo do celular, o
+  foco fica preso (1.3) e Tab não fecha. Esc fecha e devolve o foco ao gatilho (como hoje).
 - **Leitor.** `role="dialog"` não modal com nome (hoje é `role="group"`). Gatilho com
   `aria-expanded` e `aria-controls`.
-- **Fechar.** Gatilho, Esc, clique fora, Tab para fora e saída da tela cheia (como hoje).
+- **Fechar.** Gatilho, Esc, clique fora, Tab para fora (só no balão) e saída da tela cheia (como
+  hoje).
 
 ### 1.6 Dica (tooltip) e dica clicável
 
@@ -273,12 +288,12 @@ pode mudar; a ordem não.
   "Continua aberto para os outros." ([cabecalho-widget.md](../cabecalho-widget.md)). Atalho de
   teclado opcional ao lado.
 - **Mostrar.**
-  - Mouse: depois de ~500 ms sobre o controle. Se outra dica acabou de fechar, a vizinha aparece na
-    hora, sem atraso.
+  - Mouse: depois de ~500 ms sobre o controle (valor inicial; fase 5). Se outra dica acabou de
+    fechar, a vizinha aparece na hora, sem atraso.
   - Teclado: no foco por teclado (`:focus-visible`), na hora.
   - Toque: o toque longo no botão mostra a dica sem acionar o botão, e ela fica ~1,5 s depois de
-    soltar. O toque longo no resto do cabeçalho do widget continua abrindo o menu
-    (`WidgetFrame.tsx:121`).
+    soltar (valor inicial; fase 5). O toque longo no resto do cabeçalho do widget continua abrindo
+    o menu (`WidgetFrame.tsx:121`).
 - **Persistente (WCAG 1.4.13).** Esc fecha a dica sem mover o foco; o ponteiro pode ir até a dica
   sem que ela suma; ela fica enquanto houver hover ou foco.
 - **Posição e camada.** Acima do controle (abaixo, se não couber), sem cobri-lo; na top layer. Abrir
@@ -286,12 +301,13 @@ pode mudar; a ordem não.
 - **Leitor.** O nome acessível do botão é o texto da dica (`aria-label` igual, ou
   `aria-labelledby` apontando para ela); a segunda linha vai em `aria-describedby`. O leitor não
   ouve o mesmo texto duas vezes.
-- **`title=`.** Sai de todos os botões e controles (95 hoje, Base comum e 2.8). Fica só em
-  `<iframe>`, onde é o nome exigido.
+- **`title=`.** Sai de todos os botões e controles (95 hoje, Base comum e 2.8) e dá lugar a esta
+  dica. Fica só em `<iframe>`, onde é o nome exigido. **Sugestão.**
 - **Indisponível.** Se a pessoa nunca poderá usar (falta permissão), o controle some e o estado
   aparece. Se poderá usar depois (falta outro widget, falta alguém na chamada), o controle fica, com
   `aria-disabled="true"`, continua focável e a dica diz a condição. O `disabled` nativo não serve
   nesse caso, porque tira o foco e a dica. Resolve o "Foco único" cinza sem motivo (1.5).
+  **Sugestão.**
 
 **Dica clicável** (toggletip)
 
@@ -303,6 +319,7 @@ pode mudar; a ordem não.
 - Lista longa (muitos nomes) vira popover.
 - **Selo de controle.** Para quem pode mudar, o selo abre "Quem pode controlar". Para quem não pode,
   abre a dica clicável dizendo quem controla. Resolve "'Admins' bloqueia sem dizer por quê" (2.5).
+  **Sugestão.**
 
 ### 1.7 Aviso (toast e faixa)
 
@@ -325,24 +342,26 @@ Itens:
   "Agora não"; barra de tempo (só na pilha); "+N" da fila.
 - **Tempo.**
   - O prazo corre em JavaScript, não no fim da animação. Resolve o toast que não fecha em movimento
-    reduzido pelo sistema e fecha na hora pelos Ajustes (catálogo 07.1).
-  - Hover ou foco pausa, como na spec. Aviso com ação não sai enquanto o foco estiver nele.
+    reduzido pelo sistema e fecha na hora pelos Ajustes (catálogo 07.1). **Sugestão.**
+  - Hover ou foco pausa a barra, como na spec. Aviso com ação não sai enquanto o foco estiver nele
+    (**sugestão**).
   - Em movimento reduzido, o prazo corre igual e a barra fica cheia e parada (spec). Entrar e sair
-    viram esmaecimento de 150 ms, como manda o `CLAUDE.md`; isso refina o "sem animação" da spec
-    (catálogo 07.2).
+    viram esmaecimento curto (~150 ms; valor inicial, fase 5) no lugar do "sem animação" da spec
+    (catálogo 07.2). Muda a spec: **sugestão** da seção 6.2; até o aval, fica "sem animação".
   - Erro: sem barra, fica até o × (spec).
   - Pedido de outra pessoa (batida na porta) não expira enquanto o pedido valer. O × só esconde: o
     pedido segue em Pessoas › Na porta e no sino. **Sugestão** (hoje fecha em 15 s).
   - A ação de um aviso (Desfazer, Assistir) segue no sino enquanto valer, para quem não alcançou a
     tempo (WCAG 2.2.1). **Sugestão.**
 - **Com modal aberta.** O aviso novo aparece como faixa no topo do corpo dela, com as mesmas ações,
-  porque o resto da página está inerte (0.6). É o que o `App.tsx` já faz com erro e aviso; passa a
-  valer para todos os tipos.
+  porque o resto da página está inerte (0.6). É o que o `App.tsx` já faz com erro e aviso; passar a
+  valer para todos os tipos é **sugestão**.
 - **Posição e camada.** Pilha na camada `toast`, fora de qualquer contexto de empilhamento (0.6).
   Faixa no fluxo da superfície, sem flutuar sobre o conteúdo.
 - **Celular.** Como na spec. O texto cabe em duas linhas a 390 px: o nome corta com reticências
   antes do verbo. Hoje "bateu na porta." quebra em três linhas e a pilha cobre o cabeçalho do
-  primeiro widget (2.4); tirar a pilha de cima do primeiro card é **sugestão** e muda a spec.
+  primeiro widget (2.4). Tirar a pilha de cima do primeiro card muda a posição da spec: **sugestão**
+  da seção 6.2.
 - **Leitor.** Duas regiões vivas que existem desde o carregamento da página, uma `polite` e uma
   `assertive` (erro), e o aviso entra nelas. Hoje o `role` fica em cada toast, que nasce junto com
   o texto e pode não ser lido. O foco não vai para o aviso.
@@ -362,9 +381,10 @@ Itens:
     aparência, permissões e, por último, remover.
   - Destrutivos ficam no último grupo, separados. A variante destrutiva (vermelha hoje) só vai no
     que não tem volta ou remove para todos. "Silenciar para todos" é reversível e sai do vermelho;
-    "Transferir posse da sala" fica e vai para o último grupo (2.3).
+    "Transferir posse da sala" fica e vai para o último grupo (2.3). **Sugestão.**
   - Item que abre outra superfície termina em "…" ("Transferir a sala…", "Quem pode controlar…");
-    item que age na hora, não. Refina os textos de widgets-padrao.md. **Sugestão.**
+    item que age na hora, não. Muda os textos de widgets-padrao.md: **sugestão** da seção 6.2; até
+    o aval, valem os da spec.
   - Sem submenu. Passou de ~7 itens, agrupe ou mova para uma modal.
 - **Volume da pessoa.** O controle deslizante (`.person-menu-volume`) sai do menu. Onde ele vai fica
   para a fase 4. **Sugestão** (2.3).
@@ -382,48 +402,46 @@ Itens:
 
 ### 1.9 Diálogo de confirmação
 
-- **Usar só** para ação sem volta, ou cuja volta depende de outra pessoa: Sair da sala, Revogar
-  convites e Transferir a sala.
+- **Usar só** para ação sem volta, ou cuja volta depende de outra pessoa (Revogar convites,
+  Transferir a sala), e para Sair da sala quando a saída corta algo dos outros: você transmite tela
+  ou câmera, ou é o dono com gente na sala. Nos outros casos, a pessoa sai direto. A regra e os
+  textos de Sair estão no [guia de telas](telas.md#411-saída-e-finalização) (4.11, PR #332), que
+  este guia não repete. Confirmar Sair é **sugestão**; hoje não há confirmação (inventário 1.8).
 - **Não usar** para o que tem Desfazer ("Fechar para todos" sai na hora e mostra o aviso com
   Desfazer, [cabecalho-widget.md](../cabecalho-widget.md)) nem para o que a própria pessoa desfaz
   (silenciar, trancar, mudar quem controla).
 - **Forma única: o diálogo.** Hoje há duas formas e uma ação sem nenhuma (2.6): o segundo clique
   ("Revogar convites" vira "Revogar mesmo?", `RoomLock.tsx`), o `<Dialog>` de transferir
-  (`PersonMenu.tsx`, `Settings.tsx`) e "Sair da sala" sem confirmação (`App.tsx`). O segundo
-  clique sai porque um clique duplo passa direto por ele, o leitor de tela não ouve o rótulo trocar
-  e o botão muda de largura embaixo do ponteiro.
+  (`PersonMenu.tsx`, `Settings.tsx`) e "Sair da sala" sem confirmação (`App.tsx`). O diálogo no
+  lugar do "Revogar mesmo?" é **sugestão**: um clique duplo passa direto pelo segundo clique, o
+  leitor de tela não ouve o rótulo trocar e o botão muda de largura embaixo do ponteiro.
 - **Anatomia.** Título: pergunta com verbo e objeto. Corpo: uma ou duas frases com a consequência.
-  Dois botões: "Cancelar" e a ação com o verbo do título, na variante destrutiva (não na primária).
-  Sem X, porque Cancelar faz esse papel. Sem "não perguntar de novo".
+  Dois botões: o de desistir ("Cancelar"; em Sair da sala, "Ficar") e a ação com o verbo do título,
+  na variante destrutiva (não na primária). Sem X, porque o botão de desistir faz esse papel. Sem
+  "não perguntar de novo".
 - **Abrir.** `showModal()` com `role="alertdialog"`, `aria-labelledby` no título e
-  `aria-describedby` no corpo: o leitor ouve a pergunta e a consequência. Foco inicial em Cancelar.
-  Abre sobre a superfície de origem (o popover da tranca continua embaixo; o menu fecha antes).
+  `aria-describedby` no corpo: o leitor ouve a pergunta e a consequência. Foco inicial no botão de
+  desistir. Abre sobre a superfície de origem (o popover da tranca continua embaixo; o menu fecha
+  antes).
 - **Agindo e erro.** O botão da ação mostra que está agindo e não aceita o segundo clique. Erro vira
   faixa no corpo, sem fechar.
 - **Depois.** Ao confirmar, o diálogo fecha e o resultado aparece onde a pessoa estava, por exemplo
   "Pronto. Os convites enviados não valem mais." no popover da tranca (texto atual).
-- **Posição.** Centro, na top layer, mais estreita que a modal. Linha de botões: [Cancelar] [Ação],
+- **Posição.** Centro, na top layer, mais estreita que a modal. Linha de botões: [desistir] [ação],
   com a ação na borda final (regra 2.6).
-- **Celular.** Folha de baixo com os botões empilhados em largura total: a ação em cima e Cancelar
-  embaixo, mais perto do polegar.
-- **Teclado.** Tab entre os dois botões; Enter aciona o que está em foco (de início, Cancelar).
-- **Fechar.** Cancelar, Esc ou clique no fundo; os três cancelam.
-- **Sair sempre confirma.** **Sugestão**: muda o comportamento atual (1.8 do inventário).
+- **Celular.** Folha de baixo com os botões empilhados em largura total: a ação em cima e o de
+  desistir embaixo, mais perto do polegar.
+- **Teclado.** Tab entre os dois botões; Enter aciona o que está em foco (de início, o de
+  desistir).
+- **Fechar.** O botão de desistir, Esc ou clique no fundo; os três cancelam.
 
-Textos em rascunho. O Backend confere cada consequência antes da fase 4.
+Textos em rascunho; os de Sair estão no guia de telas. O Backend confere cada consequência antes da
+fase 4.
 
 | Ação              | Título                           | Corpo                                                                    | Ação         |
 | ----------------- | -------------------------------- | ------------------------------------------------------------------------ | ------------ |
-| Sair da sala      | "Sair da sala?"                  | A primeira frase que valer, na ordem da lista abaixo.                    | "Sair"       |
 | Revogar convites  | "Revogar os convites?"           | "Os convites já enviados param de valer." (texto atual)                  | "Revogar"    |
 | Transferir a sala | "Transferir a sala para {nome}?" | "Você deixa de ser o criador e passa a ser administrador." (texto atual) | "Transferir" |
-
-Corpo de "Sair da sala?", da primeira situação que valer para a última:
-
-1. Última pessoa: "Você é a última pessoa na sala, e os widgets dela se apagam."
-2. Criador: "A sala passa para outra pessoa, e você deixa de ser o criador."
-3. Sala trancada: "A sala está trancada. Para voltar, alguém precisa deixar você entrar."
-4. Nos outros casos: "Para voltar, use o mesmo código ou convite."
 
 ### 1.10 Card de widget
 
@@ -455,7 +473,8 @@ superfícies.
 - **Superfícies do widget abrem perto dele.** O que é curto vira popover no cabeçalho (cor, quem
   pode controlar, guia de dados); o que é longo vira folha lateral com o nome do widget no título
   (Histórico, Tarefas da sessão). Hoje a ajuda e o histórico abrem longe do widget (2.1).
-  **Sugestão.**
+  **Sugestão.** Muda só onde se escolhe: a cor de um widget compartilhado continua estado da sala,
+  passa pelo servidor e vale para todos, como hoje.
 
 ## 2. Regras que resolvem o inventário
 
@@ -471,14 +490,15 @@ superfícies.
 - **Exemplo.** Convite inválido: faixa no topo da landing, "Este convite não vale mais. Peça um
   novo a quem convidou você." (rascunho).
 
-### 2.2 Confirmar só o que não tem volta, de um jeito só
+### 2.2 Uma forma de confirmar, só onde faz falta
 
 - **Problema.** Duas formas de confirmar (segundo clique em Revogar, `<Dialog>` em Transferir) e
-  "Sair da sala" sem nenhuma, mesmo para o dono (2.6, 1.7, 1.8). No menu, o reversível e o
-  irreversível têm o mesmo peso (2.3).
-- **Regra.** Diálogo de confirmação (1.9) só para as ações sem volta, sempre com a mesma anatomia e o
-  mesmo foco inicial. O que tem Desfazer não confirma. A variante destrutiva só vai no que confirma
-  ou remove para todos.
+  "Sair da sala" sem nenhuma, mesmo para o dono ou para quem transmite (2.6, 1.7, 1.8). No menu, o
+  reversível e o irreversível têm o mesmo peso (2.3).
+- **Regra.** Diálogo de confirmação (1.9) só para as ações sem volta e para Sair quando corta algo
+  dos outros, sempre com a mesma anatomia e o foco inicial no botão de desistir. O que tem Desfazer
+  não confirma. A variante destrutiva só vai no que confirma ou remove para todos. Trocar o segundo
+  clique de Revogar pelo diálogo e confirmar Sair são **sugestões** (seção 6).
 
 ### 2.3 Dica visível no toque e no teclado
 
@@ -486,14 +506,15 @@ superfícies.
   foco do teclado (Base comum, 2.8). As quatro ações só de ícone do `ScreenPicker` se explicam só
   por `aria-label` e `title` (2.7).
 - **Regra.** Componente de dica (1.6): foco de teclado mostra na hora, toque longo mostra sem
-  acionar, Esc fecha e o texto é o nome acessível. `title=` só em `<iframe>`. Controle indisponível
-  por enquanto fica focável, com `aria-disabled` e a condição na dica.
+  acionar, Esc fecha e o texto é o nome acessível. Tirar os `title=` (só ficam em `<iframe>`) e
+  deixar o controle indisponível por enquanto focável, com `aria-disabled` e a condição na dica,
+  são **sugestões** (seção 6).
 
 ### 2.4 Erro de formulário em português
 
 - **Problema.** O nome vazio na landing usa a validação nativa, na língua do navegador
   (`Landing.tsx:195`, `required`; tabela-resumo).
-- **Regra.**
+- **Regra** (**sugestão**: muda o que a pessoa vê ao errar).
   - O formulário tem `noValidate`. A validação roda ao enviar e, depois do primeiro erro, ao sair do
     campo.
   - A mensagem fica logo abaixo do campo, ligada por `aria-describedby`, e o campo ganha
@@ -524,8 +545,8 @@ superfícies.
     secundária, texto ou destrutiva.
   - A destrutiva é uma variante à parte, usada só na confirmação e no último grupo do menu. Na
     confirmação, ela é a ação principal.
-  - Em toda linha de ações, as secundárias vêm antes e a principal fica na borda final. Hoje
-    transferir põe a principal antes e o aviso da porta depois.
+  - Em toda linha de ações, as secundárias vêm antes e a principal fica na borda final
+    (**sugestão**). Hoje transferir põe a principal antes e o aviso da porta depois.
   - Um só componente de botão, com os tamanhos que a fase 3 definir.
   - Qual é a ação principal de cada tela (por exemplo, o rodapé da sala) fica para o guia de telas
     (fase 1d).
@@ -555,8 +576,8 @@ superfícies.
 
 - **Problema.** Mais de 20 `z-index` sem escala, de 2 a 1100, e o toast sob o painel por causa do
   contexto de empilhamento (Base comum, 2.4).
-- **Regra.** A escala de 0.6. Top layer para tudo o que flutua sobre a sala; a pilha de avisos fora
-  do canvas.
+- **Regra.** Uma escala com nome (0.6), sem `z-index` solto. Top layer para tudo o que flutua sobre
+  a sala; a pilha de avisos fora do canvas. A ordem das camadas é **sugestão** (0.6).
 
 ## 3. Onde o Ponto entra
 
@@ -572,7 +593,8 @@ Vale para todas as famílias:
 - A superfície aceita foco e clique desde o primeiro quadro; nada espera a animação (regra 4).
 - Sobre o palco, a animação não mexe no vídeo nem no `<audio>`, e o desenho do Ponto não fica sobre
   eles (regra 3). A superfície aberta pode cobrir o palco; o desenho que a leva até lá, não.
-- Em movimento reduzido, a superfície só esmaece em ~150 ms, com o Ponto já no lugar (regra 5).
+- Em movimento reduzido, a superfície só esmaece (~150 ms, valor inicial de movimento-ponto.md,
+  seção 8; fase 5), com o Ponto já no lugar (regra 5).
 
 | Família                          | Abre: o Ponto se divide                         | Fecha: o Ponto se junta                                       |
 | -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------- |
@@ -582,7 +604,7 @@ Vale para todas as famílias:
 | Menu                             | no gatilho ou no ponteiro                       | volta ao gatilho, ou segue para a superfície que o item abriu |
 | Dica e dica clicável             | sem Ponto (**sugestão**)                        | sem Ponto                                                     |
 | Aviso                            | segue [notificacoes.md](../notificacoes.md)     | idem                                                          |
-| Confirmação                      | divide-se a partir do item que a pediu          | Cancelar: volta à origem. Confirmar: leva ao resultado.       |
+| Confirmação                      | divide-se a partir do item que a pediu          | Desistir: volta à origem. Confirmar: leva ao resultado.       |
 | Card de widget                   | "Abrir widget" de transicoes.md                 | "Fechar widget" de transicoes.md                              |
 
 - **Dica e menu sem viagem do Ponto (sugestão).** Eles abrem dezenas de vezes por hora, muitas vezes
@@ -590,7 +612,8 @@ Vale para todas as famílias:
   fase 5 decide.
 - **Aviso.** Se a fase 5 puser o Ponto no aviso, ele se divide do ponto da sala no cabeçalho, logo
   acima da pilha, e se junta de volta. Hoje vale a entrada de 8 px da spec.
-- **Confirmar Sair** leva à viagem "Sala → Início" de transicoes.md.
+- **Sair da sala**, direto ou depois de confirmar, leva à viagem "Sala → Início" de transicoes.md;
+  o que vem depois de sair está no guia de telas (4.11).
 
 ## 4. Como o estilo da fase 2 se aplica
 
@@ -604,7 +627,7 @@ com o usuário.
 | Borda: presença, espessura e cor                                           | Posição, âncora e a escala de camadas (0.6)                                                |
 | Sombra e elevação                                                          | Abrir, fechar e foco (0.4, 0.5); a forma de celular e o corte de 640 px (0.3)              |
 | Cor e opacidade da superfície e do fundo da modal                          | Papéis ARIA, regiões vivas e textos                                                        |
-| Preenchimento interno e densidade (com a fase 3)                           | Alvos de pelo menos 44 px no toque                                                         |
+| Preenchimento interno e densidade (com a fase 3)                           | Alvos de toque de pelo menos 44 px (meta do VIO; o mínimo AA é 24 px)                      |
 | Seta do popover (sim ou não)                                               | Contraste AA: texto 4,5:1; contorno, ícone e anel de foco 3:1                              |
 | Aparência das variantes de botão (primária, secundária, texto, destrutiva) | Uma ação primária por superfície (2.6); destrutiva só onde 2.2 manda                       |
 | Aparência da seleção e do anel de foco (cor, espessura)                    | Seleção e erro nunca só pela cor; anel que acompanha o contorno e não cobre vizinho (2.5)  |
@@ -618,8 +641,9 @@ e com erro.
 
 ## 5. Tabela de migração
 
-O que existe hoje e a família para onde vai. Linhas marcadas com **sugestão** esperam aval (seção
-6).
+O que existe hoje e a família para onde vai. Cada linha herda as sugestões da seção que trata do
+assunto, marcadas aqui ou não: até o aval (seção 6), a linha muda só a estrutura (componente, CSS
+dono) e o comportamento fica como hoje.
 
 ### Painéis e modais (`<Dialog>`)
 
@@ -644,29 +668,29 @@ O que existe hoje e a família para onde vai. Linhas marcadas com **sugestão** 
 
 ### Popovers, menus e dicas
 
-| Hoje (arquivo · classe)                                                              | Família                         | O que muda                                                                  |
-| ------------------------------------------------------------------------------------ | ------------------------------- | --------------------------------------------------------------------------- |
-| `components/AnchoredPopover.tsx` + `popover-position.ts`                             | Dono de popover e dicas         | `role="dialog"` no popover (hoje `group`); estado aberto no gatilho         |
-| `RoomLock.tsx` · `entry-popover` (CSS em `door.css`)                                 | Popover                         | CSS vai para o dono; "Revogar mesmo?" vira confirmação; um tipo de controle |
-| `Notifications.tsx` · `notifications-panel`                                          | Popover                         | Vazio com o próximo passo                                                   |
-| `RoomStatus.tsx` · `connection-popover`                                              | Popover                         | Texto sem jargão ("16 ms Servidor" fica para o guia de telas)               |
-| `ScreenVolume.tsx` · `volume-popover` (CSS em 3 arquivos)                            | Popover                         | Um CSS dono                                                                 |
-| `EmojiPicker.tsx` · `emoji-picker`                                                   | Popover                         |                                                                             |
-| `Spectators.tsx` · `spectators-panel`                                                | Popover                         | Sai a classe própria, o `z-index` 30 e o `!important` do palco              |
-| `SoundSources.tsx` · `sound-panel`                                                   | Popover                         | Sai a classe própria                                                        |
-| `LiveScreens.tsx` · `live-screens-panel`; `NotShown.tsx` · `not-shown-panel`         | Popover                         |                                                                             |
-| `RaffleFace.tsx` · `raffle-pop` (cores e paletas)                                    | Popover                         | Mesmo conteúdo de cor dos outros widgets                                    |
-| `MyStreamWidget.tsx` · `stream-picker`; `GridPicker.tsx`; `ColorPicker.tsx`          | Não flutuam: controles no lugar | O inventário os lista como popover; seguem 2.6 e 2.7                        |
-| `RoomCanvas.tsx` · `slot-picker` (`z-index` 1100)                                    | Modo de escolha sobre a grade   | Camada `canvas-tools`; o texto "Escolha o espaço" vira faixa de aviso       |
-| `ContextMenu.tsx` · `.context-menu` (`z-index` 300)                                  | Dono do menu                    | Top layer sem `z-index`; primeira letra pula para o item                    |
-| `PersonMenu.tsx` · `.person-menu`                                                    | Menu                            | Destrutivos no último grupo; "Silenciar para todos" sai do vermelho         |
-| `PersonMenu.tsx` · `.person-menu-volume`                                             | Sai do menu (**sugestão**)      | Lugar decidido na fase 4                                                    |
-| `WidgetFrame.tsx` · `.widget-menu`; menu do espaço do canvas                         | Menu                            | Ordem de widgets-padrao.md; teclado em todos os widgets                     |
-| 95 atributos `title=`                                                                | Dica                            | Saem, exceto em `<iframe>`                                                  |
-| `header-tools.tsx` · `.widget-control-pop` (`role="tooltip"`, abre no clique)        | Dica clicável (selo)            | Para quem pode mudar, o selo abre "Quem pode controlar"                     |
-| `RoomStatus.tsx` · `.limit-explanation`; `.limit-tooltip` (`styles.css`, `room.css`) | Dica clicável                   | Sai o `z-index` 15                                                          |
-| `PollFace.tsx` · `.poll-names`                                                       | Dica clicável                   | Lista longa vira popover                                                    |
-| `ScreenPicker.tsx` · quatro ações só de ícone                                        | Dica em cada uma                |                                                                             |
+| Hoje (arquivo · classe)                                                              | Família                       | O que muda                                                                                         |
+| ------------------------------------------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `components/AnchoredPopover.tsx` + `popover-position.ts`                             | Dono de popover e dicas       | `role="dialog"` no popover (hoje `group`); estado aberto no gatilho                                |
+| `RoomLock.tsx` · `entry-popover` (CSS em `door.css`)                                 | Popover                       | CSS vai para o dono; "Revogar mesmo?" vira confirmação (**sugestão**); um tipo de controle         |
+| `Notifications.tsx` · `notifications-panel`                                          | Popover                       | Vazio com o próximo passo                                                                          |
+| `RoomStatus.tsx` · `connection-popover`                                              | Popover                       | Texto sem jargão ("16 ms Servidor" fica para o guia de telas)                                      |
+| `ScreenVolume.tsx` · `volume-popover` (CSS em 3 arquivos)                            | Popover                       | Um CSS dono                                                                                        |
+| `EmojiPicker.tsx` · `emoji-picker`                                                   | Popover                       |                                                                                                    |
+| `Spectators.tsx` · `spectators-panel`                                                | Popover                       | Sai a classe própria, o `z-index` 30 e o `!important` do palco                                     |
+| `SoundSources.tsx` · `sound-panel`                                                   | Popover                       | Sai a classe própria                                                                               |
+| `LiveScreens.tsx` · `live-screens-panel`; `NotShown.tsx` · `not-shown-panel`         | Popover                       |                                                                                                    |
+| `RaffleFace.tsx` · `raffle-pop` (cores e paletas)                                    | Popover                       | Mesmo conteúdo de cor dos outros widgets                                                           |
+| `MyStreamWidget.tsx` · `stream-picker`; `GridPicker.tsx`; `ColorPicker.tsx`          | Conteúdo, sem família própria | Vão dentro de outra superfície (`ColorPicker.tsx` no popover de cor) ou no lugar; seguem 2.6 e 2.7 |
+| `RoomCanvas.tsx` · `slot-picker` (`z-index` 1100)                                    | Modo de escolha sobre a grade | Camada `canvas-tools`; o texto "Escolha o espaço" vira faixa de aviso                              |
+| `ContextMenu.tsx` · `.context-menu` (`z-index` 300)                                  | Dono do menu                  | Top layer sem `z-index`; primeira letra pula para o item                                           |
+| `PersonMenu.tsx` · `.person-menu`                                                    | Menu                          | Destrutivos no último grupo; "Silenciar para todos" sai do vermelho (**sugestão**)                 |
+| `PersonMenu.tsx` · `.person-menu-volume`                                             | Sai do menu (**sugestão**)    | Lugar decidido na fase 4                                                                           |
+| `WidgetFrame.tsx` · `.widget-menu`; menu do espaço do canvas                         | Menu                          | Ordem de widgets-padrao.md; teclado em todos os widgets                                            |
+| 95 atributos `title=`                                                                | Dica                          | Saem, exceto em `<iframe>` (**sugestão**)                                                          |
+| `header-tools.tsx` · `.widget-control-pop` (`role="tooltip"`, abre no clique)        | Dica clicável (selo)          | Para quem pode mudar, o selo abre "Quem pode controlar" (**sugestão**)                             |
+| `RoomStatus.tsx` · `.limit-explanation`; `.limit-tooltip` (`styles.css`, `room.css`) | Dica clicável                 | Sai o `z-index` 15                                                                                 |
+| `PollFace.tsx` · `.poll-names`                                                       | Dica clicável                 | Lista longa vira popover                                                                           |
+| `ScreenPicker.tsx` · quatro ações só de ícone                                        | Dica em cada uma              |                                                                                                    |
 
 ### Avisos
 
@@ -680,12 +704,12 @@ O que existe hoje e a família para onde vai. Linhas marcadas com **sugestão** 
 
 ### Botões, foco, seleção e formulário
 
-| Hoje                                                                          | Regra | O que muda                                   |
-| ----------------------------------------------------------------------------- | ----- | -------------------------------------------- |
-| `.primary` em 11 CSS; `.icon-button` em 6                                     | 2.6   | Um componente de botão, com um arquivo dono  |
-| Foco em `styles.css` (`outline` 2 px, afastamento 4 px) e 33 `:focus-visible` | 2.5   | Uma forma de anel, sem cobrir vizinhos       |
-| `Landing.tsx:195` · `required`                                                | 2.4   | `noValidate` e erro em português sob o campo |
-| Segmentados (`share.css`, `timer.css`), tranca, Layout, `MiniRoom.tsx`        | 2.7   | Um estilo de seleção, nunca só pela cor      |
+| Hoje                                                                          | Regra | O que muda                                                  |
+| ----------------------------------------------------------------------------- | ----- | ----------------------------------------------------------- |
+| `.primary` em 11 CSS; `.icon-button` em 6                                     | 2.6   | Um componente de botão, com um arquivo dono                 |
+| Foco em `styles.css` (`outline` 2 px, afastamento 4 px) e 33 `:focus-visible` | 2.5   | Uma forma de anel, sem cobrir vizinhos                      |
+| `Landing.tsx:195` · `required`                                                | 2.4   | `noValidate` e erro em português sob o campo (**sugestão**) |
+| Segmentados (`share.css`, `timer.css`), tranca, Layout, `MiniRoom.tsx`        | 2.7   | Um estilo de seleção, nunca só pela cor                     |
 
 ### Camadas (`z-index` de hoje)
 
@@ -705,22 +729,47 @@ O que existe hoje e a família para onde vai. Linhas marcadas com **sugestão** 
 
 ## 6. Sugestões que esperam aval
 
-1. "Sair da sala" sempre confirma, com o corpo da situação (1.9).
-2. Modal só por ação da própria pessoa; "Todos os espaços estão ocupados" vira aviso com ações
-   (0.1).
-3. Batida na porta não expira enquanto o pedido valer (1.7).
-4. A ação de um aviso (Desfazer, Assistir) segue no sino enquanto valer (1.7).
-5. No celular, a pilha de avisos não cobre o primeiro card; muda [notificacoes.md](../notificacoes.md)
-   (1.7).
-6. O volume da pessoa sai do menu (1.8).
-7. Cor, "Quem pode controlar" e "Guia de dados" viram popover no cabeçalho do widget, com um só
-   conteúdo de cor (1.10).
-8. Item de menu que abre outra superfície termina em "…"; refina widgets-padrao.md (1.8).
-9. Dica e menu abrem sem viagem do Ponto (3).
-10. F6 alterna entre sala, painel e avisos (1.4).
-11. Texto digitado e não confirmado fica guardado ao fechar (0.5).
-12. Arrastar a folha de baixo para baixo fecha (1.3).
-13. Folha de um widget leva o nome dele no título (1.2).
+Nenhuma vale antes do aval do usuário. Até lá, fica o que existe hoje (6.1) ou o que a spec aprovada
+diz (6.2). O guia de telas (#332) tem a própria lista.
+
+### 6.1 Mudam o comportamento de hoje
+
+1. "Sair da sala" confirma só quando corta algo dos outros (você transmite tela ou câmera, ou é o
+   dono com gente na sala); regra e textos no guia de telas, 4.11 (1.9).
+2. O diálogo de confirmação substitui o segundo clique "Revogar mesmo?" (1.9).
+3. Modal só por ação da própria pessoa; "Todos os espaços estão ocupados" vira aviso com ações
+   (0.1, 1.1).
+4. A ordem das camadas, com a pilha de avisos acima do painel Pessoas (0.6, 2.9).
+5. Avisos: o prazo corre em JavaScript nos dois modos de movimento reduzido; aviso com ação não
+   sai com o foco nele; com modal aberta, todo tipo de aviso vira faixa dentro dela (1.7).
+6. Batida na porta não expira enquanto o pedido valer (1.7).
+7. A ação de um aviso (Desfazer, Assistir) segue no sino enquanto valer (1.7).
+8. Os `title=` saem e dão lugar ao componente de dica; controle indisponível por enquanto fica
+   focável, com `aria-disabled` e a condição na dica (1.6, 2.3).
+9. O selo de controle abre "Quem pode controlar" para quem pode mudar e a dica clicável para quem
+   não pode (1.6).
+10. Menu da pessoa: "Silenciar para todos" sai do vermelho, "Transferir posse da sala" vai para o
+    último grupo e o volume sai do menu (1.8).
+11. Formulário com `noValidate` e erro em português sob o campo (2.4).
+12. Em toda linha de ações, a principal fica na borda final (2.6).
+13. Cor, "Quem pode controlar" e "Guia de dados" viram popover no cabeçalho do widget, com um só
+    conteúdo de cor; a cor de widget compartilhado segue estado da sala (1.10).
+14. Folha de um widget leva o nome dele no título (1.2).
+15. Dica e menu abrem sem viagem do Ponto (3).
+16. F6 alterna entre sala, painel e avisos (1.4).
+17. Texto digitado e não confirmado fica guardado ao fechar (0.5).
+18. Arrastar a folha de baixo para baixo fecha (1.3).
+
+### 6.2 Mudam uma spec aprovada
+
+Pedem o aval do usuário antes de valer, e a spec é atualizada junto.
+
+1. No celular, a pilha de avisos não cobre o primeiro card; muda a posição de
+   [notificacoes.md](../notificacoes.md) (seção Celular) (1.7).
+2. Em movimento reduzido, o aviso entra e sai com esmaecimento curto no lugar de "sem animação" de
+   [notificacoes.md](../notificacoes.md) (Movimento e acessibilidade) (1.7).
+3. Item de menu que abre outra superfície termina em "…"; muda os textos de
+   [widgets-padrao.md](../widgets-padrao.md) (1.8).
 
 **Fora do escopo:** estilo visual (fases 2 e 3); telas, hierarquia da sala, controles que somem,
 landing, porta e despedida depois de sair (guia de telas, fase 1d); qualquer animação (fase 5).
