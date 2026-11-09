@@ -15,17 +15,15 @@
 
 ## Ícones do app
 
-| Ícone                  | Uso                   | Arquivo                                                |
-| ---------------------- | --------------------- | ------------------------------------------------------ |
-| **M4 "v. noite"**      | **principal**         | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg) |
-| **M1 "v." sobre azul** | quando o fundo é azul | [`icone-m1-azul.svg`](../brandkit/icone-m1-azul.svg)   |
+| Ícone                  | Uso                  | Arquivo                                                          |
+| ---------------------- | -------------------- | ---------------------------------------------------------------- |
+| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)           |
+| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto: [`m1-ponto.md`](../escolhas/m1-ponto.md) |
 
 - M4: quadrado arredondado em `#0B0C13` com borda `#2A2C3C`, "v" em `#F3F3FB` e ponto azul
   `#2727F5` alinhado ao pé da letra.
-- M1: quadrado arredondado em `#2727F5`, "v" branco e ponto `#A6A9FF`.
-- Servem para ícone do app, favicon, avatar nas redes e instalador.
+- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto ainda
+  não está decidida ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
 - Origem: escolha do usuário na prancha "VIO · Marca", 29 out 2026 (#227), quadros "Escolhidas ·
   Ícones M4 (principal) e M1" e "Escolhida · Logo VIO (N3 arredondada) + ícones M4 e M1" ·
   https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo
-
-O favicon atual do app ainda não é a M4: pendência em [`../escolhas/README.md`](../escolhas/README.md).

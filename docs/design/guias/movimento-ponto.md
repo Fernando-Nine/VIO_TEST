@@ -3,7 +3,7 @@
 > Guia de produção do Ponto e do movimento. O que já está decidido sobre o Ponto vai para
 > [`../brandbook/ponto.md`](../brandbook/ponto.md); a ordem do trabalho está em [`plano.md`](plano.md).
 
-Roteirista · 2026-11-07 · guia aprovado; estilos pendentes de escolha · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
+Roteirista · 2026-11-07 · guia aprovado; estilos em exploração na fase 2 · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
 `sala-trancada.md`, `cameras.md`, `docs/ideias/2026-10-28-roteiro.md`, `2026-10-28-assets.md`,
 `docs/decisoes/002-leva-5-e-movimento.md`, `src/client/components/motion.ts`.
 Estende a escolha A da #261; não a rediscute.
@@ -19,7 +19,7 @@ Decisões já tomadas pelo usuário (valem como base, não como limite de ideias
   arredondado**. Transformar-se em botão, widget ou barra é permitido como transição; depois ele
   volta a ser ponto, ou o ponto continua em algum lugar. Escala por eixo (squash and stretch) não
   conta como outra forma.
-- Cor: **azul quase sempre**; muda só em raras ocasiões (a lista aberta está na seção 6).
+- Cor: **azul quase sempre**; muda só em raras ocasiões (a lista aberta está na seção 3.8).
 - Traço: **depende**. Às vezes desenha linhas da interface que **ficam** (bordas, divisórias,
   contornos de widget); em outros casos o traço some.
 - Tela cheia de transmissão: **ponto pequeno, de baixa opacidade, no canto, na cor da pessoa que

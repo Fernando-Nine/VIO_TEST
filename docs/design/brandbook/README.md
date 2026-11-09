@@ -11,7 +11,7 @@ Identidade oficial. Aqui entra **só o que o usuário já decidiu**: sem propost
 | Capítulo             | Arquivo                          |
 | -------------------- | -------------------------------- |
 | Logo e ícones do app | [marca.md](marca.md)             |
-| Tema, cores, fontes  | [fundamentos.md](fundamentos.md) |
+| Tema, fontes, ícones | [fundamentos.md](fundamentos.md) |
 | O Ponto              | [ponto.md](ponto.md)             |
 
 O que depende do estilo final (raio, sombra, densidade, contraste, paleta final) entra na fase 3 do
