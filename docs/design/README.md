@@ -44,4 +44,3 @@ desligadas em `prefers-reduced-motion`.
 | Sala trancada (#242)            | [sala-trancada.md](sala-trancada.md)         | A · cadeado no topo; #260                   |
 | Transições                      | [transicoes.md](transicoes.md)               | A · o ponto conduz; #261                    |
 | O Ponto (capítulo do Brandbook) | [ponto.md](ponto.md)                         | guia aprovado; estilos pendentes de escolha |
-| Brandbook e Brandkit            | [brandbook/](brandbook/README.md)            | Decidido; 5×5 do Ponto em aberto            |
