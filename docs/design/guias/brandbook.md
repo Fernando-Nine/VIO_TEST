@@ -38,11 +38,11 @@ Arquivo novo no brandbook só nasce quando houver a primeira decisão daquele ca
   para fundos azuis. Origem: prancha "VIO · Marca", quadros "Escolhida · Logo VIO (N3
   arredondada) + ícones M4 e M1" e "Escolhidas · Ícones M4 (principal) e M1", 29 out 2026, #227
   ([marca.md](../brandbook/marca.md)).
-- Aberto: cor do ponto da M1 (P8), versões por fundo e logo sobre imagem (P9), respiro e tamanho
-  mínimo (P10), usos proibidos (P11).
+- Decidido em 9 nov 2026: versões e logo sobre imagem (P9), respiro e tamanho mínimo (P10), usos
+  proibidos (P11) e ícone de perfil (P14).
+- Aberto: cor do ponto da M1 (P8).
 
-**2. Nome e assinatura.** _Aberto._ Escrita do nome (P6) e assinatura (P7). Hoje o app já usa
-"VIO" em texto e "by NerdQuest Studios" nos rodapés, mas isso nunca foi decidido.
+**2. Nome e assinatura.** _Decidido (9 nov 2026)._ "o VIO" em texto (P6); assinatura "da NerdQuest Studios" (P7), em [marca.md](../brandbook/marca.md). A troca nos rodapés do app é a fase 4.
 
 **3. O Ponto.** _Decidido, exceto o estilo._
 
@@ -58,7 +58,7 @@ Arquivo novo no brandbook só nasce quando houver a primeira decisão daquele ca
 
 - Decidido: azul da marca #2727F5 (logo e Ponto, 29 out e 7 nov 2026); Noite é o tema padrão
   ([decisão 003](../../decisoes/003-temas.md)).
-- Aberto: temas futuros (P12). Paleta, tokens e contraste esperam a fase 3
+- Decidido em 9 nov 2026: temas próprios (P12). Paleta, tokens e contraste esperam a fase 3
   ([cores.md](../escolhas/cores.md)).
 
 **5. Tipografia.** _Parcial._ Bricolage Grotesque na interface e IBM Plex Mono em código, ping,
@@ -68,12 +68,10 @@ tempo e números (`CLAUDE.md`, "Convenções"). Pesos e escala na fase 3.
 padrão de 2 px (exceções pontuais de 1,6 a 3) e tamanhos de 12 a 28 px, os mais comuns
 16, 14 e 15. A escala fixa de traço e tamanhos sai na fase 3.
 
-**7. Voz e tom.** _Aberto._ Já vale a base, que não é a voz: português, frases completas com
-acento, nada de texto óbvio (`CLAUDE.md`); erro visível como `Fault` com mensagem em português. As
-perguntas P1–P5 fecham [voz.md](../escolhas/voz.md). A #281 reescreveu textos de erro em 7 nov
+**7. Voz e tom.** _Decidido (9 nov 2026)_, em [voz.md](../brandbook/voz.md) (P1–P5). A #281 reescreveu textos de erro em 7 nov
 (PR #316), antes desta escolha; se a voz decidida pedir ajuste, ele vira issue `frontend` nova.
 
-**8. Imagem e ilustração.** _Aberto._ O que pode aparecer (P13) se decide agora; o estilo das
+**8. Imagem e ilustração.** _Parcial._ O que pode aparecer está decidido (P13, 9 nov 2026) em [imagem.md](../brandbook/imagem.md); o estilo das
 ilustrações de estado espera as fases 2 e 3.
 
 **9. Movimento.** _Decidido no Ponto._ O capítulo é um link para
@@ -83,14 +81,14 @@ na fase 5 (#261).
 
 **10. Aplicações.** _Parcial._
 
-| Aplicação          | Decidido                                                                                                | Aberto                                                              |
-| ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Redes              | Nada                                                                                                    | Ícone de perfil (P14); card de link (3)                             |
-| Instalador         | App Windows primeiro, instaladores em `vio-releases` ([decisão 006](../../decisoes/006-app-windows.md)) | Ícone final (4); arte do NSIS (3)                                   |
-| Página de download | Landing C "O ponto", escolha A, botão "Baixar para Windows" (#197, #258, [landing.md](../landing.md))   | Pendências da #197                                                  |
-| Avatar             | Cada pessoa é um ponto na sua cor (guia do Ponto, 7 nov 2026); cor pessoal na #299                      | Ideia "pessoa = forma do Ponto" (P15); forma e raio nas fases 2 e 3 |
-| Favicon            | M4 é o ícone principal (prancha Marca, 29 out 2026)                                                     | A troca em `public/` fica para a fase 4                             |
-| Marca d'água       | Clipes têm marca d'água ([decisão 007](../../decisoes/007-clips.md))                                    | Desenho (P9 e fase 3)                                               |
+| Aplicação          | Decidido                                                                                                | Aberto                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Redes              | Nada                                                                                                    | Card de link (3); ícone de perfil decidido (P14: M4)       |
+| Instalador         | App Windows primeiro, instaladores em `vio-releases` ([decisão 006](../../decisoes/006-app-windows.md)) | Ícone final (4); arte do NSIS (3)                          |
+| Página de download | Landing C "O ponto", escolha A, botão "Baixar para Windows" (#197, #258, [landing.md](../landing.md))   | Pendências da #197                                         |
+| Avatar             | Cada pessoa é um ponto na sua cor (guia do Ponto, 7 nov 2026); cor pessoal na #299                      | Forma e raio nas fases 2 e 3 (P15 decidida: herda o Ponto) |
+| Favicon            | M4 é o ícone principal (prancha Marca, 29 out 2026)                                                     | A troca em `public/` fica para a fase 4                    |
+| Marca d'água       | Clipes têm marca d'água ([decisão 007](../../decisoes/007-clips.md))                                    | Desenho (P9 e fase 3)                                      |
 
 ## 3. Brandkit
 
@@ -118,12 +116,14 @@ pede aprovação antes.
 
 ## 4. Perguntas da fase 1a
 
-15 perguntas, mais importantes primeiro. Cada uma tem opções com exemplos reais do app e uma
+15 perguntas, mais importantes primeiro. Em 9 nov 2026 o usuário respondeu 14; a P8 segue aberta. Cada uma tem opções com exemplos reais do app e uma
 recomendação. Recomendação não é decisão: sem resposta, a pergunta continua aberta.
 
 ### A. Voz e tom (fecha `escolhas/voz.md`)
 
 **P1. Qual é o núcleo da voz?** Exemplo: a sala sem ninguém.
+
+> **Respondida: C, 9 nov 2026.**
 
 - A. Amigo que organiza a sessão: "Sala vazia. Mande o convite para quem vai assistir."
 - B. Anfitrião discreto: "Ninguém na sala ainda."
@@ -133,6 +133,8 @@ Recomendação: **A**. É o mesmo papel do Ponto ("amiguinho que guia e acompanh
 sai da frente quando a sessão começa.
 
 **P2. Qual o registro dos textos?**
+
+> **Respondida: B, 9 nov 2026.**
 
 | A. Cuidado (como hoje)                                          | B. Leve                                                  | C. Impessoal                 |
 | --------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- |
@@ -145,7 +147,9 @@ pessoa. Recomendação: **B**. Soa como o amigo da P1 sem virar gíria, e "o VIO
 ser o produto.
 
 **P3. Como dar um erro?** Exemplo real: "Permissão não concedida. Autorize o acesso no navegador e
-tente novamente."
+
+> **Respondida: B (exemplo ajustado à P2), 9 nov 2026.**
+> tente novamente."
 
 - A. O que houve e o que fazer, em até duas frases, sem culpar: "O navegador bloqueou o microfone.
   Libere o acesso no cadeado da barra de endereço e tente de novo."
@@ -159,6 +163,8 @@ Recomendação: **A**, sem código interno no texto (o `code` do `Fault` fica pa
 
 **P4. Pode ter humor e gíria?**
 
+> **Respondida: B, 9 nov 2026.**
+
 - A. Nunca.
 - B. Só fora da sala (landing, redes, página inicial), nunca em erro nem durante a sessão.
 - C. Em todo lugar, de leve.
@@ -169,6 +175,8 @@ Exemplo, sala: "Ninguém assistindo ainda." (texto atual) × "Plateia vazia por 
 Recomendação: **B**. Na landing e nas redes a voz pode brincar; dentro da sala, ela some.
 
 **P5. O VIO usa emoji nos próprios textos?**
+
+> **Respondida: A, 9 nov 2026.**
 
 - A. Nunca. Emoji é das pessoas (chat e reações).
 - B. Só na landing e nas redes.
@@ -181,6 +189,8 @@ para o emoji das pessoas aparecer.
 
 **P6. Como se escreve o nome no texto?** Exemplo: "O VIO não grava nem guarda nada."
 
+> **Respondida: A, 9 nov 2026.**
+
 - A. "VIO" em texto, sempre com "o" (o VIO); "vio." só como desenho do logo.
 - B. "Vio" em texto corrido; "VIO" só no código da sala.
 - C. "vio." também em texto.
@@ -189,7 +199,9 @@ Recomendação: **A**. Já é o uso no app, no código da sala ("VIO-7K2Q") e no
 ("VIO-x64-setup.exe"); "vio." em frase confunde com fim de frase.
 
 **P7. Como assinar a NerdQuest Studios?** Hoje há três formas: "by NerdQuest Studios" (landing),
-"by NerdQuest Studios · fundado por Nine" (rodapé do app) e "NerdQuest · v2.x" (linha de versão).
+
+> **Respondida: B, 9 nov 2026.**
+> "by NerdQuest Studios · fundado por Nine" (rodapé do app) e "NerdQuest · v2.x" (linha de versão).
 
 - A. "by NerdQuest Studios · fundado por Nine" em todo rodapé.
 - B. "da NerdQuest Studios" (em português), sem crédito ao fundador.
@@ -201,7 +213,9 @@ Em todas: menor e depois do VIO, nunca junto do símbolo. Recomendação: **C**.
 ### C. Logo e ícones
 
 **P8. Qual a cor do ponto da M1 (e do logo sobre azul)?** Fecha
-[m1-ponto.md](../escolhas/m1-ponto.md).
+
+> **Em aberto (9 nov 2026):** o usuário não decidiu; sugeriu testar preto (cerca de 2,7:1) e quer ver a comparação visual. Ver [m1-ponto.md](../escolhas/m1-ponto.md).
+> [m1-ponto.md](../escolhas/m1-ponto.md).
 
 - A. #A6A9FF: 3,61:1 sobre o azul e 2,16:1 contra o "v" branco. O ponto continua um personagem.
 - B. #F3F3FB: 7,06:1 sobre o azul, mas 1,10:1 contra o "v": vira parte da letra.
@@ -209,7 +223,9 @@ Em todas: menor e depois do VIO, nunca junto do símbolo. Recomendação: **C**.
 Recomendação: **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado do "v" em 16 px.
 
 **P9. Que versões do logo existem e qual a regra sobre imagem?** Noite já está decidida. As
-cores e os contrastes de cada versão ficam para a fase 3.
+
+> **Respondida: A, 9 nov 2026.**
+> cores e os contrastes de cada versão ficam para a fase 3.
 
 - A. Noite, Claro, Azul e mono. Sobre imagem ou vídeo, só a M4 ou o logo numa chapa Noite. A
   marca d'água do clipe é a M4 no canto.
@@ -219,7 +235,9 @@ cores e os contrastes de cada versão ficam para a fase 3.
 Recomendação: **A**. A M4 traz o próprio fundo e se lê em qualquer quadro do vídeo.
 
 **P10. Qual o respiro e o tamanho mínimo do logo?** A unidade é o Ponto (lado do ponto, 22% da
-altura do logo).
+
+> **Respondida: B, 9 nov 2026.**
+> altura do logo).
 
 - A. Respiro de 1 Ponto; logo a partir de 20 px de altura.
 - B. Respiro de 2 Pontos; logo a partir de 24 px.
@@ -230,8 +248,10 @@ px), A ocupa 46 px, B 60 px e C 96 px, que não cabe. Os px e as proporções s�
 ajustam na fase 3; aqui se escolhe a ordem de grandeza. Recomendação: **B**.
 
 **P11. Aprova a lista de usos proibidos?** Esticar ou achatar; girar; trocar a fonte; recolorir
-com cor de estado (verde ao vivo, vermelho de erro); letras azuis sobre Noite (2,50:1); sombra,
-brilho, contorno ou degradê; ponto redondo; ponto separado da palavra.
+
+> **Respondida: B (com exceção: brilho só em divulgação), 9 nov 2026.**
+> com cor de estado (verde ao vivo, vermelho de erro); letras azuis sobre Noite (2,50:1); sombra,
+> brilho, contorno ou degradê; ponto redondo; ponto separado da palavra.
 
 - A. Aprovo a lista inteira.
 - B. Aprovo com ajustes (diga quais).
@@ -241,8 +261,10 @@ Recomendação: **A**.
 ### D. Temas, imagem e aplicações
 
 **P12. Quais temas próprios o VIO planeja?** A [decisão 003](../../decisoes/003-temas.md) prevê
-temas próprios (só cores) e da comunidade, mais tarde. Aqui se decide quais; as cores ficam para a
-fase 3.
+
+> **Respondida: A, 9 nov 2026.**
+> temas próprios (só cores) e da comunidade, mais tarde. Aqui se decide quais; as cores ficam para a
+> fase 3.
 
 - A. Noite, Noite azul e Claro, com "Automático" (segue o sistema). O palco fica escuro em todos.
 - B. Noite e Claro, com "Automático".
@@ -253,6 +275,8 @@ sobre escuro.
 
 **P13. O que pode aparecer em imagem da marca?**
 
+> **Respondida: B (com ajuste: sem app, filme ou jogo de terceiros na tela compartilhada), 9 nov 2026.**
+
 - A. Só o Ponto e formas da interface.
 - B. O Ponto e capturas reais do app; sem foto de banco de imagem e sem pessoa gerada por IA.
 - C. Também fotos de pessoas.
@@ -260,7 +284,9 @@ sobre escuro.
 Recomendação: **B**. Mostra o produto de verdade e não cria rosto falso.
 
 **P14. Qual ícone vai nos perfis (redes, Discord, atalhos)?** Os perfis cortam em círculo, então a
-versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta-se na fase 3).
+
+> **Respondida: A, 9 nov 2026.**
+> versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta-se na fase 3).
 
 - A. M4 (fundo Noite): some em perfis de fundo escuro.
 - B. M1 (fundo azul): destaca em fundo claro e escuro.
@@ -269,8 +295,10 @@ versão de perfil é sangrada, com o desenho a cerca de 84% (provisório; ajusta
 Recomendação: **B**.
 
 **P15. O avatar das pessoas segue a ideia "pessoa = forma do Ponto"?** (Sugestão; liga com a cor
-pessoal da #299.) Hoje é um círculo cheio na cor pessoal, com a inicial. Forma exata e raio ficam
-para as fases 2 e 3.
+
+> **Respondida: A, 9 nov 2026.**
+> pessoal da #299.) Hoje é um círculo cheio na cor pessoal, com a inicial. Forma exata e raio ficam
+> para as fases 2 e 3.
 
 - A. Sim: o avatar herda a forma do Ponto (as pessoas também são pontos).
 - B. Não: o avatar mantém forma própria, e só a cor liga a pessoa ao Ponto.

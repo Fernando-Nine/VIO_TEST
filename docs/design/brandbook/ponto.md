@@ -47,3 +47,8 @@ Origem: guia do Ponto, ajuste de 8 nov 2026.
   ([plano](../guias/plano.md)).
 - As cinco regras do movimento (presença, animação completa, mídia intocada, interrompível, reduzir
   movimento): [guia, seção 1](../guias/movimento-ponto.md#1-as-cinco-regras-as-únicas-inegociáveis).
+
+## Avatar das pessoas
+
+- O avatar herda a forma do Ponto: as pessoas também são pontos. Forma exata e raio na fase 3.
+- Origem: resposta do usuário à P15 da fase 1a, 9 nov 2026.
