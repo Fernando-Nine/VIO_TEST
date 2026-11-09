@@ -106,7 +106,7 @@ auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não
   (fóruns, Reddit, issues de bibliotecas, docs) antes de trocar código por tentativa.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
   rascunho do Design (trabalho novo ou de identidade: 5 estilos × 5 exemplos; ajuste pequeno: 2–3 opções;
-  tamanho real, etiqueta `design`; decisão 021) e só vira issue de
+  tamanho real, etiqueta `design`; decisão 021; ordem por fases em `docs/design/guias/plano.md`) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
   já existe não precisam. Vale também para transição e animação. O copiloto confere o aval na issue
   antes de abrir a sessão da área, mesmo que a issue seja a próxima da Fila.
@@ -218,6 +218,7 @@ screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
 Erro de agente que uma regra teria evitado, ou algo que o usuário precisou explicar no chat, vira
 uma linha curta neste arquivo (no lugar certo, sem duplicar). O copiloto revisa este arquivo uma
 vez por mês: tira o que ficou velho e atualiza a data abaixo.
+Comentário do usuário não é pedido: produzir (Design, telas, animações) só com pedido explícito; na dúvida, perguntar.
 Aprendizados (`docs/aprendizados/`): as áreas mandam 1–2 linhas no fim do bloco, e o copiloto chama o
 `escriba` no fim de cada bloco grande.
 Última revisão: 2026-11-04.
