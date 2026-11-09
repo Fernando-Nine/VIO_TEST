@@ -1,8 +1,9 @@
 # O Ponto — guia de exploração (v3)
 
-> Este é o **capítulo do Ponto do futuro Brandbook** (#227).
+> Guia de produção do Ponto e do movimento. O que já está decidido sobre o Ponto vai para
+> [`../brandbook/ponto.md`](../brandbook/ponto.md); a ordem do trabalho está em [`plano.md`](plano.md).
 
-Roteirista · 2026-11-07 · guia aprovado; estilos pendentes de escolha · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
+Roteirista · 2026-11-07 · guia aprovado; estilos em exploração na fase 2 · ajustado em 2026-11-08 (decisões 020 e 021) · base: #261, `docs/design/transicoes.md`, `landing.md`, `inicio.md`,
 `sala-trancada.md`, `cameras.md`, `docs/ideias/2026-10-28-roteiro.md`, `2026-10-28-assets.md`,
 `docs/decisoes/002-leva-5-e-movimento.md`, `src/client/components/motion.ts`.
 Estende a escolha A da #261; não a rediscute.
@@ -18,7 +19,7 @@ Decisões já tomadas pelo usuário (valem como base, não como limite de ideias
   arredondado**. Transformar-se em botão, widget ou barra é permitido como transição; depois ele
   volta a ser ponto, ou o ponto continua em algum lugar. Escala por eixo (squash and stretch) não
   conta como outra forma.
-- Cor: **azul quase sempre**; muda só em raras ocasiões (a lista aberta está na seção 6).
+- Cor: **azul quase sempre**; muda só em raras ocasiões (a lista aberta está na seção 3.8).
 - Traço: **depende**. Às vezes desenha linhas da interface que **ficam** (bordas, divisórias,
   contornos de widget); em outros casos o traço some.
 - Tela cheia de transmissão: **ponto pequeno, de baixa opacidade, no canto, na cor da pessoa que
@@ -206,8 +207,10 @@ só a cor.
 ## 4. Estilos de design
 
 O Ponto tem **uma personalidade só** (seção 2). O que varia é o **estilo de design** em que ela é
-desenhada e movida. Cinco estilos para o Design testar coisas realmente diferentes (entrega: 5
-estilos × 5 exemplos cada, decisão 021). O usuário pode trocar qualquer um deles.
+desenhada e movida. Cinco estilos para o Design testar coisas realmente diferentes. A exploração de
+estilo da fase 2 ([`plano.md`](plano.md)) usa **5 estilos × 2 amostras em telas reais** (pedido do
+usuário, 9 nov; vale no lugar dos 5 exemplos da decisão 021 para esta exploração). O usuário pode
+trocar qualquer um deles.
 
 1. **Neo-brutalista (ousada).** Bordas grossas, sombras duras, cores chapadas, o Ponto como
    protagonista. Viagens grandes, aceleração forte, freada firme. _Pergunta:_ até onde ser ousado
@@ -220,9 +223,11 @@ estilos × 5 exemplos cada, decisão 021). O usuário pode trocar qualquer um de
    onde atrapalha o filme que está passando?
 4. **Bento modular (moderna).** Blocos em grade, cada função no seu módulo, transições precisas e
    limpas. _Pergunta:_ o que torna isto inconfundivelmente VIO e não "mais um app bonito"?
-5. **Desenhado à mão / orgânico.** Traço de caneta, contornos irregulares, texturas de papel; o
-   Ponto como objeto com massa e atrito. Entra no lugar do Glass (vidro fosco, cortado porque blur sobre vídeo pesa).
-   _Pergunta:_ a pessoa sente o peso do ponto no clique?
+5. **Geométrico lúdico.** Formas chapadas e limpas derivadas do próprio Ponto (quadrados
+   arredondados, círculos), cor sólida, sem textura nem traço tremido; divertido, mas profissional.
+   Entra no lugar do "desenhado à mão" (9 nov), que já tinha substituído o Glass (vidro fosco,
+   cortado porque blur sobre vídeo pesa). _Pergunta:_ quanto brincar com as formas do Ponto sem
+   virar enfeite?
 
 Pistas para escolher: o estilo vencedor pode ser diferente por contexto (brincalhão na landing,
 minimalista dentro da sala com vídeo). Misturas são bem-vindas se forem coerentes.
@@ -338,7 +343,7 @@ Reduzir movimento nenhum loop roda e a personalidade continua legível:
 
 ## O que entregar
 
-Formato da leva: skill `vio-design-delivery`. Cada estilo (5 exemplos por estilo):
+Formato da leva: skill `vio-design-delivery`. Cada estilo (2 amostras em telas reais na fase 2):
 
 - **Canvas interativo** com os momentos escolhidos da seção 6, **em tamanho real**, usando os
   tokens de cor e tamanho que já existem (curva `--ease-ponto` e tabela de "ponto que fica" em
@@ -356,8 +361,9 @@ Formato da leva: skill `vio-design-delivery`. Cada estilo (5 exemplos por estilo
 ## Próximos passos (Roteirista, sem implementar)
 
 Telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações
-(#261 em espera). O Design entrega **5 estilos × 5 exemplos** (seção 4; momentos da seção 6, em
-tamanho real e interativos, cada um com versão com Reduzir movimento). O usuário escolhe, troca ou
+(#261 em espera até a fase 5 do [`plano.md`](plano.md)). O Design entrega **5 estilos × 2 amostras em
+telas reais** (seção 4; momentos da seção 6, em tamanho real e interativos, cada um com versão com
+Reduzir movimento). O usuário escolhe, troca ou
 mistura estilos e só então nasce o conjunto padrão que substitui a tabela de `transicoes.md` na
 #261. Depois, o Frontend (Opus, raciocínio máximo) implementa um módulo reutilizável em vez de uma
 animação por tela.

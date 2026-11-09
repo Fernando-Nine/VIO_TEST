@@ -1,7 +1,7 @@
 # Estado do VIO
 
 Fonte única de estado. Atualizada pelo copiloto (ou pela área que mudar algo daqui).
-Atualizado: 2026-11-08.
+Atualizado: 2026-11-09.
 
 ## Ambientes
 
@@ -26,7 +26,7 @@ Ordem completa do produto em `ROADMAP.md`.
 - **P0**: nenhuma.
 - **P1**: #281 avisos empurram o layout (frontend, em andamento) · #266 cursor
   some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento).
-- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; em espera até as telas, balões e pop-ups serem redesenhados com o Ponto) · #270 notificações · #269 responsividade (QA) ·
+- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade (QA) ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes.
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
@@ -65,6 +65,7 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [020](decisoes/020-movimento-completo.md) Movimento completo por padrão; reduzido também para PC fraco ou internet ruim; mídia intocada.
 - [021](decisoes/021-entrega-criativa.md) Entrega criativa 5 estilos × 5 exemplos em trabalho novo; 2–3 opções só em ajuste pequeno.
 - Prioridade de design (8 nov): telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações; #261 fica em espera.
+- Plano de design por fases (9 nov, #227; `design/guias/plano.md`): 0 limpeza (**feita**: revert da #328; brandbook só com o decidido, escolhas em aberto e guias separados) · 1 guias (**em andamento**: 1a brandbook e 1b revisão do existente em paralelo; 1c componentes e 1d telas depois da 1b; a 1a bloqueia a 3) · 2 exploração de estilo 5×2 em telas reais · 3 consolidação (brandbook, brandkit, tokens) · 4 produção das telas · 5 animações. Cada fase só com aval na anterior. **Exceção de 9 nov:** a pedido do usuário, a fase 2 roda logo após a 1c e a 1d, sem esperar o aval delas; ele revisa tudo junto ao voltar. #261 e as animações esperam a fase 5.
 
 ## Em aberto (aguardam o usuário)
 

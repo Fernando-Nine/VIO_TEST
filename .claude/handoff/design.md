@@ -1,28 +1,31 @@
 # Design — handoff
 
-Atualizado: 2026-11-08
+Atualizado: 2026-11-09
 
 ## Agora
 
-#227 Brandbook (`docs/design/brandbook/`) e Brandkit (`docs/design/brandkit/`) em PR, sem auto-merge.
-Prancha https://claude.ai/artifact/UnQPQ3Fs6gxSVQg418btT7. Espera a escolha do estilo do Ponto em
-telas, balões e pop-ups (A–E, `brandbook/em-aberto.md`; sugestão C na landing/Início, B ou D na sala).
+Plano de design por fases 0–5 (#227): `docs/design/guias/plano.md`. Fase 0 (limpeza) feita na
+PR #329. **Fase 1b em andamento** (revisão do que existe), em paralelo à 1a (guia do Brandbook).
 
 ## Pendente / bloqueios
 
-- #227: paleta, tipo e voz agora documentados no brandbook (tokens reais). Com a escolha do 5×5:
-  spec do Ponto nas superfícies + issue `frontend` para unificar tokens (`styles.css` × `room.css`,
-  ~40 cores soltas, raios de 3 a 18 px), depois #261. A #281 pode usar `brandbook/voz.md`.
+- 1c (componentes) e 1d (telas) começam depois da 1b. Exceção de 9 nov: a fase 2 (5 estilos × 2
+  amostras em telas reais) roda logo após a 1c e a 1d, sem esperar o aval; o usuário revisa tudo
+  junto ao voltar. A 1a bloqueia a fase 3.
+- Escolhas em aberto, uma por arquivo, em `docs/design/escolhas/` (estilo visual, ponto da M1,
+  cores, voz). A #281 espera a voz.
+- #261 e qualquer animação esperam a fase 5.
 - Sala em detalhe (escolhida A): **não começar** sem pedido do copiloto.
 - Divergências em `docs/design/ideias-futuras.md` (nome do grupo App, Atalhos): copiloto decide.
 
 ## Decisões da área
 
-- Skills: `vio-design-system`, `vio-design-review`, `vio-design-delivery`.
-- Destaque `#A6A9FF`; volume acima de 100% `#F2D36B`. Animações ≤ 800 ms, só esmaecer em
-  movimento reduzido.
+- Brandbook (`docs/design/brandbook/`) só com o decidido, cada item com a origem; o aberto fica em
+  `escolhas/`; como produzir, em `guias/`.
+- Produzir só com pedido explícito (`CLAUDE.md`, Autonomia).
+- Destaque `#A6A9FF`; volume acima de 100% `#F2D36B`.
 - A prévia do Render não abre pela rede do contêiner: olhar a sala com build local.
 
 ## Próximo passo
 
-Ler comentários na prancha do brandbook; com a escolha, fechar a #227 como acima. Histórico das levas: `docs/notas/design.md`.
+Terminar a 1b e entregar ao copiloto. Histórico das levas: `docs/notas/design.md`.
