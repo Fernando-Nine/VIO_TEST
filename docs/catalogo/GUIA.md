@@ -138,6 +138,11 @@ Detalhes: [ficha 02](02-conexao-e-reconexao.md).
   repassa a mídia quando o caminho direto está bloqueado. É um serviço de rede à parte, não o
   servidor do VIO.
 - **Rota nova (ICE restart):** pedir à conexão que procure outro caminho sem derrubar a chamada.
+- **Vigia de tela parada:** a conexão pode dizer "conectada" e mesmo assim a imagem parar de
+  chegar. Quem assiste confere a cada 2 s se o vídeo ainda avança (só com a aba aberta e a conexão de
+  pé); parado por 25 s (10 s na câmera), pede rota nova; parado de novo, refaz a assinatura daquela
+  tela, com pausas cada vez maiores e no máximo três vezes. A espera da tela é maior porque uma tela
+  parada quase não manda dados.
 - **Codec:** o formato de compressão do vídeo. O VIO prefere H.264 feito pela placa de vídeo.
 
 **Por que é assim**
