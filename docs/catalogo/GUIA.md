@@ -315,7 +315,7 @@ Detalhes: [ficha 06](06-canvas-widgets-e-notas.md).
 - **Entrega criativa 5×5:** em trabalho novo ou de identidade, Design e Roteirista mostram 5 estilos
   com 5 exemplos cada, para você ver muita variedade de uma vez; depois você pede para expandir ou
   mudar um estilo (decisão 021). Ajuste pequeno continua com 2–3 opções.
-- **Ponto da marca:** o círculo do logo, pensado para conduzir as transições de um lugar a outro.
+- **Ponto da marca:** o quadrado de cantos arredondados do logo (nunca um círculo, salvo ao se transformar ou reagir), pensado para conduzir as transições de um lugar a outro.
 - **WebMCP:** um jeito experimental de um assistente de IA no navegador ler e controlar a sala.
 
 **Por que é assim**
