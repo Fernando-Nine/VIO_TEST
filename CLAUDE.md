@@ -179,6 +179,9 @@ parado o cache expira e a próxima mensagem relê tudo).
   ruim) reduzem a esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`; Design:
   `motion-object-design` e `motion-scene-design`; Frontend: `motion-object-implementation` e
   `motion-scene-implementation`).
+- Responsividade: toda tela funciona em janela pequena no computador e em aparelho pequeno; se quebrar sem
+  conserto, limite a redução da janela (tamanho mínimo logo antes de quebrar); abaixo disso, só o modo
+  flutuante/picture-in-picture de uma tela (usuário, 11 nov 2026).
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
   Prefira edição direta, hover e menu de botão direito a painéis de ajustes.
 

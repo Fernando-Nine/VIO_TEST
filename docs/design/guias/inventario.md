@@ -76,7 +76,7 @@ interface; **média** quando confunde ou destoa, mas há contorno; **baixa** qua
   Windows", botão do herói e "Instalar VIO" no card) disputando com "Criar minha sala", que é a
   ação principal. Os nomes variam ("Baixar para Windows" × "Instalar VIO").
 - **Consistência:** o card de entrada tem canto vivo, enquanto campos e botões são arredondados.
-  O ponto da marca aparece quadrado aqui e redondo na sala. "junto" usa um lilás que não está nos
+  Defeito do app atual: o ponto da marca aparece quadrado aqui, mas redondo em partes da sala, contra a regra (sempre quadrado de cantos arredondados). "junto" usa um lilás que não está nos
   tokens do app. A landing tem tokens próprios (ver Base comum).
 - **Acessibilidade:** o kicker e as etiquetas do card ("SUA SALA NO VIO", "ENTRADA LIVRE",
   "opcional") são pequenos, em mono e com contraste baixo. Uma linha do cabeçalho fixo passa por
@@ -401,40 +401,40 @@ tela remota nem câmera) não mostrou o componente; o comentário vem do código
 
 ## 3. Tabela-resumo
 
-| Componente/tela            | Gravidade | Problema                                                                                                   |
-| -------------------------- | --------- | ---------------------------------------------------------------------------------------------------------- |
-| Base (tokens)              | alta      | Paleta em `styles.css` e `room.css` com valores diferentes, mais um terceiro conjunto em `landing.css`.    |
-| Base (valores soltos)      | alta      | 448 cores hex, cerca de 30 raios, 35 a 39 sombras, 91 `font-size` e mais de 20 `z-index` distintos.        |
-| Base (donos de classe)     | alta      | `.primary` em 11 arquivos, `.sheet-content` em 6 e `.volume-popover` em 3, sobrescritos por `finish.css`.  |
-| Painéis/modais             | alta      | O mesmo `<Dialog>` aparece em 3 posições a 1280 px e em 4 a 400 px, com raios e paddings diferentes.       |
-| Toasts/avisos              | alta      | Toast sob o painel Pessoas (causa não verificada), quebrado no movimento reduzido; dois sistemas de aviso. |
-| Saída/confirmações         | alta      | Duas formas de confirmar (segundo clique e diálogo); "Sair da sala" não confirma e não tem tela de saída.  |
-| Entrar (convite inválido)  | alta      | Link de convite inválido ou vencido cai na landing sem aviso.                                              |
-| Base (foco visível)        | alta      | Anel de foco retangular que cobre os botões do cabeçalho do widget; forma muda por componente.             |
-| Botões                     | média     | Primário em quatro versões (gradiente, chapado, contornado, tamanhos variados).                            |
-| Estado selecionado         | média     | Segmentado cinza num lugar e azulado em outro; Layout com dois estilos de seleção.                         |
-| Landing (formulário)       | média     | Erro de nome vazio usa a validação nativa, no idioma do navegador.                                         |
-| Landing (hierarquia)       | média     | Três CTAs de download acima da dobra competem com "Criar minha sala"; nomes diferentes.                    |
-| Landing (celular)          | média     | "Instalar VIO" aparece no celular, onde o app Windows não serve.                                           |
-| Sala (adormecer)           | média     | Os controles somem após 1 s parado; quem chega não vê o que fazer.                                         |
-| Sala (grade vazia)         | média     | "+ Adicionar widget" repetido 4 vezes e "Foco único" desabilitado sem motivo.                              |
-| Sala (celular)             | média     | Setas de rolagem por cima dos widgets; campos da votação encostam na borda.                                |
-| Catálogo (celular)         | média     | Abas cortadas sem sinal de rolagem; texto de Câmeras pede botão direito no toque.                          |
-| Dicas                      | média     | 95 `title=` nativos: nenhuma dica no toque nem no foco do teclado.                                         |
-| Rótulos mono               | média     | Mono maiúsculo pequeno e de baixo contraste em rótulos de interface, fora do uso previsto.                 |
-| Popovers                   | média     | Raio, padding, cabeçalho e ancoragem diferentes entre popovers vizinhos.                                   |
-| Menus                      | média     | Itens vermelhos sem separação; reversível e irreversível com o mesmo peso.                                 |
-| Tranca (popover)           | média     | Interruptor e caixa de seleção misturados para opções do mesmo tipo.                                       |
-| Widgets (cabeçalho)        | média     | Botões do cabeçalho variam por widget; estado vazio só no chat.                                            |
-| Ajustes (voz)              | média     | Medidor e controle de sensibilidade em barras separadas.                                                   |
-| Porta                      | baixa     | Recusado sem motivo nem próximo passo; logo muda de posição em relação à landing.                          |
-| Pessoas (painel)           | baixa     | Título e aba repetem "Pessoas"; ícone de fone sem texto.                                                   |
-| Avatar                     | baixa     | Iniciais "A" na porta e "AN" no resto.                                                                     |
-| Landing (card)             | baixa     | Card de canto vivo entre campos arredondados; ponto quadrado aqui e redondo na sala.                       |
-| Notificações               | baixa     | Estado vazio sem próximo passo.                                                                            |
-| Textos da sala             | baixa     | "Flutuante" e "16 ms Servidor" não se explicam ao público.                                                 |
-| Início (app)               | baixa     | Não verificado no navegador; precisa entrar na rodada de screenshots do app.                               |
-| Acessibilidade (navegação) | baixa     | Sem link de pular para o conteúdo (catálogo 07.13).                                                        |
-| Posição (palco e cards)    | média     | Layout, ScreenStage e FloatingPeople têm, cada um, seu próprio jeito de escolher posição.                  |
-| Painéis ancorados extras   | baixa     | `spectators-panel` e `sound-panel` com classes próprias, fora do padrão dos popovers.                      |
-| Demonstração da landing    | baixa     | MiniRoom diz "Da sala" onde a sala de verdade diz "Todos"/"Admins"; abas com outro estilo de seleção.      |
+| Componente/tela            | Gravidade | Problema                                                                                                                |
+| -------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Base (tokens)              | alta      | Paleta em `styles.css` e `room.css` com valores diferentes, mais um terceiro conjunto em `landing.css`.                 |
+| Base (valores soltos)      | alta      | 448 cores hex, cerca de 30 raios, 35 a 39 sombras, 91 `font-size` e mais de 20 `z-index` distintos.                     |
+| Base (donos de classe)     | alta      | `.primary` em 11 arquivos, `.sheet-content` em 6 e `.volume-popover` em 3, sobrescritos por `finish.css`.               |
+| Painéis/modais             | alta      | O mesmo `<Dialog>` aparece em 3 posições a 1280 px e em 4 a 400 px, com raios e paddings diferentes.                    |
+| Toasts/avisos              | alta      | Toast sob o painel Pessoas (causa não verificada), quebrado no movimento reduzido; dois sistemas de aviso.              |
+| Saída/confirmações         | alta      | Duas formas de confirmar (segundo clique e diálogo); "Sair da sala" não confirma e não tem tela de saída.               |
+| Entrar (convite inválido)  | alta      | Link de convite inválido ou vencido cai na landing sem aviso.                                                           |
+| Base (foco visível)        | alta      | Anel de foco retangular que cobre os botões do cabeçalho do widget; forma muda por componente.                          |
+| Botões                     | média     | Primário em quatro versões (gradiente, chapado, contornado, tamanhos variados).                                         |
+| Estado selecionado         | média     | Segmentado cinza num lugar e azulado em outro; Layout com dois estilos de seleção.                                      |
+| Landing (formulário)       | média     | Erro de nome vazio usa a validação nativa, no idioma do navegador.                                                      |
+| Landing (hierarquia)       | média     | Três CTAs de download acima da dobra competem com "Criar minha sala"; nomes diferentes.                                 |
+| Landing (celular)          | média     | "Instalar VIO" aparece no celular, onde o app Windows não serve.                                                        |
+| Sala (adormecer)           | média     | Os controles somem após 1 s parado; quem chega não vê o que fazer.                                                      |
+| Sala (grade vazia)         | média     | "+ Adicionar widget" repetido 4 vezes e "Foco único" desabilitado sem motivo.                                           |
+| Sala (celular)             | média     | Setas de rolagem por cima dos widgets; campos da votação encostam na borda.                                             |
+| Catálogo (celular)         | média     | Abas cortadas sem sinal de rolagem; texto de Câmeras pede botão direito no toque.                                       |
+| Dicas                      | média     | 95 `title=` nativos: nenhuma dica no toque nem no foco do teclado.                                                      |
+| Rótulos mono               | média     | Mono maiúsculo pequeno e de baixo contraste em rótulos de interface, fora do uso previsto.                              |
+| Popovers                   | média     | Raio, padding, cabeçalho e ancoragem diferentes entre popovers vizinhos.                                                |
+| Menus                      | média     | Itens vermelhos sem separação; reversível e irreversível com o mesmo peso.                                              |
+| Tranca (popover)           | média     | Interruptor e caixa de seleção misturados para opções do mesmo tipo.                                                    |
+| Widgets (cabeçalho)        | média     | Botões do cabeçalho variam por widget; estado vazio só no chat.                                                         |
+| Ajustes (voz)              | média     | Medidor e controle de sensibilidade em barras separadas.                                                                |
+| Porta                      | baixa     | Recusado sem motivo nem próximo passo; logo muda de posição em relação à landing.                                       |
+| Pessoas (painel)           | baixa     | Título e aba repetem "Pessoas"; ícone de fone sem texto.                                                                |
+| Avatar                     | baixa     | Iniciais "A" na porta e "AN" no resto.                                                                                  |
+| Landing (card)             | baixa     | Card de canto vivo entre campos arredondados; defeito: ponto quadrado aqui e redondo em partes da sala, contra a regra. |
+| Notificações               | baixa     | Estado vazio sem próximo passo.                                                                                         |
+| Textos da sala             | baixa     | "Flutuante" e "16 ms Servidor" não se explicam ao público.                                                              |
+| Início (app)               | baixa     | Não verificado no navegador; precisa entrar na rodada de screenshots do app.                                            |
+| Acessibilidade (navegação) | baixa     | Sem link de pular para o conteúdo (catálogo 07.13).                                                                     |
+| Posição (palco e cards)    | média     | Layout, ScreenStage e FloatingPeople têm, cada um, seu próprio jeito de escolher posição.                               |
+| Painéis ancorados extras   | baixa     | `spectators-panel` e `sound-panel` com classes próprias, fora do padrão dos popovers.                                   |
+| Demonstração da landing    | baixa     | MiniRoom diz "Da sala" onde a sala de verdade diz "Todos"/"Admins"; abas com outro estilo de seleção.                   |

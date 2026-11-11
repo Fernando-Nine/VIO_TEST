@@ -26,11 +26,14 @@ Ordem completa do produto em `ROADMAP.md`.
 - **P0**: nenhuma.
 - **P1**: #266 cursor some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento).
 - **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade (QA) ·
-  #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes.
+  #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes ·
+  #338 ponto redondo na sala (frontend) · #339 atalhos em Ajustes (frontend).
 - **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
   #22 BrowserLab na CI · Design: #293 qualidade automática · #294 Minha tela + Minha prévia ·
   #295 cards flutuantes · #298 cor da sala · #299 cor pessoal; menu inicial em #197.
+  Sem pressa (11 nov): #340 foco único com tela/widget flutuante (Design, precisa de rascunho e aval) ·
+  #341 flutuante "fixado" no app Windows (Design + Mídia; junto da #315).
 - Na prévia (2.12.0-rc.6): landing A (#258), início B (#259), trancar/convite (#260; #242 fechada), tela
   inteira em 1080p (#267), nomes da Store (#271), #24 e #23 (upload com teto de 8 Mbps). Depois da
   rc.6, em `changes/`: tela inicial só no app (#285), saída rápida (#286), tela cheia ociosa (#300), outra aba (#301; ajustes da sonda em PR de
@@ -65,6 +68,9 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [021](decisoes/021-entrega-criativa.md) Entrega criativa 5 estilos × 5 exemplos em trabalho novo; 2–3 opções só em ajuste pequeno.
 - Prioridade de design (8 nov): telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações; #261 fica em espera.
 - Plano de design por fases (9 nov, #227; `design/guias/plano.md`): 0 limpeza (**feita**: revert da #328; brandbook só com o decidido, escolhas em aberto e guias separados) · 1 guias (**em andamento**: 1a brandbook e 1b revisão do existente em paralelo; 1c componentes e 1d telas depois da 1b; a 1a bloqueia a 3) · 2 exploração de estilo 5×2 em telas reais · 3 consolidação (brandbook, brandkit, tokens) · 4 produção das telas · 5 animações. Cada fase só com aval na anterior. **Exceção de 9 nov:** a pedido do usuário, a fase 2 roda logo após a 1c e a 1d, sem esperar o aval delas; ele revisa tudo junto ao voltar. #261 e as animações esperam a fase 5.
+
+- Brandbook P8 (11 nov): na M1 o ponto tem a mesma cor do "v" (monocromático); o usuário imagina a M4 quase sempre, em tudo. As 15 perguntas da 1a estão respondidas.
+- Responsividade (11 nov): regra no `CLAUDE.md`; janela com tamanho mínimo logo antes de quebrar, e abaixo disso só o flutuante.
 
 ## Em aberto (aguardam o usuário)
 

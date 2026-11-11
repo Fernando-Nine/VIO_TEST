@@ -16,6 +16,8 @@ Origem: guia do Ponto aprovado pelo usuário, 7 nov 2026, seção 2.
 - **Quadrado arredondado**, na base e no repouso. Nunca vira círculo como estado.
 - Pode virar botão, widget ou barra como transição; depois volta a ser ponto. Esticar e achatar
   (squash and stretch) não conta como outra forma.
+- Regra do usuário (11 nov 2026): o ponto é **sempre um quadrado de cantos arredondados em todos os
+  lugares, exceto quando vira, desenha, forma outras coisas ou reage**.
 
 Origem: guia do Ponto, decisões do usuário, 7 nov 2026.
 
@@ -23,6 +25,7 @@ Origem: guia do Ponto, decisões do usuário, 7 nov 2026.
 
 - **Azul `#2727F5` quase sempre.** Muda só em raras ocasiões, sempre junto com movimento ou
   tamanho, nunca só a cor.
+- Na M1 (ícone sobre azul), o ponto tem a mesma cor do "v" (P8, 11 nov 2026).
 - Tela cheia de transmissão: ponto pequeno, de baixa opacidade, no canto, **na cor de quem
   compartilha a tela**.
 
