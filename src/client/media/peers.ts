@@ -9,7 +9,7 @@ import { mediaDeadline } from "./deadline";
 import { splitBudget, videoEncoding } from "./video-quality";
 import { preferVideoCodecs } from "./codecs";
 import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
-import { StallWatch } from "./stall-watch";
+import { SCREEN_STALL_MS, STALL_MS, StallWatch } from "./stall-watch";
 export interface PeerInfo {
   id: string;
   publicationId: string;
@@ -62,6 +62,8 @@ interface Peer {
 }
 /** Kinds whose sender follows each viewer's video demand. */
 const hasDemand = (kind: string) => kind === "screen" || kind === "camera";
+const stalledError =
+  "A transmissão parou de chegar. Use Reconectar mídia em Sobre a sala.";
 export interface PeerHooks {
   /** Whether this incoming subscription should be receiving video now (demand not "off"). */
   expects?: (info: PeerInfo) => boolean;
@@ -337,8 +339,11 @@ export class Peers {
   /** Incoming video that stopped arriving although nothing reported a failure (#345). */
   private watch(peer: Peer, progress: number) {
     if (peer.outgoing || !hasDemand(peer.sub.publication.kind)) return;
+    // A PC that is not connected belongs to recover(); a hidden tab may stop decoding.
     const expecting =
       this.online() &&
+      peer.pc.connectionState === "connected" &&
+      !(typeof document !== "undefined" && document.hidden) &&
       peer.pc.getReceivers().some((r) => r.track?.kind === "video") &&
       (this.hooks.expects?.(peer.info) ?? true);
     const action = this.stalls.check(
@@ -347,14 +352,13 @@ export class Peers {
       progress,
       expecting,
       Date.now(),
+      peer.sub.publication.kind === "screen" ? SCREEN_STALL_MS : STALL_MS,
     );
-    if (action === "restart") {
-      // Not connected: recover() is already restarting ICE on its own backoff.
-      if (peer.pc.connectionState === "connected") void this.restartIce(peer);
-    } else if (action === "resubscribe") this.hooks.resubscribe?.(peer.sub.id);
-    else if (action === "give-up")
-      peer.info.error =
-        "A transmissão parou de chegar. Use Reconectar mídia em Sobre a sala.";
+    if (action === "restart") void this.restartIce(peer);
+    else if (action === "resubscribe") this.hooks.resubscribe?.(peer.sub.id);
+    else if (action === "give-up") peer.info.error = stalledError;
+    else if (action === "recovered" && peer.info.error === stalledError)
+      peer.info.error = undefined;
   }
   resume() {
     for (const peer of this.entries.values())
@@ -538,7 +542,12 @@ export class Peers {
       }
     this.captures.keepPreviews(used);
   }
+  /** Drops the stall watchdog's history of a publication that left the room. */
+  forgetPublication(id: string) {
+    this.stalls.forgetPublication(id);
+  }
   closePublication(id: string) {
+    this.forgetPublication(id);
     for (const peer of [...this.entries.values()])
       if (peer.sub.publication.id === id) this.close(peer.sub.id);
   }

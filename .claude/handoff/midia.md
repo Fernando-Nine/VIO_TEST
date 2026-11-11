@@ -4,7 +4,7 @@ Atualizado: 2026-11-11
 
 ## Agora
 
-#345 (vigia de tela parada: ICE restart → reassinatura, teto 3) na PR #346, sem auto-merge, aguardando
+#345 (vigia de tela parada: ICE restart → reassinatura, teto 3; revisão do goldfish aplicada) na PR #346, sem auto-merge, aguardando
 revisão sem memória e o teste do usuário na prévia.
 #303 (instância única do app Windows) na PR `feat/303-instancia-unica`, sem auto-merge, aguardando
 revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia esperando o aceite dele.

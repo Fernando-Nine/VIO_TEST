@@ -1472,6 +1472,8 @@ export class Controller {
               if (Date.now() - since < 30000) continue;
             }
             this.missingSince.delete(id);
+            if (!publications.some((p) => p.id === id))
+              this.peers.forgetPublication(id);
             if (intent.id) {
               this.peers.close(intent.id);
               await this.request("unsubscribe", { id: intent.id }).catch(
