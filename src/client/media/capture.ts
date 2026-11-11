@@ -88,6 +88,8 @@ export interface LocalSource {
   stream: MediaStream;
   /** Sending quality of a screen; each screen keeps its own (#343). */
   quality?: Quality;
+  /** Set when the browser refused this screen's frame rate; empty once it accepts. */
+  qualityMessage?: string;
   /** Screen slot with sound and no image (#236): the program it comes from. */
   label?: string;
 }
@@ -120,7 +122,6 @@ export class Captures {
   cameraDevice = "";
   facing: "user" | "environment" = "user";
   audioMessage = "";
-  qualityMessage = "";
   private rawVoice?: MediaStream;
   private context?: AudioContext;
   private input?: MediaStreamAudioSourceNode;
@@ -205,9 +206,9 @@ export class Captures {
   slotOf(source: LocalSource) {
     for (const [slot, s] of this.sources) if (s === source) return slot;
   }
-  /** Effective sending quality of a capture. */
-  qualityOf(source?: LocalSource): Quality {
-    return source?.quality ?? defaultScreenQuality("screen");
+  /** Sending quality of a screen capture; cameras and voice have none. */
+  qualityOf(source?: LocalSource): Quality | undefined {
+    return source?.kind === "screen" ? source.quality : undefined;
   }
   /** First free screen slot, or undefined at MAX_SCREENS. */
   nextScreen() {
@@ -279,7 +280,10 @@ export class Captures {
     const source = this.save(slot, stream, quality && { ...quality });
     if (!stream.getVideoTracks().length)
       source.label = this.adapter.soundLabel?.(slot);
-    await this.applyQuality(this.qualityOf(source), slot);
+    await this.applyQuality(
+      this.qualityOf(source) ?? defaultScreenQuality(slot),
+      slot,
+    );
   }
   async startVoice() {
     if (this.sources.has("voice")) return;
@@ -459,16 +463,16 @@ export class Captures {
     const source = this.sources.get(slot);
     if (!source || source.kind !== "screen") return;
     source.quality = { ...q };
-    const track = source?.stream.getVideoTracks()[0];
+    const track = source.stream.getVideoTracks()[0];
     if (!track) return;
     try {
       await mediaDeadline(
         track.applyConstraints({ frameRate: { ideal: q.fps, max: q.fps } }),
         "O navegador não confirmou a qualidade da captura.",
       );
-      this.qualityMessage = "";
+      source.qualityMessage = "";
     } catch {
-      this.qualityMessage = "O navegador limitou a qualidade desta captura.";
+      source.qualityMessage = "O navegador limitou a qualidade desta captura.";
     }
   }
   async previewStream(slot: Slot = "screen") {

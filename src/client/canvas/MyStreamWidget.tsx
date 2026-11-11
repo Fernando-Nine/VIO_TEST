@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Gauge,
   MonitorUp,
   Music,
   Pause,
@@ -17,6 +18,7 @@ import type { Controller } from "../room/controller";
 import type { PeerInfo } from "../media/peers";
 import type { Slot } from "../media/capture";
 import type { MenuItem } from "../components/ContextMenu";
+import { AnchoredPopover } from "../components/AnchoredPopover";
 import { Media, useSpeaking } from "../components/Media";
 import { soundName } from "../components/SoundSources";
 import { participantStyle } from "../components/participant-style";
@@ -213,6 +215,7 @@ function QualityPick({
   slot: Slot;
   quality: Quality;
 }) {
+  const message = engine.captures.sources.get(slot)?.qualityMessage;
   const set = (change: Partial<Quality>) =>
     void engine
       .quality({ ...quality, ...change }, slot)
@@ -241,6 +244,7 @@ function QualityPick({
           </option>
         ))}
       </select>
+      {/* "até" keeps the ceiling apart from the measured Envio. */}
       <select
         aria-label="Limite de envio por espectador"
         title="Limite de envio por espectador"
@@ -249,13 +253,11 @@ function QualityPick({
       >
         {withCurrent(bitrates, quality.bitrate).map((b) => (
           <option key={b} value={b}>
-            {mbps(b)} Mbps
+            até {mbps(b)} Mbps
           </option>
         ))}
       </select>
-      {engine.captures.qualityMessage && (
-        <p className="field-note">{engine.captures.qualityMessage}</p>
-      )}
+      {message && <p className="field-note">{message}</p>}
     </div>
   );
 }
@@ -268,6 +270,8 @@ export function MyStreamWidget({
   height,
 }: WidgetProps) {
   const video = useRef<HTMLVideoElement>(null);
+  const preview = useRef<HTMLDivElement>(null);
+  const [picking, setPicking] = useState(false);
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState<number[]>([]);
   const snapshot = engine.view.snapshot;
@@ -293,7 +297,16 @@ export function MyStreamWidget({
   const actions = slot
     ? streamActions(engine, replaceShare, video.current, slot, share)
     : [];
-  useMenuItems(actions.length ? actions : undefined);
+  // Every size reaches the quality: the inline picker shows only in focus and on phones.
+  const visual = !!slot && !current?.audioOnly;
+  const menu = visual
+    ? [
+        ...actions.slice(0, -1),
+        { label: "Qualidade", icon: Gauge, run: () => setPicking(true) },
+        ...actions.slice(-1),
+      ]
+    : actions;
+  useMenuItems(menu.length ? menu : undefined);
   const paused = slot ? streamPaused(engine, slot) : !!current?.muted;
   const silenced = !!slot && engine.captures.isScreenAudioMuted(slot);
   // Keep the frozen frame when the pause comes from elsewhere (menu, reload).
@@ -328,6 +341,9 @@ export function MyStreamWidget({
   const source = surfaceLabel(track);
   const quality = engine.captures.qualityOf(
     slot ? engine.captures.sources.get(slot) : undefined,
+  );
+  const pick = slot && quality && (
+    <QualityPick engine={engine} slot={slot} quality={quality} />
   );
   const cells = [
     {
@@ -390,7 +406,10 @@ export function MyStreamWidget({
           </span>
         </HeaderTools>
       )}
-      <div className={`stream-preview ${sound ? "is-sound" : ""}`}>
+      <div
+        ref={preview}
+        className={`stream-preview ${sound ? "is-sound" : ""}`}
+      >
         {sound ? (
           <SoundPreview
             stream={stream}
@@ -504,11 +523,20 @@ export function MyStreamWidget({
               ))}
             </dl>
             <Chart samples={history} />
-            {slot && !sound && (
-              <QualityPick engine={engine} slot={slot} quality={quality} />
-            )}
+            {!sound && pick}
           </div>
         </>
+      )}
+      {picking && pick && (
+        <AnchoredPopover
+          anchor={preview}
+          id={`quality-${current.id}`}
+          className="quality-popover"
+          label="Qualidade desta tela"
+          close={() => setPicking(false)}
+        >
+          {pick}
+        </AnchoredPopover>
       )}
     </div>
   );

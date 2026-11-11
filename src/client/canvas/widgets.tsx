@@ -142,7 +142,7 @@ function ScreenWidget({
       <div className="widget-live">
         <i className="live-pulse" />
         {info?.publication.muted ? "VÍDEO PAUSADO" : "AO VIVO"}
-        {own && (
+        {quality && (
           <span>
             {" "}
             · {quality.resolution}p / {quality.fps} FPS

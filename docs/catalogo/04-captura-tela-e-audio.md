@@ -45,7 +45,7 @@
 7. `applyQuality(q, slot)` (~L458; slot obrigatório, como em `Controller.quality(q, slot)`): grava em `LocalSource.quality` e só `track.applyConstraints({frameRate:{ideal, max}})` (5 s). Falha vira `qualityMessage`. Resolução
    e bitrate **não** vão na captura: vão no remetente WebRTC (`peers.ts` › `parameters()` → `videoEncoding`: `maxBitrate`,
    `maxFramerate`, `scaleResolutionDownBy`). Depois `Controller.quality()` chama `peers.update("screen")`. Quem ajusta depois é o widget
-   Minha transmissão (resolução, fps e bitrate por tela); o painel Ajustes não tem mais controles de tela (#343).
+   Minha transmissão (resolução, fps e bitrate por tela); o painel Ajustes não tem mais controles de tela (#343). Falha do `applyConstraints` fica em `LocalSource.qualityMessage`, por tela; `qualityOf()` só devolve qualidade de fonte de tela (câmera/voz → `undefined`; `parameters()` cai no padrão).
 8. Teto de upload: `shareQuality()` limita o bitrate pedido a 8000 kbps; além disso `screenUploadBudget = 8000` (`video-quality.ts`)
    é dividido entre todos os espectadores das telas por `splitBudget` (water-filling, mínimo 300 kbps por pessoa) em
    `peers.ts` › `screenShare()`; `peer.info.capped` sinaliza quando cortou. O ciclo de stats (2 s) reaplica (nota #23).

@@ -218,7 +218,7 @@ export function BrowserLab() {
         "cada tela deve ser uma publicação",
       );
       assert(
-        b.captures.qualityOf(b.captures.sources.get("screen:2")).resolution <=
+        b.captures.qualityOf(b.captures.sources.get("screen:2"))!.resolution <=
           480,
         "tela extra começa em qualidade baixa",
       );
