@@ -372,8 +372,7 @@ export function ShareDialog({
       selectVideo(undefined);
     } else setDisplayVideo(displayVideo(tab, choice));
     void engine
-      .startScreen(!!audio, replace, slot)
-      .then(() => engine.quality(quality, slot))
+      .startScreen(!!audio, replace, slot, quality)
       .catch((e) => engine.fail(e));
     close();
   }

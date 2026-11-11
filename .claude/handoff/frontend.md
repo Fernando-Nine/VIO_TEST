@@ -29,6 +29,7 @@ Atualizado: 2026-11-07
 - Download: produção baixa `VIO-x64-setup.exe` direto; prévia abre a release `beta`.
 - Histórico (#309): a sala se reconhece pelo `history.state`, nunca pela URL; uma entrada por visita, reconexão e recarga só substituem.
 - Trabalha em lote, só com tudo decidido (bugs são exceção).
+- Qualidade de tela (#343): por tela, no widget Minha transmissão; o painel Ajustes não tem controle de tela. `Controller.quality(q, slot)` exige o slot e a qualidade vive em `LocalSource.quality`.
 
 ## Próximo passo
 

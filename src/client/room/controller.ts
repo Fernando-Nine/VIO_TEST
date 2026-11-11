@@ -12,6 +12,7 @@ import type {
   IceConfig,
   Kind,
   Publication,
+  Quality,
   Reply,
   RuntimeConfig,
   Snapshot,
@@ -1520,11 +1521,16 @@ export class Controller {
    * `replace` swaps what is shared without ending the publication viewers watch.
    * Another screen (#194): `startScreen(audio, false, engine.captures.nextScreen())`.
    */
-  async startScreen(audio: boolean, replace = false, slot: Slot = "screen") {
+  async startScreen(
+    audio: boolean,
+    replace = false,
+    slot: Slot = "screen",
+    quality?: Quality,
+  ) {
     const generation = this.generation;
     if (this.sounds) this.cues.unlock();
     try {
-      await this.captures.startScreen(audio, replace, slot);
+      await this.captures.startScreen(audio, replace, slot, quality);
       await this.captureQueue;
     } catch (e) {
       if (generation === this.generation) this.fail(e);
@@ -1589,7 +1595,8 @@ export class Controller {
     this.captures.stop(slot);
     await this.captureQueue;
   }
-  async quality(q: typeof this.captures.quality, slot: Slot = "screen") {
+  /** Quality of one screen only; every screen keeps its own (#343). */
+  async quality(q: Quality, slot: Slot) {
     await this.captures.applyQuality(q, slot);
     await this.peers.update("screen");
     this.bump();

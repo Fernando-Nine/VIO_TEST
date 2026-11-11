@@ -199,7 +199,9 @@ Detalhes: [ficha 03](03-webrtc-e-sinalizacao.md).
   automático estragariam música e jogo.
 - **Trocar de fonte mantém a mesma transmissão:** quem assiste não precisa reconectar (#160).
 - **Telas extras nascem em qualidade Baixa:** o envio de internet é um só e se divide entre elas
-  (#194).
+  (#194). Quem escolhe a qualidade no diálogo de compartilhar começa com ela.
+- **Cada tela tem a sua qualidade:** ajustada no widget Minha transmissão, não no painel Ajustes,
+  para que mudar uma tela não mude as outras (#343).
 - **O som de cada pessoa fica sempre tocando na página, mesmo mudo:** o Chromium só entrega o som ao
   indicador de fala se ele estiver tocando.
 - **No app, o "som do PC" exclui o próprio VIO:** senão as vozes da chamada voltariam como eco

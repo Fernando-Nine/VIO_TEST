@@ -4,7 +4,7 @@ import type {
   Subscription,
   VideoDemand,
 } from "../../shared/protocol";
-import type { Captures, Slot } from "./capture";
+import { defaultScreenQuality, type Captures, type Slot } from "./capture";
 import { mediaDeadline } from "./deadline";
 import { splitBudget, videoEncoding } from "./video-quality";
 import { preferVideoCodecs } from "./codecs";
@@ -405,7 +405,10 @@ export class Peers {
     const active = demand?.video !== "off";
     if (!sender.track && active && source) await sender.replaceTrack(source);
     const height = (sender.track || source)?.getSettings().height;
-    const quality = { ...this.captures.qualityOf(local) };
+    // Cameras and previews ignore it; a screen whose capture is gone keeps the default.
+    const sent =
+      this.captures.qualityOf(local) ?? defaultScreenQuality("screen");
+    const quality = { ...sent };
     if (
       demand &&
       peer.sub.tier === "main" &&
@@ -421,9 +424,7 @@ export class Peers {
           Math.max(
             500,
             Math.round(
-              quality.bitrate *
-                (quality.resolution /
-                  this.captures.qualityOf(local).resolution),
+              quality.bitrate * (quality.resolution / sent.resolution),
             ),
           ),
         );

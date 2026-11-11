@@ -127,7 +127,7 @@
     senão `small`. `cameraEncoding` (`video-quality.ts`): `small` 120 kbps/12 fps/altura ≤ 240; `fit` 300 kbps/20 fps; sem demanda ou `focus` 450 kbps/20 fps.
     Ao desmontar, o tile manda `off`. `SpeakerProbe` usa o áudio de voz de **todas** as câmeras (mesmo escondidas) para mover o destaque.
 27. `MyStreamWidget.tsx`: prévia local da própria captura (nunca o vídeo remoto), envio em Mbps, quadros/s + altura, ping, perda, gráfico dos últimos 60 s
-    (amostra a cada 2 s, `historyLength` amostras), lista de espectadores, seletor de resolução (`screenResolutions` 240–2160) e fps (5, 15, 24, 30, 60). "dividido"
+    (amostra a cada 2 s, `historyLength` amostras), lista de espectadores, seletor de resolução (`screenResolutions` 240–2160), fps (5, 15, 24, 30, 60) e limite por espectador (0,45–8 Mbps), cada um só da tela mostrada (#343; inline em foco e no celular alto; nos outros tamanhos, item "Qualidade" do botão direito abre o mesmo seletor num `AnchoredPopover`). "dividido"
     quando `capped` (`peers.ts` › `screenShare` < bitrate pedido). Até 3 telas próprias, navegáveis com setas.
 28. Vídeo nativo do app Windows (`desktop/native-video.ts`) é **lado de quem envia**: o app grava quadros NV12 num `SharedBuffer` do WebView2
     (cabeçalho 64 bytes, 3 slots, seqlock) e a página os escreve num `MediaStreamTrackGenerator` com `contentHint = "detail"`. Para o espectador é uma faixa de vídeo normal. `desktop/video.ts` lista fontes e decodifica miniatura `VIOT` (máx. 320x180).

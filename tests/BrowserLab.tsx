@@ -185,7 +185,7 @@ export function BrowserLab() {
       report(
         "Troca da transmissão principal encerra apenas a assinatura anterior",
       );
-      await b.quality({ fps: 10, bitrate: 400, resolution: 480 });
+      await b.quality({ fps: 10, bitrate: 400, resolution: 480 }, "screen");
       await until(
         () =>
           b.peers
@@ -218,7 +218,7 @@ export function BrowserLab() {
         "cada tela deve ser uma publicação",
       );
       assert(
-        b.captures.qualityOf(b.captures.sources.get("screen:2")).resolution <=
+        b.captures.qualityOf(b.captures.sources.get("screen:2"))!.resolution <=
           480,
         "tela extra começa em qualidade baixa",
       );

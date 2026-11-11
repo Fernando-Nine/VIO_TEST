@@ -36,20 +36,21 @@
    `preferCurrentTab`, `selfBrowserSurface`, `systemAudio`, `monitorTypeSurfaces` nem `contentHint` na captura web
    (grep em `src/` e `docs/`: só `contentHint` em `desktop/native-video.ts`).
 4. `browserCapture.screen(audio)` (`media/capture.ts` ~L43): `getDisplayMedia({video: displayVideo, audio: audio ? {echoCancellation:false, noiseSuppression:false, autoGainControl:false} : false})`. `displayVideo` é variável de módulo (`setDisplayVideo`), `true` se vazio.
-5. `Captures.startScreen(audio, replace, slot)` (~L232): `bumpGeneration(slot)` (descarta resposta velha se o usuário parou/trocou
+5. `Captures.startScreen(audio, replace, slot, quality?)` (~L240): `bumpGeneration(slot)` (descarta resposta velha se o usuário parou/trocou
    durante o diálogo), depois `applyConstraints` de áudio com os três processamentos desligados sob `mediaDeadline` de 5 s
    (falha vira `audioMessage`, não erro), confere geração de novo, monta `audioMessage` (com/sem áudio; aviso de eco se
-   `displaySurface === "monitor"`), chama `save()` e `applyQuality()`.
+   `displaySurface === "monitor"`), chama `save()` e `applyQuality()`. `quality` é a escolha do diálogo: a tela já nasce com ela (#343).
 6. `save()` (~L156): mantém a **mesma `key`** ao substituir (mesma publicação, peers só trocam a trilha; #160), reaplica o
-   mute de tela (`silenced`), preserva vídeo pausado, repassa a miniatura, para as trilhas antigas e liga `ended` → `stop(slot)`.
-7. `applyQuality()` (~L448): só `track.applyConstraints({frameRate:{ideal, max}})` (5 s). Falha vira `qualityMessage`. Resolução
+   mute de tela (`silenced`), guarda a qualidade **na própria fonte** (`LocalSource.quality`; não há qualidade global, #343), preserva vídeo pausado, repassa a miniatura, para as trilhas antigas e liga `ended` → `stop(slot)`.
+7. `applyQuality(q, slot)` (~L458; slot obrigatório, como em `Controller.quality(q, slot)`): grava em `LocalSource.quality` e só `track.applyConstraints({frameRate:{ideal, max}})` (5 s). Falha vira `qualityMessage`. Resolução
    e bitrate **não** vão na captura: vão no remetente WebRTC (`peers.ts` › `parameters()` → `videoEncoding`: `maxBitrate`,
-   `maxFramerate`, `scaleResolutionDownBy`). Depois `Controller.quality()` chama `peers.update("screen")`.
+   `maxFramerate`, `scaleResolutionDownBy`). Depois `Controller.quality()` chama `peers.update("screen")`. Quem ajusta depois é o widget
+   Minha transmissão (resolução, fps e bitrate por tela); o painel Ajustes não tem mais controles de tela (#343). Falha do `applyConstraints` fica em `LocalSource.qualityMessage`, por tela; `qualityOf()` só devolve qualidade de fonte de tela (câmera/voz → `undefined`; `parameters()` cai no padrão).
 8. Teto de upload: `shareQuality()` limita o bitrate pedido a 8000 kbps; além disso `screenUploadBudget = 8000` (`video-quality.ts`)
    é dividido entre todos os espectadores das telas por `splitBudget` (water-filling, mínimo 300 kbps por pessoa) em
    `peers.ts` › `screenShare()`; `peer.info.capped` sinaliza quando cortou. O ciclo de stats (2 s) reaplica (nota #23).
-9. Telas extras (2ª e 3ª): `nextScreen()` → `screenSlots`; começam leves (`extraScreenQuality`: o menor entre a qualidade atual e a
-   preset Baixa 15 fps / 700 kbps / 480p). Acima de 3, o diálogo mostra "Você já transmite 3 telas" e o botão fica desabilitado
+9. Telas extras (2ª e 3ª): `nextScreen()` → `screenSlots`; sem escolha do diálogo começam leves (`defaultScreenQuality` →
+   `extraScreenQuality`: Média limitada à preset Baixa 15 fps / 700 kbps / 480p); a primeira, Média. Acima de 3, o diálogo mostra "Você já transmite 3 telas" e o botão fica desabilitado
    (`ready` exige `slot`); o servidor também recusa.
 10. Erro: `mediaError()` traduz `NotAllowed/NotFound/NotReadable/Overconstrained/InvalidState` para português; o resto usa a
     mensagem do `Error`. Caminho do diálogo: `.catch(e => engine.fail(e))`. O diálogo fecha antes de a captura terminar.
@@ -62,7 +63,7 @@
     miniaturas em 3 workers paralelos na ordem da lista (#247), id válido só para uma listagem (relista a cada troca de aba).
     Abas: Tela inteira, Janela, **Só som** (se `caps.protocol === 1 && caps.processAudio`, e não em troca `replace`).
 13. `startNativeShare` (`desktop/share.ts`): pede `desktop_share_audio {sourceId, system}` (janela → `app`, tela inteira → `system`
-    = PC sem o VIO), faz `selectProcess` + `selectVideo(source, {width,height,fps})`, `engine.startScreen`, `engine.quality`.
+    = PC sem o VIO), faz `selectProcess` + `selectVideo(source, {width,height,fps})`, `engine.startScreen(…, quality)`.
     `captureRate(fps)` arredonda para 15/30/60 nativos; a trilha corta o resto.
 14. `windowsCapture.screen()` (`desktop/capture.ts`): vídeo = `startNativeVideo` (trilha nativa) ou, se nada foi escolhido,
     `getDisplayMedia({video:true, audio:false})` do WebView2 (chamado antes do primeiro `await`, por causa da ativação do usuário).
@@ -153,7 +154,7 @@
 | Orçamento de upload (todas as telas) | 8000 kbps, mínimo 300 por espectador | `video-quality.ts` › `screenUploadBudget`, `minimumShare` |
 | Prévia enviada | 90 kbps, 5 fps | `video-quality.ts` › `videoEncoding` |
 | Miniatura local da própria tela | 320×180, redesenho 200 ms, `captureStream(5)` | `capture.ts` › `createPreview` |
-| Tela extra | min(qualidade, Baixa) | `extraScreenQuality` |
+| Tela sem escolha do diálogo | 1ª Média; extras min(Média, Baixa) | `defaultScreenQuality`, `extraScreenQuality` |
 | Câmera (captura) | 640×360 ideal, 20 fps ideal, máx. 24 | `startCamera` |
 | Câmera (envio) | 450 / 300 / 120 kbps; 20 / 20 / 12 fps | `cameraEncoding` |
 | Prazo de confirmações do navegador | 5000 ms | `deadline.ts` › `mediaDeadline` |
