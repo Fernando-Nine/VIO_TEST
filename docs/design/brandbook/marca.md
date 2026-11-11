@@ -25,8 +25,7 @@
 - M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. O ponto tem a mesma
   cor do "v" (monocromático). Origem: resposta do usuário à P8, 11 nov 2026
   ([`../escolhas/fechadas/2026-11-11-m1-ponto.md`](../escolhas/fechadas/2026-11-11-m1-ponto.md)).
-- Uso esperado: o usuário imagina que a **M4 será usada quase sempre, em tudo** (resposta à P8, 11 nov
-  2026); a M1 fica para o fundo azul.
+- Expectativa do usuário (resposta à P8, 11 nov 2026): imagina que a M4 será usada quase sempre, em tudo.
 - Origem: escolha do usuário na prancha "VIO · Marca", 29 out 2026 (#227), quadros "Escolhidas ·
   Ícones M4 (principal) e M1" e "Escolhida · Logo VIO (N3 arredondada) + ícones M4 e M1" ·
   https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo

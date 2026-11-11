@@ -68,9 +68,8 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - [021](decisoes/021-entrega-criativa.md) Entrega criativa 5 estilos × 5 exemplos em trabalho novo; 2–3 opções só em ajuste pequeno.
 - Prioridade de design (8 nov): telas, balões e pop-ups redesenhados com a linguagem do Ponto vêm **antes** das animações; #261 fica em espera.
 - Plano de design por fases (9 nov, #227; `design/guias/plano.md`): 0 limpeza (**feita**: revert da #328; brandbook só com o decidido, escolhas em aberto e guias separados) · 1 guias (**em andamento**: 1a brandbook e 1b revisão do existente em paralelo; 1c componentes e 1d telas depois da 1b; a 1a bloqueia a 3) · 2 exploração de estilo 5×2 em telas reais · 3 consolidação (brandbook, brandkit, tokens) · 4 produção das telas · 5 animações. Cada fase só com aval na anterior. **Exceção de 9 nov:** a pedido do usuário, a fase 2 roda logo após a 1c e a 1d, sem esperar o aval delas; ele revisa tudo junto ao voltar. #261 e as animações esperam a fase 5.
-
-- Brandbook P8 (11 nov): na M1 o ponto tem a mesma cor do "v" (monocromático); o usuário imagina a M4 quase sempre, em tudo. As 15 perguntas da 1a estão respondidas.
-- Responsividade (11 nov): regra no `CLAUDE.md`; janela com tamanho mínimo logo antes de quebrar, e abaixo disso só o flutuante.
+- Brandbook P8 (11 nov): na M1 o ponto tem a mesma cor do "v"; detalhes em `design/brandbook/marca.md`. As 15 perguntas da 1a estão respondidas.
+- Responsividade (11 nov): regra em `CLAUDE.md` (Convenções); execução na #269.
 
 ## Em aberto (aguardam o usuário)
 

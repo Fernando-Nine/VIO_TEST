@@ -116,7 +116,7 @@ pede aprovação antes.
 
 ## 4. Perguntas da fase 1a
 
-15 perguntas, mais importantes primeiro. Em 9 nov 2026 o usuário respondeu 14 em 9 nov e a P8 em 11 nov: **15 respondidas**. Cada uma tem opções com exemplos reais do app e uma
+15 perguntas, mais importantes primeiro. O usuário respondeu 14 em 9 nov e a P8 em 11 nov: as 15 estão respondidas. Cada uma tem opções com exemplos reais do app e uma
 recomendação. Recomendação não é decisão: sem resposta, a pergunta continua aberta.
 
 ### A. Voz e tom (fechou em `escolhas/fechadas/2026-11-09-voz.md`)
@@ -212,15 +212,17 @@ Em todas: menor e depois do VIO, nunca junto do símbolo. Recomendação: **C**.
 
 ### C. Logo e ícones
 
-**P8. Qual a cor do ponto da M1 (e do logo sobre azul)?** _Respondida em 11 nov 2026: mesma cor do "v" (monocromático); o usuário imagina a M4 em quase todo uso._ Fechou
+**P8. Qual a cor do ponto da M1 (e do logo sobre azul)?** _Respondida em 11 nov 2026: mesma cor do "v" (monocromático)._ Fechou
 [m1-ponto.md](../escolhas/fechadas/2026-11-11-m1-ponto.md).
+
+_Histórico (opções e recomendação, antes da resposta):_
 
 - A. #A6A9FF: 3,61:1 sobre o azul e 2,16:1 contra o "v" branco. O ponto continua um personagem.
 - B. #F3F3FB: 7,06:1 sobre o azul, mas 1,10:1 contra o "v": vira parte da letra.
 
-Recomendação: **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado do "v" em 16 px.
+Recomendação (histórica): **A**. Passa 3:1 (elemento gráfico) e mantém o ponto separado do "v" em 16 px.
 
-> **Respondida (11 nov 2026):** o ponto da M1 tem a mesma cor do "v" (monocromático). As opções A e B ficam como histórico.
+> **Respondida (11 nov 2026):** o ponto da M1 tem a mesma cor do "v" (monocromático).
 
 **P9. Que versões do logo existem e qual a regra sobre imagem?** Noite já está decidida. As
 cores e os contrastes de cada versão ficam para a fase 3.
@@ -314,7 +316,7 @@ Recomendação: **A**. "As pessoas também são pontos" vira forma, não só cor
    "Pergunta N da prancha 1a, resposta de DD mmm AAAA", e o link da prancha.
 3. A escolha correspondente sai de `escolhas/` para
    `escolhas/fechadas/AAAA-MM-DD-<escolha>.md`, com a decisão anotada: `voz.md` fecha com P1–P5;
-   `m1-ponto.md` com P8, e o SVG escolhido vira `brandkit/icone-m1-azul.svg`. As outras perguntas
+   `2026-11-11-m1-ponto.md` com P8; o SVG da M1 (`brandkit/icone-m1-azul.svg`) será gerado na fase 3. As outras perguntas
    entram direto no brandbook; se a resposta for "depois", nasce um arquivo novo em `escolhas/`.
 4. Tudo entra numa PR `docs:` só, que atualiza a seção 2 deste guia e o
    [README do brandbook](../brandbook/README.md). Nada muda no código pela 1a: resposta que altera
