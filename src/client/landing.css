@@ -82,7 +82,7 @@
   width: 6px;
   height: 6px;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: 1.5px;
   background: var(--accent);
 }
 .landing-hero h1 {

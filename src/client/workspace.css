@@ -554,7 +554,7 @@
   display: inline-block;
   width: 6px;
   height: 6px;
-  border-radius: 2px;
+  border-radius: 1.5px;
   background: var(--person-accent, #a2afff);
 }
 .widget-screen-wait {
@@ -3486,7 +3486,7 @@ button.inline-text.is-empty {
 .screen-duration .live-dot {
   width: 6px;
   height: 6px;
-  border-radius: 2px;
+  border-radius: 1.5px;
   background: var(--live);
 }
 /* #158: × closes a room widget for everyone; − only for you. */
@@ -3576,7 +3576,7 @@ button.inline-text.is-empty {
   top: 21px;
   width: 6px;
   height: 6px;
-  border-radius: 2px;
+  border-radius: 1.5px;
   background: #a6a9ff;
 }
 
