@@ -46,6 +46,7 @@ Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão 
 copiloto só no fim do bloco (≤ 4 linhas) ou quando houver erro que a área não resolve ou que
 depende do usuário. Só o copiloto mantém conversa longa.
 Comentário do usuário não é pedido: produzir (Design, telas, animações) só com pedido explícito; na dúvida, perguntar.
+Guia ou documento que pede aval do usuário (sugestões, perguntas) é publicado como página de leitura com comentários, não só mesclado em Markdown.
 
 **Economia de créditos:** rode só os testes ligados ao que mudou (a CI roda o resto) e não
 releia arquivos que não mudaram desde a última leitura. Suíte completa, BrowserLab e
