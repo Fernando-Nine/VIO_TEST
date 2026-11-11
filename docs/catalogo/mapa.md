@@ -65,6 +65,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | --- | --- | --- |
 | `peers.ts` | PeerConnections, negociação (ofertante único, `round`), ICE, bitrate | `controller.ts`, `codecs.ts`, `video-quality.ts` |
 | `capture.ts` | Microfone, portão, câmera, tela; `fonte → analisador → portão → destino` | `controller.ts`, `voice-activity.ts` |
+| `stall-watch.ts` | Vigia de vídeo recebido parado: ICE restart, depois reassinatura (#345) | `peers.ts` |
 | `remote-stream.ts` | `addRemoteTrack`/`removeRemoteTrack` com eventos | `peers.ts` |
 | `codecs.ts`, `video-quality.ts` | Preferência H.264; resolução, taxa e orçamento de envio | `peers.ts`, `capture.ts` |
 | `voice-activity.ts` | Leitura do indicador de fala num tick comum | `capture.ts`, `Media.tsx` |

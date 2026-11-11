@@ -80,6 +80,14 @@
     - dono: rollback se `have-local-offer`, depois `offer(iceRestart:true)`;
     - espectador: envia `{id, round, restart:true}` e o dono refaz oferta com `iceRestart`.
     Com `attempts ≥ 4` mostra "A mídia ainda não voltou…TURN". `accept` repetido em PC `failed` também chama `recover`.
+16b. **Vigia de vídeo parado** (#345, `stall-watch.ts`, chamado no ciclo de stats por `peers.ts` › `watch`): só
+    assinaturas **recebidas** de tela/câmera (voz fica de fora), por `publicationId:tier`. Progresso = soma de
+    `bytesReceived + packetsReceived + framesDecoded` do `inbound-rtp` de vídeo. Não conta enquanto offline, sem
+    receptor de vídeo ou com demanda `off` (`controller.ts` › hook `expects`; prévias sempre contam). 10 s sem
+    progresso → ICE restart pelo caminho do `recover` (`restartIce`; se a PC não está `connected`, deixa para o
+    `recover`); mais 10 s → `controller.ts` › `resubscribe(id)`: o mesmo do `reconnectMedia`, só para aquela
+    assinatura (fecha, `unsubscribe`, nonce novo, `reconcile`), e não age se a publicação sumiu do snapshot.
+    Espera entre reassinaturas 40 s, 80 s; teto 3, depois um aviso e para. 60 s de mídia fluindo zera o histórico.
 17. `resume()` (volta de rede/visibilidade, reconexão do socket): dono recoloca oferta com restart; todos armam `recover`.
 18. `reconnectMedia(forceRelay)` (botão "Reconectar mídia" / "Testar somente via TURN", `App.tsx` ~L967): recusa relay se
     `ice.turn` falso; troca `iceTransportPolicy` em todas as PCs; fecha e re-assina tudo com **novo nonce** (id novo,
@@ -122,6 +130,7 @@
 | `setParameters` timeout | 5000 ms | `deadline.ts` › `mediaDeadline` |
 | Ciclo de stats | 2000 ms (também reaplica `parameters` se mudou altura da fonte ou a divisão do teto) | `peers.ts` ctor, `stats` |
 | Recuperação | 2·2^n s, teto 30 s, jitter ±15%, n ≤ 5; aviso a partir de 4 | `peers.ts` › `recover` |
+| Vigia de vídeo parado | 10 s → ICE restart; +10 s → reassinatura; espera 40/80 s; teto 3; histórico zera com 60 s bons | `stall-watch.ts` |
 | Fila de candidatos | 128 por PC | `peers.ts` › `signal` |
 | `pendingVideoDemand` | 512 entradas | `peers.ts` › `demand` |
 | Tolerância de publicação sumida | 30 s | `controller.ts` › `reconcile` |

@@ -1,0 +1,1 @@
+Quando a tela de alguém fica preta ou congela para quem assiste, a sala tenta voltar sozinha: primeiro renova a rota da conexão e, se a imagem ainda não chegar, refaz a ligação daquela tela, sem precisar ir em "Reconectar mídia". Se mesmo assim não voltar depois de algumas tentativas, aparece o aviso para reconectar à mão.

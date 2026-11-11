@@ -277,6 +277,16 @@ export class Controller {
       () => this.bump(),
       () => this.view.status === "connected",
       () => this.refreshIce(),
+      {
+        // Previews ignore demand; a main video set to "off" is not expected to flow.
+        expects: (info) =>
+          info.tier !== "main" ||
+          (
+            this.desiredVideo.get(info.publicationId) ||
+            (info.kind === "camera" ? cameraOff : undefined)
+          )?.video !== "off",
+        resubscribe: (id) => void this.resubscribe(id),
+      },
     );
     if (persist) {
       try {
@@ -1581,6 +1591,30 @@ export class Controller {
     await this.captures.applyQuality(q, slot);
     await this.peers.update("screen");
     this.bump();
+  }
+  /**
+   * The stall watchdog's last step (#345): what reconnectMedia does, for one
+   * subscription. Skipped while its publication is missing from the snapshot
+   * (owner reentering after a server restart): reconcile decides those.
+   */
+  private async resubscribe(id: string) {
+    const generation = this.generation;
+    const intent = [...this.subscriptions.values()].find((i) => i.id === id);
+    const publicationId = this.peers.entries.get(id)?.sub.publication.id;
+    if (
+      !intent ||
+      !publicationId ||
+      this.view.status !== "connected" ||
+      !this.view.snapshot?.participants.some((m) =>
+        m.publications.some((p) => p.id === publicationId),
+      )
+    )
+      return;
+    this.peers.close(id);
+    intent.nonce = freshKey();
+    intent.id = undefined;
+    await this.request("unsubscribe", { id }).catch(() => {});
+    if (generation === this.generation) await this.reconcile();
   }
   async reconnectMedia(forceRelay = this.peers.forceRelay) {
     try {

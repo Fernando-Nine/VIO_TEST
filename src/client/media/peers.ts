@@ -9,6 +9,7 @@ import { mediaDeadline } from "./deadline";
 import { splitBudget, videoEncoding } from "./video-quality";
 import { preferVideoCodecs } from "./codecs";
 import { addRemoteTrack, removeRemoteTrack } from "./remote-stream";
+import { StallWatch } from "./stall-watch";
 export interface PeerInfo {
   id: string;
   publicationId: string;
@@ -61,6 +62,12 @@ interface Peer {
 }
 /** Kinds whose sender follows each viewer's video demand. */
 const hasDemand = (kind: string) => kind === "screen" || kind === "camera";
+export interface PeerHooks {
+  /** Whether this incoming subscription should be receiving video now (demand not "off"). */
+  expects?: (info: PeerInfo) => boolean;
+  /** Last step of the stall watchdog: drop this subscription and subscribe afresh. */
+  resubscribe?: (id: string) => void;
+}
 export class Peers {
   entries = new Map<string, Peer>();
   ice: IceConfig = { iceServers: [], expiresAt: 0, turn: false };
@@ -70,6 +77,7 @@ export class Peers {
   private pendingVideoDemand = new Map<string, VideoDemand>();
   private accepting = new Set<string>();
   private generation = 0;
+  private stalls = new StallWatch();
   constructor(
     private me: () => string,
     private captures: Captures,
@@ -77,6 +85,7 @@ export class Peers {
     private changed: () => void,
     private online: () => boolean,
     private freshIce: () => Promise<IceConfig>,
+    private hooks: PeerHooks = {},
   ) {
     this.statsTimer = setInterval(() => void this.stats(), 2000);
   }
@@ -299,20 +308,7 @@ export class Peers {
         }
         peer.attempts = Math.min(5, peer.attempts + 1);
         peer.info.attempts = peer.attempts;
-        void this.serial(peer, async () => {
-          if (this.ice.expiresAt < Date.now() + 60000)
-            this.ice = await this.freshIce();
-          peer.pc.setConfiguration({
-            iceServers: this.ice.iceServers,
-            iceTransportPolicy: this.forceRelay ? "relay" : "all",
-          });
-          if (peer.outgoing) {
-            if (peer.pc.signalingState === "have-local-offer")
-              await peer.pc.setLocalDescription({ type: "rollback" });
-            await this.offer(peer, true);
-          } else
-            this.send({ id: peer.sub.id, round: peer.round, restart: true });
-        });
+        void this.restartIce(peer);
         if (peer.attempts >= 4)
           peer.info.error =
             "A mídia ainda não voltou. Continuamos tentando; redes restritas podem precisar de TURN.";
@@ -321,6 +317,44 @@ export class Peers {
       },
       Math.min(2000 * 2 ** peer.attempts, 30000) * (0.85 + Math.random() * 0.3),
     );
+  }
+  /** ICE restart through the single offerer: the owner offers, a viewer asks it to. */
+  private restartIce(peer: Peer) {
+    return this.serial(peer, async () => {
+      if (this.ice.expiresAt < Date.now() + 60000)
+        this.ice = await this.freshIce();
+      peer.pc.setConfiguration({
+        iceServers: this.ice.iceServers,
+        iceTransportPolicy: this.forceRelay ? "relay" : "all",
+      });
+      if (peer.outgoing) {
+        if (peer.pc.signalingState === "have-local-offer")
+          await peer.pc.setLocalDescription({ type: "rollback" });
+        await this.offer(peer, true);
+      } else this.send({ id: peer.sub.id, round: peer.round, restart: true });
+    });
+  }
+  /** Incoming video that stopped arriving although nothing reported a failure (#345). */
+  private watch(peer: Peer, progress: number) {
+    if (peer.outgoing || !hasDemand(peer.sub.publication.kind)) return;
+    const expecting =
+      this.online() &&
+      peer.pc.getReceivers().some((r) => r.track?.kind === "video") &&
+      (this.hooks.expects?.(peer.info) ?? true);
+    const action = this.stalls.check(
+      peer.sub.id,
+      `${peer.sub.publication.id}:${peer.sub.tier}`,
+      progress,
+      expecting,
+      Date.now(),
+    );
+    if (action === "restart") {
+      // Not connected: recover() is already restarting ICE on its own backoff.
+      if (peer.pc.connectionState === "connected") void this.restartIce(peer);
+    } else if (action === "resubscribe") this.hooks.resubscribe?.(peer.sub.id);
+    else if (action === "give-up")
+      peer.info.error =
+        "A transmissão parou de chegar. Use Reconectar mídia em Sobre a sala.";
   }
   resume() {
     for (const peer of this.entries.values())
@@ -479,6 +513,7 @@ export class Peers {
     const peer = this.entries.get(id);
     if (!peer) return;
     this.entries.delete(id);
+    this.stalls.forget(id);
     clearTimeout(peer.timer);
     peer.events.abort();
     peer.pc.ontrack = null;
@@ -568,7 +603,13 @@ export class Peers {
               local?.candidateType === "relay" ||
               remote?.candidateType === "relay";
           }
+          let progress = 0;
           stats.forEach((s) => {
+            if (s.type === "inbound-rtp" && s.kind === "video")
+              progress +=
+                (s.bytesReceived || 0) +
+                (s.packetsReceived || 0) +
+                (s.framesDecoded || 0);
             if (
               s.type === (peer.outgoing ? "outbound-rtp" : "inbound-rtp") &&
               (s.kind === "video" || peer.sub.publication.kind === "voice")
@@ -594,6 +635,8 @@ export class Peers {
               });
             }
           });
+          if (this.entries.get(peer.sub.id) === peer)
+            this.watch(peer, progress);
         }),
       );
       this.changed();
@@ -603,6 +646,7 @@ export class Peers {
   }
   closeAll() {
     this.generation++;
+    this.stalls.clear();
     this.pendingVideoDemand.clear();
     this.accepting.clear();
     for (const id of [...this.entries.keys()]) this.close(id);
