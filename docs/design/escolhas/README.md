@@ -17,8 +17,9 @@ Nada daqui vale como identidade oficial.
 | Escolha               | Arquivo                              | Quando se decide |
 | --------------------- | ------------------------------------ | ---------------- |
 | Estilo visual         | [estilo-visual.md](estilo-visual.md) | fase 2           |
-| Cor do ponto da M1    | [m1-ponto.md](m1-ponto.md)           | com o usuário    |
 | Cores (retrato atual) | [cores.md](cores.md)                 | fase 3           |
+
+Fechadas: [voz](fechadas/2026-11-09-voz.md), [cor do ponto da M1](fechadas/2026-11-11-m1-ponto.md).
 
 ## Fora de escolha (para a fila do Frontend)
 

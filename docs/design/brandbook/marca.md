@@ -15,15 +15,17 @@
 
 ## Ícones do app
 
-| Ícone                  | Uso                  | Arquivo                                                               |
-| ---------------------- | -------------------- | --------------------------------------------------------------------- |
-| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg)                |
-| **M1 "v." sobre azul** | uso sobre fundo azul | cor do ponto em aberto (P8): [`m1-ponto.md`](../escolhas/m1-ponto.md) |
+| Ícone                  | Uso                  | Arquivo                                                |
+| ---------------------- | -------------------- | ------------------------------------------------------ |
+| **M4 "v. noite"**      | **principal**        | [`icone-m4-noite.svg`](../brandkit/icone-m4-noite.svg) |
+| **M1 "v." sobre azul** | uso sobre fundo azul | ponto na cor do V (P8, 11 nov 2026)                    |
 
 - M4: quadrado arredondado em `#0B0C13` com borda `#2A2C3C`, "v" em `#F3F3FB` e ponto azul
   `#2727F5` alinhado ao pé da letra.
-- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. A cor do ponto está
-  em aberto (P8) ([`../escolhas/m1-ponto.md`](../escolhas/m1-ponto.md)).
+- M1: quadrado arredondado em `#2727F5` com "v" branco, para uso sobre azul. O ponto tem a mesma
+  cor do "v" (monocromático). Origem: resposta do usuário à P8, 11 nov 2026
+  ([`../escolhas/fechadas/2026-11-11-m1-ponto.md`](../escolhas/fechadas/2026-11-11-m1-ponto.md)).
+- Expectativa do usuário (resposta à P8, 11 nov 2026): imagina que a M4 será usada quase sempre, em tudo.
 - Origem: escolha do usuário na prancha "VIO · Marca", 29 out 2026 (#227), quadros "Escolhidas ·
   Ícones M4 (principal) e M1" e "Escolhida · Logo VIO (N3 arredondada) + ícones M4 e M1" ·
   https://claude.ai/artifact/CQ7zbg9248JmEqZFeHAAoo
