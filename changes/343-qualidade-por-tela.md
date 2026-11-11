@@ -1,0 +1,1 @@
+Cada tela compartilhada agora tem a própria qualidade: no widget Minha transmissão você ajusta a resolução, os quadros por segundo e o limite de envio da tela mostrada, sem mexer nas outras. Uma tela nova começa com o que foi escolhido no diálogo de compartilhar, e os controles de qualidade da tela saíram do painel Ajustes.

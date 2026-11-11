@@ -226,14 +226,20 @@
 }
 .stream-quality-pick {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 .my-stream .stream-quality-pick select {
-  flex: 1;
+  flex: 1 1 76px;
+  min-width: 0;
   min-height: 32px;
   height: 32px;
-  padding: 0 10px;
+  padding: 0 4px 0 8px;
   font-size: 0.8125rem;
+}
+.stream-quality-pick .field-note {
+  flex-basis: 100%;
+  margin: 0;
 }
 .stream-resolution {
   display: none;
@@ -329,6 +335,9 @@
   .my-stream .stream-numbers {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     order: -1;
+  }
+  .my-stream .stream-quality-pick {
+    display: flex;
   }
 }
 

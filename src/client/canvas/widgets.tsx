@@ -73,9 +73,10 @@ function ScreenWidget({
   const id = widget.config.publicationId;
   const info = engine.screenInfo(id);
   const own = info?.publication.owner === engine.view.id;
-  const stream = own
-    ? engine.captures.sources.get("screen")?.stream
-    : engine.peers.stream(id);
+  // My own screen: the capture behind this publication, whichever slot it is in.
+  const local = own ? engine.captures.sourceFor(info.publication) : undefined;
+  const quality = engine.captures.qualityOf(local);
+  const stream = own ? local?.stream : engine.peers.stream(id);
   const box = useRef<HTMLDivElement>(null);
   const [pageVisible, setPageVisible] = useState(true);
   const doc = box.current?.ownerDocument;
@@ -144,8 +145,7 @@ function ScreenWidget({
         {own && (
           <span>
             {" "}
-            · {engine.captures.quality.resolution}p /{" "}
-            {engine.captures.quality.fps} FPS
+            · {quality.resolution}p / {quality.fps} FPS
           </span>
         )}
       </div>

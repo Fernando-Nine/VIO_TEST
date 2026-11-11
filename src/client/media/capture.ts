@@ -27,6 +27,12 @@ export function extraScreenQuality(q: Quality): Quality {
     resolution: Math.min(q.resolution, low.resolution),
   };
 }
+/** Without a dialog choice: medium for the first screen, lighter for the others. */
+export function defaultScreenQuality(slot: Slot): Quality {
+  return slot === "screen"
+    ? { ...presets.Média }
+    : extraScreenQuality(presets.Média);
+}
 export interface CaptureAdapter {
   screen(audio: boolean, slot: Slot): Promise<MediaStream>;
   device(constraints: MediaStreamConstraints): Promise<MediaStream>;
@@ -80,7 +86,7 @@ export interface LocalSource {
   kind: Kind;
   key: string;
   stream: MediaStream;
-  /** Extra screens only; the first follows `Captures.quality`. */
+  /** Sending quality of a screen; each screen keeps its own (#343). */
   quality?: Quality;
   /** Screen slot with sound and no image (#236): the program it comes from. */
   label?: string;
@@ -98,7 +104,6 @@ export class Captures {
     );
   }
   sources = new Map<Slot, LocalSource>();
-  quality: Quality = { ...presets.Média };
   micMuted = false;
   deaf = false;
   threshold = -55;
@@ -153,7 +158,7 @@ export class Captures {
     this.generation.set(slot, next);
     return next;
   }
-  private save(slot: Slot, stream: MediaStream) {
+  private save(slot: Slot, stream: MediaStream, quality?: Quality) {
     const kind = slotKind(slot);
     const previous = this.sources.get(slot);
     // Same key = same publication: peers swap tracks and viewers stay connected.
@@ -162,10 +167,9 @@ export class Captures {
       key: previous?.key || freshKey(),
       stream,
       quality:
-        previous?.quality ??
-        (kind === "screen" && slot !== "screen"
-          ? extraScreenQuality(this.quality)
-          : undefined),
+        kind === "screen"
+          ? (quality ?? previous?.quality ?? defaultScreenQuality(slot))
+          : undefined,
     };
     this.sources.set(slot, source);
     if (kind === "screen") {
@@ -202,8 +206,8 @@ export class Captures {
     for (const [slot, s] of this.sources) if (s === source) return slot;
   }
   /** Effective sending quality of a capture. */
-  qualityOf(source?: LocalSource) {
-    return source?.quality ?? this.quality;
+  qualityOf(source?: LocalSource): Quality {
+    return source?.quality ?? defaultScreenQuality("screen");
   }
   /** First free screen slot, or undefined at MAX_SCREENS. */
   nextScreen() {
@@ -228,8 +232,14 @@ export class Captures {
   /**
    * With `replace`, a new source takes over the same publication (#160).
    * Another screen goes in `nextScreen()`; the server refuses past MAX_SCREENS.
+   * `quality` (the share dialog's choice) is the screen's quality from the start.
    */
-  async startScreen(audio: boolean, replace = false, slot: Slot = "screen") {
+  async startScreen(
+    audio: boolean,
+    replace = false,
+    slot: Slot = "screen",
+    quality?: Quality,
+  ) {
     if (this.sources.has(slot) && !replace) return;
     const generation = this.bumpGeneration(slot);
     const stream = await this.adapter.screen(audio, slot);
@@ -266,7 +276,7 @@ export class Captures {
         " O som do sistema pode incluir a conversa desta sala; prefira uma aba ou use fones.";
     if (this.adapter.screenAudioMessage)
       this.audioMessage = this.adapter.screenAudioMessage();
-    const source = this.save(slot, stream);
+    const source = this.save(slot, stream, quality && { ...quality });
     if (!stream.getVideoTracks().length)
       source.label = this.adapter.soundLabel?.(slot);
     await this.applyQuality(this.qualityOf(source), slot);
@@ -445,10 +455,10 @@ export class Captures {
     this.facing = facing;
     this.save("camera", stream);
   }
-  async applyQuality(q: Quality, slot: Slot = "screen") {
+  async applyQuality(q: Quality, slot: Slot) {
     const source = this.sources.get(slot);
-    if (slot === "screen") this.quality = q;
-    else if (source) source.quality = q;
+    if (!source || source.kind !== "screen") return;
+    source.quality = { ...q };
     const track = source?.stream.getVideoTracks()[0];
     if (!track) return;
     try {
@@ -458,8 +468,7 @@ export class Captures {
       );
       this.qualityMessage = "";
     } catch {
-      this.qualityMessage =
-        "O navegador limitou os ajustes de captura. Confira os valores efetivos abaixo.";
+      this.qualityMessage = "O navegador limitou a qualidade desta captura.";
     }
   }
   async previewStream(slot: Slot = "screen") {

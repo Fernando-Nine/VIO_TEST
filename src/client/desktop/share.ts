@@ -55,8 +55,7 @@ export async function startNativeShare(
     height: quality.resolution,
     fps: captureRate(quality.fps),
   });
-  await engine.startScreen(Boolean(sound), replace, slot);
-  await engine.quality(quality, slot);
+  await engine.startScreen(Boolean(sound), replace, slot, quality);
 }
 
 /** Sounds that can go without an image (#229): the whole PC first, then applications. */

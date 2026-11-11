@@ -11,7 +11,7 @@ import {
   Square,
   VolumeX,
 } from "lucide-react";
-import type { Participant, Publication } from "../../shared/protocol";
+import type { Participant, Publication, Quality } from "../../shared/protocol";
 import { screenResolutions } from "../../shared/protocol";
 import type { Controller } from "../room/controller";
 import type { PeerInfo } from "../media/peers";
@@ -196,6 +196,70 @@ function Chart({ samples }: { samples: number[] }) {
   );
 }
 
+const rates = [5, 15, 24, 30, 60];
+/** Per-viewer ceilings in kbps, from the lightest preset to the upload cap. */
+const bitrates = [450, 700, 1000, 1800, 2500, 4000, 6000, 8000];
+/** The value in use stays listed even when it came from elsewhere (dialog, source size). */
+const withCurrent = (list: readonly number[], value: number) =>
+  list.includes(value) ? list : [...list, value].sort((a, b) => a - b);
+
+/** Resolution, frame rate and bitrate of this screen only (#343). */
+function QualityPick({
+  engine,
+  slot,
+  quality,
+}: {
+  engine: Controller;
+  slot: Slot;
+  quality: Quality;
+}) {
+  const set = (change: Partial<Quality>) =>
+    void engine
+      .quality({ ...quality, ...change }, slot)
+      .catch((e) => engine.fail(e));
+  return (
+    <div className="stream-quality-pick" role="group" aria-label="Qualidade">
+      <select
+        aria-label="Resolução"
+        value={quality.resolution}
+        onChange={(e) => set({ resolution: +e.target.value })}
+      >
+        {withCurrent(screenResolutions, quality.resolution).map((p) => (
+          <option key={p} value={p}>
+            {p}p
+          </option>
+        ))}
+      </select>
+      <select
+        aria-label="Quadros por segundo"
+        value={quality.fps}
+        onChange={(e) => set({ fps: +e.target.value })}
+      >
+        {withCurrent(rates, quality.fps).map((f) => (
+          <option key={f} value={f}>
+            {f} fps
+          </option>
+        ))}
+      </select>
+      <select
+        aria-label="Limite de envio por espectador"
+        title="Limite de envio por espectador"
+        value={quality.bitrate}
+        onChange={(e) => set({ bitrate: +e.target.value })}
+      >
+        {withCurrent(bitrates, quality.bitrate).map((b) => (
+          <option key={b} value={b}>
+            {mbps(b)} Mbps
+          </option>
+        ))}
+      </select>
+      {engine.captures.qualityMessage && (
+        <p className="field-note">{engine.captures.qualityMessage}</p>
+      )}
+    </div>
+  );
+}
+
 /** Minha transmissão (#160): preview, controls, who watches and the numbers. */
 export function MyStreamWidget({
   engine,
@@ -213,7 +277,6 @@ export function MyStreamWidget({
   const current = own[Math.min(index, own.length - 1)];
   // The preview is the local capture; only the publication made from it has one.
   const slot = slotOf(engine, current?.id);
-  const local = !!slot;
   const stream = slot ? engine.captures.sources.get(slot)?.stream : undefined;
   const track = stream?.getVideoTracks()[0];
   const infos = current
@@ -441,39 +504,8 @@ export function MyStreamWidget({
               ))}
             </dl>
             <Chart samples={history} />
-            {local && !sound && (
-              <div className="stream-quality-pick" aria-label="Qualidade">
-                <select
-                  aria-label="Resolução"
-                  value={quality.resolution}
-                  onChange={(e) =>
-                    void engine
-                      .quality({ ...quality, resolution: +e.target.value })
-                      .catch((e) => engine.fail(e))
-                  }
-                >
-                  {screenResolutions.map((p) => (
-                    <option key={p} value={p}>
-                      {p}p
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="Quadros por segundo"
-                  value={quality.fps}
-                  onChange={(e) =>
-                    void engine
-                      .quality({ ...quality, fps: +e.target.value })
-                      .catch((e) => engine.fail(e))
-                  }
-                >
-                  {[5, 15, 24, 30, 60].map((f) => (
-                    <option key={f} value={f}>
-                      {f} fps
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {slot && !sound && (
+              <QualityPick engine={engine} slot={slot} quality={quality} />
             )}
           </div>
         </>

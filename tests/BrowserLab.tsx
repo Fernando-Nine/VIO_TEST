@@ -185,7 +185,7 @@ export function BrowserLab() {
       report(
         "Troca da transmissão principal encerra apenas a assinatura anterior",
       );
-      await b.quality({ fps: 10, bitrate: 400, resolution: 480 });
+      await b.quality({ fps: 10, bitrate: 400, resolution: 480 }, "screen");
       await until(
         () =>
           b.peers

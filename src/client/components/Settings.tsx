@@ -21,11 +21,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Controller } from "../room/controller";
-import {
-  presets,
-  screenResolutions,
-  type Quality,
-} from "../../shared/protocol";
 import { canManageRoom } from "../../shared/permissions";
 import {
   MasterVolume,
@@ -54,7 +49,7 @@ const categories: {
   icon: LucideIcon;
 }[] = [
   { id: "audio", label: "Áudio", hint: "Microfone, saída, voz", icon: Mic },
-  { id: "video", label: "Vídeo", hint: "Câmera, prévias, tela", icon: Video },
+  { id: "video", label: "Vídeo", hint: "Câmera e prévias", icon: Video },
   {
     id: "notifications",
     label: "Notificações",
@@ -83,7 +78,6 @@ const searchable: { label: string; category: Category; text?: string }[] = [
   { label: "Ajuste fino das telas", category: "audio" },
   { label: "Câmera", category: "video" },
   { label: "Prévias ao vivo", category: "video" },
-  { label: "Qualidade da tela", category: "video", text: "Compartilhamento" },
   { label: "Balões", category: "notifications", text: "Avisos" },
   { label: "Alguém entrou ou saiu", category: "notifications" },
   { label: "Nova tela", category: "notifications" },
@@ -648,22 +642,7 @@ function AudioPage({ engine }: { engine: Controller }) {
 function VideoPage({ engine }: { engine: Controller }) {
   const capture = engine.captures;
   const { options } = useDevices(engine);
-  const [quality, setQuality] = useState<Quality>(capture.quality);
-  useEffect(() => {
-    const timer = setTimeout(
-      () => void engine.quality(quality).catch((e) => engine.fail(e)),
-      350,
-    );
-    return () => clearTimeout(timer);
-  }, [quality, engine]);
-  const screen = capture.sources
-    .get("screen")
-    ?.stream.getVideoTracks()[0]
-    ?.getSettings();
   const supports = navigator.mediaDevices?.getSupportedConstraints() || {};
-  const sending = engine.peers
-    .infos()
-    .filter((p) => p.sending && p.kind === "screen");
   return (
     <>
       <Group title="Câmera">
@@ -712,78 +691,6 @@ function VideoPage({ engine }: { engine: Controller }) {
           checked={engine.previewsEnabled}
           change={(checked) => engine.setPreviews(checked)}
         />
-      </Group>
-      <Group title="Compartilhamento de tela">
-        <div className="segmented">
-          {Object.entries(presets).map(([name, q]) => (
-            <button
-              key={name}
-              className={
-                JSON.stringify(q) === JSON.stringify(quality) ? "active" : ""
-              }
-              onClick={() => setQuality({ ...q })}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-        <label>
-          Resolução do envio
-          <select
-            value={quality.resolution}
-            onChange={(e) =>
-              setQuality({ ...quality, resolution: +e.target.value })
-            }
-          >
-            {screenResolutions.map((resolution) => (
-              <option key={resolution} value={resolution}>
-                {resolution}p
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Quadros por segundo <output>{quality.fps} FPS</output>
-          <input
-            aria-label="Quadros por segundo"
-            type="range"
-            min="5"
-            max="60"
-            step="1"
-            value={quality.fps}
-            onChange={(e) => setQuality({ ...quality, fps: +e.target.value })}
-          />
-        </label>
-        <label>
-          Limite por espectador <output>{quality.bitrate} kbps</output>
-          <input
-            aria-label="Bitrate da tela"
-            type="range"
-            min="250"
-            max="8000"
-            step="50"
-            value={quality.bitrate}
-            onChange={(e) =>
-              setQuality({ ...quality, bitrate: +e.target.value })
-            }
-          />
-        </label>
-        {screen && (
-          <div className="technical">
-            Captura: {screen.width} × {screen.height} ·{" "}
-            {Math.round(screen.frameRate || 0)} FPS
-            {sending.map((p) => (
-              <p key={p.id}>
-                {p.tier === "preview" ? "Miniatura" : "Vídeo principal"}:{" "}
-                {p.width || "—"} × {p.height || "—"} · {p.fps ?? "—"} FPS ·{" "}
-                {p.bitrate ?? "—"} kbps
-              </p>
-            ))}
-          </div>
-        )}
-        {capture.qualityMessage && (
-          <p className="field-note">{capture.qualityMessage}</p>
-        )}
       </Group>
     </>
   );
