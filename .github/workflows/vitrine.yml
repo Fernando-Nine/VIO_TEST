@@ -14,6 +14,8 @@ on:
       - "tests/BrowserLab.tsx"
       - "tests/synthetic.ts"
       - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/vitrine.yml"
   workflow_dispatch:
     inputs:
