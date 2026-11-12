@@ -1,17 +1,20 @@
 # Design — handoff
 
-Atualizado: 2026-11-09
+Atualizado: 2026-11-12
 
 ## Agora
 
-Plano de design por fases 0–5 (#227): `docs/design/guias/plano.md`. Fase 0 (limpeza) feita na
-PR #329. **Fase 1b em andamento** (revisão do que existe), em paralelo à 1a (guia do Brandbook).
+Plano de design por fases 0–5 (#227): `docs/design/guias/plano.md`. **Fase 2, rodada 2:** 6
+variações sobre o guia aprovado (`docs/design/guias/estilo.md`, PR #361) publicadas no
+[canvas](https://claude.ai/artifact/UPb7DxFciP46are3wAkczD). Esperando o usuário escolher por
+comentário; resumo em `docs/design/escolhas/estilo-visual.md`. Depois do aval: preencher a seção
+Escolhidas da prancha `Main`, subir o decidido para o brandbook (fase 3) e fechar a #227.
+Fonte das pranchas (gerador): fora do repositório, recriável pelo canvas (as `.dc.html` são a
+referência).
 
 ## Pendente / bloqueios
 
-- 1c (componentes) e 1d (telas) começam depois da 1b. Exceção de 9 nov: a fase 2 (5 estilos × 2
-  amostras em telas reais) roda logo após a 1c e a 1d, sem esperar o aval; o usuário revisa tudo
-  junto ao voltar. A 1a bloqueia a fase 3.
+- A 1a (guia do Brandbook) bloqueia a fase 3.
 - Escolhas em aberto, uma por arquivo, em `docs/design/escolhas/` (estilo visual, ponto da M1,
   cores, voz). A #281 espera a voz.
 - #261 e qualquer animação esperam a fase 5.
@@ -28,4 +31,5 @@ PR #329. **Fase 1b em andamento** (revisão do que existe), em paralelo à 1a (g
 
 ## Próximo passo
 
-Terminar a 1b e entregar ao copiloto. Histórico das levas: `docs/notas/design.md`.
+Ler os comentários do canvas das variações (`ArtifactComments`) e montar a prancha Escolhidas.
+Histórico das levas: `docs/notas/design.md`.

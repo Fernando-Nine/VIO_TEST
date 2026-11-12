@@ -26,3 +26,7 @@ Canvas **VIO · Leva 4** https://claude.ai/artifact/7ERZLFRtHn6xXE6mXcoPUf.
   - Itens novos de Ajustes, para depois — #168.
 - `widgets-padrao.md` (nomes do menu) e `transmissoes.md` (etiqueta vira aviso no topo) ajustados.
 - Prévia do Render inacessível pela rede do contêiner: olhar a sala com build local.
+- Fase 2, rodada 2 (12 nov): 6 variações sobre o guia `guias/estilo.md` (cantos tonais, coluna
+  geométrica, radial reativo, tema na minha cor, cada um na sua cor, radial na minha cor), mesmas
+  telas em 1600×900 e 390 px, V1 também em 4K e 2560×1080 —
+  [canvas](https://claude.ai/artifact/UPb7DxFciP46are3wAkczD), resumo em `escolhas/estilo-visual.md`.
