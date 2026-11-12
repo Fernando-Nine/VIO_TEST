@@ -287,8 +287,7 @@ interrompível, curva `--ease-ponto` `cubic-bezier(.2,.7,.2,1)`.
 - **Balões de interface e avisos nascem do Ponto:** o Ponto viaja da origem (o Ponto da sala, o
   Ponto da pessoa que bateu na porta) até o canto apontado do balão, e a placa aparece dali com
   `opacity` e um `scale` **uniforme** de 0,9 a 1 (`transform-origin` no canto apontado), 160 ms. O
-  Ponto fica no balão, à esquerda do texto. Ao sumir, o inverso. Nada de `scaleX` seguido de `scaleY`
-  na placa: deforma o raio.
+  Ponto fica no balão, à esquerda do texto. Ao sumir, o inverso. **O Ponto vira retângulo esticando de verdade:** anima-se a largura e a altura (ou `clip-path: inset(... round 12px)`), que mantêm o raio exato. O que não se usa é `scaleX`/`scaleY`, que só espicha a imagem e entorta os cantos.
 - **Molas só no Ponto e nos gestos**, nunca no conteúdo do palco, em peça ou em lista.
 - **Exceção a `transicoes.md` (Pessoa chega):** o quique `cubic-bezier(.3,1.4,.5,1)` fica só no
   **Ponto da pessoa**, que é um Ponto; o nome e o resto do item entram sem quique, com `opacity` e
@@ -324,8 +323,7 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 - Cor: verde ou outra cor de estado fora da paleta; cor pura da pessoa em área grande; botão branco
   em fundo escuro; anil como texto ou ícone fino sobre Noite; cor atrás do Ponto em repouso; perigo
   só na cor; grade usada como contorno.
-- Movimento: `scaleX` e `scaleY` separados em Placa; Barra que encolhe
-  com `scaleX`; mola em peça ou lista; formas caindo, quicando ou espalhadas no Início.
+- Movimento: esticar Placa ou Barra com `scaleX`/`scaleY` (entorta o raio; use largura, altura ou `clip-path`); mola em peça ou lista; formas caindo, quicando ou espalhadas no Início.
 - Ilustração que não seja da família do Ponto.
 - O código da sala desenhado em peças (5B): ele é sempre texto em IBM Plex Mono.
 - Espaço sem uso; cabeçalho gigante; duas versões do mesmo controle lado a lado; controle sumido.
