@@ -47,6 +47,12 @@ import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite as roomUrl, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
+import {
+  duckingAsked,
+  duckingOff,
+  markDuckingAsked,
+  setDuckingOff,
+} from "../desktop/ducking";
 import { SCREEN_FINE_MAX, ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
 import {
@@ -200,6 +206,8 @@ export class Controller {
   inCall = false;
   private callGeneration = 0;
   private voicePending = false;
+  /** PROVISIONAL (#344, removed with #352): ask once to stop Windows ducking. */
+  duckingAsk = false;
   private cameraPending = false;
   peopleHidden = false;
   screenArrangement = { mode: "right" as "right" | "bottom", revision: 0 };
@@ -1559,6 +1567,7 @@ export class Controller {
           return;
         }
         this.captures.micMuted = false;
+        if (this.persist) void this.checkDucking();
       } else this.captures.micMuted = !this.captures.micMuted;
       this.captures.syncMute();
       void this.playCue(this.captures.micMuted ? "mute" : "unmute");
@@ -1568,6 +1577,51 @@ export class Controller {
       if (generation === this.callGeneration) this.fail(e);
     } finally {
       if (generation === this.callGeneration) this.voicePending = false;
+    }
+  }
+  // PROVISIONAL (#344): the first call with the microphone open in the app asks once
+  // whether Windows should stop lowering other sounds. Removed with #352.
+  private async checkDucking() {
+    if (this.duckingAsk || duckingAsked()) return;
+    try {
+      if ((await duckingOff()) !== false || duckingAsked()) return;
+    } catch {
+      return;
+    }
+    this.duckingAsk = true;
+    this.bump();
+  }
+  async answerDucking(off: boolean) {
+    this.duckingAsk = false;
+    markDuckingAsked();
+    this.bump();
+    if (off) await this.setDucking(true);
+  }
+  /** Changes the Windows preference; Windows applies it to a new microphone stream. */
+  async setDucking(off: boolean) {
+    try {
+      await setDuckingOff(off);
+      markDuckingAsked();
+    } catch (e) {
+      this.fail(e);
+      this.bump();
+      return;
+    }
+    if (!this.captures.sources.has("voice") || this.voicePending) {
+      this.bump();
+      return;
+    }
+    const generation = this.callGeneration;
+    this.voicePending = true;
+    try {
+      await this.captures.reopenMicrophone();
+    } catch (e) {
+      // reopenMicrophone already stopped the voice: the button shows it off.
+      if (generation === this.callGeneration) this.fail(e);
+    } finally {
+      if (generation === this.callGeneration) this.voicePending = false;
+      await this.captureQueue;
+      this.bump();
     }
   }
   deafen() {

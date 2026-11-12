@@ -16,6 +16,8 @@
     "allow-desktop-video-start",
     "allow-desktop-video-wait",
     "allow-desktop-video-stop",
-    "allow-desktop-share-audio"
+    "allow-desktop-share-audio",
+    "allow-desktop-ducking",
+    "allow-desktop-set-ducking"
   ]
 }

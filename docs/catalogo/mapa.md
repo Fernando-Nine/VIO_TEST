@@ -110,6 +110,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | `capture.ts`, `share.ts` | Escolha de fonte e início da captura nativa | `src-tauri/src/capture.rs`, `stream.rs` |
 | `video.ts`, `native-video.ts` | Lista de telas/janelas; leitura do buffer compartilhado NV12 | `video.rs`, `wire.rs` |
 | `pcm-worklet.js` / `.d.ts` | AudioWorklet que toca PCM do som nativo | `share.ts` |
+| `ducking.ts` | Provisório (#344, sai com #352): opção Comunicações do Windows | `ducking.rs`; `room/controller.ts`, `Settings.tsx` |
 
 ## src-tauri (ficha [10](10-app-windows.md))
 
@@ -122,6 +123,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | `src/printwindow.rs` | Captura de janela por `PrintWindow` |
 | `src/programs.rs` | Quais programas tocam som; árvore de processos |
 | `src/wire.rs`, `src/log.rs` | Formato dos pacotes e miniaturas; log |
+| `src/ducking.rs` | Provisório (#344, sai com #352): lê e grava `UserDuckingPreference` |
 | `capabilities/main.json`, `tauri.conf.json`, `tauri.updater.json`, `Cargo.toml` | Permissões, configuração, feed de atualização, dependências |
 
 ## tests e scripts (ficha [11](11-testes-e-ci.md); build em [09](09-hospedagem-deploy-release.md))

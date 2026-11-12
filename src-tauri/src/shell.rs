@@ -1,4 +1,5 @@
 use crate::capture::{self, Manager, Source};
+use crate::ducking;
 use crate::instance;
 use crate::log;
 use crate::stream::{Options, Started, StreamManager, Tick};
@@ -189,6 +190,22 @@ fn desktop_share_audio(
     }
 }
 
+/// PROVISIONAL (#344, removed with #352): the Windows "Communications activity" value.
+#[tauri::command]
+fn desktop_ducking(window: WebviewWindow) -> Result<Option<u32>, String> {
+    trusted(&window)?;
+    ducking::read()
+}
+
+/// PROVISIONAL (#344, removed with #352): `None` restores the Windows default.
+#[tauri::command]
+fn desktop_set_ducking(window: WebviewWindow, value: Option<u32>) -> Result<(), String> {
+    trusted(&window)?;
+    ducking::write(value)?;
+    log::write("ducking", &format!("set {value:?}"));
+    Ok(())
+}
+
 async fn update(app: &AppHandle) -> tauri_plugin_updater::Result<()> {
     let mut builder = app.updater_builder().timeout(Duration::from_secs(20));
     // VIO Teste follows whatever its feed points at, even a lower prerelease number.
@@ -267,7 +284,9 @@ pub fn run() {
             desktop_video_start,
             desktop_video_wait,
             desktop_video_stop,
-            desktop_share_audio
+            desktop_share_audio,
+            desktop_ducking,
+            desktop_set_ducking
         ])
         .setup(|app| {
             if let Ok(dir) = app.path().app_log_dir() {
