@@ -147,7 +147,7 @@ Regras:
 - **Botão principal:** fundo `recipiente` com texto `sobreRecipiente`, ou o anil cheio com ícone
   branco (7,1:1). **Nunca botão branco em fundo escuro** (4A).
 - **Sem cor de estado nova.** Verde e amarelo existem só como cor de pessoa. Aviso usa o tom
-  `destaque` da sala com ícone e texto. O "ao vivo" hoje é `#4CDDC3`: ver pergunta 3.
+  `destaque` da sala com ícone e texto. Exceção única: **"ao vivo" é sempre verde** (resposta 3).
 - **Perigo `#FF8A96` sempre com ícone e texto** ("Sair da chamada", "Remover"), nunca só a cor, para
   não ser confundido com o Ponto de quem escolheu Vermelho.
 - Estado nunca só por cor: sempre ícone, texto ou forma junto.
@@ -206,7 +206,7 @@ O balão é **um Ponto que esticou, mudou de cor e aponta para a origem**.
 - **Nenhum controle some com o estilo.** Foco único, layout, tela cheia, convidar: todos os do
   [inventário](inventario.md) aparecem em toda variação de sala (o Foco único sumiu no 3A).
 - **(sugestão, do 5A)** Criar sala pode virar **o próprio Ponto**: um Ponto anil de 56 px com ícone
-  "+", nome em dica, que ao clicar viaja e cresce até virar a sala. Ver pergunta 4.
+  "+", nome em dica, que ao clicar viaja e cresce até virar a sala. Testar nas variações como aparência parada (resposta 4).
 
 ### 4.5 Tempo que encolhe (4A)
 
@@ -262,9 +262,9 @@ eles ainda dizem o estado pela forma.
 - **Usar o espaço.** Início: criar e entrar continuam no centro; ao redor, perfil e salas juntos
   (3A) e as peças que o Roteirista propôs, em segundo plano. O que sobra recebe grade e ilustração,
   não vazio.
-- **Largura máxima.** Início e páginas: conteúdo em até **1200 px**, centrado; a grade continua até
-  a borda. Sala: área de trabalho em até **1920 px**; os balões de canto acompanham essa área, não a
-  borda do monitor; em tela cheia o palco ocupa tudo. Ver pergunta 5.
+- **Sem largura máxima** (resposta 5). A tela usa toda a largura, até telão e TV. Em tela grande o
+  conteúdo não se espalha: as peças crescem em proporção (a escala da interface sobe a partir de
+  1920 px) e o que é lido junto continua agrupado, com linhas de texto de até ~72 caracteres.
 - Celular (390 px): balões viram uma linha no topo e uma embaixo; nada de rolagem lateral.
 
 ## 7. Movimento
@@ -341,8 +341,8 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 | Posição da sala  | balões nos 4 cantos · coluna de peças numa borda · menu radial em Pontos ao redor do Ponto da sala |
 | Fundo            | grade de linhas · textura de pontos · pontos que reagem                                            |
 | Canto do balão   | canto apontado · bico em Corte                                                                     |
-| Cor da interface | só Anil · peças da pessoa na cor dela · interface na cor de quem a usa (pergunta 1)                |
-| Botão principal  | placa com texto · o próprio Ponto (pergunta 4)                                                     |
+| Cor da interface | só Anil · peças da pessoa na cor dela · interface na cor de quem a usa (opção, resposta 1)         |
+| Botão principal  | placa com texto · o próprio Ponto (resposta 4)                                                     |
 
 ## 10. Entrega de cada variação
 
@@ -350,7 +350,7 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 
 Cada variação mostra, em tamanho real: **Início** (1280 × 800), **Sala sem transmissão**
 (1280 × 800), **Sala com transmissão** (1280 × 800) e **Sala no celular** (390 × 844). Uma das
-variações mostra também uma tela larga (2560 × 1080) para a largura máxima.
+variações mostra também uma tela de TV (3840 × 2160) e uma larga (2560 × 1080), sem largura máxima.
 
 ### 10.2 Eixos e cobertura
 
@@ -398,15 +398,18 @@ Texto corrido nunca abaixo de 14 px; 12 px só em rótulo curto.
 
 Cada variação mostra os estados de um botão de ícone, um botão com texto e um item de menu.
 
-## Perguntas abertas
+## Respostas do usuário (12 nov 2026)
 
-1. **Cor pessoal até onde?** Só no que vem de cada pessoa (aviso, ponto, transmissão), ou também
-   pode tingir a interface inteira de quem a usa (Início e balões na sua cor), como opção?
-2. **Ponto branco em repouso:** vale só dentro de botão e peça, com o logo sempre anil, como acima?
-3. **"Ao vivo" em `#4CDDC3`** é uma cor de estado fora da paleta. Trocar pela cor de quem transmite,
-   com o halo, ou manter?
-4. **Criar sala como o próprio Ponto**, sem texto visível (nome em dica e `aria-label`): testar nas
-   variações?
-5. **Largura máxima:** 1200 px no Início e 1920 px na sala servem para o seu monitor?
-6. **Quique de quem chega:** fica só no Ponto da pessoa, e o nome entra sem quique (7.1). Está bom,
-   ou prefere sem quique nenhum?
+1. **Cor pessoal na interface:** opção de ligar e desligar em Aparência ("tema na minha cor",
+   parcial). Desligada, vale só o padrão (a cor tinge o que vem da pessoa). Ligada, mais partes da
+   interface usam a paleta da pessoa. Como a paleta vem da receita da 3.2 (luminosidade fixa), nenhuma
+   cor deixa o tema ilegível; se um dia houver cor livre, a receita corrige o croma do mesmo jeito.
+2. **Ponto branco parado:** não é definitivo. O Ponto pode passar o protagonismo de um lugar para
+   outro, mover-se e mudar de cor (ficar anil) conforme a tela. Só no movimento reduzido ele fica
+   parado. Detalhe fica para a fase 5.
+3. **"Ao vivo":** o ponto é sempre verde. Testar nas variações o verde-água atual (`#4CDDC3`) e um
+   verde mais vivo que passe contraste; nos dois casos vai com o halo e o texto "Ao vivo", para não
+   se confundir com o Ponto de quem escolheu Verde ou Ciano.
+4. **Criar sala como o Ponto:** testar só a aparência, parada; a viagem fica para a fase 5.
+5. **Largura máxima:** nenhuma. Funciona de 390 px a telão (ver seção 6).
+6. **Quique de quem chega:** como recomendado, só no Ponto da pessoa.
