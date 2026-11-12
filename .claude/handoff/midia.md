@@ -4,6 +4,9 @@ Atualizado: 2026-11-12
 
 ## Agora
 
+#344 (Windows abaixa os outros sons) na PR `fix/344-ducking-windows`, sem auto-merge: **provisório**,
+muda `UserDuckingPreference` (pergunta uma vez + chave em Ajustes › Áudio) e reabre o microfone.
+Quando o Windows relê o valor não é documentado; o teste do usuário no PC decide. Sai com a #352.
 #350 (ajuste fino das telas até 500%, ganho puro sem limitador por decisão do usuário) na PR `feat/350-ajuste-fino-500`, sem auto-merge.
 #344 (ajuste "vozes abaixam outros sons" no app) **não implementado**: o Chromium do WebView2 abre o microfone com `AudioCategory_Communications` no processo de áudio dele, e a única saída documentada (`SetDuckingPreference` / `IAudioClientDuckingControl`) vale só para a sessão do próprio processo; chamar de fora não é documentado e só vale depois de reabrir o fluxo. Volta a `aguarda-usuario` (teste do `mmsys.cpl` › Comunicações › Não fazer nada, ou aval para um build experimental).
 #345 (vigia de tela parada: ICE restart → reassinatura, teto 3; revisão do goldfish aplicada) na PR #346, sem auto-merge, aguardando

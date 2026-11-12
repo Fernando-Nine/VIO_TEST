@@ -905,6 +905,34 @@ export default function App({ engine }: { engine: Controller }) {
           <ArrowUpRight size={12} />
         </button>
       </footer>
+      {engine.duckingAsk && (
+        // PROVISIONAL (#344): removed with #352, when VIO captures the microphone itself.
+        <Dialog
+          title="Outros sons mais baixos"
+          centered
+          close={() => void engine.answerDucking(false)}
+        >
+          <p>
+            O Windows está abaixando os outros sons durante a chamada. Quer
+            desligar isso? A mudança vale para a opção Comunicações do Windows e
+            pode ser desfeita em Ajustes › Áudio.
+          </p>
+          <div className="notification-actions">
+            <button
+              className="primary"
+              onClick={() => void engine.answerDucking(true)}
+            >
+              Desligar
+            </button>
+            <button
+              className="secondary"
+              onClick={() => void engine.answerDucking(false)}
+            >
+              Agora não
+            </button>
+          </div>
+        </Dialog>
+      )}
       {panel && (
         <Dialog
           key={panel}

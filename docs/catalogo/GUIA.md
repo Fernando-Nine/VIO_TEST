@@ -455,6 +455,10 @@ Detalhes: [ficha 09](09-hospedagem-deploy-release.md).
   para a atualização.
 - **Sem assinatura de código por enquanto:** só ao abrir ao público (decisão 006).
 - **Atualizar só quando o app abre:** instalar no meio do uso poderia derrubar uma chamada.
+- **Outros sons mais baixos na chamada (provisório):** a casca abre o microfone como "chamada", e o
+  Windows abaixa os outros sons. Até o VIO capturar o microfone sozinho (#352), o app pergunta uma
+  vez se pode mudar a opção Comunicações do Windows para "Não fazer nada", com uma chave em Ajustes ›
+  Áudio para voltar atrás. Quando a #352 chegar, isso sai e o VIO para de mexer em ajustes do Windows.
 - **Identificadores opacos:** a página não escolhe qual processo capturar pelo número dele, então
   uma página comprometida não consegue mirar outro programa.
 

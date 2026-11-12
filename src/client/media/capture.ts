@@ -361,9 +361,28 @@ export class Captures {
         { once: true },
       );
   }
-  async changeMicrophone(deviceId: string) {
+  /**
+   * Closes the device before opening it again, so the system sees a new capture
+   * stream (a same-device reopen may otherwise reuse the old one). PROVISIONAL use:
+   * applying the Windows communications preference (#344, removed with #352).
+   */
+  async reopenMicrophone() {
+    if (!this.sources.has("voice")) return;
+    try {
+      await this.changeMicrophone(this.micDevice, true);
+    } catch (error) {
+      this.stop("voice");
+      throw error;
+    }
+  }
+  async changeMicrophone(deviceId: string, fresh = false) {
     this.micDevice = deviceId;
     if (!this.sources.has("voice")) return;
+    if (fresh) {
+      this.input?.disconnect();
+      this.input = undefined;
+      this.rawVoice?.getTracks().forEach((t) => t.stop());
+    }
     const stream = await this.adapter.device({
       audio: {
         ...this.voiceSettings,

@@ -33,6 +33,8 @@ import { ColorPicker } from "./ColorPicker";
 import { Dialog } from "./Dialog";
 import { outputError } from "../media/audio-output";
 import { api, invite } from "../endpoint";
+import { desktop } from "../desktop/bridge";
+import { duckingOff } from "../desktop/ducking";
 
 type Category =
   | "audio"
@@ -75,6 +77,15 @@ const searchable: { label: string; category: Category; text?: string }[] = [
   { label: "Ganho automático", category: "audio" },
   { label: "Saída de áudio", category: "audio", text: "Reproduzir em" },
   { label: "Volume geral", category: "audio" },
+  ...(desktop
+    ? [
+        {
+          label: "Outros sons abaixados pelo Windows",
+          category: "audio" as const,
+          text: "Impedir que o Windows abaixe",
+        },
+      ]
+    : []),
   { label: "Ajuste fino das telas", category: "audio" },
   { label: "Câmera", category: "video" },
   { label: "Prévias ao vivo", category: "video" },
@@ -627,6 +638,7 @@ function AudioPage({ engine }: { engine: Controller }) {
           </>
         )}
         <MasterVolume engine={engine} />
+        {desktop && <WindowsDucking engine={engine} />}
         <Toggle
           label="Ajuste fino das telas"
           note="Volume das telas até 500%, só para você."
@@ -636,6 +648,41 @@ function AudioPage({ engine }: { engine: Controller }) {
         />
       </Group>
     </>
+  );
+}
+
+/**
+ * PROVISIONAL (#344): mirrors the Windows "Communications" preference while VIO's
+ * microphone is a WebView2 communications stream. Removed with #352.
+ */
+function WindowsDucking({ engine }: { engine: Controller }) {
+  const [off, setOff] = useState<boolean>();
+  const [saving, setSaving] = useState(false);
+  const read = () =>
+    duckingOff()
+      .then(setOff)
+      .catch(() => setOff(undefined));
+  useEffect(() => void read(), []);
+  return (
+    <Toggle
+      label="Impedir que o Windows abaixe os outros sons"
+      note={
+        off === undefined
+          ? "O Windows não informou esta opção."
+          : off
+            ? "Ligado: a opção Comunicações do Windows fica em “Não fazer nada”."
+            : "Desligado: a opção Comunicações do Windows volta ao que era antes."
+      }
+      checked={!!off}
+      disabled={off === undefined || saving}
+      change={(checked) => {
+        setSaving(true);
+        void engine
+          .setDucking(checked)
+          .then(read)
+          .finally(() => setSaving(false));
+      }}
+    />
   );
 }
 
