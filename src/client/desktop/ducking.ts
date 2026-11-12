@@ -14,7 +14,19 @@ type Invoke = <T>(
 /** Windows value for "Do nothing"; `null` means the key is absent (Windows default). */
 export const DUCKING_OFF = 3;
 const key = "vio:ducking";
-type Saved = { asked?: boolean; previous?: number | null };
+/**
+ * What Windows had before VIO set "Do nothing": a raw DWORD, `null` when the value
+ * was absent, or `"unchanged"` when it was already 3 (VIO changed nothing). Missing
+ * means there is nothing for VIO to restore.
+ */
+type Previous = number | null | "unchanged";
+type Saved = { asked?: boolean; previous?: Previous };
+
+const dword = (value: unknown): value is number =>
+  typeof value === "number" &&
+  Number.isInteger(value) &&
+  value >= 0 &&
+  value <= 0xffffffff;
 
 function load(): Saved {
   try {
@@ -24,11 +36,7 @@ function load(): Saved {
     return {
       asked: asked === true,
       previous:
-        previous === null ||
-        (typeof previous === "number" &&
-          Number.isInteger(previous) &&
-          previous >= 0 &&
-          previous < DUCKING_OFF)
+        previous === null || previous === "unchanged" || dword(previous)
           ? previous
           : undefined,
     };
@@ -53,9 +61,16 @@ export async function duckingOff(
   return (await invoke<number | null>("desktop_ducking")) === DUCKING_OFF;
 }
 
+/** Whether turning ducking back on has a state of VIO's own to restore. */
+export function duckingRestorable() {
+  const previous = load().previous;
+  return previous !== undefined && previous !== "unchanged";
+}
+
 /**
- * Turning it off remembers what Windows had, so turning it back on restores that
- * choice (or the Windows default) instead of guessing a value.
+ * Turning it off remembers exactly what Windows had; turning it back on restores
+ * that state (the raw value, or the absent value) and writes nothing when VIO had
+ * not changed anything.
  */
 export async function setDuckingOff(
   off: boolean,
@@ -63,13 +78,18 @@ export async function setDuckingOff(
 ) {
   if (off) {
     const current = await invoke<number | null>("desktop_ducking");
-    if (current === DUCKING_OFF) return;
+    if (current === DUCKING_OFF) {
+      // A saved value means VIO's own change is still in place (restoring clears
+      // it), so keep it; with none, Windows was already "Do nothing" before VIO.
+      if (load().previous === undefined) store({ previous: "unchanged" });
+      return;
+    }
     store({ previous: current });
     await invoke("desktop_set_ducking", { value: DUCKING_OFF });
-  } else {
-    const previous = load().previous;
-    await invoke("desktop_set_ducking", {
-      value: previous === undefined ? null : previous,
-    });
+    return;
   }
+  const previous = load().previous;
+  if (previous === undefined || previous === "unchanged") return;
+  await invoke("desktop_set_ducking", { value: previous });
+  store({ previous: undefined });
 }

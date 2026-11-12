@@ -12,7 +12,7 @@
 //! 2 = reduce by 50%, 3 = do nothing. Windows applies it when a communications
 //! stream opens, so the interface reopens the microphone after a change.
 use windows::core::w;
-use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_SUCCESS};
+use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, ERROR_SUCCESS};
 use windows::Win32::System::Registry::{
     RegDeleteKeyValueW, RegGetValueW, RegSetKeyValueW, HKEY_CURRENT_USER, REG_DWORD,
     RRF_RT_REG_DWORD,
@@ -20,9 +20,9 @@ use windows::Win32::System::Registry::{
 
 const KEY: windows::core::PCWSTR = w!("Software\\Microsoft\\Multimedia\\Audio");
 const VALUE: windows::core::PCWSTR = w!("UserDuckingPreference");
-pub const DO_NOTHING: u32 = 3;
 
-/// The stored value, or `None` when Windows uses its default.
+/// The raw stored value (unknown numbers included, so they can be restored as they
+/// were), or `None` when the value or key is absent and Windows uses its default.
 pub fn read() -> Result<Option<u32>, String> {
     let mut data = 0u32;
     let mut size = std::mem::size_of::<u32>() as u32;
@@ -38,17 +38,17 @@ pub fn read() -> Result<Option<u32>, String> {
         )
     };
     match status {
-        ERROR_SUCCESS if data <= DO_NOTHING => Ok(Some(data)),
-        // Unknown numbers behave like the default; report them as absent.
-        ERROR_SUCCESS | ERROR_FILE_NOT_FOUND => Ok(None),
+        ERROR_SUCCESS => Ok(Some(data)),
+        ERROR_FILE_NOT_FOUND | ERROR_PATH_NOT_FOUND => Ok(None),
         _ => Err("O Windows não informou a preferência de comunicações.".into()),
     }
 }
 
-/// Writes `value`, or removes it (back to the Windows default) when `None`.
+/// Writes `value` (any DWORD, to restore an unknown one exactly), or removes it
+/// (back to the Windows default) when `None`.
 pub fn write(value: Option<u32>) -> Result<(), String> {
     let status = match value {
-        Some(v) if v <= DO_NOTHING => unsafe {
+        Some(v) => unsafe {
             RegSetKeyValueW(
                 HKEY_CURRENT_USER,
                 KEY,
@@ -58,9 +58,8 @@ pub fn write(value: Option<u32>) -> Result<(), String> {
                 std::mem::size_of::<u32>() as u32,
             )
         },
-        Some(_) => return Err("Preferência de comunicações inválida.".into()),
         None => match unsafe { RegDeleteKeyValueW(HKEY_CURRENT_USER, KEY, VALUE) } {
-            ERROR_FILE_NOT_FOUND => ERROR_SUCCESS,
+            ERROR_FILE_NOT_FOUND | ERROR_PATH_NOT_FOUND => ERROR_SUCCESS,
             other => other,
         },
     };

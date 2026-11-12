@@ -1602,11 +1602,25 @@ export class Controller {
     try {
       await setDuckingOff(off);
       markDuckingAsked();
-      await this.captures.reopenMicrophone();
-      await this.captureQueue;
     } catch (e) {
       this.fail(e);
+      this.bump();
+      return;
+    }
+    if (!this.captures.sources.has("voice") || this.voicePending) {
+      this.bump();
+      return;
+    }
+    const generation = this.callGeneration;
+    this.voicePending = true;
+    try {
+      await this.captures.reopenMicrophone();
+    } catch (e) {
+      // reopenMicrophone already stopped the voice: the button shows it off.
+      if (generation === this.callGeneration) this.fail(e);
     } finally {
+      if (generation === this.callGeneration) this.voicePending = false;
+      await this.captureQueue;
       this.bump();
     }
   }

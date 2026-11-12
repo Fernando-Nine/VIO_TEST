@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   duckingAsked,
   duckingOff,
+  duckingRestorable,
   markDuckingAsked,
   setDuckingOff,
 } from "../src/client/desktop/ducking";
@@ -44,11 +45,30 @@ test("preferência de comunicações do Windows: desligar e voltar restaura o va
   const absent = windows(null);
   await setDuckingOff(true, absent.invoke);
   await setDuckingOff(false, absent.invoke);
-  assert.deepEqual(absent.state.writes, [3, null], "sem valor volta ao padrão");
+  assert.deepEqual(
+    absent.state.writes,
+    [3, null],
+    "valor ausente volta ausente",
+  );
 
-  store.set("vio:ducking", '{"asked":1,"previous":9}');
-  assert.equal(duckingAsked(), false);
-  const odd = windows(3);
+  store.clear();
+  const nothing = windows(1);
+  await setDuckingOff(false, nothing.invoke);
+  assert.deepEqual(nothing.state.writes, [], "sem estado salvo não grava");
+
+  const odd = windows(7);
+  await setDuckingOff(true, odd.invoke);
   await setDuckingOff(false, odd.invoke);
-  assert.equal(odd.state.value, null, "valor salvo inválido vira o padrão");
+  assert.deepEqual(odd.state.writes, [3, 7], "valor desconhecido volta igual");
+
+  assert.equal(duckingRestorable(), false, "restaurar encerra o ciclo");
+  const already = windows(3);
+  await setDuckingOff(true, already.invoke);
+  assert.equal(duckingRestorable(), false, "já estava em 3 antes do VIO");
+  await setDuckingOff(false, already.invoke);
+  assert.deepEqual(already.state.writes, [], "já estava em 3: nada a desfazer");
+
+  store.set("vio:ducking", '{"asked":1,"previous":"x"}');
+  assert.equal(duckingAsked(), false);
+  assert.equal(duckingRestorable(), false);
 });

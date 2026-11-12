@@ -371,8 +371,16 @@ export class Captures {
     try {
       await this.changeMicrophone(this.micDevice, true);
     } catch (error) {
-      this.stop("voice");
+      if (this.sources.has("voice")) this.stop("voice");
       throw error;
+    }
+    // The old device is already closed: a reopen that bailed out leaves no live input.
+    if (
+      this.sources.has("voice") &&
+      !this.rawVoice?.getAudioTracks().some((t) => t.readyState === "live")
+    ) {
+      this.stop("voice");
+      throw new Error("O microfone não reabriu. Ligue o microfone de novo.");
     }
   }
   async changeMicrophone(deviceId: string, fresh = false) {
