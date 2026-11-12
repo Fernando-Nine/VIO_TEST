@@ -133,9 +133,11 @@ sobre `peca` 9,6:1 · `sobreRecipiente` sobre `recipiente` 8,4:1 · `destaque` s
 `contorno` sobre `peca` 3,6:1 · perigo `#FF8A96` sobre `chao`/`peca` Anil 8,6:1 / 8,0:1. Tudo passa
 no AA (texto 4,5:1, controle e gráfico 3:1). O cálculo vira teste dos tokens na fase 4.
 
-**A exceção é o Anil puro (2,49:1).** O Ponto de quem escolheu Anil nunca é a única pista: leva as
-iniciais em branco (7,1:1) e vem com o nome; quando sinaliza estado (fala, transmissão), o estado
-vai no Contorno `destaque`, que passa de 3:1.
+**A cor pura pode ter pouco contraste** (Anil dá 2,49:1, e a roda de cores permite qualquer uma).
+O Ponto da pessoa nunca é a única pista: leva as iniciais na cor que contrasta mais (branco ou
+`chao`) e vem com o nome. Se a cor pura der menos de 3:1 sobre o fundo, o Ponto ganha o Contorno
+`destaque`, que sempre passa de 3:1; quando sinaliza estado (fala, transmissão), o estado também vai
+no Contorno.
 
 Regras:
 
@@ -205,8 +207,8 @@ O balão é **um Ponto que esticou, mudou de cor e aponta para a origem**.
   botão só; a outra fica no menu do botão direito e no balão do toque longo.
 - **Nenhum controle some com o estilo.** Foco único, layout, tela cheia, convidar: todos os do
   [inventário](inventario.md) aparecem em toda variação de sala (o Foco único sumiu no 3A).
-- **(sugestão, do 5A)** Criar sala pode virar **o próprio Ponto**: um Ponto anil de 56 px com ícone
-  "+", nome em dica, que ao clicar viaja e cresce até virar a sala. Testar nas variações como aparência parada (resposta 4).
+- **Criar sala** pode ganhar a forma do Ponto (do 5A), **mantendo o texto** "Criar sala"; só ícone
+  quando não couber (resposta 4).
 
 ### 4.5 Tempo que encolhe (4A)
 
@@ -342,7 +344,7 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 | Fundo            | grade de linhas · textura de pontos · pontos que reagem                                            |
 | Canto do balão   | canto apontado · bico em Corte                                                                     |
 | Cor da interface | só Anil · peças da pessoa na cor dela · interface na cor de quem a usa (opção, resposta 1)         |
-| Botão principal  | placa com texto · o próprio Ponto (resposta 4)                                                     |
+| Botão principal  | placa com texto · Ponto com texto ao lado (resposta 4)                                             |
 
 ## 10. Entrega de cada variação
 
@@ -400,16 +402,21 @@ Cada variação mostra os estados de um botão de ícone, um botão com texto e 
 
 ## Respostas do usuário (12 nov 2026)
 
-1. **Cor pessoal na interface:** opção de ligar e desligar em Aparência ("tema na minha cor",
-   parcial). Desligada, vale só o padrão (a cor tinge o que vem da pessoa). Ligada, mais partes da
-   interface usam a paleta da pessoa. Como a paleta vem da receita da 3.2 (luminosidade fixa), nenhuma
-   cor deixa o tema ilegível; se um dia houver cor livre, a receita corrige o croma do mesmo jeito.
+1. **Cor pessoal na interface:** opção em Aparência ("tema na minha cor", parcial), **desligada por
+   padrão**. Desligada, a cor tinge só o que vem da pessoa. Ligada, mais partes da interface usam a
+   paleta dela. Como existe a roda de cores, qualquer cor pode chegar: os tons da paleta saem da
+   receita da 3.2 (luminosidade e croma fixos, só o matiz vem da cor), então continuam legíveis com
+   qualquer escolha. A cor pura, que pode ser escura ou clara demais, fica só no Ponto, com iniciais
+   e nome, e ganha o Contorno `destaque` quando passar de menos de 3:1 sobre o fundo. As variações
+   podem mostrar a opção ligada.
 2. **Ponto branco parado:** não é definitivo. O Ponto pode passar o protagonismo de um lugar para
    outro, mover-se e mudar de cor (ficar anil) conforme a tela. Só no movimento reduzido ele fica
    parado. Detalhe fica para a fase 5.
 3. **"Ao vivo":** o ponto é sempre verde. Testar nas variações o verde-água atual (`#4CDDC3`) e um
    verde mais vivo que passe contraste; nos dois casos vai com o halo e o texto "Ao vivo", para não
    se confundir com o Ponto de quem escolheu Verde ou Ciano.
-4. **Criar sala como o Ponto:** testar só a aparência, parada; a viagem fica para a fase 5.
-5. **Largura máxima:** nenhuma. Funciona de 390 px a telão (ver seção 6).
+4. **Criar sala:** o comentário antigo falava da animação, não de tirar o texto. Pode explorar a
+   forma, mas **com texto escrito** por padrão (mais intuitivo); só ícone quando o texto não couber.
+5. **Largura máxima:** nenhuma. Funciona de 390 px a telão; a partir de 1920 px cresce em proporção
+   (seção 6).
 6. **Quique de quem chega:** como recomendado, só no Ponto da pessoa.
