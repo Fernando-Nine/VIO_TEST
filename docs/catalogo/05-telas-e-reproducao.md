@@ -67,7 +67,7 @@
     Volume nativo = `min(1, volume) * masterVolume`; mudo se `muted` do usuário ou `masterVolume === 0`.
     Só liga `srcObject` quando há faixa de áudio viva (evita `HAVE_NOTHING` no Chromium). `AbortError` do `play()` é ignorado.
     Autoplay bloqueado: botão `Ativar áudio de <nome>`.
-13. Acima de 100% (até 300%, só com `fineAudio`): monta `AudioBoost` com `ScreenPlayback.create` (`screen-playback.ts`):
+13. Acima de 100% (até 500%, `SCREEN_FINE_MAX`, só com `fineAudio`; ganho puro, sem limitador por decisão do usuário): monta `AudioBoost` com `ScreenPlayback.create` (`screen-playback.ts`):
     `MediaStreamAudioSourceNode → GainNode → MediaStreamAudioDestinationNode`, ganho `setTargetAtTime(min(3,max(0,v)), now, 0.02)`.
     O `<audio>` nativo continua tocando, mudo, para não alimentar o grafo com silêncio (comentário do arquivo). Se o
     grafo falha, o nativo segue audível até 100% e aparece "Ativar amplificação".
@@ -168,7 +168,7 @@
 | `IntersectionObserver` (limiar 0,4) | Só assinar prévia visível | `ScreenPicker.tsx` (sem uso) |
 | `ResizeObserver` | Altura real do tile para decidir `small/fit` e layout de câmera | `CamerasWidget.tsx` |
 | `document.visibilityState` / `visibilitychange` | Pedir `off` com aba oculta | `widgets.tsx`; `CamerasWidget.tsx` |
-| Web Audio: `AudioContext`, `GainNode`, `MediaStreamAudioDestinationNode` | Amplificar tela até 300% sem mexer no que é enviado | `screen-playback.ts`; `ScreenAudio.tsx` › `AudioBoost` |
+| Web Audio: `AudioContext`, `GainNode`, `MediaStreamAudioDestinationNode` | Amplificar tela até 500% sem mexer no que é enviado | `screen-playback.ts`; `ScreenAudio.tsx` › `AudioBoost` |
 | `HTMLMediaElement.setSinkId` (via `AudioOutput.register`) | Saída de áudio escolhida (detalhe em outro tema) | `ScreenAudio.tsx`, `Media.tsx` |
 | Document Picture-in-Picture API | Janela flutuante com a sala inteira | `picture-in-picture.ts` |
 | Video PiP nativo (`requestPictureInPicture`) | Fallback | idem |

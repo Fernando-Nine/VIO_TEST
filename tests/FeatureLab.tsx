@@ -157,14 +157,11 @@ export function FeatureLab() {
       screenGraph.setVolume(1);
       const screenBase = await rms();
       assert(screenBase > 0.02, "Nenhum sinal na reprodução de tela");
-      screenGraph.setVolume(3);
+      screenGraph.setVolume(5);
       const screenHigh = (await rms()) / screenBase;
       screenGraph.setVolume(0);
       const screenSilent = await rms();
-      assert(
-        Math.abs(screenHigh - 3) < 0.25,
-        "Ganho da tela não alcançou 300%",
-      );
+      assert(Math.abs(screenHigh - 5) < 0.4, "Ganho da tela não alcançou 500%");
       assert(screenSilent < 0.001, "Volume zero da tela não silenciou");
       screenGraph.close();
       assert(
@@ -173,7 +170,7 @@ export function FeatureLab() {
       );
       screenSource.disconnect();
       report(
-        `Áudio tardio da tela: 300% = ${screenHigh.toFixed(2)}×; zero silencia; captura preservada`,
+        `Áudio tardio da tela: 500% = ${screenHigh.toFixed(2)}×; zero silencia; captura preservada`,
       );
       analyser.disconnect();
       silent.disconnect();

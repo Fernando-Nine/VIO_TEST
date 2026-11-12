@@ -186,7 +186,7 @@ Detalhes: [ficha 03](03-webrtc-e-sinalizacao.md).
   para saber.
 - **Volume geral e volume de cada um:** o geral é um botão-mestre só seu; cada pessoa e cada tela
   têm o seu, e os dois se multiplicam. Nada disso muda o que os outros ouvem.
-- **Ajuste fino até 300%:** amplifica o som de uma tela só no seu aparelho.
+- **Ajuste fino até 500%:** amplifica o som de uma tela só no seu aparelho. É um ganho puro, sem limitador: o som fica limpo, e quem exagerar ouve distorção (escolha do usuário, 12 nov).
 - **Saída de áudio:** para qual fone ou caixa de som o som vai.
 - **Só som:** no app do Windows, compartilhar o som de um programa sem mostrar a imagem.
 

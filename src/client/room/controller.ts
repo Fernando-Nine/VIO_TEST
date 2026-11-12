@@ -47,7 +47,7 @@ import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite as roomUrl, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
-import { ScreenPlayback } from "../media/screen-playback";
+import { SCREEN_FINE_MAX, ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
 import {
   recoveryDelay,
@@ -1250,7 +1250,10 @@ export class Controller {
   ) {
     const next = { ...this.screenLevel(id), ...patch };
     if (!Number.isFinite(next.volume)) return;
-    next.volume = Math.min(this.fineAudio ? 3 : 1, Math.max(0, next.volume));
+    next.volume = Math.min(
+      this.fineAudio ? SCREEN_FINE_MAX : 1,
+      Math.max(0, next.volume),
+    );
     this.screenLevels.set(id, next);
     if (next.volume > 1) this.playback.unlock();
     this.bump();

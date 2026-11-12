@@ -1,0 +1,1 @@
+O ajuste fino das telas agora vai até 500%, para o som de uma tela que chega muito baixo. Continua valendo só para você, sem mudar o que os outros ouvem, e é um ganho puro: sem limitador, o som fica limpo, mas pode distorcer se você exagerar.

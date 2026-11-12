@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnchoredPopover } from "./AnchoredPopover";
 import { Volume2, VolumeX } from "lucide-react";
 import type { Controller } from "../room/controller";
+import { SCREEN_FINE_MAX } from "../media/screen-playback";
 import { VolumeNumber, VolumeSlider } from "./VolumeSlider";
 
 /**
@@ -150,7 +151,7 @@ export function ScreenVolume({
               </p>
             )}
             {engine.fineAudio && (
-              <small className="field-note">Ajuste fino ativo · até 300%</small>
+              <small className="field-note">Ajuste fino ativo · até 500%</small>
             )}
           </div>
         </AnchoredPopover>
@@ -176,7 +177,7 @@ export function ScreenVolumeSlider({
       id={vertical ? undefined : `level-${id}`}
       label={`Volume da tela de ${info?.name || "Participante"}`}
       value={level.volume}
-      max={engine.fineAudio ? 3 : 1}
+      max={engine.fineAudio ? SCREEN_FINE_MAX : 1}
       step={engine.fineAudio ? 0.01 : 0.05}
       disabled={!info?.publication.audio}
       vertical={vertical}

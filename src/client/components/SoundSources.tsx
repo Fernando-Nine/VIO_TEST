@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
 import { Music, Volume2, VolumeX, X } from "lucide-react";
 import type { Controller } from "../room/controller";
+import { SCREEN_FINE_MAX } from "../media/screen-playback";
 import { AnchoredPopover } from "./AnchoredPopover";
 import { useSpeaking } from "./Media";
 import { VolumeNumber, VolumeSlider } from "./VolumeSlider";
@@ -90,7 +91,7 @@ function SoundChip({ engine, id }: { engine: Controller; id: string }) {
             <VolumeSlider
               label={`Volume de ${name}`}
               value={level.volume}
-              max={engine.fineAudio ? 3 : 1}
+              max={engine.fineAudio ? SCREEN_FINE_MAX : 1}
               step={engine.fineAudio ? 0.01 : 0.05}
               onChange={(volume) => engine.setScreenLevel(id, { volume })}
             />
