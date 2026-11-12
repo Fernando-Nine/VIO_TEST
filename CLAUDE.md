@@ -41,6 +41,7 @@ avise o copiloto pelo handoff; não reescreva o território do outro em silênci
 Agentes são **autônomos**. Corrigiu um erro pequeno? Corrija e siga, sem relatório.
 Pergunte ao usuário **apenas** quando a decisão puder prejudicar usuários em geral
 (privacidade, segurança, perda de dados, custo) ou mudar a visão do produto.
+Decisões complexas ou muitas perguntas de uma vez saem numa **página de decisões** (formato da fase 1): contexto curto e simples, opções marcáveis com a recomendada indicada, observação por item e botão "respondi"; o chat só manda o link. O resto segue pelo chat.
 Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão exigir.
 **Áreas trabalham em silêncio**: sem narrar passos nem mandar avisos parciais. Uma mensagem ao
 copiloto só no fim do bloco (≤ 4 linhas) ou quando houver erro que a área não resolve ou que
