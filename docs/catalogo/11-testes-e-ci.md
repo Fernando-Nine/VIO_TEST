@@ -30,6 +30,8 @@
 11. **`npm audit`.** CI: `--omit=dev --audit-level=high` (falha só em vulnerabilidade alta/crítica de dependência de produção). Também existe `npm run audit:production` (`npm audit --omit=dev`, qualquer nível).
 12. **Etiquetas.** `.github/labels.yml` é a fonte das etiquetas (nome, cor, descrição); `.github/workflows/labels.yml` as cria ou atualiza com o `gh` do runner em push na `main` que o altera ou por `workflow_dispatch`, sem apagar as que não estão no arquivo.
 13. **Casos de borda:** `server.test.ts` usa portas efêmeras; testes de CHANGELOG dependem de `npm run build` na CI; `release-notes.test.ts` valida o formato de `changes/` (um parágrafo, nome `<issue>-<slug>.md`, ignora README).
+14. **Vitrine (`npm run test:vitrine`, #269).** Página de laboratório `/qa-vitrine?caso=<id>` (`tests/VitrineLab.tsx`, só com `ENABLE_TEST_LAB` e em dev) que monta cada widget pequeno e grande, as 7 abas de Ajustes, 3 diálogos, balões e o início, com 3 `Controller`s reais (Ana, Bia, Caio) e mídia sintética, sem mídia real. `tests/vitrine/vitrine.spec.ts` (Playwright 1.63.0, fixado na versão do Chromium local) abre cada caso em 5 telas (360x640, 390x844, 768x1024, 1280x720, 1920x1080; 37 casos x 5 = 185 testes) e confere: rolagem horizontal, elemento fora da janela, cortado pelo contêiner, texto cortado, sobreposição de interativos e alvo pequeno (mínimo 44 px em tela de toque, 24 px no desktop, WCAG 2.5.8). Depois compara `toHaveScreenshot` com a base em `tests/vitrine/base/` (`maxDiffPixelRatio` 0,002; vídeo, relógio e código da sala mascarados). O servidor sobe por `tests/vitrine/servidor.ts` (porta 4173, `TRUST_PROXY=1` e `x-forwarded-for` por teste para não bater no limite de entradas por IP). Quebras reais ficam em `tests/vitrine/conhecidos.ts` com o número da issue (apague a entrada ao corrigir); exceções de alvo em `EXCECOES`. Tamanho mínimo da janela (#356): `TAMANHO_MINIMO_DA_JANELA` em `tests/vitrine/config.ts`. Local: `VITRINE_CHROMIUM=<caminho do chromium>` (ou `npx playwright install chromium`); `VITRINE_ACHADOS=<arquivo>` só levanta achados em JSON, sem asserts; `-- --update-snapshots` refaz a base. Cerca de 3 min com 4 workers.
+15. **`vitrine.yml`.** `pull_request` filtrado por paths (`src/client/**`, `src/shared/**`, `tests/vitrine/**`, `tests/VitrineLab.tsx`, `playwright.config.ts`, o workflow), `workflow_dispatch` com `update_snapshots` (anexa a base nova como artefato `vitrine-base`). Node 24, `npx playwright install --with-deps chromium`, `npm run test:vitrine -- --trace off`, 2 workers, `timeout-minutes: 25`. Em falha, artefato `vitrine-diff` (atual, esperado e diferença; 14 dias).
 
 ## Arquivos de teste (`tests/*.test.ts`)
 
@@ -62,6 +64,7 @@
 | Espera padrão do BrowserLab (`until`) | 20 s | `tests/BrowserLab.tsx` ~L15 |
 | Vídeo sintético | 1280×720 tela, 640×360 câmera, 30 fps de captura, redesenho a cada 33 ms | `tests/synthetic.ts` |
 | Retenção do artefato Windows | 14 dias | `windows.yml` |
+| Vitrine: casos x telas / tempo local / timeout do job | 37 x 5 = 185 / ~3 min / 25 min | `tests/vitrine/`, `vitrine.yml` |
 | Testes Rust | 20 marcadores `#[test]`/`#[ignore]` em 5 arquivos (contagem aproximada) | `src-tauri/src/*.rs` |
 
 ## Peças e técnicas
@@ -102,7 +105,7 @@ https://playwright.dev/docs/accessibility-testing · cobertura nativa, k6, Artil
 | 11.1 | Nenhum teste automático prova mídia real entre navegadores (#22): `BrowserLab`, `WatchLab` e `ScreenAudioLab` só rodam por `npm run test:media`, fora da CI. Regressão de WebRTC só aparece na prévia. | lacuna | alta | `tests/BrowserLab.tsx`; `tests/media-runner.ts`; `.github/workflows/ci.yml` |
 | 11.2 | `check-deployment.mjs` não roda na CI (#21) e hoje falharia no `sw.js` ([09](09-hospedagem-deploy-release.md), 09.1). | lacuna | alta | `scripts/check-deployment.mjs` |
 | 11.3 | O Prettier não é conferido na CI nem tem script (#20). | lacuna | alta | `package.json`; `ci.yml` |
-| 11.4 | Sem cobertura de código medida e sem teste automático de acessibilidade, visual ou entre navegadores. | lacuna | alta | repositório |
+| 11.4 | Sem cobertura de código medida e sem teste de acessibilidade ou entre navegadores; o visual e o layout da interface passam a ter a vitrine (item 14), só em Chromium. | lacuna | alta | repositório |
 | 11.5 | Os testes de desempenho da captura nativa rodam com `continue-on-error`: regressão de CPU não quebra a CI. | risco | média | `.github/workflows/windows.yml` (~L71) |
 | 11.6 | `docs/VALIDACAO.md` (622 linhas) é diário histórico por rodada (2.0.0 a 2.7.0-rc.5; fala em "74 testes"), não a suíte de hoje: 163 casos em 39 arquivos. O "Roteiro manual" (`ENABLE_TEST_LAB=1 npm run test:media`) segue válido. | doc desatualizado | alta | `docs/VALIDACAO.md` |
 | 11.7 | `server.test.ts` concentra 32 casos em 2720 linhas: difícil achar e rodar um caso isolado. | risco | média | `tests/server.test.ts` |

@@ -30,6 +30,7 @@ Observação: `react`, `react-dom`, `lucide-react`, `@dnd-kit/react` e fontes es
 | `esbuild` | ^0.28.2 | Empacota o servidor em `dist/server/index.js` | `scripts/build.mjs` | build |
 | `typescript` | ~5.9.3 | Verificação de tipos (`tsc --noEmit`) | `tsconfig.json` | build/CI |
 | `tsx` | ^4.20.5 | Roda `.ts` em `npm run dev` e nos testes | `package.json` scripts | dev/teste |
+| `@playwright/test` | 1.63.0 (fixa) | Vitrine: checagens de layout e capturas em 5 telas | `playwright.config.ts`, `tests/vitrine/` | dev/teste (CI instala o Chromium) |
 | `prettier` | 3.6.2 | Formatação (sem script nem passo na CI) | `.prettierignore` | dev |
 | `@tauri-apps/cli` | ^2.12.4 | `tauri build` do instalador Windows | `.github/workflows/windows.yml` | build (desktop) |
 | `@types/express` | ^5.0.3 | Tipos | `src/server/app.ts` | tipos |

@@ -15,6 +15,7 @@
     "typecheck": "node scripts/build-info.ts && tsc --noEmit",
     "test": "node scripts/build-info.ts && node --import tsx --test tests/*.test.ts",
     "test:media": "node scripts/build-info.ts && node --env-file-if-exists=.env --import tsx tests/media-runner.ts",
+    "test:vitrine": "node scripts/build-info.ts && playwright test",
     "audit:production": "npm audit --omit=dev"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tauri-apps/cli": "^2.12.4",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.0",

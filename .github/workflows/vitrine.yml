@@ -1,0 +1,63 @@
+name: Vitrine
+
+# Showcase of the interface (#269): every widget, Ajustes tab, dialog and
+# balloon on five screen sizes, with layout checks and screenshots against the
+# approved baseline in tests/vitrine/base. Runs only when the interface can
+# have changed.
+on:
+  pull_request:
+    paths:
+      - "src/client/**"
+      - "src/shared/**"
+      - "tests/vitrine/**"
+      - "tests/VitrineLab.tsx"
+      - "tests/BrowserLab.tsx"
+      - "tests/synthetic.ts"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/vitrine.yml"
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: "Regenerate the baseline and attach it as an artifact"
+        type: boolean
+        default: false
+
+concurrency:
+  group: vitrine-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  vitrine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run the showcase
+        run: npm run test:vitrine -- --trace off ${{ inputs.update_snapshots && '--update-snapshots' || '' }}
+      - name: Attach the diffs (actual, expected and diff images)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitrine-diff
+          path: |
+            test-results/vitrine
+            playwright-report
+          retention-days: 14
+      - name: Attach the regenerated baseline
+        if: inputs.update_snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitrine-base
+          path: tests/vitrine/base
+          retention-days: 14

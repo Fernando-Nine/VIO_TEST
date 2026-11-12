@@ -16,3 +16,4 @@ src/shared/build-info.json
 
 # Agent worktrees (isolated subagent checkouts)
 .claude/worktrees/
+playwright-report/
