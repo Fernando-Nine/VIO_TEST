@@ -231,7 +231,7 @@ lugar.
 ### 5.2 Padrões infinitos que reagem ao mouse
 
 - Sutis: os Pontos da grade perto do cursor (raio de ~120 px) crescem até 1,6× e clareiam (opacidade);
-  voltam em 600 ms. Só `transform` e `opacity`.
+  voltam em 600 ms.
 - Pausam com Reduzir movimento, com a aba escondida e **na sala enquanto alguém transmite** (não
   gastar a máquina de quem envia). Ficam estáticos, ainda visíveis.
 - **(variar)** reagir ao cursor, deriva lenta contínua (um ciclo ≥ 20 s) ou estático.
@@ -273,15 +273,14 @@ eles ainda dizem o estado pela forma.
 
 Vale [`transicoes.md`](../transicoes.md) e as cinco regras de
 [`movimento-ponto.md`](movimento-ponto.md#1-as-cinco-regras-as-únicas-inegociáveis): o Ponto
-conduz, só `transform`/`opacity` no caminho principal, origem e destino medidos (FLIP), ≤ 800 ms,
+conduz, animação completa por padrão (decisão 020: `transform`/`opacity` são o caminho barato, não um
+limite), origem e destino medidos (FLIP), ≤ 800 ms,
 interrompível, curva `--ease-ponto` `cubic-bezier(.2,.7,.2,1)`.
 
 ### 7.1 O Ponto conduz (transições, balões de interface e avisos)
 
 - **Ponto branco que fica anil ao viajar (3A).** Em repouso dentro de um botão ou peça, o Ponto é
-  `#F3F3FB`; em viagem, é anil. A troca **não anima `color` nem `background`**: o Ponto viajante tem
-  **duas camadas empilhadas** (branca e anil) e a troca é um crossfade de `opacity` entre elas
-  (120 ms na partida, o inverso no pouso). O ponto do logo segue sempre anil.
+  `#F3F3FB`; em viagem, é anil. A troca de cor acompanha a viagem (120 ms na partida, o inverso no pouso). O ponto do logo segue sempre anil.
 - **Um Ponto só** (regra 1 de `movimento-ponto.md`): o Ponto que repousa no botão é o mesmo que
   parte. Ao sair, o botão fica sem ele; ao pousar, ele passa a ser o Ponto do destino. Nunca há um
   segundo Ponto esperando no destino.
@@ -311,6 +310,7 @@ dica e o menu **não usam o Ponto**. Proposta **"brotar do canto"**:
 
 ### 7.3 Reduzir movimento
 
+É o interruptor de acessibilidade e também de PC fraco ou internet ruim (decisão 020).
 Uma regra só, **sem exceção: tudo vira esmaecimento de 150 ms** (`opacity`), dica e menu inclusive.
 O Ponto aparece direto no lugar final, nada cresce nem quica, os padrões de fundo param e os três
 gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
@@ -324,7 +324,7 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 - Cor: verde ou outra cor de estado fora da paleta; cor pura da pessoa em área grande; botão branco
   em fundo escuro; anil como texto ou ícone fino sobre Noite; cor atrás do Ponto em repouso; perigo
   só na cor; grade usada como contorno.
-- Movimento: animar `color`/`background`; `scaleX` e `scaleY` separados em Placa; Barra que encolhe
+- Movimento: `scaleX` e `scaleY` separados em Placa; Barra que encolhe
   com `scaleX`; mola em peça ou lista; formas caindo, quicando ou espalhadas no Início.
 - Ilustração que não seja da família do Ponto.
 - O código da sala desenhado em peças (5B): ele é sempre texto em IBM Plex Mono.
