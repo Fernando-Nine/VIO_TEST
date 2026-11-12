@@ -35,11 +35,11 @@ Decididas (escolha; observação do usuário entre parênteses quando muda o tra
 - **q25** Segundo pacote de ajustes pequenos: aprovado inteiro.
 - **q22** Pacote de ajustes pequenos: aprovado, menos os itens abaixo. Aprovados com condição: "Tela nova gera um aviso só" (se corrige aviso repetido ou piscando); "Janela de widget leva o nome" (se ainda não tiver); "Arrastar a folha para baixo fecha" (se for padrão comum e não conflitar com recarregar a página). Os demais itens do pacote estão aprovados.
 
-**Em aberto, aguardando explicação ao usuário (não decididos):**
+**Fechadas depois (12 nov):**
 
-- **q19** "Todos os espaços estão ocupados": o usuário questiona se o caso existe, já que Tira e Grade crescem sozinhas. Levantou o risco de spam de widgets compartilhados (bot criando widgets) e sugeriu que widget novo compartilhado chegue como notificação, e cada um coloca só se quiser. Se a pergunta não for isso, vale a opção recomendada.
-- **q21** "Foco único": a premissa da pergunta estava **errada**. O layout é individual; dono e admins nunca mudam o layout de ninguém. No código (`src/client/canvas/RoomCanvas.tsx` ~L1330) o botão fica desabilitado só quando não há widget em foco ("Abra um widget para usar o Foco único."). Princípio do usuário: cada pessoa monta o próprio layout; dono e admins só moderam e adicionam widgets, que cada um escolhe ver ou não. Falta reformular a pergunta.
-- **q22, itens em aberto:** "Pular para o conteúdo" (prefere opção em Ajustes; botão tipo cutscene fica esquisito, pois as transições serão rápidas e dão charme ao VIO); notificações (vão mudar com os estilos); "Linhas de botões" (depende do contexto e da linha; quer entender melhor); "Dica e menu abrem sem a viagem do Ponto" (quer entender melhor a proposta).
+- **q19** Manter como está: acima do limite da Grade, os widgets aparecem flutuando. Antispam e anti-bot geral viraram a #357.
+- **q21** Na Grade 1x1 já é foco, sem botão "Foco único" (#355). Não é urgente.
+- **q22, itens restantes:** "Pular para o conteúdo", "Linhas de botões" e "Arrastar para baixo" ficam com a opção recomendada. "Dica e menu sem a viagem do Ponto": o Design explora uma animação rápida e criativa que não canse; se não achar, fica a recomendada.
 
 ## Motivo
 

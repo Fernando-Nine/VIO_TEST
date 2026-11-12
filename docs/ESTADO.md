@@ -25,10 +25,10 @@ Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
 - **P1**: #266 cursor some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento) · #344 áudio da tela some só para um amigo (mídia; ver Decisões de 12 nov).
-- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade (QA) ·
+- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade + vitrine (QA) · #356 tamanho mínimo da janela e vídeo flutuante · #358 botões do mouse e menu de contexto · #359 barra de título do app ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes ·
   #338 ponto redondo na sala (frontend).
-- **P3**: #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
+- **P3**: #355 Grade 1x1 já é foco, sem botão (não urgente) · #357 antispam e limites (Backend/segurança) · #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (`aguarda-usuario`, inalterada em 12 nov; avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
   #22 BrowserLab na CI · Design: #293 qualidade automática · #294 Minha tela + Minha prévia ·
   #295 cards flutuantes · #298 cor da sala · #299 cor pessoal; menu inicial em #197.
@@ -73,6 +73,11 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - Brandbook P8 (11 nov): na M1 o ponto tem a mesma cor do "v"; detalhes em `design/brandbook/marca.md`. As 15 perguntas da 1a estão respondidas.
 - Hospedagem (12 nov): fica no Render Free por ora; o sono de 15 min não pesa, pois o servidor segue ativo enquanto há gente usando. **Pendente, ligado ao banco:** quando ele chegar, o copiloto explica ao usuário como o Render funciona, as alternativas e por que Render e não Vercel.
 - TURN (12 nov): #135 segue `aguarda-usuario`, sem mudança.
+- Layout individual (decisão 022): cada pessoa monta o próprio; dono e admins só moderam e adicionam widgets.
+- Checagem automática (12 nov): o que um robô confere não volta para o usuário nem para o chat. Playwright é dependência aprovada. #269 ampliada com a vitrine; mudança de interface roda a vitrine.
+- **Para depois (usuário decide quando):** caminho das animações: a Fable desenha, o Opus implementa e confere quadro a quadro, e a Fable revisa.
+- **Para depois (usuário decide quando)**, 3 itens da Fable: (1) revisão de segurança completa do servidor, do protocolo, das permissões e dos limites, com correções pelo Backend em Sonnet; (2) plano do banco e das contas só no papel (qual banco, onde hospedar, login, o que guardar, LGPD, custo), com contas e banco ainda adiados; (3) pesquisa e projeto do microfone próprio (#352).
+- Issues novas de 12 nov: #355, #356 (tamanho mínimo da janela e vídeo flutuante), #357 (antispam e limites), #358 (botões do mouse e menu de contexto), #359 (barra de título do app); #269 ampliada com a vitrine.
 - Atalhos em Ajustes (12 nov): #339 sem prioridade agora; vai para o fim da fila do frontend.
 - Áudio da tela (12 nov, #344): ocorreu só com um amigo; os demais ouvem a tela normalmente. Direção: o app ganha o ajuste "vozes abaixam outros sons" (ducking do Windows), **desligado por padrão**, ou seja, por padrão o app pede ao Windows que não abaixe os outros programas. #344 segue na fila como Mídia; o copiloto confirma se precisa de rascunho do Design.
 - Responsividade (11 nov): regra em `CLAUDE.md` (Convenções); execução na #269.

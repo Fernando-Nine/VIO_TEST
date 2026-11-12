@@ -21,17 +21,17 @@ código ou mandar um `crawler`. O `GUIA.md` de lá explica os porquês para leig
 
 ## Equipe
 
-| Área               | Papel                                                                                                                        | Handoff         |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                                                           | `copiloto.md`   |
-| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                                                                | `frontend.md`   |
-| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                                                     | `midia.md`      |
-| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                                                               | `backend.md`    |
-| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                                                         | `qa.md`         |
-| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                                                   | `design.md`     |
-| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                                                           | `juridico.md`   |
-| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                                                            | `roteirista.md` |
-| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web), `escriba` (organiza aprendizados) | sem handoff     |
+| Área               | Papel                                                                                                                                                                                  | Handoff         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                                                                                                                     | `copiloto.md`   |
+| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                                                                                                                          | `frontend.md`   |
+| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                                                                                                               | `midia.md`      |
+| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                                                                                                                         | `backend.md`    |
+| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                                                                                                                   | `qa.md`         |
+| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                                                                                                             | `design.md`     |
+| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                                                                                                                     | `juridico.md`   |
+| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                                                                                                                      | `roteirista.md` |
+| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web), `escriba` (organiza aprendizados), `seguranca` (revisa segurança de diff ou de área, só lê) | sem handoff     |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
@@ -71,7 +71,7 @@ auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não
 
 | Modelo | Tarefas                                                                                                                 |
 | ------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Opus   | Mídia/WebRTC, segurança, interface complexa e animações (animações com raciocínio no máximo)                            |
+| Opus   | Mídia/WebRTC, segurança (incl. `seguranca`), interface complexa e animações (animações com raciocínio no máximo)        |
 | Sonnet | QA, textos/docs, Jurídico, Roteirista, Backend de rotina, bugs P1 simples, `goldfish`/`crawler`/`pesquisador`/`escriba` |
 | Haiku  | Buscas simples                                                                                                          |
 
@@ -166,6 +166,7 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Widget compartilhado é **um só estado para a sala**: toda ação (iniciar, pausar, desligar
   alarme, votar, rolar, sortear, editar) vale para todos, via servidor. Estado só local é
   permitido apenas em widget individual ou em preferência pessoal (volume, posição).
+- Layout é sempre individual: cada pessoa monta o próprio. Dono e admins moderam e adicionam widgets, que cada pessoa escolhe ver; nunca mudam o layout de ninguém.
 
 ## Convenções
 
@@ -219,6 +220,8 @@ npm run test:media       # bancada de mídia no navegador (tests/BrowserLab.tsx)
 
 Teste de servidor não prova interface: em mudança visual, **olhe a tela** (BrowserLab ou
 screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
+Checagem automática sempre que der: o que um robô confere (Playwright, testes) não volta para o usuário
+nem para o chat. Mudança de interface roda a vitrine (#269) quando ela existir.
 
 ## Regras que crescem
 
