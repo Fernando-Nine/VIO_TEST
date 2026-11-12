@@ -65,6 +65,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | --- | --- | --- |
 | `peers.ts` | PeerConnections, negociação (ofertante único, `round`), ICE, bitrate | `controller.ts`, `codecs.ts`, `video-quality.ts` |
 | `capture.ts` | Microfone, portão, câmera, tela; `fonte → analisador → portão → destino` | `controller.ts`, `voice-activity.ts` |
+| `stall-watch.ts` | Vigia de vídeo recebido parado: ICE restart, depois reassinatura (#345) | `peers.ts` |
 | `remote-stream.ts` | `addRemoteTrack`/`removeRemoteTrack` com eventos | `peers.ts` |
 | `codecs.ts`, `video-quality.ts` | Preferência H.264; resolução, taxa e orçamento de envio | `peers.ts`, `capture.ts` |
 | `voice-activity.ts` | Leitura do indicador de fala num tick comum | `capture.ts`, `Media.tsx` |
@@ -109,6 +110,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | `capture.ts`, `share.ts` | Escolha de fonte e início da captura nativa | `src-tauri/src/capture.rs`, `stream.rs` |
 | `video.ts`, `native-video.ts` | Lista de telas/janelas; leitura do buffer compartilhado NV12 | `video.rs`, `wire.rs` |
 | `pcm-worklet.js` / `.d.ts` | AudioWorklet que toca PCM do som nativo | `share.ts` |
+| `ducking.ts` | Provisório (#344, sai com #352): opção Comunicações do Windows | `ducking.rs`; `room/controller.ts`, `Settings.tsx` |
 
 ## src-tauri (ficha [10](10-app-windows.md))
 
@@ -121,6 +123,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | `src/printwindow.rs` | Captura de janela por `PrintWindow` |
 | `src/programs.rs` | Quais programas tocam som; árvore de processos |
 | `src/wire.rs`, `src/log.rs` | Formato dos pacotes e miniaturas; log |
+| `src/ducking.rs` | Provisório (#344, sai com #352): lê e grava `UserDuckingPreference` |
 | `capabilities/main.json`, `tauri.conf.json`, `tauri.updater.json`, `Cargo.toml` | Permissões, configuração, feed de atualização, dependências |
 
 ## tests e scripts (ficha [11](11-testes-e-ci.md); build em [09](09-hospedagem-deploy-release.md))

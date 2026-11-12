@@ -17,6 +17,9 @@ fn main() {
             "desktop_video_wait",
             "desktop_video_stop",
             "desktop_share_audio",
+            // PROVISIONAL (#344), removed with #352.
+            "desktop_ducking",
+            "desktop_set_ducking",
         ]),
     ))
     .expect("Tauri configuration must be valid");

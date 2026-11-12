@@ -1,9 +1,15 @@
 # Mídia — handoff
 
-Atualizado: 2026-11-07
+Atualizado: 2026-11-12
 
 ## Agora
 
+#344 (Windows abaixa os outros sons) na PR `fix/344-ducking-windows`, sem auto-merge: **provisório**,
+muda `UserDuckingPreference` (pergunta uma vez + chave em Ajustes › Áudio) e reabre o microfone.
+Quando o Windows relê o valor não é documentado; o teste do usuário no PC decide. Sai com a #352.
+#350 (ajuste fino das telas até 500%, ganho puro sem limitador por decisão do usuário) na PR `feat/350-ajuste-fino-500`, sem auto-merge.
+#345 (vigia de tela parada: ICE restart → reassinatura, teto 3; revisão do goldfish aplicada) na PR #346, sem auto-merge, aguardando
+revisão sem memória e o teste do usuário na prévia.
 #303 (instância única do app Windows) na PR `feat/303-instancia-unica`, sem auto-merge, aguardando
 revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia esperando o aceite dele.
 

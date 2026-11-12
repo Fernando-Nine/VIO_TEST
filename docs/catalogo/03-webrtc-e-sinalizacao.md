@@ -80,6 +80,16 @@
     - dono: rollback se `have-local-offer`, depois `offer(iceRestart:true)`;
     - espectador: envia `{id, round, restart:true}` e o dono refaz oferta com `iceRestart`.
     Com `attempts ≥ 4` mostra "A mídia ainda não voltou…TURN". `accept` repetido em PC `failed` também chama `recover`.
+16b. **Vigia de vídeo parado** (#345, `stall-watch.ts`, chamado no ciclo de stats por `peers.ts` › `watch`): só
+    assinaturas **recebidas** de tela/câmera (voz fica de fora), por `publicationId:tier`. Progresso = soma de
+    `bytesReceived + packetsReceived + framesDecoded` do `inbound-rtp` de vídeo. O relógio só corre com a PC
+    `connected` (o resto é do `recover`), online, aba visível, receptor de vídeo e demanda diferente de `off`
+    (`controller.ts` › hook `expects`; prévias sempre contam). Sem progresso por 25 s (tela) ou 10 s (câmera) →
+    ICE restart (`restartIce`, o mesmo do `recover`); mais um intervalo → `controller.ts` › `resubscribe(id)`: o mesmo
+    do `reconnectMedia`, só para aquela assinatura (fecha, `unsubscribe`, nonce novo, `reconcile`), e não age se a
+    publicação sumiu do snapshot. Espera entre reassinaturas 4× e 8× o intervalo; teto 3, depois um aviso, que some
+    quando o vídeo volta ("recovered"). 60 s de mídia fluindo ou a publicação sair da sala (`forgetPublication`)
+    zeram o histórico.
 17. `resume()` (volta de rede/visibilidade, reconexão do socket): dono recoloca oferta com restart; todos armam `recover`.
 18. `reconnectMedia(forceRelay)` (botão "Reconectar mídia" / "Testar somente via TURN", `App.tsx` ~L967): recusa relay se
     `ice.turn` falso; troca `iceTransportPolicy` em todas as PCs; fecha e re-assina tudo com **novo nonce** (id novo,
@@ -122,6 +132,7 @@
 | `setParameters` timeout | 5000 ms | `deadline.ts` › `mediaDeadline` |
 | Ciclo de stats | 2000 ms (também reaplica `parameters` se mudou altura da fonte ou a divisão do teto) | `peers.ts` ctor, `stats` |
 | Recuperação | 2·2^n s, teto 30 s, jitter ±15%, n ≤ 5; aviso a partir de 4 | `peers.ts` › `recover` |
+| Vigia de vídeo parado | intervalo 25 s (tela) / 10 s (câmera) → ICE restart; +1 → reassinatura; espera 4×/8×; teto 3; histórico zera com 60 s bons | `stall-watch.ts` |
 | Fila de candidatos | 128 por PC | `peers.ts` › `signal` |
 | `pendingVideoDemand` | 512 entradas | `peers.ts` › `demand` |
 | Tolerância de publicação sumida | 30 s | `controller.ts` › `reconcile` |

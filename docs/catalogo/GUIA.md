@@ -138,6 +138,11 @@ Detalhes: [ficha 02](02-conexao-e-reconexao.md).
   repassa a mídia quando o caminho direto está bloqueado. É um serviço de rede à parte, não o
   servidor do VIO.
 - **Rota nova (ICE restart):** pedir à conexão que procure outro caminho sem derrubar a chamada.
+- **Vigia de tela parada:** a conexão pode dizer "conectada" e mesmo assim a imagem parar de
+  chegar. Quem assiste confere a cada 2 s se o vídeo ainda avança (só com a aba aberta e a conexão de
+  pé); parado por 25 s (10 s na câmera), pede rota nova; parado de novo, refaz a assinatura daquela
+  tela, com pausas cada vez maiores e no máximo três vezes. A espera da tela é maior porque uma tela
+  parada quase não manda dados.
 - **Codec:** o formato de compressão do vídeo. O VIO prefere H.264 feito pela placa de vídeo.
 
 **Por que é assim**
@@ -181,7 +186,7 @@ Detalhes: [ficha 03](03-webrtc-e-sinalizacao.md).
   para saber.
 - **Volume geral e volume de cada um:** o geral é um botão-mestre só seu; cada pessoa e cada tela
   têm o seu, e os dois se multiplicam. Nada disso muda o que os outros ouvem.
-- **Ajuste fino até 300%:** amplifica o som de uma tela só no seu aparelho.
+- **Ajuste fino até 500%:** amplifica o som de uma tela só no seu aparelho. É um ganho puro, sem limitador: o som fica limpo, e quem exagerar ouve distorção (escolha do usuário, 12 nov).
 - **Saída de áudio:** para qual fone ou caixa de som o som vai.
 - **Só som:** no app do Windows, compartilhar o som de um programa sem mostrar a imagem.
 
@@ -194,7 +199,9 @@ Detalhes: [ficha 03](03-webrtc-e-sinalizacao.md).
   automático estragariam música e jogo.
 - **Trocar de fonte mantém a mesma transmissão:** quem assiste não precisa reconectar (#160).
 - **Telas extras nascem em qualidade Baixa:** o envio de internet é um só e se divide entre elas
-  (#194).
+  (#194). Quem escolhe a qualidade no diálogo de compartilhar começa com ela.
+- **Cada tela tem a sua qualidade:** ajustada no widget Minha transmissão, não no painel Ajustes,
+  para que mudar uma tela não mude as outras (#343).
 - **O som de cada pessoa fica sempre tocando na página, mesmo mudo:** o Chromium só entrega o som ao
   indicador de fala se ele estiver tocando.
 - **No app, o "som do PC" exclui o próprio VIO:** senão as vozes da chamada voltariam como eco
@@ -303,9 +310,14 @@ Detalhes: [ficha 06](06-canvas-widgets-e-notas.md).
 - **Service worker:** um ajudante do navegador que guarda os arquivos fixos (imagens e scripts) para
   o VIO abrir mais rápido. Nunca mexe na sala, na sessão nem na conexão.
 - **App instalável (PWA):** o site pode ser instalado como aplicativo.
-- **Movimento reduzido:** opção do sistema ou dos Ajustes para quem se incomoda com animação; reduz
-  tudo a esmaecimento.
-- **Ponto da marca:** o círculo do logo, pensado para conduzir as transições de um lugar a outro.
+- **Reduzir movimento:** opção do sistema ou dos Ajustes (Acessibilidade) que reduz tudo a esmaecimento.
+  Serve para quem se incomoda com animação e também para PC fraco ou internet ruim (decisão 020).
+- **Animação completa:** desde a decisão 020 o VIO anima à vontade; o que protege a chamada é não
+  mexer no vídeo e evitar efeitos pesados sobre ele. Quem tem aparelho fraco liga Reduzir movimento.
+- **Entrega criativa 5×5:** em trabalho novo ou de identidade, Design e Roteirista mostram 5 estilos
+  com 5 exemplos cada, para você ver muita variedade de uma vez; depois você pede para expandir ou
+  mudar um estilo (decisão 021). Ajuste pequeno continua com 2–3 opções.
+- **Ponto da marca:** o quadrado de cantos arredondados do logo (nunca um círculo, salvo ao se transformar ou reagir), pensado para conduzir as transições de um lugar a outro.
 - **WebMCP:** um jeito experimental de um assistente de IA no navegador ler e controlar a sala.
 
 **Por que é assim**
@@ -443,6 +455,10 @@ Detalhes: [ficha 09](09-hospedagem-deploy-release.md).
   para a atualização.
 - **Sem assinatura de código por enquanto:** só ao abrir ao público (decisão 006).
 - **Atualizar só quando o app abre:** instalar no meio do uso poderia derrubar uma chamada.
+- **Outros sons mais baixos na chamada (provisório):** a casca abre o microfone como "chamada", e o
+  Windows abaixa os outros sons. Até o VIO capturar o microfone sozinho (#352), o app pergunta uma
+  vez se pode mudar a opção Comunicações do Windows para "Não fazer nada", com uma chave em Ajustes ›
+  Áudio para voltar atrás. Quando a #352 chegar, isso sai e o VIO para de mexer em ajustes do Windows.
 - **Identificadores opacos:** a página não escolhe qual processo capturar pelo número dele, então
   uma página comprometida não consegue mirar outro programa.
 

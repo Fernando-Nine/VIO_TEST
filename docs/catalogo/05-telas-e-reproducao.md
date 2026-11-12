@@ -67,7 +67,7 @@
     Volume nativo = `min(1, volume) * masterVolume`; mudo se `muted` do usuário ou `masterVolume === 0`.
     Só liga `srcObject` quando há faixa de áudio viva (evita `HAVE_NOTHING` no Chromium). `AbortError` do `play()` é ignorado.
     Autoplay bloqueado: botão `Ativar áudio de <nome>`.
-13. Acima de 100% (até 300%, só com `fineAudio`): monta `AudioBoost` com `ScreenPlayback.create` (`screen-playback.ts`):
+13. Acima de 100% (até 500%, `SCREEN_FINE_MAX`, só com `fineAudio`; ganho puro, sem limitador por decisão do usuário): monta `AudioBoost` com `ScreenPlayback.create` (`screen-playback.ts`):
     `MediaStreamAudioSourceNode → GainNode → MediaStreamAudioDestinationNode`, ganho `setTargetAtTime(min(3,max(0,v)), now, 0.02)`.
     O `<audio>` nativo continua tocando, mudo, para não alimentar o grafo com silêncio (comentário do arquivo). Se o
     grafo falha, o nativo segue audível até 100% e aparece "Ativar amplificação".
@@ -127,7 +127,7 @@
     senão `small`. `cameraEncoding` (`video-quality.ts`): `small` 120 kbps/12 fps/altura ≤ 240; `fit` 300 kbps/20 fps; sem demanda ou `focus` 450 kbps/20 fps.
     Ao desmontar, o tile manda `off`. `SpeakerProbe` usa o áudio de voz de **todas** as câmeras (mesmo escondidas) para mover o destaque.
 27. `MyStreamWidget.tsx`: prévia local da própria captura (nunca o vídeo remoto), envio em Mbps, quadros/s + altura, ping, perda, gráfico dos últimos 60 s
-    (amostra a cada 2 s, `historyLength` amostras), lista de espectadores, seletor de resolução (`screenResolutions` 240–2160) e fps (5, 15, 24, 30, 60). "dividido"
+    (amostra a cada 2 s, `historyLength` amostras), lista de espectadores, seletor de resolução (`screenResolutions` 240–2160), fps (5, 15, 24, 30, 60) e limite por espectador (0,45–8 Mbps), cada um só da tela mostrada (#343; inline em foco e no celular alto; nos outros tamanhos, item "Qualidade" do botão direito abre o mesmo seletor num `AnchoredPopover`). "dividido"
     quando `capped` (`peers.ts` › `screenShare` < bitrate pedido). Até 3 telas próprias, navegáveis com setas.
 28. Vídeo nativo do app Windows (`desktop/native-video.ts`) é **lado de quem envia**: o app grava quadros NV12 num `SharedBuffer` do WebView2
     (cabeçalho 64 bytes, 3 slots, seqlock) e a página os escreve num `MediaStreamTrackGenerator` com `contentHint = "detail"`. Para o espectador é uma faixa de vídeo normal. `desktop/video.ts` lista fontes e decodifica miniatura `VIOT` (máx. 320x180).
@@ -168,7 +168,7 @@
 | `IntersectionObserver` (limiar 0,4) | Só assinar prévia visível | `ScreenPicker.tsx` (sem uso) |
 | `ResizeObserver` | Altura real do tile para decidir `small/fit` e layout de câmera | `CamerasWidget.tsx` |
 | `document.visibilityState` / `visibilitychange` | Pedir `off` com aba oculta | `widgets.tsx`; `CamerasWidget.tsx` |
-| Web Audio: `AudioContext`, `GainNode`, `MediaStreamAudioDestinationNode` | Amplificar tela até 300% sem mexer no que é enviado | `screen-playback.ts`; `ScreenAudio.tsx` › `AudioBoost` |
+| Web Audio: `AudioContext`, `GainNode`, `MediaStreamAudioDestinationNode` | Amplificar tela até 500% sem mexer no que é enviado | `screen-playback.ts`; `ScreenAudio.tsx` › `AudioBoost` |
 | `HTMLMediaElement.setSinkId` (via `AudioOutput.register`) | Saída de áudio escolhida (detalhe em outro tema) | `ScreenAudio.tsx`, `Media.tsx` |
 | Document Picture-in-Picture API | Janela flutuante com a sala inteira | `picture-in-picture.ts` |
 | Video PiP nativo (`requestPictureInPicture`) | Fallback | idem |

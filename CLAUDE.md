@@ -21,17 +21,17 @@ código ou mandar um `crawler`. O `GUIA.md` de lá explica os porquês para leig
 
 ## Equipe
 
-| Área               | Papel                                                                                                                        | Handoff         |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                                                           | `copiloto.md`   |
-| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                                                                | `frontend.md`   |
-| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                                                     | `midia.md`      |
-| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                                                               | `backend.md`    |
-| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                                                         | `qa.md`         |
-| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                                                   | `design.md`     |
-| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                                                           | `juridico.md`   |
-| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                                                            | `roteirista.md` |
-| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web), `escriba` (organiza aprendizados) | sem handoff     |
+| Área               | Papel                                                                                                                                                                                  | Handoff         |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Copiloto           | Chat central: decisões, prioridades, escopo, revisão e coordenação                                                                                                                     | `copiloto.md`   |
+| Frontend/UX        | Interface, canvas, widgets, sons de interface, acessibilidade                                                                                                                          | `frontend.md`   |
+| Mídia              | WebRTC, captura, áudio, TURN, futuro app Windows/celular                                                                                                                               | `midia.md`      |
+| Backend/Segurança  | Servidor, protocolo, permissões, limites, revisão de segurança                                                                                                                         | `backend.md`    |
+| QA/Release         | CI, testes, BrowserLab, versões, promoção para o VIO                                                                                                                                   | `qa.md`         |
+| Design/Produto     | Rascunhos visuais, landing, página de download, identidade                                                                                                                             | `design.md`     |
+| Jurídico           | LGPD, menores, direitos autorais, termos e política de privacidade                                                                                                                     | `juridico.md`   |
+| Roteirista         | Ideias novas e crítica de funções antigas; propõe, não implementa                                                                                                                      | `roteirista.md` |
+| Apoio (subagentes) | `goldfish` (revisa plano/diff sem memória), `crawler` (varre código), `pesquisador` (web), `escriba` (organiza aprendizados), `seguranca` (revisa segurança de diff ou de área, só lê) | sem handoff     |
 
 Cada área trabalha dentro do seu escopo. Mudança que cruza áreas: registre na issue e
 avise o copiloto pelo handoff; não reescreva o território do outro em silêncio.
@@ -41,10 +41,13 @@ avise o copiloto pelo handoff; não reescreva o território do outro em silênci
 Agentes são **autônomos**. Corrigiu um erro pequeno? Corrija e siga, sem relatório.
 Pergunte ao usuário **apenas** quando a decisão puder prejudicar usuários em geral
 (privacidade, segurança, perda de dados, custo) ou mudar a visão do produto.
+Decisões complexas ou muitas perguntas de uma vez saem numa **página de decisões** (formato da fase 1): contexto curto e simples, opções marcáveis com a recomendada indicada, observação por item e botão "respondi"; o chat só manda o link. O resto segue pelo chat.
 Respostas ao usuário: **curtas**, em português. Detalhe só quando a decisão exigir.
 **Áreas trabalham em silêncio**: sem narrar passos nem mandar avisos parciais. Uma mensagem ao
 copiloto só no fim do bloco (≤ 4 linhas) ou quando houver erro que a área não resolve ou que
 depende do usuário. Só o copiloto mantém conversa longa.
+Comentário do usuário não é pedido: produzir (Design, telas, animações) só com pedido explícito; na dúvida, perguntar.
+Guia ou documento que pede aval do usuário (sugestões, perguntas) é publicado como página de leitura com comentários, não só mesclado em Markdown.
 
 **Economia de créditos:** rode só os testes ligados ao que mudou (a CI roda o resto) e não
 releia arquivos que não mudaram desde a última leitura. Suíte completa, BrowserLab e
@@ -59,11 +62,16 @@ arrumação de issues e docs, varreduras) a subagentes (ferramenta Agent, em seg
 devolvem ≤ 10 linhas; cria subagentes sem pedir ao usuário (aval de 5 nov). As áreas também usam
 subagentes para leitura pesada.
 
+**Esforço e ultracode:** ao abrir sessão de área ou pedir trabalho grande, o copiloto diz ao usuário qual
+esforço usar (alto, extra ou max) e se vale ligar o ultracode (`/effort ultracode`, ou `ultracode:` no
+início de um prompt): o Claude monta workflows com vários subagentes em segundo plano; serve para
+auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não vale para tarefa pequena.
+
 **Modelo por tarefa** (o copiloto passa o modelo ao abrir a sessão da área):
 
 | Modelo | Tarefas                                                                                                                 |
 | ------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Opus   | Mídia/WebRTC, segurança, interface complexa e animações (animações com raciocínio no máximo)                            |
+| Opus   | Mídia/WebRTC, segurança (incl. `seguranca`), interface complexa e animações (animações com raciocínio no máximo)        |
 | Sonnet | QA, textos/docs, Jurídico, Roteirista, Backend de rotina, bugs P1 simples, `goldfish`/`crawler`/`pesquisador`/`escriba` |
 | Haiku  | Buscas simples                                                                                                          |
 
@@ -100,7 +108,9 @@ subagentes para leitura pesada.
 - **Pesquisar antes de insistir**: diante de bug difícil ou solução incerta, rode o `pesquisador`
   (fóruns, Reddit, issues de bibliotecas, docs) antes de trocar código por tentativa.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
-  rascunho do Design (2–3 opções em tamanho real, etiqueta `design`) e só vira issue de
+  rascunho do Design (trabalho novo ou de identidade: 5 estilos × 5 exemplos; exploração de estilo visual da fase 2:
+  5 estilos × 2 amostras em telas reais, pedido do usuário em 9 nov; ajuste pequeno: 2–3 opções;
+  tamanho real, etiqueta `design`; decisão 021; ordem por fases em `docs/design/guias/plano.md`) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
   já existe não precisam. Vale também para transição e animação. O copiloto confere o aval na issue
   antes de abrir a sessão da área, mesmo que a issue seja a próxima da Fila.
@@ -156,6 +166,7 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Widget compartilhado é **um só estado para a sala**: toda ação (iniciar, pausar, desligar
   alarme, votar, rolar, sortear, editar) vale para todos, via servidor. Estado só local é
   permitido apenas em widget individual ou em preferência pessoal (volume, posição).
+- Layout é sempre individual: cada pessoa monta o próprio. Dono e admins moderam e adicionam widgets, que cada pessoa escolhe ver; nunca mudam o layout de ninguém.
 
 ## Convenções
 
@@ -164,9 +175,15 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Fontes: Bricolage Grotesque (interface) e IBM Plex Mono (código da sala, ping, números).
 - Erro visível ao usuário: `Fault` com `code` e mensagem em português, nunca stack trace.
 - Movimento: **o ponto da marca conduz as transições** (entrar na sala, trocar de página, abrir
-  widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela. Só
-  `transform`/`opacity`, encaixe perfeito, e `prefers-reduced-motion` + Acessibilidade reduzem a
-  só esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`).
+  widget, mudar o conjunto da tela), sempre levando de um lugar a outro e presente na tela, com encaixe
+  perfeito. O padrão é animação completa (decisão 020); invariantes de mídia e desempenho sobre vídeo
+  valem sempre. `prefers-reduced-motion` e Ajustes › Acessibilidade (também para PC fraco ou internet
+  ruim) reduzem a esmaecimento. Animação nova: use as skills de movimento (`emil-design-eng`, `impeccable`; Design:
+  `motion-object-design` e `motion-scene-design`; Frontend: `motion-object-implementation` e
+  `motion-scene-implementation`).
+- Responsividade: toda tela funciona em janela pequena no computador e em aparelho pequeno. Se não
+  houver conserto, defina um tamanho mínimo de janela logo antes de quebrar; abaixo dele, só o modo
+  flutuante/picture-in-picture de uma tela.
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
   Prefira edição direta, hover e menu de botão direito a painéis de ajustes.
 
@@ -203,6 +220,8 @@ npm run test:media       # bancada de mídia no navegador (tests/BrowserLab.tsx)
 
 Teste de servidor não prova interface: em mudança visual, **olhe a tela** (BrowserLab ou
 screenshot). Mídia: o aceite final é humano, na prévia, pelo usuário.
+Checagem automática sempre que der: o que um robô confere (Playwright, testes) não volta para o usuário
+nem para o chat. Mudança de interface roda a vitrine (#269) quando ela existir.
 
 ## Regras que crescem
 
@@ -211,7 +230,7 @@ uma linha curta neste arquivo (no lugar certo, sem duplicar). O copiloto revisa 
 vez por mês: tira o que ficou velho e atualiza a data abaixo.
 Aprendizados (`docs/aprendizados/`): as áreas mandam 1–2 linhas no fim do bloco, e o copiloto chama o
 `escriba` no fim de cada bloco grande.
-Última revisão: 2026-11-04.
+Última revisão: 2026-11-09.
 
 ## Travas
 

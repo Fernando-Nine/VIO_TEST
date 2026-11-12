@@ -21,11 +21,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Controller } from "../room/controller";
-import {
-  presets,
-  screenResolutions,
-  type Quality,
-} from "../../shared/protocol";
 import { canManageRoom } from "../../shared/permissions";
 import {
   MasterVolume,
@@ -38,6 +33,8 @@ import { ColorPicker } from "./ColorPicker";
 import { Dialog } from "./Dialog";
 import { outputError } from "../media/audio-output";
 import { api, invite } from "../endpoint";
+import { desktop } from "../desktop/bridge";
+import { duckingOff, duckingRestorable } from "../desktop/ducking";
 
 type Category =
   | "audio"
@@ -54,7 +51,7 @@ const categories: {
   icon: LucideIcon;
 }[] = [
   { id: "audio", label: "Áudio", hint: "Microfone, saída, voz", icon: Mic },
-  { id: "video", label: "Vídeo", hint: "Câmera, prévias, tela", icon: Video },
+  { id: "video", label: "Vídeo", hint: "Câmera e prévias", icon: Video },
   {
     id: "notifications",
     label: "Notificações",
@@ -80,10 +77,18 @@ const searchable: { label: string; category: Category; text?: string }[] = [
   { label: "Ganho automático", category: "audio" },
   { label: "Saída de áudio", category: "audio", text: "Reproduzir em" },
   { label: "Volume geral", category: "audio" },
+  ...(desktop
+    ? [
+        {
+          label: "Outros sons abaixados pelo Windows",
+          category: "audio" as const,
+          text: "Impedir que o Windows abaixe",
+        },
+      ]
+    : []),
   { label: "Ajuste fino das telas", category: "audio" },
   { label: "Câmera", category: "video" },
   { label: "Prévias ao vivo", category: "video" },
-  { label: "Qualidade da tela", category: "video", text: "Compartilhamento" },
   { label: "Balões", category: "notifications", text: "Avisos" },
   { label: "Alguém entrou ou saiu", category: "notifications" },
   { label: "Nova tela", category: "notifications" },
@@ -633,9 +638,10 @@ function AudioPage({ engine }: { engine: Controller }) {
           </>
         )}
         <MasterVolume engine={engine} />
+        {desktop && <WindowsDucking engine={engine} />}
         <Toggle
           label="Ajuste fino das telas"
-          note="Volume das telas até 300%, só para você."
+          note="Volume das telas até 500%, só para você."
           checked={engine.fineAudio}
           disabled={!engine.playback.supported}
           change={(checked) => engine.setFineAudio(checked)}
@@ -645,25 +651,48 @@ function AudioPage({ engine }: { engine: Controller }) {
   );
 }
 
+/**
+ * PROVISIONAL (#344): mirrors the Windows "Communications" preference while VIO's
+ * microphone is a WebView2 communications stream. Removed with #352.
+ */
+function WindowsDucking({ engine }: { engine: Controller }) {
+  const [off, setOff] = useState<boolean>();
+  const [saving, setSaving] = useState(false);
+  const restorable = duckingRestorable();
+  const read = () =>
+    duckingOff()
+      .then(setOff)
+      .catch(() => setOff(undefined));
+  useEffect(() => void read(), []);
+  return (
+    <Toggle
+      label="Impedir que o Windows abaixe os outros sons"
+      note={
+        off === undefined
+          ? "O Windows não informou esta opção."
+          : off && !restorable
+            ? "Já estava assim no Windows. Para mudar, use Som › Comunicações."
+            : off
+              ? "Ligado: a opção Comunicações do Windows fica em “Não fazer nada”."
+              : "Desligado: a opção Comunicações do Windows volta ao que era antes."
+      }
+      checked={!!off}
+      disabled={off === undefined || saving || (off && !restorable)}
+      change={(checked) => {
+        setSaving(true);
+        void engine
+          .setDucking(checked)
+          .then(read)
+          .finally(() => setSaving(false));
+      }}
+    />
+  );
+}
+
 function VideoPage({ engine }: { engine: Controller }) {
   const capture = engine.captures;
   const { options } = useDevices(engine);
-  const [quality, setQuality] = useState<Quality>(capture.quality);
-  useEffect(() => {
-    const timer = setTimeout(
-      () => void engine.quality(quality).catch((e) => engine.fail(e)),
-      350,
-    );
-    return () => clearTimeout(timer);
-  }, [quality, engine]);
-  const screen = capture.sources
-    .get("screen")
-    ?.stream.getVideoTracks()[0]
-    ?.getSettings();
   const supports = navigator.mediaDevices?.getSupportedConstraints() || {};
-  const sending = engine.peers
-    .infos()
-    .filter((p) => p.sending && p.kind === "screen");
   return (
     <>
       <Group title="Câmera">
@@ -712,78 +741,6 @@ function VideoPage({ engine }: { engine: Controller }) {
           checked={engine.previewsEnabled}
           change={(checked) => engine.setPreviews(checked)}
         />
-      </Group>
-      <Group title="Compartilhamento de tela">
-        <div className="segmented">
-          {Object.entries(presets).map(([name, q]) => (
-            <button
-              key={name}
-              className={
-                JSON.stringify(q) === JSON.stringify(quality) ? "active" : ""
-              }
-              onClick={() => setQuality({ ...q })}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-        <label>
-          Resolução do envio
-          <select
-            value={quality.resolution}
-            onChange={(e) =>
-              setQuality({ ...quality, resolution: +e.target.value })
-            }
-          >
-            {screenResolutions.map((resolution) => (
-              <option key={resolution} value={resolution}>
-                {resolution}p
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Quadros por segundo <output>{quality.fps} FPS</output>
-          <input
-            aria-label="Quadros por segundo"
-            type="range"
-            min="5"
-            max="60"
-            step="1"
-            value={quality.fps}
-            onChange={(e) => setQuality({ ...quality, fps: +e.target.value })}
-          />
-        </label>
-        <label>
-          Limite por espectador <output>{quality.bitrate} kbps</output>
-          <input
-            aria-label="Bitrate da tela"
-            type="range"
-            min="250"
-            max="8000"
-            step="50"
-            value={quality.bitrate}
-            onChange={(e) =>
-              setQuality({ ...quality, bitrate: +e.target.value })
-            }
-          />
-        </label>
-        {screen && (
-          <div className="technical">
-            Captura: {screen.width} × {screen.height} ·{" "}
-            {Math.round(screen.frameRate || 0)} FPS
-            {sending.map((p) => (
-              <p key={p.id}>
-                {p.tier === "preview" ? "Miniatura" : "Vídeo principal"}:{" "}
-                {p.width || "—"} × {p.height || "—"} · {p.fps ?? "—"} FPS ·{" "}
-                {p.bitrate ?? "—"} kbps
-              </p>
-            ))}
-          </div>
-        )}
-        {capture.qualityMessage && (
-          <p className="field-note">{capture.qualityMessage}</p>
-        )}
       </Group>
     </>
   );

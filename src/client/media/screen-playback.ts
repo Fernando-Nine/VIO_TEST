@@ -1,3 +1,6 @@
+/** Highest local screen volume with fine adjustment on (500%). Playback only; plain gain, no limiter (user decision, 12 nov). */
+export const SCREEN_FINE_MAX = 5;
+
 /** Optional amplification only. Native playback must remain attached to the raw stream. */
 export class ScreenPlayback {
   private context?: AudioContext;
@@ -40,7 +43,7 @@ export class ScreenPlayback {
       context,
       setVolume(volume: number) {
         gain.gain.setTargetAtTime(
-          Math.min(3, Math.max(0, volume)),
+          Math.min(SCREEN_FINE_MAX, Math.max(0, volume)),
           context.currentTime,
           0.02,
         );

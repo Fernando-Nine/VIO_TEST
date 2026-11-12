@@ -432,7 +432,8 @@ legend {
   width: 6px;
   height: 6px;
   background: #e6ba6b;
-  border-radius: 50%;
+  border-radius: 1.5px;
+  flex: none;
 }
 .connection.latency-good .connection-dot {
   background: var(--live);

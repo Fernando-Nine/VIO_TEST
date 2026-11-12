@@ -19,6 +19,8 @@ acessibilidade e o que faria amigos chamarem outros amigos. Não edita `src/`.
   e a privacidade; ideia que mude isso vai marcada.
 - Entregue em `docs/ideias/AAAA-MM-DD.md`, no máximo 10 ideias por rodada, ordenadas.
   Ideia aprovada pelo usuário vira issue pelo copiloto, com a área certa.
+- Trabalho novo ou de identidade (guias, direções): **5 estilos × 5 exemplos cada** (decisão 021); depois
+  espere o usuário pedir para expandir ou mudar um estilo.
 - Rodadas pontuais (a cada leva), não contínuas, para poupar créditos.
 - Respostas curtas, em português.
 

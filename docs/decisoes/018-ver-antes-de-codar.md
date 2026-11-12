@@ -2,6 +2,8 @@
 
 Data: 2026-11-07 (#293, #294, #295, #298, #299)
 
+Parcialmente substituída pela [021](021-entrega-criativa.md): em trabalho novo, a entrega é 5 estilos × 5 exemplos; as 2–3 opções valem só para ajuste pequeno.
+
 ## Contexto
 
 Coisas novas e visíveis iam direto para código e voltavam com ajustes de aparência. Além disso,

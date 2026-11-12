@@ -12,6 +12,7 @@ import type {
   IceConfig,
   Kind,
   Publication,
+  Quality,
   Reply,
   RuntimeConfig,
   Snapshot,
@@ -46,7 +47,13 @@ import { defaultColor, normalizeColor } from "../../shared/colors";
 import { freshKey } from "../id";
 import { api, socketOrigin, invite as roomUrl, embedded } from "../endpoint";
 import { AudioOutput, outputError } from "../media/audio-output";
-import { ScreenPlayback } from "../media/screen-playback";
+import {
+  duckingAsked,
+  duckingOff,
+  markDuckingAsked,
+  setDuckingOff,
+} from "../desktop/ducking";
+import { SCREEN_FINE_MAX, ScreenPlayback } from "../media/screen-playback";
 import { watchScreen, unwatchScreen, watchOnlyScreen } from "./watching";
 import {
   recoveryDelay,
@@ -199,6 +206,8 @@ export class Controller {
   inCall = false;
   private callGeneration = 0;
   private voicePending = false;
+  /** PROVISIONAL (#344, removed with #352): ask once to stop Windows ducking. */
+  duckingAsk = false;
   private cameraPending = false;
   peopleHidden = false;
   screenArrangement = { mode: "right" as "right" | "bottom", revision: 0 };
@@ -277,6 +286,16 @@ export class Controller {
       () => this.bump(),
       () => this.view.status === "connected",
       () => this.refreshIce(),
+      {
+        // Previews ignore demand; a main video set to "off" is not expected to flow.
+        expects: (info) =>
+          info.tier !== "main" ||
+          (
+            this.desiredVideo.get(info.publicationId) ||
+            (info.kind === "camera" ? cameraOff : undefined)
+          )?.video !== "off",
+        resubscribe: (id) => void this.resubscribe(id),
+      },
     );
     if (persist) {
       try {
@@ -1239,7 +1258,10 @@ export class Controller {
   ) {
     const next = { ...this.screenLevel(id), ...patch };
     if (!Number.isFinite(next.volume)) return;
-    next.volume = Math.min(this.fineAudio ? 3 : 1, Math.max(0, next.volume));
+    next.volume = Math.min(
+      this.fineAudio ? SCREEN_FINE_MAX : 1,
+      Math.max(0, next.volume),
+    );
     this.screenLevels.set(id, next);
     if (next.volume > 1) this.playback.unlock();
     this.bump();
@@ -1462,6 +1484,8 @@ export class Controller {
               if (Date.now() - since < 30000) continue;
             }
             this.missingSince.delete(id);
+            if (!publications.some((p) => p.id === id))
+              this.peers.forgetPublication(id);
             if (intent.id) {
               this.peers.close(intent.id);
               await this.request("unsubscribe", { id: intent.id }).catch(
@@ -1508,11 +1532,16 @@ export class Controller {
    * `replace` swaps what is shared without ending the publication viewers watch.
    * Another screen (#194): `startScreen(audio, false, engine.captures.nextScreen())`.
    */
-  async startScreen(audio: boolean, replace = false, slot: Slot = "screen") {
+  async startScreen(
+    audio: boolean,
+    replace = false,
+    slot: Slot = "screen",
+    quality?: Quality,
+  ) {
     const generation = this.generation;
     if (this.sounds) this.cues.unlock();
     try {
-      await this.captures.startScreen(audio, replace, slot);
+      await this.captures.startScreen(audio, replace, slot, quality);
       await this.captureQueue;
     } catch (e) {
       if (generation === this.generation) this.fail(e);
@@ -1538,6 +1567,7 @@ export class Controller {
           return;
         }
         this.captures.micMuted = false;
+        if (this.persist) void this.checkDucking();
       } else this.captures.micMuted = !this.captures.micMuted;
       this.captures.syncMute();
       void this.playCue(this.captures.micMuted ? "mute" : "unmute");
@@ -1547,6 +1577,51 @@ export class Controller {
       if (generation === this.callGeneration) this.fail(e);
     } finally {
       if (generation === this.callGeneration) this.voicePending = false;
+    }
+  }
+  // PROVISIONAL (#344): the first call with the microphone open in the app asks once
+  // whether Windows should stop lowering other sounds. Removed with #352.
+  private async checkDucking() {
+    if (this.duckingAsk || duckingAsked()) return;
+    try {
+      if ((await duckingOff()) !== false || duckingAsked()) return;
+    } catch {
+      return;
+    }
+    this.duckingAsk = true;
+    this.bump();
+  }
+  async answerDucking(off: boolean) {
+    this.duckingAsk = false;
+    markDuckingAsked();
+    this.bump();
+    if (off) await this.setDucking(true);
+  }
+  /** Changes the Windows preference; Windows applies it to a new microphone stream. */
+  async setDucking(off: boolean) {
+    try {
+      await setDuckingOff(off);
+      markDuckingAsked();
+    } catch (e) {
+      this.fail(e);
+      this.bump();
+      return;
+    }
+    if (!this.captures.sources.has("voice") || this.voicePending) {
+      this.bump();
+      return;
+    }
+    const generation = this.callGeneration;
+    this.voicePending = true;
+    try {
+      await this.captures.reopenMicrophone();
+    } catch (e) {
+      // reopenMicrophone already stopped the voice: the button shows it off.
+      if (generation === this.callGeneration) this.fail(e);
+    } finally {
+      if (generation === this.callGeneration) this.voicePending = false;
+      await this.captureQueue;
+      this.bump();
     }
   }
   deafen() {
@@ -1577,10 +1652,35 @@ export class Controller {
     this.captures.stop(slot);
     await this.captureQueue;
   }
-  async quality(q: typeof this.captures.quality, slot: Slot = "screen") {
+  /** Quality of one screen only; every screen keeps its own (#343). */
+  async quality(q: Quality, slot: Slot) {
     await this.captures.applyQuality(q, slot);
     await this.peers.update("screen");
     this.bump();
+  }
+  /**
+   * The stall watchdog's last step (#345): what reconnectMedia does, for one
+   * subscription. Skipped while its publication is missing from the snapshot
+   * (owner reentering after a server restart): reconcile decides those.
+   */
+  private async resubscribe(id: string) {
+    const generation = this.generation;
+    const intent = [...this.subscriptions.values()].find((i) => i.id === id);
+    const publicationId = this.peers.entries.get(id)?.sub.publication.id;
+    if (
+      !intent ||
+      !publicationId ||
+      this.view.status !== "connected" ||
+      !this.view.snapshot?.participants.some((m) =>
+        m.publications.some((p) => p.id === publicationId),
+      )
+    )
+      return;
+    this.peers.close(id);
+    intent.nonce = freshKey();
+    intent.id = undefined;
+    await this.request("unsubscribe", { id }).catch(() => {});
+    if (generation === this.generation) await this.reconcile();
   }
   async reconnectMedia(forceRelay = this.peers.forceRelay) {
     try {

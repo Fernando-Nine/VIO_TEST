@@ -17,4 +17,6 @@ Para atualizar, copie de novo da origem; não edite aqui.
 | playwright-cli | github.com/microsoft/playwright-cli | Apache-2.0 |
 | design-critique, design-accessibility-review, design-ux-copy, design-system, design-handoff, design-user-research | plugin "design" da Anthropic (conta do usuário) | conforme o plugin |
 
-Skills próprias do VIO: `vio-design-system`, `vio-design-review`.
+Skills próprias do VIO: `vio-design-system`, `vio-design-review`, `vio-design-delivery`,
+`motion-object-design`, `motion-scene-design`, `motion-object-implementation`,
+`motion-scene-implementation`.

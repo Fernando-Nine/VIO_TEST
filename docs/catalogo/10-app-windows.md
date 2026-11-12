@@ -2,7 +2,7 @@
 
 > **Resumo:** Casca Tauri 2 + WebView2 que **empacota o cliente React** (build com `VITE_DESKTOP=1`) e o serve em `https://tauri.localhost`; só fala com o servidor do canal por HTTPS/WSS. O Rust lista telas/janelas/programas, captura imagem (WGC, Desktop Duplication ou PrintWindow) e áudio (WASAPI process loopback) e entrega à página: imagem por **SharedBuffer** NV12 (sem passar pelo IPC), áudio por PCM via `invoke` binário. A página vira `MediaStreamTrack` e publica pelo WebRTC de sempre. Atualização automática antes de abrir a janela, por `vio-releases`, com assinatura minisign.
 >
-> **Arquivos-chave:** `src-tauri/src/shell.rs` (janela, 12 comandos, updater, origem), `instance.rs` (instância única), `capture.rs` (áudio WASAPI + lista de programas), `video.rs` (lista de telas/janelas, miniaturas GDI/WGC), `stream.rs` (captura WGC → NV12 → SharedBuffer), `duplication.rs` (tela no Win10), `printwindow.rs` (janela no Win10), `programs.rs` (nome/ícone/quem toca som), `wire.rs` (formatos binários), `log.rs`, `main.rs`, `build.rs`, `capabilities/main.json`, `tauri.conf.json`, `tauri.updater.json`, `src/client/desktop/*.ts`, `scripts/desktop-channel.mjs`, `scripts/build-desktop.mjs`, `.github/workflows/windows.yml`.
+> **Arquivos-chave:** `src-tauri/src/shell.rs` (janela, 14 comandos, updater, origem), `instance.rs` (instância única), `capture.rs` (áudio WASAPI + lista de programas), `video.rs` (lista de telas/janelas, miniaturas GDI/WGC), `stream.rs` (captura WGC → NV12 → SharedBuffer), `duplication.rs` (tela no Win10), `printwindow.rs` (janela no Win10), `programs.rs` (nome/ícone/quem toca som), `wire.rs` (formatos binários), `log.rs`, `main.rs`, `build.rs`, `capabilities/main.json`, `tauri.conf.json`, `tauri.updater.json`, `src/client/desktop/*.ts`, `scripts/desktop-channel.mjs`, `scripts/build-desktop.mjs`, `.github/workflows/windows.yml`.
 >
 > **Docs:** `docs/WINDOWS.md`, `docs/DESKTOP-WASAPI.md` (especificação inicial, parte desatualizada), `docs/WINDOWS-RELEASE.md`, `docs/decisoes/006-app-windows.md`.
 >
@@ -14,7 +14,7 @@
 
 1. `main.rs` só compila o app no Windows (`#[cfg(windows)]`); em outro SO imprime "VIO Desktop requires Windows x64." `windows_subsystem = "windows"` em release (sem console).
 2. **Instância única (#303):** `shell.rs` › `run()` abre o log cedo (`%LOCALAPPDATA%\<identifier>\logs`) e chama `instance::claim(identifier)`: mutex nomeado `Local\<identifier>.instance` (`CreateMutexW`). Se já existe (ou dá `ACCESS_DENIED`, criado por cópia elevada), procura a janela principal pela **classe** `VIO.Main.<identifier>` (`FindWindowW`), restaura se minimizada ou oculta, chama `SetForegroundWindow` (negado → `FlashWindowEx` na barra de tarefas) e sai sem mensagem. Sem janela ainda (checando ou baixando atualização) espera até 120 s, de 250 em 250 ms, e registra no log se desistir. Se a outra instância sair (fechou, ou `app.restart()` após atualizar, que cria o processo novo antes de o velho sair) o mutex fica abandonado, a espera devolve `WAIT_ABANDONED` e esta assume e abre normalmente. O identificador difere por canal, então VIO e VIO Teste coexistem. Testes `instance::tests` (segunda abertura, mutex abandonado) rodam no `cargo test` do Windows.
-3. `shell.rs` › `run()` registra o plugin updater, 3 gerenciadores (`Manager` áudio, `VideoManager`, `StreamManager`) e os 12 comandos. No `setup`: inicia o log e, numa task assíncrona, **primeiro atualiza, depois abre a janela** (`update()` → `open()`). Se `open` falha, `exit(1)`.
+3. `shell.rs` › `run()` registra o plugin updater, 3 gerenciadores (`Manager` áudio, `VideoManager`, `StreamManager`) e os 14 comandos. No `setup`: inicia o log e, numa task assíncrona, **primeiro atualiza, depois abre a janela** (`update()` → `open()`). Se `open` falha, `exit(1)`.
 4. `open()` cria a janela `main` com `WebviewUrl::App("index.html")` e `use_https_scheme(true)`: origem **`https://tauri.localhost`** (sem porta). 1280×800, mínimo 720×480. `.on_navigation(local)` recusa qualquer URL que não seja essa origem.
 5. **O app empacota o cliente** (`frontendDist: ../dist/desktop`, gerado por `build-desktop.mjs`); não carrega a página remota. Só sinalização/Socket.IO vão ao servidor (`VITE_API_BASE` = servidor do canal; `VITE_WEB_URL` idem, para convites). O servidor precisa de `ALLOWED_APP_ORIGINS=https://tauri.localhost` (`src/server/config.ts` › `origemDeAppValida`, ~L73; `app.ts` ~L56/69/108 aceita a origem em CORS e Socket.IO). Está configurado nos dois Render (`docs/ESTADO.md`).
 6. `watch_page`: handler `ProcessFailed` do WebView2; registra no log e **recarrega** se o processo de renderização morreu (`RENDER_PROCESS_EXITED`).
@@ -23,7 +23,7 @@
 ### Ponte nativa (quem pode chamar o quê)
 
 8. `tauri.conf.json` › `withGlobalTauri: true`: `window.__TAURI__` existe. `bridge.ts` › `nativeInvoke` só chama se `VITE_DESKTOP==="1"` **e** `__TAURI__.core.invoke` existir; senão rejeita com "Abra esta função no aplicativo VIO para Windows." (build web nunca expõe nativo).
-9. `build.rs` declara os 12 comandos em `AppManifest::commands` → cada um exige permissão explícita (`allow-desktop-*`). `capabilities/main.json`: `local: true`, `windows: ["main"]`, as 12 permissões; **nenhuma** permissão `core:*`, de updater, fs, shell ou opener é concedida à página.
+9. `build.rs` declara os 14 comandos em `AppManifest::commands` → cada um exige permissão explícita (`allow-desktop-*`). `capabilities/main.json`: `local: true`, `windows: ["main"]`, as 14 permissões; **nenhuma** permissão `core:*`, de updater, fs, shell ou opener é concedida à página.
 10. Defesa em profundidade em Rust: cada comando começa com `trusted(&window)`: label `main` **e** `window.url()` = `https://tauri.localhost` sem porta (`local()`). IDs de fonte/captura são validados por `valid_id` (32 hex). IDs são aleatórios (`capture.rs` › `key()`, 16 bytes de `BCryptGenRandom`); a página nunca vê PID, HWND, caminho.
 11. CSP do app (`tauri.conf.json`): `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' ipc: http://ipc.localhost https://<servidor> wss://<servidor>; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'`. `build-desktop`/`overlay()` troca o host do `connect-src` por canal.
 
@@ -39,6 +39,7 @@ Comandos (todos em `shell.rs`):
 | `desktop_video_thumbnail` | miniatura ≤320×180 |
 | `desktop_video_start` / `_wait` / `_stop` | captura de imagem, espera do próximo quadro, parada |
 | `desktop_share_audio` | liga uma fonte de vídeo ao áudio do seu programa (ou PC inteiro sem VIO) |
+| `desktop_ducking` / `desktop_set_ducking` | **Provisório (#344, sai com #352):** lê e grava `UserDuckingPreference` (`ducking.rs`) |
 
 ### Captura de imagem (fluxo normal)
 
@@ -66,7 +67,7 @@ Comandos (todos em `shell.rs`):
 27. Dois canais (`desktop-channel.mjs`): **stable** "VIO" (`studio.nerdquest.vio`, servidor vio-quest, feed `latest.json` em `releases/latest/download/`, instalador `VIO-x64-setup.exe`, tag `vX.Y.Z`) e **beta** "VIO Teste" (`studio.nerdquest.vio.test`, vio-test, `beta.json` no release fixo `beta`, instalador `VIO-Teste-<versão>-x64-setup.exe`, ícone com selo). Cada um tem **chave pública minisign própria** (IDs `7D499EB91F0CA1FE` produção, `3123E38BB793CE0D` teste, ver WINDOWS-RELEASE); o beta nunca instala o stable. Versão beta = `<package.json>.<GITHUB_RUN_NUMBER>` (ex. `2.12.0-rc.6.123`; sem prerelease → `-rc.0.<run>`).
 28. `build-desktop.mjs`: Vite com `NODE_ENV=production`, `VITE_DESKTOP=1`, `outDir dist/desktop`, sem sourcemap, `assetsInlineLimit 0`. `desktop-channel.mjs config` gera `src-tauri/tauri.channel.json` (productName, version, identifier, CSP, ícone, pubkey, endpoint) e, no stable em tag, **aborta se a tag ≠ `v<versão>`**.
 29. `windows.yml` (runner `windows-latest`, timeout 40 min): `npm ci` → `npm run build` (gera `dist/source.tar.gz`, embutido no instalador como recurso, AGPL) → `build:desktop` → config → `cargo test --locked` → testes `--ignored` de troca (`native_swap`, `audio_swap`, bloqueantes) e de CPU/miniaturas (`continue-on-error`) → `tauri build --bundles nsis` (com `tauri.updater.json` e chave só se `PUBLISH` e há segredo) → artefato `VIO-Windows-x64` (14 dias) → publica no `vio-releases` com `gh` (token `VIO_RELEASES_TOKEN`). Beta: sobe instalador antes do feed (o feed antigo continua válido), edita notas, apaga instaladores antigos do release. Sem segredos: só gera o artefato e avisa.
-30. Instalador NSIS `currentUser` (sem admin), PT-BR, WebView2 por `downloadBootstrapper` silencioso, **sem assinatura de código** (SmartScreen avisa; decisão da ADR 006). Licença `LICENSE` no instalador.
+30. Instalador NSIS `currentUser` (sem admin), PT-BR, WebView2 por `downloadBootstrapper` silencioso, **sem assinatura de código** (SmartScreen avisa; decisão da ADR 006). Página de licença do instalador mostra o termo de uso (`docs/juridico/termo-instalador.txt`, idade mínima 13 anos); a AGPL segue no `source.tar.gz` em `resources`. O termo fica em UTF-8 **sem BOM**: o bundler do Tauri 2.12 acrescenta o próprio BOM ao copiá-lo (com BOM no arquivo, sobraria um U+FEFF no começo do texto).
 
 ### Logs
 
@@ -165,6 +166,12 @@ https://kitemetric.com/blogs/valorant-and-obs-a-definitive-guide-to-fixing-captu
 fraca) · https://v2.tauri.app/security/capabilities/ ·
 https://about.signpath.io/product/open-source ·
 https://learn.microsoft.com/windows/apps/package-and-deploy/code-signing-options
+
+### Outros sons abaixados nas chamadas (provisório, #344)
+
+26. O WebView2 abre o microfone como fluxo de **comunicações**, e o Windows abaixa os outros sons enquanto ele está aberto (mmsys.cpl › Comunicações; padrão "Reduzir 80%"). A opção é por usuário, sem admin: `HKCU\Software\Microsoft\Multimedia\Audio` › DWORD `UserDuckingPreference` (0 mudo, 1 −80%, 2 −50%, 3 "Não fazer nada"; ausente = padrão). Não há documento da Microsoft sobre o valor; a correspondência vem de diffs do registro feitos por terceiros. Quando o Windows relê o valor também não é documentado: o app grava e **reabre o microfone** (`reopenMicrophone`, fecha o dispositivo antes de abrir de novo) para nascer um fluxo de comunicações novo.
+27. Na primeira chamada com o microfone aberto no app (`controller.microphone` › `checkDucking`), se o valor não é 3, um diálogo pergunta uma vez ("Desligar" / "Agora não"); a resposta fica em `localStorage["vio:ducking"]`. Ajustes › Áudio › "Impedir que o Windows abaixe os outros sons" mostra e muda o valor; ao desligar devolve exatamente o estado anterior salvo (número cru ou valor ausente); se o VIO não mudou nada (já estava em 3), não grava e a chave fica travada, apontando para Som › Comunicações.
+28. **Provisório:** quando o VIO capturar o microfone por conta própria (#352), o diálogo, a chave, `desktop/ducking.ts`, `ducking.rs` e os dois comandos saem, e o VIO deixa de mudar ajustes do Windows.
 
 ## Achados
 
