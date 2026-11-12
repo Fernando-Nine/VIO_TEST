@@ -10,31 +10,31 @@ canvas só para consulta.
 lugar novo e **pousa num ponto que fica na tela** — o VIO nunca fica estático, e o ponto
 está sempre presente em algum lugar:
 
-| Lugar       | Ponto que fica                                     |
-| ----------- | -------------------------------------------------- |
-| Landing     | ponto final de "junto" (pulsa devagar)             |
-| Início      | ponto dentro do botão Criar sala                   |
-| Sala        | ponto antes do código da sala, no cabeçalho        |
-| Widget      | ponto à esquerda do título, no cabeçalho do widget |
-| Transmissão | ponto do selo Ao vivo                              |
-| Pessoa      | ponto ao lado do nome (cresce com a fala)          |
+| Lugar       | Ponto que fica                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Landing     | ponto final de "junto" (pulsa devagar)                                                                                    |
+| Início      | ponto dentro do botão Criar sala                                                                                          |
+| Sala        | no balão da sala, antes do código; fica no canto quando o balão some ([guia](guias/estilo.md#42-balões-de-canto-na-sala)) |
+| Widget      | ponto à esquerda do título, no cabeçalho do widget                                                                        |
+| Transmissão | ponto do selo Ao vivo                                                                                                     |
+| Pessoa      | ponto ao lado do nome (cresce com a fala)                                                                                 |
 
 ## Movimentos
 
 Curva padrão: `cubic-bezier(.2,.7,.2,1)` ("--ease-ponto"). Todos ≤ 800 ms.
 
-| Momento                      | O que acontece                                                                                    | Tempo                                     |
-| ---------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Landing → Início             | ponto sai do botão, cresce no centro, Início aparece por baixo e o ponto pousa no botão Criar     | 320 + 140 + 320 ms; tela nova 200 ms ease |
-| Início → Sala (Criar/Entrar) | ponto do botão cresce até o tamanho do palco; a sala aparece; o ponto some no palco               | 420 ms + 160 ms                           |
-| Sala → Início (Sair)         | palco encolhe até o ponto do botão Criar                                                          | 420 ms                                    |
-| Início → Landing             | ponto vai do botão até o ponto de "junto"                                                         | 420 ms                                    |
-| Abrir widget                 | ponto vai do botão até o cabeçalho do widget; o widget cresce a partir dali (`scale` de 0,05 a 1) | 260 + 240 ms                              |
-| Fechar widget (− ou ×)       | widget encolhe para o seu ponto; o ponto volta ao botão de origem                                 | 180 ms ease-in + 240 ms                   |
-| Trocar o conjunto da tela    | (layout/foco) o ponto da tela escolhida vai à nova posição; as telas trocam com opacidade         | 320 ms + 200 ms                           |
-| Pessoa chega                 | chip entra pela borda com um pequeno quique                                                       | 320 ms `cubic-bezier(.3,1.4,.5,1)`        |
-| Pessoa sai                   | chip sai pela borda e apaga                                                                       | 200 ms ease-in                            |
-| Tela começa                  | ponto da pessoa salta do rodapé para o palco e vira o selo Ao vivo                                | 420 ms                                    |
+| Momento                      | O que acontece                                                                                                                                                              | Tempo                                                    |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Landing → Início             | ponto sai do botão, cresce no centro, Início aparece por baixo e o ponto pousa no botão Criar                                                                               | 320 + 140 + 320 ms; tela nova 200 ms ease                |
+| Início → Sala (Criar/Entrar) | ponto do botão cresce até o tamanho do palco; a sala aparece; o ponto some no palco                                                                                         | 420 ms + 160 ms                                          |
+| Sala → Início (Sair)         | palco encolhe até o ponto do botão Criar                                                                                                                                    | 420 ms                                                   |
+| Início → Landing             | ponto vai do botão até o ponto de "junto"                                                                                                                                   | 420 ms                                                   |
+| Abrir widget                 | ponto vai do botão até o cabeçalho do widget; o widget cresce a partir dali (`scale` de 0,05 a 1)                                                                           | 260 + 240 ms                                             |
+| Fechar widget (− ou ×)       | widget encolhe para o seu ponto; o ponto volta ao botão de origem                                                                                                           | 180 ms ease-in + 240 ms                                  |
+| Trocar o conjunto da tela    | (layout/foco) o ponto da tela escolhida vai à nova posição; as telas trocam com opacidade                                                                                   | 320 ms + 200 ms                                          |
+| Pessoa chega                 | chip entra pela borda (`opacity` + `translate`, sem quique); só o Ponto da pessoa quica ([guia](guias/estilo.md#71-o-ponto-conduz-transições-balões-de-interface-e-avisos)) | 320 ms `--ease-ponto`; Ponto `cubic-bezier(.3,1.4,.5,1)` |
+| Pessoa sai                   | chip sai pela borda e apaga                                                                                                                                                 | 200 ms ease-in                                           |
+| Tela começa                  | ponto da pessoa salta do rodapé para o palco e vira o selo Ao vivo                                                                                                          | 420 ms                                                   |
 
 ## Encaixe perfeito (pedido do usuário)
 
