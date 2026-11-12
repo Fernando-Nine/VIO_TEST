@@ -25,10 +25,10 @@ Ordem completa do produto em `ROADMAP.md`.
 
 - **P0**: nenhuma.
 - **P1**: #266 cursor some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento) · #344 áudio da tela some só para um amigo (mídia; ver Decisões de 12 nov).
-- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade + vitrine (QA) · #356 tamanho mínimo da janela e vídeo flutuante · #358 botões do mouse e menu de contexto · #359 barra de título do app ·
+- **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade + vitrine (QA) · #355 Grade 1x1 já é foco, sem botão (não urgente) · #356 tamanho mínimo da janela e vídeo flutuante ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes ·
   #338 ponto redondo na sala (frontend).
-- **P3**: #355 Grade 1x1 já é foco, sem botão (não urgente) · #357 antispam e limites (Backend/segurança) · #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
+- **P3**: #357 antispam e limites (Backend/segurança) · #358 botões do mouse e menu de contexto · #359 barra de título do app · #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (`aguarda-usuario`, inalterada em 12 nov; avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
   #22 BrowserLab na CI · Design: #293 qualidade automática · #294 Minha tela + Minha prévia ·
   #295 cards flutuantes · #298 cor da sala · #299 cor pessoal; menu inicial em #197.
