@@ -269,6 +269,8 @@ eles ainda dizem o estado pela forma.
 
 ## 7. Movimento
 
+**Só guia, nada se anima agora.** Esta seção registra as regras para quando as animações forem feitas (fase 5); as variações da fase 2 são quadros estáticos.
+
 Vale [`transicoes.md`](../transicoes.md) e as cinco regras de
 [`movimento-ponto.md`](movimento-ponto.md#1-as-cinco-regras-as-únicas-inegociáveis): o Ponto
 conduz, só `transform`/`opacity` no caminho principal, origem e destino medidos (FLIP), ≤ 800 ms,
@@ -292,8 +294,8 @@ interrompível, curva `--ease-ponto` `cubic-bezier(.2,.7,.2,1)`.
 - **Exceção a `transicoes.md` (Pessoa chega):** o quique `cubic-bezier(.3,1.4,.5,1)` fica só no
   **Ponto da pessoa**, que é um Ponto; o nome e o resto do item entram sem quique, com `opacity` e
   `translate` (`--ease-ponto`, 320 ms). `transicoes.md` foi atualizado com isso.
-- **A bola do 5A:** cada variação mostra o Ponto do Início parado, respirando e viajando, em quadros
-  ou protótipo.
+- **A bola do 5A:** cada variação mostra o Ponto do Início parado, respirando e viajando em **quadros
+  estáticos**. Nada se anima nesta fase: a seção 7 é regra para a fase 5.
 
 ### 7.2 Dica e menu, sem a viagem do Ponto (q22)
 
