@@ -11,6 +11,7 @@ import { LayoutLab } from "./LayoutLab";
 import { FeatureLab } from "./FeatureLab";
 import { PreferencesLab } from "./PreferencesLab";
 import { ScreenAudioLab } from "./ScreenAudioLab";
+import { VitrineLab } from "./VitrineLab";
 type Result = { test: string; status: "PASS" | "FAIL"; detail?: unknown };
 async function until(condition: () => boolean, label: string, ms = 20000) {
   const start = Date.now();
@@ -697,6 +698,8 @@ export async function mountLab(root: Root) {
   root.render(
     location.pathname === "/qa-switch" ? (
       <RoomSwitchLab />
+    ) : location.pathname === "/qa-vitrine" ? (
+      <VitrineLab />
     ) : location.pathname === "/qa-layout" ? (
       <LayoutLab />
     ) : location.pathname === "/qa-watch" ? (

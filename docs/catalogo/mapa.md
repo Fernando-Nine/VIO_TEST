@@ -132,6 +132,7 @@ apagou um arquivo relevante? Atualize este mapa no mesmo PR. Fichas: [README](RE
 | --- | --- |
 | `tests/*.test.ts` | `npm test` (`node --test`); `server.test.ts` sobe o servidor real |
 | `tests/*Lab.tsx`, `media-runner.ts`, `synthetic.ts` | BrowserLab (`npm run test:media`): mídia sintética no navegador |
+| `tests/VitrineLab.tsx`, `tests/vitrine/*` (`vitrine.spec.ts`, `casos.ts`, `config.ts`, `medidas.ts`, `conhecidos.ts`, `servidor.ts`, `base/`), `playwright.config.ts` | Vitrine (`npm run test:vitrine`, #269): cada widget/aba/diálogo em 5 telas, checagens de layout e capturas contra a base; `.github/workflows/vitrine.yml` |
 | `scripts/build.mjs`, `build-info.ts` | Build e `build-info.json` (commit, notas de `changes/`) |
 | `scripts/build-desktop.mjs`, `desktop-channel.mjs` | Build do app e canais `stable`/`beta` |
 | `scripts/check-deployment.mjs` | Confere a implantação (não roda na CI) |

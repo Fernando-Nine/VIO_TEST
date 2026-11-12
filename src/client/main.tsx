@@ -23,7 +23,7 @@ const root = createRoot(document.getElementById("root")!);
 const engine = new Controller(desktop ? windowsCapture : undefined);
 if (
   import.meta.env.DEV &&
-  ["/qa", "/qa-layout", "/qa-watch", "/qa-switch"].includes(location.pathname)
+  ["/qa", "/qa-layout", "/qa-watch", "/qa-switch", "/qa-vitrine"].includes(location.pathname)
 )
   void import("../../tests/BrowserLab")
     .then((lab) => lab.mountLab(root))
