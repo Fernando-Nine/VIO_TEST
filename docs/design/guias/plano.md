@@ -32,6 +32,12 @@ Ordem do trabalho de identidade, telas e animações do VIO (#227). Pedido do us
 A pedido do usuário, a **fase 2 roda logo após a 1c e a 1d, sem esperar o aval delas**; ele revisa
 tudo junto ao voltar. A 1a continua bloqueando a fase 3.
 
+## Guia do estilo próprio (12 nov 2026)
+
+Os comentários do usuário na fase 2 pediram um estilo próprio antes de seguir: o
+[guia do estilo](estilo.md) (bases 3A e 5A, com peso menor do 4A) vai ao usuário; **com o aval dele**,
+vêm 5–7 variações sobre os eixos do guia, e só então a fase 3.
+
 ## Notas
 
 - A #261 (transições) e qualquer animação nova esperam a fase 5.
