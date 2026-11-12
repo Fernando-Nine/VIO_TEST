@@ -629,7 +629,7 @@ function AudioPage({ engine }: { engine: Controller }) {
         <MasterVolume engine={engine} />
         <Toggle
           label="Ajuste fino das telas"
-          note="Volume das telas até 300%, só para você."
+          note="Volume das telas até 500%, só para você."
           checked={engine.fineAudio}
           disabled={!engine.playback.supported}
           change={(checked) => engine.setFineAudio(checked)}
