@@ -8,7 +8,7 @@
 
 **Como ler.** As regras valem para todas as variações. O que está marcado **(variar)** é eixo de
 exploração: cada variação escolhe um valor, e nenhuma junta todos. **(sugestão)** é proposta do
-Design ainda não pedida pelo usuário. As dúvidas estão em "Perguntas abertas", no fim.
+Design ainda não pedida pelo usuário. As respostas do usuário estão no fim.
 
 **Bases.** **3A Expressivo** (tonal, chapado, botões de ícone, cor da pessoa) e **5A Geométrico**
 (formas com sentido) são as duas principais. **4A Bento** entra com peso menor: peças que encaixam
@@ -279,7 +279,7 @@ interrompível, curva `--ease-ponto` `cubic-bezier(.2,.7,.2,1)`.
 
 ### 7.1 O Ponto conduz (transições, balões de interface e avisos)
 
-- **Ponto branco que fica anil ao viajar (3A).** Em repouso dentro de um botão ou peça, o Ponto é
+- **Ponto branco que fica anil ao viajar (3A), por enquanto.** Não é definitivo: o Ponto pode passar o protagonismo, mover-se e mudar de cor (resposta 2). Em repouso dentro de um botão ou peça, o Ponto é
   `#F3F3FB`; em viagem, é anil. A troca de cor acompanha a viagem (120 ms na partida, o inverso no pouso). O ponto do logo segue sempre anil.
 - **Um Ponto só** (regra 1 de `movimento-ponto.md`): o Ponto que repousa no botão é o mesmo que
   parte. Ao sair, o botão fica sem ele; ao pousar, ele passa a ser o Ponto do destino. Nunca há um
