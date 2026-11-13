@@ -2,10 +2,15 @@
 
 - **Fase:** 2 do [plano](../guias/plano.md) (exceção de 9 nov: roda logo após a 1c e a 1d, sem
   esperar o aval delas).
-- **Situação:** em aberto, agora na **rodada 2** (variações sobre o guia aprovado). O usuário
-  escolhe comentando na prancha ("V3, mas com o verde-água do V1"); misturar eixos vale.
+- **Situação:** em aberto. A **rodada 2 não foi aprovada** (13 nov, [#367](https://github.com/Fernando-Nine/VIO_TEST/issues/367)). Próximo: definição escrita, 5 kits enxutos e, do escolhido, 3 exemplos de uso.
 
-## Rodada 2 · variações sobre o guia (12 nov 2026)
+## Rodada 2 · variações sobre o guia (12 nov 2026) · não aprovada
+
+Críticas de 13 nov ([#367](https://github.com/Fernando-Nine/VIO_TEST/issues/367)): variações parecidas
+entre si e distantes do guia; espaço vazio e partes pouco intuitivas; formas sem função explicada;
+mudou coisa demais de uma vez. Em tela larga o texto ficou difícil de ler; o botão importante saiu na
+cor de outra pessoa; a grade aparecia na tela e na sala juntas. Favorita: V1 Cantos tonais (bico em
+Corte, botão com o Ponto dentro). Regras novas: sem pílula e um halo só.
 
 - **Base:** guia [`../guias/estilo.md`](../guias/estilo.md), aprovado na PR #361. O usuário
   autorizou 5–7 variações nos eixos marcados **(variar)**.

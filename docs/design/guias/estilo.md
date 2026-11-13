@@ -8,7 +8,9 @@
 
 **Como ler.** As regras valem para todas as variações. O que está marcado **(variar)** é eixo de
 exploração: cada variação escolhe um valor, e nenhuma junta todos. **(sugestão)** é proposta do
-Design ainda não pedida pelo usuário. As respostas do usuário estão no fim.
+Design ainda não pedida pelo usuário. As respostas do usuário estão no fim. A **revisão de 13 nov 2026**
+(rodada 2 recusada, [#367](https://github.com/Fernando-Nine/VIO_TEST/issues/367)) vale sobre o texto
+abaixo e está resumida na última seção.
 
 **Bases.** **3A Expressivo** (tonal, chapado, botões de ícone, cor da pessoa) e **5A Geométrico**
 (formas com sentido) são as duas principais. **4A Bento** entra com peso menor: peças que encaixam
@@ -48,7 +50,7 @@ balões separados que nascem do Ponto.
 | Botão só ícone                | 40 px                          | 44 px                     | 11 / 12 px                                 |
 | Botão com texto               | 40 ou 48 px                    | 48 px                     | 11 / 13 px                                 |
 | Campo de texto                | 40 px                          | 48 px                     | 11 / 13 px                                 |
-| Chip, selo, contagem          | 24 px desenhado, área de 40 px | área de 44 px             | pílula (até 24 px de altura)               |
+| Chip, selo, contagem          | 24 px desenhado, área de 40 px | área de 44 px             | raio do quadrado de dentro (sem pílula)    |
 | Item de menu                  | 32 px desenhado, área de 40 px | 44 px                     | 9 / 12 px                                  |
 | Balão                         | ≥ 36 px                        | ≥ 44 px                   | 12 px, um canto apontado de 3 px (ver 4.1) |
 | Peça (widget, painel, cartão) | qualquer                       | qualquer                  | 16 px                                      |
@@ -61,7 +63,7 @@ balões separados que nascem do Ponto.
 - **Raios concêntricos.** Peça dentro de peça: raio de dentro = raio de fora − **padding interno**
   da peça de fora (16 − 8 = 8; mínimo 4). É a regra que faz as quinas encaixarem.
 - **Gap** entre peças vizinhas: 8 px fixo. Padding interno e gap são medidas separadas.
-- **Pílula (999 px) só até 24 px de altura.** Acima disso, raio da tabela.
+- **Sem pílula.** Tudo é quadrado arredondado e o recipiente acompanha o raio do quadrado de dentro (um switch em pílula com um quadrado dentro parece errado). Exceção só com aval, caso a caso (#367).
 - **Raio 0** só em linha da grade, divisória e no palco em tela cheia.
 
 ### 2.2 O que é redondo, o que é geométrico
@@ -146,10 +148,11 @@ Regras:
   amarelo forte do 3A.
 - **Fundo atrás do Ponto:** o Ponto pousa direto no `chao` ou na `peca`. Sem halo ou faixa colorida
   atrás dele em repouso (a "cor atrás do ponto" do 3A); halo só como gesto (5.3).
-- **Botão principal:** fundo `recipiente` com texto `sobreRecipiente`, ou o anil cheio com ícone
+- **Botão importante nunca usa a cor de outra pessoa** (ex.: "Deixar entrar" na paleta vermelha de Mari parecia negar). Fica na paleta de quem usa ou no Anil (#367).
+- **Botão principal:** com o **Ponto dentro** (fechado em 13 nov). Fundo `recipiente` com texto `sobreRecipiente`, ou o anil cheio com ícone
   branco (7,1:1). **Nunca botão branco em fundo escuro** (4A).
 - **Sem cor de estado nova.** Verde e amarelo existem só como cor de pessoa. Aviso usa o tom
-  `destaque` da sala com ícone e texto. Exceção única: **"ao vivo" é sempre verde** (resposta 3).
+  `destaque` da sala com ícone e texto. Exceção única: **"ao vivo" é sempre verde**, vivo mas não tanto, que encaixe na paleta e não pareça azul (tom a definir; resposta 3).
 - **Perigo `#FF8A96` sempre com ícone e texto** ("Sair da chamada", "Remover"), nunca só a cor, para
   não ser confundido com o Ponto de quem escolheu Vermelho.
 - Estado nunca só por cor: sempre ícone, texto ou forma junto.
@@ -161,7 +164,7 @@ Regras:
 O balão é **um Ponto que esticou, mudou de cor e aponta para a origem**.
 
 - Placa de raio 12 px com **um canto apontado** (raio 3 px) virado para quem o gerou: o botão, a
-  pessoa, o canto da tela. **(variar)** canto apontado ou bico curto em Corte (6 px).
+  pessoa, o canto da tela. **Fechado: bico curto em Corte** (6 px); o canto apontado de 3 px fica como alternativa descartada.
 - Pequeno: até 320 px de largura e 3 linhas. Passou disso, não é balão, é peça.
 - Cor: `peca` da paleta de quem gerou (aviso de Mari bater na porta = paleta de Mari); da sala, Anil.
 - Três tipos, com regras diferentes:
@@ -227,8 +230,9 @@ lugar.
   contraste e **nunca serve de contorno de controle**.
 - **(variar)** linha contínua, só as interseções (textura de pontos, do Roteirista) ou interseções em
   Pontos de 3 px.
-- Fica no Início, na porta, nos vazios e atrás das peças da sala; **nunca atrás do palco** nem
-  dentro de área de leitura.
+- **Em aberto (13 nov):** onde a grade fica se decide na conversa da #367. Não pode estar em todo
+  lugar, nem na tela e na sala ao mesmo tempo (não dá para separar o que é tela do que é sala, e as
+  grades não se encaixam). Até lá, vale só: **nunca atrás do palco** nem dentro de área de leitura.
 
 ### 5.2 Padrões infinitos que reagem ao mouse
 
@@ -243,10 +247,10 @@ lugar.
 | Gesto              | Forma                            | Onde                                            | Com Reduzir movimento                               |
 | ------------------ | -------------------------------- | ----------------------------------------------- | --------------------------------------------------- |
 | Ponto + **anel**   | Contorno que acompanha a voz     | fala (lê o estado de voz, não cria análise)     | Contorno fixo de 2 px enquanto fala; some ao parar  |
-| Ponto + **halo**   | Contorno que se afasta e esmaece | convidar, alguém bateu na porta, chamar atenção | dois Contornos parados, um afastado do outro        |
+| Ponto + **halo**   | Contorno que se afasta e esmaece | convidar, alguém bateu na porta, chamar atenção | um Contorno parado, afastado do Ponto (um halo só)  |
 | Ponto + **órbita** | Pontos menores girando em volta  | carregando, conectando, reconectando            | três Pontos parados em volta, com o texto do estado |
 
-Os mesmos três em botão, balão, ilustração e carregamento. Nada de quarto gesto sem pedido. Parados,
+**Um halo só**: nunca dois halos no mesmo Ponto (#367). Os mesmos três em botão, balão, ilustração e carregamento. Nada de quarto gesto sem pedido. Parados,
 eles ainda dizem o estado pela forma.
 
 ### 5.4 Ilustrações
@@ -266,7 +270,8 @@ eles ainda dizem o estado pela forma.
   não vazio.
 - **Sem largura máxima** (resposta 5). A tela usa toda a largura, até telão e TV. Em tela grande o
   conteúdo não se espalha: as peças crescem em proporção (a escala da interface sobe a partir de
-  1920 px) e o que é lido junto continua agrupado, com linhas de texto de até ~72 caracteres.
+  1920 px) e o que é lido junto continua agrupado, com linhas de texto de até ~72 caracteres. O texto precisa
+  ficar legível em tela larga (a rodada 2 falhou nisso); não é preciso testar várias dimensões.
 - Celular (390 px): balões viram uma linha no topo e uma embaixo; nada de rolagem lateral.
 
 ## 7. Movimento
@@ -312,14 +317,14 @@ dica e o menu **não usam o Ponto**. Proposta **"brotar do canto"**:
 ### 7.3 Reduzir movimento
 
 É o interruptor de acessibilidade e também de PC fraco ou internet ruim (decisão 020).
-Uma regra só, **sem exceção: tudo vira esmaecimento de 150 ms** (`opacity`), dica e menu inclusive.
+São **3 níveis** (#369; os níveis ainda serão definidos). O nível máximo segue a regra antiga, **sem exceção: tudo vira esmaecimento de 150 ms** (`opacity`), dica e menu inclusive.
 O Ponto aparece direto no lugar final, nada cresce nem quica, os padrões de fundo param e os três
 gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 
 ## 8. Proibido
 
-- Forma: quina reta em peça (tudo quadrado, 2A); pílula acima de 24 px ou raio acima de 16 px em
-  Placa e peça; tudo parecer balão (5B); círculo como pessoa ou sala; raios que não encaixam.
+- Forma: quina reta em peça (tudo quadrado, 2A); pílula (exceção só com aval, caso a caso) ou raio acima de 16 px em
+  Placa e peça; recipiente com raio diferente do quadrado de dentro; tudo parecer balão (5B); círculo como pessoa ou sala; raios que não encaixam.
 - Ponto solto, sem papel; cadeado ou outro selo por cima do Ponto da sala; dois Pontos da marca ao
   mesmo tempo (fora contagem e carregamento).
 - Cor: verde ou outra cor de estado fora da paleta; cor pura da pessoa em área grande; botão branco
@@ -342,9 +347,9 @@ gestos ficam estáticos, com o estado mostrado pela forma (tabela da 5.3).
 | Base dominante   | 3A tonal · 5A geométrico · mistura com peso maior num dos dois                                     |
 | Posição da sala  | balões nos 4 cantos · coluna de peças numa borda · menu radial em Pontos ao redor do Ponto da sala |
 | Fundo            | grade de linhas · textura de pontos · pontos que reagem                                            |
-| Canto do balão   | canto apontado · bico em Corte                                                                     |
+| Canto do balão   | fechado: bico em Corte                                                                             |
 | Cor da interface | só Anil · peças da pessoa na cor dela · interface na cor de quem a usa (opção, resposta 1)         |
-| Botão principal  | placa com texto · Ponto com texto ao lado (resposta 4)                                             |
+| Botão principal  | fechado: com o Ponto dentro                                                                        |
 
 ## 10. Entrega de cada variação
 
@@ -402,7 +407,8 @@ Cada variação mostra os estados de um botão de ícone, um botão com texto e 
 
 ## Respostas do usuário (12 nov 2026)
 
-1. **Cor pessoal na interface:** opção em Aparência ("tema na minha cor", parcial), **desligada por
+1. **Cor pessoal na interface** (revista em 13 nov, ver a última seção; o texto abaixo é o de 12 nov):
+   opção em Aparência ("tema na minha cor", parcial), **desligada por
    padrão**. Desligada, a cor tinge só o que vem da pessoa. Ligada, mais partes da interface usam a
    paleta dela. Como existe a roda de cores, qualquer cor pode chegar: os tons da paleta saem da
    receita da 3.2 (luminosidade e croma fixos, só o matiz vem da cor), então continuam legíveis com
@@ -412,7 +418,8 @@ Cada variação mostra os estados de um botão de ícone, um botão com texto e 
 2. **Ponto branco parado:** não é definitivo. O Ponto pode passar o protagonismo de um lugar para
    outro, mover-se e mudar de cor (ficar anil) conforme a tela. Só no movimento reduzido ele fica
    parado. Detalhe fica para a fase 5.
-3. **"Ao vivo":** o ponto é sempre verde. Testar nas variações o verde-água atual (`#4CDDC3`) e um
+3. **"Ao vivo"** (revisto em 13 nov: verde vivo mas não tanto, sem parecer azul, e **um halo só**, não dois):
+   o ponto é sempre verde. Testar nas variações o verde-água atual (`#4CDDC3`) e um
    verde mais vivo que passe contraste; nos dois casos vai com o halo e o texto "Ao vivo", para não
    se confundir com o Ponto de quem escolheu Verde ou Ciano.
 4. **Criar sala:** o comentário antigo falava da animação, não de tirar o texto. Pode explorar a
@@ -420,3 +427,22 @@ Cada variação mostra os estados de um botão de ícone, um botão com texto e 
 5. **Largura máxima:** nenhuma. Funciona de 390 px a telão; a partir de 1920 px cresce em proporção
    (seção 6).
 6. **Quique de quem chega:** como recomendado, só no Ponto da pessoa.
+
+## Revisão de 13 nov 2026
+
+A rodada 2 (#366) foi **recusada**; críticas e novo processo na
+[#367](https://github.com/Fernando-Nine/VIO_TEST/issues/367). O que mudou neste guia:
+
+- **Sem pílula** (recipiente segue o raio do quadrado de dentro; exceção só com aval) e **um halo só**.
+- **Fechado:** bico em Corte; botão principal com o Ponto dentro; "Ao vivo" verde vivo que encaixe na
+  paleta e não pareça azul (tom a definir); Ponto parado de preferência Anil.
+- **Grade:** em aberto, decidida na conversa da #367; nunca em todo lugar, nem na tela e na sala juntas.
+- **Tela larga:** cresce em proporção e o texto precisa ficar legível.
+- **Botão importante nunca usa a cor de outra pessoa.**
+- **Cor pessoal (resposta 1 revista):** "Cada um na sua cor" é uma opção **ligada por padrão**, separada
+  do tema (chat, votação e aviso de entrada podem usar a cor de quem agiu; botões importantes e padrões
+  da interface não mudam). "Tema na minha cor" é um tema completo, inclusive nos botões importantes, com
+  paleta gerada automaticamente da roda de cores. Cada tema tem **4 níveis de claridade** (#368).
+- **Reduzir movimento:** 3 níveis (#369).
+- **Processo:** definição escrita, depois 5 kits enxutos e diferentes entre si, e o escolhido expandido
+  em 3 exemplos de uso. Cada forma vem com a explicação do que faz.

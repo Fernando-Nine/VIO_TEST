@@ -108,8 +108,8 @@ auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não
 - **Pesquisar antes de insistir**: diante de bug difícil ou solução incerta, rode o `pesquisador`
   (fóruns, Reddit, issues de bibliotecas, docs) antes de trocar código por tentativa.
 - **Ver antes de codar**: toda coisa nova visível (widget, tela, cursor, ajustes, card) começa com
-  rascunho do Design (trabalho novo ou de identidade: 5 estilos × 5 exemplos; exploração de estilo visual da fase 2:
-  5 estilos × 2 amostras em telas reais, pedido do usuário em 9 nov; ajuste pequeno: 2–3 opções;
+  rascunho do Design (trabalho novo ou de identidade: 5 estilos × 5 exemplos; estilo visual da fase 2: definição
+  escrita primeiro, depois 5 kits enxutos e diferentes entre si, e o escolhido expandido em 3 exemplos de uso (pedido de 13 nov); ajuste pequeno: 2–3 opções;
   tamanho real, etiqueta `design`; decisão 021; ordem por fases em `docs/design/guias/plano.md`) e só vira issue de
   frontend/backend depois do aval do usuário no rascunho. Correção de bug e ajuste pequeno do que
   já existe não precisam. Vale também para transição e animação. O copiloto confere o aval na issue
@@ -184,6 +184,7 @@ parado o cache expira e a próxima mensagem relê tudo).
 - Responsividade: toda tela funciona em janela pequena no computador e em aparelho pequeno. Se não
   houver conserto, defina um tamanho mínimo de janela logo antes de quebrar; abaixo dele, só o modo
   flutuante/picture-in-picture de uma tela.
+- Variação de Design: fiel ao guia aprovado; cada forma tem função explicada; botão importante nunca na cor de outra pessoa; sem pílula (recipiente segue o quadrado), um halo só.
 - Interface enxuta: sem texto que explique o óbvio, sem aviso repetido, sem botão morto.
   Prefira edição direta, hover e menu de botão direito a painéis de ajustes.
 

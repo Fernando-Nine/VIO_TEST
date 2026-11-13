@@ -27,8 +27,8 @@ Ordem completa do produto em `ROADMAP.md`.
 - **P1**: #266 cursor some · #268 Baixar direto · #280 Flutuante no app (mídia, em andamento) · #344 áudio da tela some só para um amigo (mídia; ver Decisões de 12 nov).
 - **P2**: #303 app com uma instância só (Mídia) · #261 transições (Opus no máximo; espera a fase 5 do plano de design) · #270 notificações · #269 responsividade + vitrine (QA) · #355 Grade 1x1 já é foco, sem botão (não urgente) · #356 tamanho mínimo da janela e vídeo flutuante ·
   #20 Prettier na CI · #25 conferir TURN · #296 · #297 barra de rolagem em Recentes ·
-  #338 ponto redondo na sala (frontend).
-- **P3**: #357 antispam e limites (Backend/segurança) · #358 botões do mouse e menu de contexto · #359 barra de título do app · #282 bandeja + ícone · #227 brandbook · #197 landing (pendências) · #208 clips ·
+  #338 ponto redondo na sala (frontend) · #370 pílula e halo (espera o kit).
+- **P3**: #357 antispam e limites (Backend/segurança) · #358 botões do mouse e menu de contexto · #359 barra de título do app · #282 bandeja + ícone · #227 brandbook · #367 definição e kits da fase 2 · #368 temas (4 claridades) · #369 acessibilidade (3 níveis de movimento) · #197 landing (pendências) · #208 clips ·
   #168 Ajustes · #135 TURN Cloudflare (`aguarda-usuario`, inalterada em 12 nov; avisar o usuário quando chegar a vez) · #21 conferência pós-deploy ·
   #22 BrowserLab na CI · Design: #293 qualidade automática · #294 Minha tela + Minha prévia ·
   #295 cards flutuantes · #298 cor da sala · #299 cor pessoal; menu inicial em #197.
@@ -73,6 +73,7 @@ Uma linha por decisão; o texto está em `docs/decisoes/` (formato no README de 
 - Brandbook P8 (11 nov): na M1 o ponto tem a mesma cor do "v"; detalhes em `design/brandbook/marca.md`. As 15 perguntas da 1a estão respondidas.
 - Hospedagem (12 nov): fica no Render Free por ora; o sono de 15 min não pesa, pois o servidor segue ativo enquanto há gente usando. **Pendente, ligado ao banco:** quando ele chegar, o copiloto explica ao usuário como o Render funciona, as alternativas e por que Render e não Vercel.
 - TURN (12 nov): #135 segue `aguarda-usuario`, sem mudança.
+- Design fase 2 (13 nov, #367): rodada 2 recusada (variações parecidas entre si e longe do guia). Regras novas: sem pílula, um halo só, botão importante nunca na cor de outra pessoa; bico em Corte, botão principal com o Ponto dentro. Novo processo: definição escrita (Roteirista), 5 kits enxutos, o escolhido expandido em 3 exemplos. Detalhe em `design/guias/estilo.md`.
 - Layout individual (decisão 022): cada pessoa monta o próprio; dono e admins só moderam e adicionam widgets.
 - Checagem automática (12 nov): o que um robô confere não volta para o usuário nem para o chat. Playwright é dependência aprovada. #269 ampliada com a vitrine; mudança de interface roda a vitrine.
 - **Para depois (usuário decide quando):** caminho das animações: a Fable desenha, o Opus implementa e confere quadro a quadro, e a Fable revisa.
