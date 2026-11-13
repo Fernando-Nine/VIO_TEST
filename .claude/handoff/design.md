@@ -1,14 +1,16 @@
 # Design — handoff
 
-Atualizado: 2026-11-12
+Atualizado: 2026-11-13
 
 ## Agora
 
-Plano de design por fases 0–5 (#227): `docs/design/guias/plano.md`. **Fase 2, rodada 2:** 6
-variações sobre o guia aprovado (`docs/design/guias/estilo.md`, PR #361) publicadas no
-[canvas](https://claude.ai/artifact/UPb7DxFciP46are3wAkczD). Esperando o usuário escolher por
-comentário; resumo em `docs/design/escolhas/estilo-visual.md`. Depois do aval: preencher a seção
-Escolhidas da prancha `Main`, subir o decidido para o brandbook (fase 3) e fechar a #227.
+Plano de design por fases 0–5 (#227): `docs/design/guias/plano.md`. **Fase 2: a rodada 2
+foi recusada** em 13 nov (#367; resumo em `docs/design/escolhas/estilo-visual.md`). O guia
+`docs/design/guias/estilo.md` ganhou as regras novas (sem pílula, um halo só, botão importante nunca na
+cor de outra pessoa, escolhas fechadas). Próximo: definição escrita com o Roteirista (Início, o que
+preenche os espaços, onde fica a grade); depois 5 kits enxutos e diferentes entre si; então o kit
+escolhido expandido com 3 exemplos; só depois o brandbook (fase 3). Temas #368, acessibilidade #369 e
+pílula/halo #370 são issues próprias.
 Fonte das pranchas (gerador): fora do repositório, recriável pelo canvas (as `.dc.html` são a
 referência).
 
@@ -31,5 +33,5 @@ referência).
 
 ## Próximo passo
 
-Ler os comentários do canvas das variações (`ArtifactComments`) e montar a prancha Escolhidas.
+Com o Roteirista, escrever a definição da #367 e publicá-la como página com comentários.
 Histórico das levas: `docs/notas/design.md`.
