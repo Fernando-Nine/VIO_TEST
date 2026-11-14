@@ -201,8 +201,8 @@ parado o cache expira e a próxima mensagem relê tudo).
 
 ## Escopo
 
-Agora: sem contas, banco de dados ou gravação no servidor — **adiados**, não proibidos
-(clips gravados no próprio aparelho são um objetivo futuro). Sem SFU. Aviso de carga P2P
+Agora: sem contas, banco de dados ou gravação no servidor — **adiados**, não proibidos. Telas, interfaces e opções que dependem deles **podem e devem** ser planejadas e desenhadas já, prontas para quando chegarem (pedido de 14 nov).
+Clips gravados no próprio aparelho são um objetivo futuro. Sem SFU. Aviso de carga P2P
 a partir de 6 pessoas, sem bloquear entrada.
 Futuro: app Windows (prioridade), depois celular; comunidade e monetização.
 Dependência nova exige aprovação do usuário (aprovadas: as do `package.json` atual).
