@@ -1,9 +1,13 @@
 # Mídia — handoff
 
-Atualizado: 2026-11-12
+Atualizado: 2026-11-14
 
 ## Agora
 
+#352 (microfone próprio): pesquisa e projeto entregues em `docs/planos/microfone-proprio.md`, com
+página de leitura para comentários (link no topo do arquivo). **Aguarda aval do usuário** em 5
+decisões: caminho (A recomendado: captura WASAPI crua + processamento próprio), dependências
+`nnnoiseless` e `sonora`, RNNoise no navegador (depois) e rodar a etapa 0 no PC dele. Sem código.
 #344 (Windows abaixa os outros sons) na PR `fix/344-ducking-windows`, sem auto-merge: **provisório**,
 muda `UserDuckingPreference` (pergunta uma vez + chave em Ajustes › Áudio) e reabre o microfone.
 Quando o Windows relê o valor não é documentado; o teste do usuário no PC decide. Sai com a #352.
@@ -15,6 +19,8 @@ revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia es
 
 ## Pendente / bloqueios
 
+- #352: nada começa antes do aval. Nenhum número do plano foi medido por nós; a etapa 0 (bancada no
+  PC do usuário) confirma qual fluxo abaixa os sons, o atraso da ponte e a CPU.
 - Parecer curto, com o Pesquisador quando existir: captura nativa x anti-cheat (Valorant/Riot),
   porque a tela pequena pode ter vindo dele. O usuário vai testar.
 - #135 TURN Cloudflare (`aguarda-usuario`): explicar passo a passo quando ele pedir.
@@ -31,5 +37,6 @@ revisão e o teste do usuário no PC. #267, #271, #24 e #23 seguem na prévia es
 
 ## Próximo passo
 
-Primeira issue `midia` da Fila do `ESTADO.md`. Medidas e dicas de bancada (inclusive `cargo check`
-do Windows no Linux): `docs/notas/midia.md`.
+Com o aval na #352: abrir a issue da etapa 0 (medidas de bancada, sem código de produto). Sem o
+aval: primeira issue `midia` da Fila do `ESTADO.md`. Medidas e dicas de bancada (inclusive
+`cargo check` do Windows no Linux): `docs/notas/midia.md`.
