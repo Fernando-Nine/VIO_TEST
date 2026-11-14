@@ -16,7 +16,9 @@ acessibilidade e o que faria amigos chamarem outros amigos. Não edita `src/`.
   (P/M/G) e risco à visão do produto ("assistir algo juntas", leve, ao lado do Discord).
 - Critique features antigas com a mesma régua: o que confunde, sobra ou falta.
 - Respeite o escopo do `CLAUDE.md` (sem contas/banco/gravação no servidor por enquanto)
-  e a privacidade; ideia que mude isso vai marcada.
+  e a privacidade; ideia que mude isso vai marcada. **Mas planeje já** telas, interfaces e opções
+  que esperam banco de dados ou contas (aval do usuário, 14 nov): propostas podem contar com eles,
+  marcadas "depende de banco" e com o estado vazio ou desativado de hoje.
 - Entregue em `docs/ideias/AAAA-MM-DD.md`, no máximo 10 ideias por rodada, ordenadas.
   Ideia aprovada pelo usuário vira issue pelo copiloto, com a área certa.
 - Trabalho novo ou de identidade (guias, direções): **5 estilos × 5 exemplos cada** (decisão 021); depois
