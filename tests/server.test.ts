@@ -2835,3 +2835,26 @@ test("sala vazia que só o criador usou some em 1 min; a que teve mais gente fic
     await app.close();
   }
 });
+
+test("recusa por limite de criação não despeja a sala vazia de ninguém (#376)", async () => {
+  const app = await server(0, { MAX_ROOMS_PER_IP: "6" }),
+    sockets: Socket[] = [];
+  try {
+    const a = await person(app, sockets);
+    for (let i = 0; i < 6; i++) {
+      data(await request(a, "join", { name: "A", code: "KEEP000" + i }));
+      data(await request(a, "leave", {}));
+    }
+    // Six empty rooms and no creation tokens left: the seventh is refused and
+    // the oldest empty room stays where it is.
+    refused(
+      await request(a, "join", { name: "A", code: "KEEP0007" }),
+      "RATE_LIMIT",
+    );
+    assert.equal(app.rooms.rooms.size, 6);
+    assert.equal(app.rooms.rooms.has("KEEP0000"), true);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});

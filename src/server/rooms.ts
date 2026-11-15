@@ -563,27 +563,30 @@ export class Rooms {
    * an idle one never blocks a real person.
    */
   private admitRoom(ip: string) {
-    this.limits.take(ip + ":room-create", ROOM_CREATES_PER_MINUTE);
+    // Decide first, spend the creation token after: a refusal costs nothing.
     let mine = 0;
     for (const room of this.rooms.values()) if (room.originIp === ip) mine++;
+    const evict: Room[] = [];
     if (mine >= this.config.maxRoomsPerIp) {
       const own = this.oldestEmpty(ip);
       if (!own)
         throw new Fault(
           "CAPACITY",
-          "Você já tem salas demais abertas. Feche uma e tente de novo.",
+          "Esta rede já tem muitas salas abertas. Feche uma e tente de novo.",
         );
-      this.dropRoom(own);
+      evict.push(own);
     }
-    if (this.rooms.size >= this.config.maxRooms) {
+    if (this.rooms.size - evict.length >= this.config.maxRooms) {
       const empty = this.oldestEmpty();
-      if (!empty)
+      if (!empty || evict.includes(empty))
         throw new Fault(
           "CAPACITY",
           "O serviço está ocupado. Tente novamente em instantes.",
         );
-      this.dropRoom(empty);
+      evict.push(empty);
     }
+    this.limits.take(ip + ":room-create", ROOM_CREATES_PER_MINUTE);
+    for (const room of evict) this.dropRoom(room);
   }
   /** Drops what the member's page published or watched; the page is gone. */
   private dropMedia(room: Room, member: Member) {
