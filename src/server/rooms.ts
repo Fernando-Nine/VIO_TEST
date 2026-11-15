@@ -274,9 +274,14 @@ export class Rooms {
           .to(member.socketId)
           .emit("widget-updated", { id, widget: this.view(widget, member.id) });
   }
-  /** Polls with a deadline reveal their votes when time runs out. */
+  /**
+   * Polls with a deadline reveal their votes when time runs out. One timer per
+   * widget (#375): a new start, a reset or a close cancels the previous one,
+   * and the callback holds only the room code and the widget id.
+   */
   private scheduleReveal(room: Room, widget: SharedWidget) {
     const { module, moduleState: state } = widget;
+    room.widgets.cancelReveal(widget.id);
     if (
       module?.kind !== "poll" ||
       !state ||
@@ -284,19 +289,24 @@ export class Rooms {
     )
       return;
     if (!module.duration) return;
+    const { code, widgets } = room;
+    const id = widget.id;
     const startedAt = state.startedAt!;
-    setTimeout(
+    room.widgets.scheduleReveal(
+      id,
+      Math.max(0, startedAt + module.duration * 1000 - Date.now()) + 50,
       () => {
-        const current = room.widgets.entries.get(widget.id);
+        const live = this.rooms.get(code);
+        const current = live?.widgets.entries.get(id);
         if (
-          this.rooms.get(room.code) === room &&
+          live &&
+          live.widgets === widgets &&
           current?.moduleState?.startedAt === startedAt &&
           !current.moduleState.closed
         )
-          this.emitWidget(room, widget.id, current);
+          this.emitWidget(live, id, current);
       },
-      Math.max(0, startedAt + module.duration * 1000 - Date.now()) + 50,
-    ).unref();
+    );
   }
   private screenViewers(room: Room): Record<string, string[]> {
     const viewers: Record<string, string[]> = {};
@@ -1080,7 +1090,10 @@ export class Rooms {
         data.operation,
       );
       this.emitWidget(room, data.id, widget);
-      if (data.operation.kind === "poll-control")
+      if (
+        data.operation.kind === "poll-control" ||
+        data.operation.kind === "reset"
+      )
         this.scheduleReveal(room, widget);
       return this.view(widget, m.id);
     }
