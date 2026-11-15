@@ -289,7 +289,7 @@ export class Rooms {
     )
       return;
     if (!module.duration) return;
-    const { code } = room;
+    const { code, widgets } = room;
     const id = widget.id;
     const startedAt = state.startedAt!;
     room.widgets.scheduleReveal(
@@ -300,6 +300,7 @@ export class Rooms {
         const current = live?.widgets.entries.get(id);
         if (
           live &&
+          live.widgets === widgets &&
           current?.moduleState?.startedAt === startedAt &&
           !current.moduleState.closed
         )
@@ -1089,7 +1090,10 @@ export class Rooms {
         data.operation,
       );
       this.emitWidget(room, data.id, widget);
-      if (data.operation.kind === "poll-control")
+      if (
+        data.operation.kind === "poll-control" ||
+        data.operation.kind === "reset"
+      )
         this.scheduleReveal(room, widget);
       return this.view(widget, m.id);
     }
