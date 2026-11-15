@@ -2718,3 +2718,63 @@ test("câmera segue a demanda de cada espectador (#162); voz não tem demanda", 
     await app.close();
   }
 });
+
+test("enquete com prazo mantém no máximo um timer por widget e nenhum depois dele (#375)", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const sessions = await Promise.all([session(app.url), session(app.url)]);
+    for (const s of sessions) sockets.push(await connect(app.url, s.token));
+    const [creator, other] = sockets;
+    data(await request(creator, "join", { code: "TIMERPOLL", name: "Dono" }));
+    const poll = defaultModule("poll", () => crypto.randomUUID());
+    if (poll.kind !== "poll") assert.fail();
+    const room = () => app.rooms.rooms.get("TIMERPOLL")!;
+    const id = crypto.randomUUID();
+    data(
+      await request(creator, "widget-create", {
+        id,
+        content: {
+          kind: "poll",
+          title: "Prazo",
+          blocks: [],
+          module: { ...poll, duration: 3600 },
+        },
+      }),
+    );
+    const control = async (action: "start" | "reset") =>
+      data(
+        await request<SharedWidget>(creator, "module-interact", {
+          id,
+          operationId: crypto.randomUUID(),
+          operation: {
+            kind: "poll-control",
+            action,
+            revision: room().widgets.entries.get(id)!.revision,
+          },
+        }),
+      );
+    for (let i = 0; i < 20; i++) {
+      await control("start");
+      assert.equal(room().widgets.pendingReveals, 1);
+      await control("reset");
+      assert.equal(room().widgets.pendingReveals, 0);
+    }
+    await control("start");
+    assert.equal(room().widgets.pendingReveals, 1);
+    data(await request(creator, "widget-delete", { id }));
+    assert.equal(room().widgets.pendingReveals, 0);
+    // Restoring reopens the poll with its deadline: one timer again.
+    data(await request(creator, "widget-restore", { id }));
+    assert.equal(room().widgets.pendingReveals, 1);
+    // The last person leaving empties the room and takes the timer with it.
+    const widgets = room().widgets;
+    other.disconnect();
+    const members = [...room().members.values()];
+    for (const m of members) (app.rooms as any).leave(room(), m, true);
+    assert.equal(widgets.pendingReveals, 0);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
