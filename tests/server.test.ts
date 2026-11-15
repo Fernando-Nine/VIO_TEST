@@ -20,7 +20,7 @@ import type {
 } from "../src/shared/protocol";
 const origin = "http://localhost:3000";
 const secret = "test-only-session-secret-do-not-use-in-production";
-async function server(port = 0) {
+async function server(port = 0, extra: Record<string, string> = {}) {
   const instance = await createApp(
     readConfig({
       PORT: String(port),
@@ -28,6 +28,7 @@ async function server(port = 0) {
       ALLOWED_ORIGINS: origin,
       STUN_URLS: "",
       MAX_PARTICIPANTS: "6", // A legacy deployment must not reintroduce the cap.
+      ...extra,
     }),
   );
   instance.http.listen(port, "127.0.0.1");
@@ -993,7 +994,13 @@ test("trocar identidades não contorna limites de sessão e entrada por IP", asy
       sockets.push(await connect(app.url, token));
     for (let i = 0; i < 40; i++) {
       const socket = sockets[i % sockets.length];
-      data(await request(socket, "join", { name: "Teste", code: "RATE" + i }));
+      // Five rooms reused: only new rooms count against the creation limit (#376).
+      data(
+        await request(socket, "join", {
+          name: "Teste",
+          code: "RATE" + (i % 5),
+        }),
+      );
       data(await request(socket, "leave"));
     }
     const denied = await request(sockets[0], "join", {
@@ -2713,6 +2720,116 @@ test("câmera segue a demanda de cada espectador (#162); voz não tem demanda", 
       ).ok,
       false,
     );
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+async function person(app: { url: string }, sockets: Socket[]) {
+  const { token } = await session(app.url);
+  const socket = await connect(app.url, token);
+  sockets.push(socket);
+  return socket;
+}
+const refused = (r: Reply<unknown>, code: string) => {
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.equal(r.code, code);
+};
+
+test("um IP não enche o teto de salas: limite por IP, vaga das vazias e criação por minuto (#376)", async () => {
+  const app = await server(0, { MAX_ROOMS_PER_IP: "2" }),
+    sockets: Socket[] = [];
+  try {
+    const [a, b, c] = [
+      await person(app, sockets),
+      await person(app, sockets),
+      await person(app, sockets),
+    ];
+    data(await request(a, "join", { name: "A", code: "CAPONE1" }));
+    data(await request(b, "join", { name: "B", code: "CAPTWO22" }));
+    // The IP already has two rooms with people in them: a third is refused.
+    refused(
+      await request(c, "join", { name: "C", code: "CAPTHREE" }),
+      "CAPACITY",
+    );
+    assert.equal(app.rooms.rooms.has("CAPTHREE"), false);
+    // Once one of them empties, it makes room for the new one.
+    data(await request(b, "leave", {}));
+    data(await request(c, "join", { name: "C", code: "CAPTHREE" }));
+    assert.equal(app.rooms.rooms.has("CAPTWO22"), false);
+    assert.equal(app.rooms.rooms.has("CAPONE1"), true);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("no teto global sala vazia dá a vaga e sala ocupada nunca é despejada (#376)", async () => {
+  const app = await server(0, { MAX_ROOMS: "2", MAX_ROOMS_PER_IP: "10" }),
+    sockets: Socket[] = [];
+  try {
+    const [a, b, c] = [
+      await person(app, sockets),
+      await person(app, sockets),
+      await person(app, sockets),
+    ];
+    data(await request(a, "join", { name: "A", code: "GLOBAL01" }));
+    data(await request(b, "join", { name: "B", code: "GLOBAL02" }));
+    refused(
+      await request(c, "join", { name: "C", code: "GLOBAL03" }),
+      "CAPACITY",
+    );
+    data(await request(a, "leave", {}));
+    data(await request(c, "join", { name: "C", code: "GLOBAL03" }));
+    assert.equal(app.rooms.rooms.size, 2);
+    assert.equal(app.rooms.rooms.has("GLOBAL02"), true);
+    assert.equal(app.rooms.rooms.has("GLOBAL01"), false);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("criar sala em sequência esbarra no limite por minuto do IP (#376)", async () => {
+  const app = await server(0, { MAX_ROOMS_PER_IP: "50" }),
+    sockets: Socket[] = [];
+  try {
+    const a = await person(app, sockets);
+    for (let i = 0; i < 6; i++) {
+      data(await request(a, "join", { name: "A", code: "BURST00" + i }));
+      data(await request(a, "leave", {}));
+    }
+    refused(
+      await request(a, "join", { name: "A", code: "BURST007" }),
+      "RATE_LIMIT",
+    );
+    assert.equal(app.rooms.rooms.has("BURST007"), false);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("sala vazia que só o criador usou some em 1 min; a que teve mais gente fica o TTL inteiro (#376)", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const [a, b, c] = [
+      await person(app, sockets),
+      await person(app, sockets),
+      await person(app, sockets),
+    ];
+    data(await request(a, "join", { name: "A", code: "SOLO0001" }));
+    data(await request(b, "join", { name: "B", code: "PAIR0001" }));
+    data(await request(c, "join", { name: "C", code: "PAIR0001" }));
+    data(await request(a, "leave", {}));
+    data(await request(b, "leave", {}));
+    data(await request(c, "leave", {}));
+    for (const room of app.rooms.rooms.values()) room.touched -= 90_000;
+    app.rooms.clean();
+    assert.equal(app.rooms.rooms.has("SOLO0001"), false);
+    assert.equal(app.rooms.rooms.has("PAIR0001"), true);
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();
