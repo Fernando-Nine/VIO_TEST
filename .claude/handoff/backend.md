@@ -1,12 +1,19 @@
 # Backend/Segurança — handoff
 
-Atualizado: 2026-11-07
+Atualizado: 2026-11-15
 
 ## Agora
 
-#292 (reinício duplicava pessoas e tocava sons): PR `fix/292-reinicio` aberta sem auto-merge; o
-copiloto roda o goldfish no diff e liga o auto-merge. Conferir na prévia: deploy com 3 pessoas na
-sala, sem duplicata e sem som de entrar/sair; uma entrada real ainda toca.
+Revisão de segurança (nov/2026), duas P1 de disponibilidade:
+
+- #375 (PR #379): um timer de revelação por enquete (`RoomWidgets.scheduleReveal`/`cancelReveal`), cancelado
+  ao reiniciar, resetar, mudar a estrutura, apagar o widget e esvaziar a sala.
+- #376 (PR aberta no branch `fix/376-teto-salas`): `Rooms.admitRoom` cobra 6 criações/min por IP, no máx.
+  `MAX_ROOMS_PER_IP` (6) salas abertas por IP e o teto global; no limite a sala vazia mais antiga cede a
+  vaga; sala vazia que só o criador usou vai embora em 60 s.
+  Os dois problemas também existem na produção 2.11.0: recomendado hotfix (decisão 005).
+  Conferir na prévia: entrar/criar salas normalmente; amigos no mesmo IP (NAT) abrindo mais de 6 salas ao
+  mesmo tempo recebem `CAPACITY`.
 
 ## Pendente / bloqueios
 
@@ -36,6 +43,8 @@ sala, sem duplicata e sem som de entrar/sair; uma entrada real ainda toca.
   chamada, widgets); `page` é segredo da aba. `io.use` só manda `SESSION_EXPIRED` para token
   ruim; outro erro vira `CONNECTION_ERROR` (o cliente tenta com o mesmo token). Limite: no deploy
   do Render as duas instâncias coexistem ~60 s.
+- Criação de sala (#376): limites por IP em `admitRoom`; `Room.originIp` só em memória, nunca em log.
+- Timers de widget (#375): só dentro de `RoomWidgets` (um por widget, `unref`, limpos em `clear()`); nunca `setTimeout` solto na `Rooms`.
 - Orçamentos (`trimToBudget`, `chatBudget`, `historyBudget`) em `shared/widgets.ts`.
 
 ## Próximo passo
