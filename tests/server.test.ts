@@ -2726,6 +2726,78 @@ test("câmera segue a demanda de cada espectador (#162); voz não tem demanda", 
   }
 });
 
+test("enquete com prazo mantém no máximo um timer por widget e nenhum depois dele (#375)", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const { token } = await session(app.url);
+    const creator = await connect(app.url, token);
+    sockets.push(creator);
+    data(await request(creator, "join", { code: "TIMERPOLL", name: "Dono" }));
+    const poll = defaultModule("poll", () => crypto.randomUUID());
+    if (poll.kind !== "poll") assert.fail();
+    const room = () => app.rooms.rooms.get("TIMERPOLL")!;
+    const id = crypto.randomUUID();
+    data(
+      await request(creator, "widget-create", {
+        id,
+        content: {
+          kind: "poll",
+          title: "Prazo",
+          blocks: [],
+          module: { ...poll, duration: 3600 },
+        },
+      }),
+    );
+    const control = async (action: "start" | "reset") =>
+      data(
+        await request<SharedWidget>(creator, "module-interact", {
+          id,
+          operationId: crypto.randomUUID(),
+          operation: {
+            kind: "poll-control",
+            action,
+            revision: room().widgets.entries.get(id)!.revision,
+          },
+        }),
+      );
+    for (let i = 0; i < 20; i++) {
+      await control("start");
+      assert.equal(room().widgets.pendingReveals, 1);
+      await control("reset");
+      assert.equal(room().widgets.pendingReveals, 0);
+    }
+    // The generic reset operation also drops the pending reveal.
+    await control("start");
+    assert.equal(room().widgets.pendingReveals, 1);
+    data(
+      await request(creator, "module-interact", {
+        id,
+        operationId: crypto.randomUUID(),
+        operation: {
+          kind: "reset",
+          revision: room().widgets.entries.get(id)!.revision,
+        },
+      }),
+    );
+    assert.equal(room().widgets.pendingReveals, 0);
+    await control("start");
+    assert.equal(room().widgets.pendingReveals, 1);
+    data(await request(creator, "widget-delete", { id }));
+    assert.equal(room().widgets.pendingReveals, 0);
+    // Restoring reopens the poll with its deadline: one timer again.
+    data(await request(creator, "widget-restore", { id }));
+    assert.equal(room().widgets.pendingReveals, 1);
+    // The last person leaving empties the room and takes the timer with it.
+    const widgets = room().widgets;
+    data(await request(creator, "leave", {}));
+    assert.equal(widgets.pendingReveals, 0);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
 async function person(app: { url: string }, sockets: Socket[]) {
   const { token } = await session(app.url);
   const socket = await connect(app.url, token);
@@ -2853,6 +2925,56 @@ test("recusa por limite de criação não despeja a sala vazia de ninguém (#376
     );
     assert.equal(app.rooms.rooms.size, 6);
     assert.equal(app.rooms.rooms.has("KEEP0000"), true);
+  } finally {
+    sockets.forEach((s) => s.disconnect());
+    await app.close();
+  }
+});
+
+test("enquete com prazo ainda revela os votos quando o prazo acaba (#375)", async () => {
+  const app = await server(),
+    sockets: Socket[] = [];
+  try {
+    const { token } = await session(app.url);
+    const creator = await connect(app.url, token);
+    sockets.push(creator);
+    data(await request(creator, "join", { code: "REVEALPOLL", name: "Dono" }));
+    const poll = defaultModule("poll", () => crypto.randomUUID());
+    if (poll.kind !== "poll") assert.fail();
+    const id = crypto.randomUUID();
+    data(
+      await request(creator, "widget-create", {
+        id,
+        content: {
+          kind: "poll",
+          title: "Prazo curto",
+          blocks: [],
+          module: { ...poll, duration: 1 },
+        },
+      }),
+    );
+    const updates: number[] = [];
+    creator.on("widget-updated", (w: SharedWidget) => {
+      if (w.id === id) updates.push(Date.now());
+    });
+    const widget = app.rooms.rooms.get("REVEALPOLL")!.widgets.entries.get(id)!;
+    data(
+      await request(creator, "module-interact", {
+        id,
+        operationId: crypto.randomUUID(),
+        operation: {
+          kind: "poll-control",
+          action: "start",
+          revision: widget.revision,
+        },
+      }),
+    );
+    const started = Date.now();
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+    assert.ok(
+      updates.some((at) => at - started >= 900),
+      "the deadline pushes one more update to the room",
+    );
   } finally {
     sockets.forEach((s) => s.disconnect());
     await app.close();

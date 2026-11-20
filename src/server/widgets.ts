@@ -36,7 +36,28 @@ export class RoomWidgets {
   readonly closed = new Map<string, ClosedWidget>();
   private operations = new Map<string, number>();
   private lastMessages = new Map<string, number>();
+  /** One pending poll reveal per widget; never outlives the widget (#375). */
+  private reveals = new Map<string, NodeJS.Timeout>();
+  get pendingReveals() {
+    return this.reveals.size;
+  }
+  cancelReveal(id: string) {
+    clearTimeout(this.reveals.get(id));
+    this.reveals.delete(id);
+  }
+  /** Replaces any earlier reveal of the widget. `run` must not hold the room. */
+  scheduleReveal(id: string, delay: number, run: () => void) {
+    this.cancelReveal(id);
+    const timer = setTimeout(() => {
+      if (this.reveals.get(id) === timer) this.reveals.delete(id);
+      run();
+    }, delay);
+    timer.unref();
+    this.reveals.set(id, timer);
+  }
   clear() {
+    for (const timer of this.reveals.values()) clearTimeout(timer);
+    this.reveals.clear();
     this.entries.clear();
     for (const entry of this.closed.values()) clearTimeout(entry.timer);
     this.closed.clear();
@@ -129,17 +150,20 @@ export class RoomWidgets {
         ? { moduleState: {} }
         : {}),
     };
+    if (next.moduleState !== current.moduleState) this.cancelReveal(id);
     this.entries.set(id, next);
     return next;
   }
   remove(owner: string, id: string, authorized = false) {
     this.owned(owner, id, authorized);
     this.entries.delete(id);
+    this.cancelReveal(id);
   }
   /** Removes the widget and holds it for `closedWidgetHold` ms. */
   close(id: string, by: string, byName: string): WidgetClosed {
     const widget = this.owned(by, id, true);
     this.entries.delete(id);
+    this.cancelReveal(id);
     this.drop(id);
     // Bounded: at most one held copy per widget slot in the room.
     while (this.closed.size >= 32) this.drop(this.closed.keys().next().value!);

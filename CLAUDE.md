@@ -131,7 +131,7 @@ auditorias, migrações de muitos arquivos e pesquisa cruzada; gasta mais e não
 
 ## Contexto
 
-O chat se resume sozinho (compactação automática) aos 200 mil tokens, configurado em
+O chat se resume sozinho (compactação automática) aos 160 mil tokens, configurado em
 `.claude/settings.json`; ninguém troca de chat nem arquiva. **Áreas: 1–2 issues por sessão** (o
 copiloto abre a sessão); ao fim, atualize o handoff (formato em `.claude/handoff/README.md`) e faça
 commit. **Copiloto**: continua no mesmo chat; `/compact` antes de pausar por horas (depois de 1 h
