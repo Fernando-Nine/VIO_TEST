@@ -19,6 +19,8 @@ export interface Config {
   roomTtl: number;
   recommendedParticipants: number;
   maxRooms: number;
+  /** Rooms one IP may keep open at once (#376). */
+  maxRoomsPerIp: number;
   maxPreviews: number;
   maxSocketsPerIp: number;
   socketPath: string;
@@ -181,6 +183,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     // Advisory only. Legacy MAX_PARTICIPANTS must not restore the retired cap.
     recommendedParticipants: 6,
     maxRooms: integer(env.MAX_ROOMS, 200, 1, 10000),
+    maxRoomsPerIp: integer(env.MAX_ROOMS_PER_IP, 6, 1, 200),
     maxPreviews: 2,
     maxSocketsPerIp: integer(env.MAX_SOCKETS_PER_IP, 20, 4, 200),
     socketPath: env.SOCKET_PATH || "/socket.io",

@@ -76,6 +76,8 @@ interface Room {
   creatorId: string;
   permissions: RoomPermissions;
   touched: number;
+  /** Network origin of the creator, in memory only: bounds rooms per IP (#376). */
+  originIp: string;
   /**
    * Seat ranking (#226): the rank of the creator's credential (-1 = none).
    * While `provisional`, the creator got the seat without one (first back after
@@ -107,6 +109,10 @@ interface Waiting extends WaitingPerson {
   socketId: string;
 }
 const WAIT_TTL = 5 * 60 * 1000;
+/** An empty room only its creator ever used goes away sooner (#376). */
+const UNESTABLISHED_TTL = 60 * 1000;
+/** New rooms one IP may open per minute (#376). */
+const ROOM_CREATES_PER_MINUTE = 6;
 const MAX_WAITING = 20;
 const REFUSED_FOR = 60 * 1000;
 const MAX_KNOWN = 500;
@@ -535,9 +541,62 @@ export class Rooms {
               [...room.members.values()].some((o) => o !== m && o.online)))
         )
           this.leave(room, m);
-      if (!room.members.size && now - room.touched > this.config.roomTtl)
-        this.rooms.delete(room.code);
+      if (
+        !room.members.size &&
+        now - room.touched >
+          (room.known.size > 1
+            ? this.config.roomTtl
+            : Math.min(this.config.roomTtl, UNESTABLISHED_TTL))
+      )
+        this.dropRoom(room);
     }
+  }
+  private dropRoom(room: Room) {
+    room.widgets.clear();
+    this.rooms.delete(room.code);
+  }
+  /** Oldest empty room, optionally only those opened from `ip`. */
+  private oldestEmpty(ip?: string) {
+    let oldest: Room | undefined;
+    for (const room of this.rooms.values())
+      if (
+        !room.members.size &&
+        (ip === undefined || room.originIp === ip) &&
+        (!oldest || room.touched < oldest.touched)
+      )
+        oldest = room;
+    return oldest;
+  }
+  /**
+   * Gate for opening one more room (#376): a creation rate per IP, a cap of
+   * open rooms per IP and the global cap. Empty rooms are the first to go, so
+   * an idle one never blocks a real person.
+   */
+  private admitRoom(ip: string) {
+    // Decide first, spend the creation token after: a refusal costs nothing.
+    let mine = 0;
+    for (const room of this.rooms.values()) if (room.originIp === ip) mine++;
+    const evict: Room[] = [];
+    if (mine >= this.config.maxRoomsPerIp) {
+      const own = this.oldestEmpty(ip);
+      if (!own)
+        throw new Fault(
+          "CAPACITY",
+          "Esta rede já tem muitas salas abertas. Feche uma e tente de novo.",
+        );
+      evict.push(own);
+    }
+    if (this.rooms.size - evict.length >= this.config.maxRooms) {
+      const empty = this.oldestEmpty();
+      if (!empty || evict.includes(empty))
+        throw new Fault(
+          "CAPACITY",
+          "O serviço está ocupado. Tente novamente em instantes.",
+        );
+      evict.push(empty);
+    }
+    this.limits.take(ip + ":room-create", ROOM_CREATES_PER_MINUTE);
+    for (const room of evict) this.dropRoom(room);
   }
   /** Drops what the member's page published or watched; the page is gone. */
   private dropMedia(room: Room, member: Member) {
@@ -758,11 +817,7 @@ export class Rooms {
         );
       let room = this.rooms.get(code);
       if (!room) {
-        if (this.rooms.size >= this.config.maxRooms)
-          throw new Fault(
-            "CAPACITY",
-            "O serviço está ocupado. Tente novamente em instantes.",
-          );
+        this.admitRoom(socket.data.ip);
         room = {
           code,
           createdAt: Date.now(),
@@ -773,6 +828,7 @@ export class Rooms {
           creatorId: socket.data.id,
           permissions: { ...defaultPermissions },
           touched: Date.now(),
+          originIp: socket.data.ip,
           // A known code that is gone means a restart: its creator may return.
           creatorRank: recreated ? -1 : Date.now(),
           provisional: recreated,

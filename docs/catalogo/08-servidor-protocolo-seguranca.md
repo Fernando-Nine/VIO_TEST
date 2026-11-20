@@ -87,6 +87,7 @@
 | `FAREWELL_SECONDS` | 8 | 2–60; prazo depois da despedida, só com outra pessoa online |
 | `ROOM_TTL_SECONDS` | 300 | 10–3600 |
 | `MAX_ROOMS` | 200 | 1–10000 |
+| `MAX_ROOMS_PER_IP` | 6 | 1–200 |
 | `MAX_SOCKETS_PER_IP` | 20 | 4–200 |
 | `SOCKET_PATH` | `/socket.io` | — |
 | `SIGNALING_URL` | vazio (mesma origem) | — |

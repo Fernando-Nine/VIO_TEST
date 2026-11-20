@@ -49,7 +49,7 @@
 2. Sem `code` e sem sala atual: `generateCode()` = 8 bytes aleatórios em hex maiúsculo (16
    caracteres, 64 bits). Com `code` ou já em uma sala: `recreated = true`.
 3. Já em outra sala (`membership`) com código diferente → `ALREADY_JOINED`.
-4. Sala inexistente: se `rooms.size >= maxRooms` (200) → `CAPACITY`; senão cria `Room` com
+4. Sala inexistente: `admitRoom` (#376) cobra 6 criações/min por IP (`RATE_LIMIT`), limita `maxRoomsPerIp` (6) salas abertas por IP e o teto `maxRooms` (200); no limite, a sala **vazia** mais antiga cede a vaga e, sem vazia, `CAPACITY`; senão cria `Room` com
    `creatorId = quem chegou`, permissões padrão, `inviteGen` novo. `creatorRank = recreated ? -1 : Date.now()`; `provisional = fresh = recreated`. Ou seja: **qualquer código bem formado cria sala**;
    quem chega primeiro a um código "conhecido" é criador provisório.
 5. Mesma sessão já online em outro socket da sala → `SESSION_IN_USE`.
@@ -73,7 +73,7 @@
    `lastSeen=now`, `broadcast`. Não remove da sala.
 3. `clean()` roda a cada 10 s (`app.ts`, `setInterval`): remove recusas vencidas, expira esperas
    (5 min, `admission` "Ninguém respondeu a tempo"), faz `leave` de quem está offline há mais que
-   `grace` (90 s), apaga a sala vazia após `roomTtl` (300 s sem `touched`). O atraso real de remoção é
+   `grace` (90 s), apaga a sala vazia após `roomTtl` (300 s sem `touched`; 60 s se só o criador a usou, `known.size <= 1`). O atraso real de remoção é
    `grace` + até 10 s.
 4. `leave(room, member, explicit)`: encerra publicações e assinaturas, apaga o membro, `forget` nos
    widgets, `membership.delete`. Último a sair: limpa widgets e avisos, zera permissões (volta ao padrão
@@ -175,6 +175,7 @@ em `readConfig`, sem variável de ambiente (`MAX_PARTICIPANTS` legado é ignorad
 | Tolerância offline (grace) | 90 s (10–300) | `RECONNECT_GRACE_SECONDS` |
 | Sala vazia vive | 300 s (10–3600) | `ROOM_TTL_SECONDS` |
 | Máx. de salas | 200 (1–10000) | `MAX_ROOMS` |
+| Máx. de salas por IP | 6 (1–200) | `MAX_ROOMS_PER_IP` |
 | Participantes recomendados | 6 (fixo; sem teto) | `config.ts` |
 | Varredura de limpeza | 10 s | `app.ts` › `setInterval` |
 | Código gerado | 16 hex maiúsculos (64 bits) | `security.ts` › `generateCode` |

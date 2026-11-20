@@ -151,6 +151,7 @@ isolamento de áudio universal. [Limites e fontes](docs/NAVEGADORES.md).
 | `TURN_URLS`, `TURN_SECRET` | vazios | Configuração opcional de relay |
 | `TURN_TTL_SECONDS` | 600 | Expiração das credenciais TURN |
 | `MAX_ROOMS` | 200 | Limite de salas em memória |
+| `MAX_ROOMS_PER_IP` | 6 | Salas abertas ao mesmo tempo por IP; sala vazia cede a vaga |
 | `MAX_SOCKETS_PER_IP` | 20 | Conexões simultâneas por IP |
 | `RECONNECT_GRACE_SECONDS` | 90 | Preserva presença durante queda temporária |
 | `FAREWELL_SECONDS` | 8 | Prazo para voltar depois de fechar a aba ou recarregar |
