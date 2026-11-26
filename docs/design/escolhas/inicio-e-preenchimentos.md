@@ -40,6 +40,19 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Ajustes:** barra de busca no topo; seção avançada em Acessibilidade para escolher quais animações manter ou tirar, com indicador de peso (extensão do #369).
 - **Método:** nada de amostra do Design até listarmos todas as telas e necessidades; o Design faz tudo de uma vez e o usuário escolhe vendo.
 
+## Criar/entrar (decisões de 26 nov, parte 3)
+
+- **Campo de código:** campo único comum, sem caixinhas por caractere (o usuário não gosta do estilo Jackbox; pesquisa: caixinhas quebram autofill, colagem e leitor de tela). Sugestões de salas recentes ao digitar: descartado. Conferir com o Backend se o alfabeto do código evita I/L/O/U (Crockford).
+- **Tipo de sala ao criar:** três opções visuais (aberta, pede entrada, só convidados), ícones na família do Ponto. Já existe um indicador hoje; vale ter a escolha clara.
+- **Nome da sala:** gerado quando a pessoa não escreve; botão de sortear outro. Estilos: quase todos (adjetivo + objeto, frase de filme/meme, hora/dia); o ligado ao nome da pessoa não entra. Lista própria em português.
+- **Entrar como convidada:** nome e cor, mas a pessoa **procura e muda por si só** (nada de popup quase obrigatório). Com conta (espera banco), vira "entrar como X".
+- **Pré-visualização antes de entrar** (espera banco, decisão do Backend/Jurídico): só nome da sala e quantidade de pessoas; nunca nomes nem a tela da transmissão.
+- **Criando a sala:** o Ponto constrói a tela de carregamento durante a transição e mostra que está carregando até criar a sala. Sem coreografia fixada: o Design imagina.
+- **Entram:** convite com cartão (nome, código, QR; procurado, não imposto), vibração leve ao colar código válido (celular), sala rápida (cria e já copia o link), estado vazio caprichado nas Salas recentes, mensagens de erro distintas (não existe, cheia, trancada; convite expirado com conta).
+- **Teste de som/microfone:** vive em Ajustes › Áudio, não antes da sala; a pessoa entra mudo.
+- **Em dúvida/detalhar:** "voltar para a última sala".
+- **Saudação sem nome:** a definir (ver conversa).
+
 ## Em aberto
 
 Saudações (regras), grade (onde pode aparecer), Comunidade (o que temas/mods podem mexer), Perfil, Amigos, Novidades, preparar sala, integrações com Discord, demais telas (Criar/entrar, Porta, Sala, erros, Landing, Download, Instalador, Abertura).
