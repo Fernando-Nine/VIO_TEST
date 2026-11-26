@@ -27,6 +27,19 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Textura por tela**: token por tela/tema/claridade; o usuário quer ver no site antes de decidir.
 - **Ajustes**: atalho (engrenagem) no Início. Hoje Ajustes mistura ajustes da sala; precisa separar pessoais, da sala e de conta (espera banco). Idiomas já planejados (ROADMAP, #168).
 
+## O Ponto, fundos e Ajustes no Início (decisões de 26 nov, parte 2)
+
+- **Fundos que o Design mostra** (amostras, sem escolha ainda): cáustica (shader, custo opcional), 8 (padrão geométrico da marca: quadrado arredondado repetido, girando devagar; o "Ponto de verdade" D aparece nessa amostra), 7 (partículas flutuando), 6 (ondas em camadas). Contornos, campo de fluxo, óleo/aurora, mesh e grão não são amostras; texturas o usuário avalia no site.
+- **Onde o Ponto mora no Início:** é o **ponto final das frases** e é bem vivo. Não há tela (palco) no Início, então não há disputa de atenção.
+- **Gestos do Ponto com o corpo e o texto** (substituem anel/halo/órbita, descartados: o segundo ponto orbitando estranha): circular o texto e parar no fim; saltinhos e "bater a cabeça" na haste reta do "!" de "Olá, X!". Cada frase leva uma etiqueta de gesto; o Design inventa o vocabulário. Regra: o Ponto nunca deixa de ser um quadrado arredondado.
+- **Olhar** (testar A e B): A, uma marca interna ("pupila") desliza para o mouse, e fecha/volta à forma original quando ele se move; B (testar também), inclinação 3D leve. Inclinar como cartão 3D fica guardado para outros momentos. Esticar em direção ao mouse e seguir cursor: descartados (parece querer alcançar).
+- **Cenas** (aprovadas como direção): acordar (nasce no centro, salta até o fim da saudação, vira o ponto final), dormir (~2 min parado: respira devagar, afunda ~2 px, marca interna fecha; acorda ao toque), comemorar copiar (sem som, pulinho de ~200 ms + "Copiado").
+- **Saíram:** atalho de teclado, colar link, "quem está online" nas salas (Amigos já mostra), resumo de sessão (quem anota é uma pessoa).
+- **Badges** (espera banco): beta tester, horas transmitidas, amigos etc.; gamificação leve aceita. Sem exemplo de mercado achado: seria original.
+- **Discord:** o modo compacto da sala (tela pequena + mudo) já é a issue do flutuante, e não é do Início. Fica aberto pesquisar **integrações com o Discord** e o que é possível.
+- **Ajustes:** barra de busca no topo; seção avançada em Acessibilidade para escolher quais animações manter ou tirar, com indicador de peso (extensão do #369).
+- **Método:** nada de amostra do Design até listarmos todas as telas e necessidades; o Design faz tudo de uma vez e o usuário escolhe vendo.
+
 ## Em aberto
 
-Saudações (regras), movimento/vida no Início, preenchimentos, grade, Comunidade (o que temas/mods podem mexer), demais telas.
+Saudações (regras), grade (onde pode aparecer), Comunidade (o que temas/mods podem mexer), Perfil, Amigos, Novidades, preparar sala, integrações com Discord, demais telas (Criar/entrar, Porta, Sala, erros, Landing, Download, Instalador, Abertura).
