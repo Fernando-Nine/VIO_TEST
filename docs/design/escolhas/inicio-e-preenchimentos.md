@@ -65,8 +65,18 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Dono decide:** aceitar, recusar ou **fechar a sala** (recusa pedidos automaticamente).
 - **Aviso sonoro** opcional ao dono quando alguém bate.
 - **Entrada sem pedir** para quem já entrou antes: **opção configurável** pelo dono (espera banco).
-- **Descartado:** "deixar todos entrarem" da lista de espera (perigoso).
+- **"Deixar todos entrarem"** na lista de espera: pode existir, mas **pede confirmação** ("quer mesmo deixar todos entrarem?").
 - **Em aberto:** a resposta "estou ocupado" e o tom exato da recusa.
+
+## Navegação, Explorar e Comunidade (decisões de 26 nov, parte 5)
+
+- **Entrar na sala é o foco principal** (quase sempre uma pessoa cria e as outras entram); **Criar sala é segundo foco**, opção clicada depois.
+- **Criar sala** concentra a configuração: nome, cor, permissões de entrada, convidados e permissões da sala.
+- **Salas públicas e "procurar sala": fora** (decisão do usuário; risco de menores e conteúdo ilegal sem conta nem idade).
+- **Explorar** = achar mods, temas e widgets novos. **Comunidade** = o que você já tem/baixou e, no futuro, **grupos** (como os do Discord; a pensar). Duas abas: "o que tenho" e "procurar".
+- **Temas podem mudar também os sons do VIO**, além de cor, layout, ícones, imagens e animações.
+- **Mods:** tag **verificado** e **não verificado** (com aviso de possível perigo). Cartão padrão para mods, temas e widgets (prévia, autor, versão, o que mexe, permissões). Envio com revisão estilo Obsidian e selo verificado: detalhar com Backend/Segurança (decisão 004; declarar permissão não basta, sandbox real).
+- **Perfil:** foto e nome aparecem na saudação do Início; clicar abre perfil + Ajustes, que ganha uma categoria só para conta e perfil.
 
 ## Em aberto
 
