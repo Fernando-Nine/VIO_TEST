@@ -18,6 +18,15 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Novidades**: só funções novas, bem explicadas; mudança pequena (cor de botão) não entra.
 - **Preparar a sala antes de criar**: só o que os widgets não fazem na hora; lista de opções a definir.
 
+## Vida e preenchimento do Início (decisões de 26 nov)
+
+- **Saudações**: lista fechada escrita por nós, com partes por regra (hora, nome, hábito; ex.: "O de sempre?" só após 3 entradas na mesma sala), sorteio fixo por dia. **Frases soltas** (memes, estilo splash do Minecraft) em lista separada, planejadas já; da comunidade só no futuro, com revisão humana, nunca ao vivo.
+- **Visual de entrada**: um padrão fixo, que troca em datas festivas por tabela de datas no cliente (sem servidor). Ilustração: Design, com o amigo ilustrador do usuário se precisar.
+- **Descartado**: Ponto que segue o cursor; salas favoritas "vivas" com quem fala (custo alto). Na lista de salas, só pontos e "+N"; "Ao vivo" quando há transmissão.
+- **Fundo do Início**: pode ser pesado (só vale na tela inicial; na sala troca ou some), com opção de desligar para PC fraco, pausa ao transmitir e com Reduzir movimento. Quer ver amostras: gradientes com grão, curvas de nível, campo de fluxo, mancha de óleo/aurora, mais tipos populares. Pesquisa do `pesquisador` com pouca fonte; custos são estimativas.
+- **Textura por tela**: token por tela/tema/claridade; o usuário quer ver no site antes de decidir.
+- **Ajustes**: atalho (engrenagem) no Início. Hoje Ajustes mistura ajustes da sala; precisa separar pessoais, da sala e de conta (espera banco). Idiomas já planejados (ROADMAP, #168).
+
 ## Em aberto
 
 Saudações (regras), movimento/vida no Início, preenchimentos, grade, Comunidade (o que temas/mods podem mexer), demais telas.
