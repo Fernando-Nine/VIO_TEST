@@ -78,6 +78,13 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Mods:** tag **verificado** e **não verificado** (com aviso de possível perigo). Cartão padrão para mods, temas e widgets (prévia, autor, versão, o que mexe, permissões). Envio com revisão estilo Obsidian e selo verificado: detalhar com Backend/Segurança (decisão 004; declarar permissão não basta, sandbox real).
 - **Perfil:** foto e nome aparecem na saudação do Início; clicar abre perfil + Ajustes, que ganha uma categoria só para conta e perfil.
 
+### Disposição, permissões e selos (decisões de 26 nov, parte 6)
+
+- **Disposição da navegação** (barra lateral, abas, ordem): **o Design decide**. Ideia aprovada: ícones que recolhem em janela pequena (opção D).
+- **Mods não ficam limitados demais.** Um mod pode pedir algo que o VIO não permite por boa razão (deixar bonito, interessante). Devem poder existir; **sem verificação aparecem como não seguros, por conta e risco de quem instala**. Falta definir como pedir acesso extra e como verificar (Backend/Segurança; decisão 004 segue: sandbox real).
+- **Selo, todas as ideias valem:** A autor confirmado · B versão revisada · C histórico limpo · D selo da casa.
+- **Autor confirmado de verdade (ideia do usuário):** além de fama e vários mods, um nível em que a identidade do autor fica ligada à conta (talvez via VIP/assinatura), para rastrear em caso de crime. **Espera banco e conta; passa pelo Jurídico (LGPD, guarda de documentos) e pelo Backend.**
+
 ## Em aberto
 
 Saudações (regras), grade (onde pode aparecer), Comunidade (o que temas/mods podem mexer), Perfil, Amigos, Novidades, preparar sala, integrações com Discord, demais telas (Criar/entrar, Porta, Sala, erros, Landing, Download, Instalador, Abertura).
