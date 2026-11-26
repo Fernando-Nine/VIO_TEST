@@ -51,7 +51,22 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Entram:** convite com cartão (nome, código, QR; procurado, não imposto), vibração leve ao colar código válido (celular), sala rápida (cria e já copia o link), estado vazio caprichado nas Salas recentes, mensagens de erro distintas (não existe, cheia, trancada; convite expirado com conta).
 - **Teste de som/microfone:** vive em Ajustes › Áudio, não antes da sala; a pessoa entra mudo.
 - **Em dúvida/detalhar:** "voltar para a última sala".
-- **Saudação sem nome:** a definir (ver conversa).
+- **Saudação sem nome:** frases que funcionam sem nome (lista solta) como padrão, com um convite discreto para colocar o nome; sem "convidada". Sem apelido gerado por ora.
+- **Voltar para a última sala:** fica no rascunho; o usuário tira depois se não gostar.
+- **Sala rápida:** botão/lugar separado de Criar sala.
+- **Criar e Entrar viram telas separadas** (decisão do usuário); abre espaço para outras: procurar sala, procurar mods (a explorar).
+
+## Porta (sala trancada, decisões de 26 nov, parte 4)
+
+- **Tom:** linguagem amigável, de "brother", sem formalidade.
+- **Espera:** o Ponto representa o carregamento da sala. Sem sugerir animação; o Design decide. **Sem fim definido** (sem limite de tempo).
+- **Passatempo na espera:** ideia de mini jogo (estilo dinossauro do Chrome) enquanto espera entrar; o usuário "qualquer coisa", a explorar.
+- **Quem bate** escreve **mensagem junto com a batida** (decidido). Dono e admins veem **nome e foto** de quem bateu e abrem o **perfil** (quando existir; espera banco).
+- **Dono decide:** aceitar, recusar ou **fechar a sala** (recusa pedidos automaticamente).
+- **Aviso sonoro** opcional ao dono quando alguém bate.
+- **Entrada sem pedir** para quem já entrou antes: **opção configurável** pelo dono (espera banco).
+- **Descartado:** "deixar todos entrarem" da lista de espera (perigoso).
+- **Em aberto:** a resposta "estou ocupado" e o tom exato da recusa.
 
 ## Em aberto
 
