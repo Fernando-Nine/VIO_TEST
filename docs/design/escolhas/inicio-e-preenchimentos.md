@@ -85,6 +85,9 @@ Estado: **conversa em andamento** com o usuário (14–26 nov 2026). Marcação 
 - **Selo, todas as ideias valem:** A autor confirmado · B versão revisada · C histórico limpo · D selo da casa.
 - **Autor confirmado de verdade (ideia do usuário):** além de fama e vários mods, um nível em que a identidade do autor fica ligada à conta (talvez via VIP/assinatura), para rastrear em caso de crime. **Espera banco e conta; passa pelo Jurídico (LGPD, guarda de documentos) e pelo Backend.**
 
+- **Decidido (27 nov):** permissões extras de mods por **pedido, item a item (A)** e **desligar o mod na hora (C)**; **pedido de verificação pelo autor (D)** como caminho para o selo, depois.
+- **Degraus de autor (a definir):** o **VIP** (nome provisório; algo como Nitro do Discord ou verificado do Twitter, pago, com várias vantagens e perfil confirmado) é um degrau. **Autor confirmado** exige **mais pré-requisitos por segurança**; verificar identidade é só um dos passos. Pagamento (cartão) fica para mais adiante; verificação de identidade já foi conversada com o copiloto e deve ser **terceirizada**. Tudo espera conta e banco; Jurídico e Backend.
+
 ## Em aberto
 
 Saudações (regras), grade (onde pode aparecer), Comunidade (o que temas/mods podem mexer), Perfil, Amigos, Novidades, preparar sala, integrações com Discord, demais telas (Criar/entrar, Porta, Sala, erros, Landing, Download, Instalador, Abertura).
